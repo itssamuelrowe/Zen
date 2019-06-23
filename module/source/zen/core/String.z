@@ -1,0 +1,67 @@
+import zen.collection.ArrayList
+import zen.core.Boolean
+
+annotation Script <= Script2
+    String version
+    String encoding
+
+import zen.collection.ArrayList
+import zen.core.Boolean
+
+annotation Suppress extends Annotation
+    var warnings
+    var log
+
+annotation ForwardExceptions extends RuntimeAnnotation
+
+annotation CompileTimeAnnotation extends Annotation
+    ;
+    
+@script version='1.0' encoding='utf-8'
+package zen.core
+
+import zen.annotation.script
+import zen.annotation.suppress
+
+@Supress warnings='apparent-index-out-of-range' log=true
+class String <= CharacterSequence
+
+    var m_sequence
+    
+    String()
+        array = null
+        
+    String(sequence, clone)
+        m_sequence = clone? sequence.makeClone : sequence
+    
+    function getSize
+        return m_sequence == null then 0 else m_sequence->length
+        
+    @version since='1.1'
+    @deprecated since='1.2'
+    function equals(other)
+        var result = false
+        if other is String
+            result = true
+            var i
+            var limit = other->m_sequence->length
+            while i < limit
+                if m_sequence[i] != other->m_sequence[i]
+                    result = false
+                    break
+                i++
+        return result
+        
+    function getCharacterAt(i)
+        try
+            return m_sequence[i]
+        catch IndexOutOfRangeException exception
+            throw new StringIndexOutOfRangeException(exception)
+    
+    function getIterator()
+        return m_sequence.getIterator()
+    
+    function isEmpty()
+        return m_sequence == null or m_sequence->length == 0
+        
+    

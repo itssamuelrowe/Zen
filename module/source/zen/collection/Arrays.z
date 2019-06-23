@@ -1,0 +1,18 @@
+names = array('Samuel', 'Rowe', 'Shalom', 'Neeya', 'Roshan', 'Jezbel')
+names = explode()
+
+for name in names
+    print(name)
+    
+class Arrays
+
+    function explode(... array)
+        var list = new LinkedList
+        addExplosion(list, array)
+    
+    function addExplosion(list, element)
+        if element is Array
+            for item in element
+                addExplosion(list, item)
+        else
+            list.add(item)

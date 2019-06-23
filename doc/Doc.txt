@@ -1,0 +1,3 @@
+The standard does impose any restrictions on the implementation design of the
+native interface. The reference implementation employs a virtual function table
+internally. 

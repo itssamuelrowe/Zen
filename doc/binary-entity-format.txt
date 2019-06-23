@@ -1,0 +1,46 @@
+ * Representation of a entity file, more appropriately a binary tape, encoded
+ * in the Binary Entity Format (FEB). It consists of an array of bytes.
+ * Muti-byte quantities which occupy 2 bytes, 4 bytes, and 8 bytes are
+ * constructed by reading two, four, and eight consecutive bytes, respectively.
+ * These bytes are always stored in big-endian order.
+ *
+ * Every entity file contains the definition of a single primary entity: class,
+ * interface, annotation, or enumeration.
+
+```
+struct zen_EntityFile_t {
+
+    /**
+     * Represents the magic number which identifies the Binary Entity Format (FEB).
+     * It has the value 0xFEB72000.
+     */
+    uint32_t m_magicNumber;
+
+    /**
+     * Represents the version of the Binary Entity Format (FEB) with which
+     * the binary file is encoded.
+     */
+    zen_FebVersion_t m_version;
+
+    
+
+    /**
+     * A mask of flags which denote various properties of this entity file.
+     */
+    uint16_t m_flags;
+    
+    /**
+     * The constant pool is a table where references to various constants,
+     * identifiers, and other such entries are stored.
+     */
+    zen_ConstantPool_t* m_constantPool;
+
+    /**
+     * The primary binary entity of this binary file.
+     *
+     * Every binary file contains the definition of a single entity: class,
+     * interface, annotation, or enumeration. It is known as the primary entity.
+     */
+    zen_Entity_t* m_entity;
+}
+```

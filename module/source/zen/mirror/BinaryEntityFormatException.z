@@ -1,0 +1,13 @@
+import zen.core.RuntimeException
+
+/**
+ * @author Samuel Rowe
+ * @since  1.0
+ */
+class BinaryEntityFormatException : RuntimeException
+
+    function new(cause) : RuntimeException(cause)
+        ;
+        
+    function new(cause, message) : RuntimeException(cause, message)
+        ;

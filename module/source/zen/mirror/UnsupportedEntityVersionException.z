@@ -1,0 +1,11 @@
+/**
+ * @author Samuel Rowe
+ * @since  1.0
+ */
+class UnsupportedEntityVersionException : BinaryEntityFormatException
+
+    function new(cause) : BinaryEntityFormatException(cause)
+        ;
+        
+    function new(cause, message) : BinaryEntityFormatException(cause, message)
+        ;

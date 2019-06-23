@@ -1,0 +1,34 @@
+import zen.core.ObjectHelper.filterArgument
+
+/**
+ * An assertion is an arbitrary check to filter undefined behaviour internally.
+ * At runtime, such assertions can be enabled or disabled via the Runtime API.
+ *
+ * @author Samuel Rowe
+ * @since  zen 1.0
+ */
+annotation Assertion
+    ;
+
+class ArrayDecorator : Array
+    var m_array
+
+    static function decorate(array)
+        return new ArrayDecorator(array)
+
+    // TODO: What's the difference between new Array(...) and new Object[...]?
+    function new(argument)
+        filterObject(argument, [ Array.class, Integer.class ])
+
+        if argument is Array
+            m_array = argument
+        else if argument is Integer
+            m_array = new Array(size)
+
+    function fill(value)
+        ArrayHelper.fill(m_array, 0, m_array.getSize(), value)
+        return this
+
+    function fill(startIndex, stopIndex, value)
+        ArrayHelper.fill(startIndex, stopIndex, value)
+        return this

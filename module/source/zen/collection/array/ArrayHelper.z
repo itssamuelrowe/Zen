@@ -1,0 +1,7 @@
+class ArrayHelper
+
+    static function fill(array, startIndex, stopIndex, value)
+        var i = startIndex
+        while i < stopIndex
+            array[i] = value
+            i++

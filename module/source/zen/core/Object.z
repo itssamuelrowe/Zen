@@ -1,0 +1,14 @@
+// Friday, March 16, 2018
+
+class Object
+
+    native function hash
+
+    native function toString
+
+    /**
+     * The compiler automatically generates function.
+     */
+    @Operator('==')
+    function equals(other)
+        return other is this

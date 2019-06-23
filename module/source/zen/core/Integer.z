@@ -1,0 +1,52 @@
+// Friday, March 16, 2018
+
+/**
+ * An integer value.
+ *
+ * @author Samuel Rowe
+ * @since  Zen SE 1.0
+ */
+class Integer
+
+    /**
+     * The minimum value of an {@link Integer}.
+     */
+    public static var MIN_VALUE = 0x80000000
+
+    /**
+     * The maximum value of an {@link Integer}.
+     */
+    public static var MAX_VALUE = 0x7fffffff
+    
+    static function parseInteger(sequence, radix)
+        if sequence == null
+            throw new NumberFormatException('The specified character sequence is null.')
+        
+        if (radix < MIN_RADIX) or (radix > MAX_RADIX)
+            throw new NumberFormatException('The specified radix (%d) is invalid.' % radix)
+        
+        var result = 0
+        var negative = false
+        var i = 0
+        var size = sequence.getSize
+        
+
+    /**
+     * The value of this {@link Integer}.
+     */
+    var value
+
+    function new(value)
+        if value is Number
+            setValue(source)
+        else if value is CharacterSequence
+            setParsedValue(sequence, DECIMAL_RADIX)
+        else
+            throw new InvalidArgumentException
+
+    function new(sequence, radix)
+        setParsedValue(sequence, radix)
+
+    native function setValue(value)
+
+    native function getValue
