@@ -1668,7 +1668,7 @@ enum zen_ByteCode_t {
     /* Pop */
 
     ZEN_BYTE_CODE_POP,
-    ZEN_BYTE_CODE_POP_2,
+    ZEN_BYTE_CODE_POP2,
 
     /* Push */
 
@@ -2288,9 +2288,9 @@ enum zen_ByteCode_t {
      */
     ZEN_BYTE_CODE_STORE_AA,
 
-    ZEN_BYTE_CODE_STORE_STATIC_FIELD,
-
     ZEN_BYTE_CODE_STORE_INSTANCE_FIELD,
+    
+    ZEN_BYTE_CODE_STORE_STATIC_FIELD,
 
     /* Subtract */
 
@@ -2407,7 +2407,7 @@ enum zen_ByteCode_t {
      *     An instance of the {@code InvalidArraySizeException} class is thrown
      *     if the specified exception is {@code null}.
      */
-    ZEN_BYTE_CODE_THROW_A,
+    ZEN_BYTE_CODE_THROW,
 
     /* Wide */
 
