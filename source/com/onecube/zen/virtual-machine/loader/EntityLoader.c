@@ -223,13 +223,14 @@ zen_Entity_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader,
 
 // Load Entity From File
 
+// BUG: You cannot copy an array of bytes with the general purpose Array.
 jtk_Array_t* jtk_InputStreamHelper_toArray(jtk_InputStream_t* stream) {
     uint8_t* result = jtk_Memory_allocate(uint8_t, 1024);
     int32_t size = 1024;
     int32_t index = 0;
     while (true) {
         int32_t count = jtk_InputStream_readBytesEx(stream, result, size,
-            index, size - index);
+            index, size);
             
         if (count <= 0) {
             break;
@@ -239,7 +240,8 @@ jtk_Array_t* jtk_InputStreamHelper_toArray(jtk_InputStream_t* stream) {
         
         if (index >= (int32_t)(size * 0.85f)) {
             uint8_t* temporary = result;
-            result = jtk_Memory_allocate(uint8_t, size * 2);
+            int32_t newSize = size * 2;
+            result = jtk_Arrays_copyOfEx_b(result, size, newSize, 0, false);
             jtk_Memory_deallocate(temporary);
         }
     }

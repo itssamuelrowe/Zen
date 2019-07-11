@@ -2299,12 +2299,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 break;
             }
 
-            case ZEN_BYTE_CODE_POP_2: { /* pop_2 */
+            case ZEN_BYTE_CODE_POP2: { /* pop2 */
                 /* Discard the first two operands on top of the operand stack. */
                 zen_OperandStack_popEx(currentStackFrame->m_operandStack, 2);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `pop_2` (operand stack = %d)",
+                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `pop2` (operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -3346,7 +3346,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             /* Throw */
 
-            case ZEN_BYTE_CODE_THROW_A: { /* throw_a */
+            case ZEN_BYTE_CODE_THROW: { /* throw */
                 /* Retrieve the reference to the exception object from the operand stack. */
                 uintptr_t reference = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
 
@@ -3396,7 +3396,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 }
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `throw_a`");
+                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `throw`");
 
                 break;
             }

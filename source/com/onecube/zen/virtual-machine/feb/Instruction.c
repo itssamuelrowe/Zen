@@ -188,7 +188,7 @@ zen_Instruction_t zen_Instruction_instructions[] = {
     /* Pop */
 
     { "pop", ZEN_BYTE_CODE_POP, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "pop_2", ZEN_BYTE_CODE_POP_2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "pop2", ZEN_BYTE_CODE_POP2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
 
     /* Push */
 
@@ -280,7 +280,7 @@ zen_Instruction_t zen_Instruction_instructions[] = {
 
     /* Throw */
 
-    { "throw_a", ZEN_BYTE_CODE_THROW_A, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "throw", ZEN_BYTE_CODE_THROW, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
 
     /* Wide */
 

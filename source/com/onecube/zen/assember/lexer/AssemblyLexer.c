@@ -31,7 +31,7 @@ uint8_t zen_AssemblyLexer_literalNames[][25] = {
 
     { 's', 'i', 'n', 'g', 'l', 'e', '_', 'l', 'i', 'n', 'e', '_', 'c', 'o', 'm', 'm', 'e', 'n', 't', '\0' },
     { 'm', 'u', 'l', 't', 'i', '_', 'l', 'i', 'n', 'e', '_', 'c', 'o', 'm', 'm', 'e', 'n', 't', '\0' },
-    
+
     { '<', 'i', 'd', 'e', 'n', 't', 'i', 'f', 'i', 'e', 'r', '>', '\0' },
 
     { 'n', 'o', 'p', '\0' },
@@ -228,6 +228,10 @@ uint8_t zen_AssemblyLexer_literalNames[][25] = {
     { 's', 'w', 'i', 't', 'c', 'h', '_', 's', 'e', 'a', 'r', 'c', 'h', '\0' },
     { 't', 'h', 'r', 'o', 'w', '\0' },
     { 'w', 'i', 'd', 'e', '\0' },
+
+    { 'c', 'o', 'd', 'e', '\0' },
+    { 'c', 'o', 'n', 's', 't', 'a', 'n', 't', '_', 'p', 'o', 'o', 'l', '\0' },
+    { 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', '\0' },
 
     { '<', 'i', 'n', 't', 'e', 'g', 'e', 'r', '_', 'l', 'i', 't', 'e', 'r', 'a', 'l', '>', '\0' },
 
@@ -627,28 +631,6 @@ zen_Token_t* zen_AssemblyLexer_nextToken(zen_AssemblyLexer_t* lexer) {
                     break;
                 }
 
-                /* EXCLAMATION_MARK_EQUAL
-                 * :    '!='
-                 * ;
-                 *
-                 * EXCLAMATION_MARK
-                 * :    '!'
-                 * ;
-                 */
-                case '!' : {
-                    zen_AssemblyLexer_consume(lexer);
-
-                    if (lexer->m_la1 == '=') {
-                        zen_AssemblyLexer_consume(lexer);
-                        lexer->m_type = ZEN_TOKEN_EXCLAMATION_MARK_EQUAL;
-                    }
-                    else {
-                        lexer->m_type = ZEN_TOKEN_EXCLAMATION_MARK;
-                    }
-
-                    break;
-                }
-
                 /* AT
                  * :    '@'
                  * ;
@@ -674,175 +656,6 @@ zen_Token_t* zen_AssemblyLexer_nextToken(zen_AssemblyLexer_t* lexer) {
                     break;
                 }
 
-                /* MODULUS_EQUAL
-                 * :    '%='
-                 * ;
-                 *
-                 * MODULUS
-                 * :    '%'
-                 * ;
-                 */
-                case '%' : {
-                    zen_AssemblyLexer_consume(lexer);
-
-                    if (lexer->m_la1 == '=') {
-                        zen_AssemblyLexer_consume(lexer);
-                        lexer->m_type = ZEN_TOKEN_MODULUS_EQUAL;
-                    }
-                    else {
-                        lexer->m_type = ZEN_TOKEN_MODULUS;
-                    }
-
-                    break;
-                }
-
-                /* AMPERSAND_2
-                 * :    '&&'
-                 * ;
-                 *
-                 * AMPERSAND_EQUAL
-                 * :    '&='
-                 * ;
-                 *
-                 * AMPERSAND
-                 * :    '&'
-                 * ;
-                 */
-                case '&' : {
-                    zen_AssemblyLexer_consume(lexer);
-
-                    if (lexer->m_la1 == '&') {
-                        zen_AssemblyLexer_consume(lexer);
-                        lexer->m_type = ZEN_TOKEN_AMPERSAND_2;
-                    }
-                    else if (lexer->m_la1 == '=') {
-                        zen_AssemblyLexer_consume(lexer);
-                        lexer->m_type = ZEN_TOKEN_AMPERSAND_EQUAL;
-                    }
-                    else {
-                        lexer->m_type = ZEN_TOKEN_AMPERSAND;
-                    }
-
-                    break;
-                }
-
-                /* LEFT_PARENTHESIS
-                 * :    '('
-                 * ;
-                 */
-                case '(' : {
-                    /* Consume and discard the '(' character. */
-                    zen_AssemblyLexer_consume(lexer);
-                    /* The lexer has recognized the '(' token. */
-                    lexer->m_type = ZEN_TOKEN_LEFT_PARENTHESIS;
-                    /* The lexer is inside an enclosure. The parser will fail
-                     * if newline or indentation tokens are generated. Therefore,
-                     * mark this enclosure.
-                     */
-                    lexer->m_enclosures++;
-                    break;
-                }
-
-                /* RIGHT_PARENTHESIS
-                 * :    ')'
-                 * ;
-                 */
-                case ')' : {
-                    /* Consume and discard the '(' character. */
-                    zen_AssemblyLexer_consume(lexer);
-                    /* The lexer has recognized the '(' token. */
-                    lexer->m_type = ZEN_TOKEN_RIGHT_PARENTHESIS;
-                    /* The lexer is outside an enclosure. The parser will fail
-                     * if newline or indentation tokens are not generated
-                     * appropriately. Therefore, unmark this enclosure.
-                     */
-                    lexer->m_enclosures--;
-                    break;
-                }
-
-                /* ASTERISK_2_EQUAL
-                 * :    '**='
-                 * ;
-                 *
-                 * ASTERISK_2
-                 * :    '**'
-                 * ;
-                 *
-                 * ASTERISK_EQUAL
-                 * :    '*='
-                 * ;
-                 *
-                 * ASTERISK
-                 * :    '*'
-                 * ;
-                 */
-                case '*' : {
-                    /* Consume and discard the '*' character. */
-                    zen_AssemblyLexer_consume(lexer);
-
-                    if (lexer->m_la1 == '*') {
-                        /* Consume and discard the '*' character. */
-                        zen_AssemblyLexer_consume(lexer);
-
-                        if (lexer->m_la1 == '=') {
-                            /* Consume and discard the '=' character. */
-                            zen_AssemblyLexer_consume(lexer);
-                            /* The lexer has recognized the '**=' token. */
-                            lexer->m_type = ZEN_TOKEN_ASTERISK_2_EQUAL;
-                        }
-                        else {
-                            /* The lexer has recognized the '**' token. */
-                            lexer->m_type = ZEN_TOKEN_ASTERISK_2;
-                        }
-                    }
-                    else if (lexer->m_la1 == '=') {
-                        /* Consume and discard the '=' character. */
-                        zen_AssemblyLexer_consume(lexer);
-                        /* The lexer has recognized the '*=' token. */
-                        lexer->m_type = ZEN_TOKEN_ASTERISK_EQUAL;
-                    }
-                    else {
-                        lexer->m_type = ZEN_TOKEN_ASTERISK;
-                    }
-
-                    break;
-                }
-
-                /* PLUS_2
-                 * :    '++'
-                 * ;
-                 *
-                 * PLUS_EQUAL
-                 * :    '+='
-                 * ;
-                 *
-                 * PLUS
-                 * :    '+'
-                 * ;
-                 */
-                case '+' : {
-                    /* Consume and discard the '+' character. */
-                    zen_AssemblyLexer_consume(lexer);
-
-                    if (lexer->m_la1 == '+') {
-                        /* Consume and discard the '+' character. */
-                        zen_AssemblyLexer_consume(lexer);
-                        /* The lexer has recognized the '++' token. */
-                        lexer->m_type = ZEN_TOKEN_PLUS_2;
-                    }
-                    else if (lexer->m_la1 == '=') {
-                        /* Consume and discard the '=' character. */
-                        zen_AssemblyLexer_consume(lexer);
-                        /* The lexer has recognized the '+=' token. */
-                        lexer->m_type = ZEN_TOKEN_PLUS_EQUAL;
-                    }
-                    else {
-                        lexer->m_type = ZEN_TOKEN_PLUS;
-                    }
-
-                    break;
-                }
-
                 /* COMMA
                  * :    ','
                  * ;
@@ -855,91 +668,6 @@ zen_Token_t* zen_AssemblyLexer_nextToken(zen_AssemblyLexer_t* lexer) {
                     break;
                 }
 
-                /* DASH_2
-                 * :    '--'
-                 * ;
-                 *
-                 * ARROW
-                 * :    '->'
-                 * ;
-                 *
-                 * DASH_EQUAL
-                 * :    '-='
-                 * ;
-                 *
-                 * DASH
-                 * :    '-'
-                 * ;
-                 */
-                case '-' : {
-                    /* Consume and discard the '-' character. */
-                    zen_AssemblyLexer_consume(lexer);
-
-                    if (lexer->m_la1 == '-') {
-                        /* Consume and discard the '-' character. */
-                        zen_AssemblyLexer_consume(lexer);
-                        /* The lexer has recognized the '--' token. */
-                        lexer->m_type = ZEN_TOKEN_DASH_2;
-                    }
-                    else if (lexer->m_la1 == '>') {
-                        /* Consume and discard the '>' character. */
-                        zen_AssemblyLexer_consume(lexer);
-                        /* The lexer has recognized the '->' token. */
-                        lexer->m_type = ZEN_TOKEN_ARROW;
-                    }
-                    else if (lexer->m_la1 == '=') {
-                        /* Consume and discard the '=' character. */
-                        zen_AssemblyLexer_consume(lexer);
-                        /* The lexer has recognized the '-=' token. */
-                        lexer->m_type = ZEN_TOKEN_DASH_EQUAL;
-                    }
-                    else {
-                        /* The lexer has recognized the '-' token. */
-                        lexer->m_type = ZEN_TOKEN_DASH;
-                    }
-
-                    break;
-                }
-
-                /* ELLIPSIS
-                 * :    '...'
-                 * ;
-                 *
-                 * DOT_2
-                 * :    '..'
-                 * ;
-                 *
-                 * DOT
-                 * :    '.'
-                 * ;
-                 */
-                case '.' : {
-                    /* Consume and discard the '.' character. */
-                    zen_AssemblyLexer_consume(lexer);
-
-                    if (lexer->m_la1 == '.') {
-                        /* Consume and discard the '.' character. */
-                        zen_AssemblyLexer_consume(lexer);
-
-                        if (lexer->m_la1 == '.') {
-                            /* Consume and discard the '.' character. */
-                            zen_AssemblyLexer_consume(lexer);
-                            /* The lexer has recognized the '...' token. */
-                            lexer->m_type = ZEN_TOKEN_ELLIPSIS;
-                        }
-                        else {
-                            /* The lexer has recognized the '..' token. */
-                            lexer->m_type = ZEN_TOKEN_DOT_2;
-                        }
-                    }
-                    else {
-                        /* The lexer has recognized the '.' token. */
-                        lexer->m_type = ZEN_TOKEN_DOT;
-                    }
-
-                    break;
-                }
-
                 /* SINGLE_LINE_COMMENT
                  * :    '//' ~[\r\n]* -> channel(hidden)
                  * ;
@@ -948,13 +676,6 @@ zen_Token_t* zen_AssemblyLexer_nextToken(zen_AssemblyLexer_t* lexer) {
                  * :    '/*' .*? '*''/' -> channel(hidden)
                  * ;
                  *
-                 * FORWARD_SLASH_EQUAL
-                 * :    '/='
-                 * ;
-                 *
-                 * FORWARD_SLASH
-                 * :    '/'
-                 * ;
                  */
                 case '/' : {
                     /* Consume and discard the '/' character. */
@@ -1047,377 +768,12 @@ zen_Token_t* zen_AssemblyLexer_nextToken(zen_AssemblyLexer_t* lexer) {
                          */
                         lexer->m_channel = ZEN_TOKEN_CHANNEL_HIDDEN;
                     }
-                    else if (lexer->m_la1 == '=') {
-                        /* Consume and discard the '=' character. */
-                        zen_AssemblyLexer_consume(lexer);
-                        /* The lexer has recognized the '/=' token. */
-                        lexer->m_type = ZEN_TOKEN_FORWARD_SLASH_EQUAL;
-                    }
-                    else {
-                        /* The lexer has recognized the '/' token. */
-                        lexer->m_type = ZEN_TOKEN_FORWARD_SLASH;
-                    }
-
-                    break;
-                }
-
-                /* COLON_2
-                 * :    '::'
-                 * ;
-                 *
-                 * COLON
-                 * :    ':'
-                 * ;
-                 */
-                case ':' : {
-                    /* Consume and discard the ':' character. */
-                    zen_AssemblyLexer_consume(lexer);
-
-                    if (lexer->m_la1 == ':') {
-                        /* Consume and discard the ':' character. */
-                        zen_AssemblyLexer_consume(lexer);
-
-                        /* The lexer has recognized the '::' token. */
-                        lexer->m_type = ZEN_TOKEN_COLON_2;
-                    }
-                    else {
-                        /* The lexer has recognized the ':' token. */
-                        lexer->m_type = ZEN_TOKEN_COLON;
-                    }
-
-                    break;
-                }
-
-                /* SEMICOLON
-                 * :    ';'
-                 * ;
-                 */
-                case ';' : {
-                    /* Consume and discard the ';' character. */
-                    zen_AssemblyLexer_consume(lexer);
-                    /* The lexer has recognized the ';' token. */
-                    lexer->m_type = ZEN_TOKEN_SEMICOLON;
-                    break;
-                }
-
-                /* LEFT_ANGLE_BRACKET_2_EQUAL
-                 * :    '<<='
-                 * ;
-                 *
-                 * LEFT_ANGLE_BRACKET_2
-                 * :    '<<'
-                 * ;
-                 *
-                 * LEFT_ANGLE_BRACKET_EQUAL
-                 * :    '<='
-                 * ;
-                 *
-                 * LEFT_ANGLE_BRACKET
-                 * :    '<'
-                 * ;
-                 */
-                case '<' : {
-                    /* Consume and discard the '<' character. */
-                    zen_AssemblyLexer_consume(lexer);
-
-                    if (lexer->m_la1 == '<') {
-                        /* Consume and discard the '<' character. */
-                        zen_AssemblyLexer_consume(lexer);
-
-                        if (lexer->m_la1 == '=') {
-                            /* Consume and discard the '=' character. */
-                            zen_AssemblyLexer_consume(lexer);
-                            /* The lexer has recognized the '<<=' token. */
-                            lexer->m_type = ZEN_TOKEN_LEFT_ANGLE_BRACKET_2_EQUAL;
-                        }
-                        else {
-                            /* The lexer has recognized the '<<' token. */
-                            lexer->m_type = ZEN_TOKEN_LEFT_ANGLE_BRACKET_2;
-                        }
-                    }
-                    else if (lexer->m_la1 == '=') {
-                        /* Consume and discard the '=' character. */
-                        zen_AssemblyLexer_consume(lexer);
-                        /* The lexer has recognized the '<=' token. */
-                        lexer->m_type = ZEN_TOKEN_LEFT_ANGLE_BRACKET_EQUAL;
-                    }
-                    else {
-                        /* The lexer has recognized the '<' token. */
-                        lexer->m_type = ZEN_TOKEN_LEFT_ANGLE_BRACKET;
-                    }
-
-                    break;
-                }
-
-                /* RIGHT_ANGLE_BRACKET_3_EQUAL
-                 * :    '>>>='
-                 * ;
-                 *
-                 * RIGHT_ANGLE_BRACKET_3
-                 * :    '>>>'
-                 * ;
-                 *
-                 * RIGHT_ANGLE_BRACKET_2_EQUAL
-                 * :    '>>='
-                 * ;
-                 *
-                 * RIGHT_ANGLE_BRACKET_2
-                 * :    '>>'
-                 * ;
-                 *
-                 * RIGHT_ANGLE_BRACKET_EQUAL
-                 * :    '>='
-                 * ;
-                 *
-                 * RIGHT_ANGLE_BRACKET
-                 * :    '>'
-                 * ;
-                 */
-                case '>' : {
-                    /* Consume and discard the '>' character. */
-                    zen_AssemblyLexer_consume(lexer);
-
-                    if (lexer->m_la1 == '>') {
-                        /* Consume and discard the '>' character. */
-                        zen_AssemblyLexer_consume(lexer);
-
-                        if (lexer->m_la1 == '>') {
-                            /* Consume and discard the '>' character. */
-                            zen_AssemblyLexer_consume(lexer);
-
-                            if (lexer->m_la1 == '=') {
-                                /* Consume and discard the '=' character. */
-                                zen_AssemblyLexer_consume(lexer);
-                                /* The lexer has recognized the '>>>=' token. */
-                                lexer->m_type = ZEN_TOKEN_RIGHT_ANGLE_BRACKET_3_EQUAL;
-                            }
-                            else {
-                                /* The lexer has recognized the '>>>' token. */
-                                lexer->m_type = ZEN_TOKEN_RIGHT_ANGLE_BRACKET_3;
-                            }
-                        }
-                        else if (lexer->m_la1 == '=') {
-                            /* Consume and discard the '=' character. */
-                            zen_AssemblyLexer_consume(lexer);
-                            /* The lexer has recognized the '>>=' token. */
-                            lexer->m_type = ZEN_TOKEN_RIGHT_ANGLE_BRACKET_2_EQUAL;
-                        }
-                        else {
-                            /* The lexer has recognized the '>>' token. */
-                            lexer->m_type = ZEN_TOKEN_RIGHT_ANGLE_BRACKET_2;
-                        }
-                    }
-                    else if (lexer->m_la1 == '=') {
-                        /* Consume and discard the '=' character. */
-                        zen_AssemblyLexer_consume(lexer);
-                        /* The lexer has recognized the '>=' token. */
-                        lexer->m_type = ZEN_TOKEN_RIGHT_ANGLE_BRACKET_EQUAL;
-                    }
-                    else {
-                        /* The lexer has recognized the '>' token. */
-                        lexer->m_type = ZEN_TOKEN_RIGHT_ANGLE_BRACKET;
-                    }
-
-                    break;
-                }
-
-                /* EQUAL_2
-                 * :    '=='
-                 * ;
-                 *
-                 * EQUAL
-                 * :    '='
-                 * ;
-                 */
-                case '=' : {
-                    /* Consume and discard the '=' character. */
-                    zen_AssemblyLexer_consume(lexer);
-
-                    if (lexer->m_la1 == '=') {
-                        /* Consume and discard the '=' character. */
-                        zen_AssemblyLexer_consume(lexer);
-                        /* The lexer has recognized the '==' token. */
-                        lexer->m_type = ZEN_TOKEN_EQUAL_2;
-                    }
-                    else {
-                        /* The lexer has recognized the '=' token. */
-                        lexer->m_type = ZEN_TOKEN_EQUAL;
-                    }
-
-                    break;
-                }
-
-                /* HOOK
-                 * :    '?'
-                 * ;
-                 */
-                case '?' : {
-                    /* Consume and discard the '?' character. */
-                    zen_AssemblyLexer_consume(lexer);
-                    /* The lexer has recognized the '?' token. */
-                    lexer->m_type = ZEN_TOKEN_HOOK;
-                    break;
-                }
-
-                /* LEFT_BRACE
-                 * :    '{'
-                 * ;
-                 */
-                case '{' : {
-                    /* Consume and discard the '{' character. */
-                    zen_AssemblyLexer_consume(lexer);
-                    /* The lexer has recognized the '{' token. */
-                    lexer->m_type = ZEN_TOKEN_LEFT_BRACE;
-                    /* The lexer is inside an enclosure. The parser will fail
-                     * if newline or indentation tokens are generated. Therefore,
-                     * mark this enclosure.
-                     */
-                    lexer->m_enclosures++;
-                    break;
-                }
-
-                /* RIGHT_BRACE
-                 * :    '}'
-                 * ;
-                 */
-                case '}' : {
-                    /* Consume and discard the '}' character. */
-                    zen_AssemblyLexer_consume(lexer);
-                    /* The lexer has recognized the '}' token. */
-                    lexer->m_type = ZEN_TOKEN_RIGHT_BRACE;
-                    /* The lexer is outside an enclosure. The parser will fail
-                     * if newline or indentation tokens are not generated
-                     * appropriately. Therefore, unmark this enclosure.
-                     */
-                    lexer->m_enclosures--;
-                    break;
-                }
-
-                /* LEFT_SQUARE_BRACKET
-                 * :    '['
-                 * ;
-                 */
-                case '[' : {
-                    /* Consume and discard the '[' character. */
-                    zen_AssemblyLexer_consume(lexer);
-                    /* The lexer has recognized the '[' token. */
-                    lexer->m_type = ZEN_TOKEN_LEFT_SQUARE_BRACKET;
-                    /* The lexer is inside an enclosure. The parser will fail
-                     * if newline or indentation tokens are generated. Therefore,
-                     * mark this enclosure.
-                     */
-                    lexer->m_enclosures++;
-                    break;
-                }
-
-                /* RIGHT_SQUARE_BRACKET
-                 * :    ']'
-                 * ;
-                 */
-                case ']' : {
-                    /* Consume and discard the ']' character. */
-                    zen_AssemblyLexer_consume(lexer);
-                    /* The lexer has recognized the ']' token. */
-                    lexer->m_type = ZEN_TOKEN_RIGHT_SQUARE_BRACKET;
-                    /* The lexer is outside an enclosure. The parser will fail
-                     * if newline or indentation tokens are not generated
-                     * appropriately. Therefore, unmark this enclosure.
-                     */
-                    lexer->m_enclosures--;
-                    break;
-                }
-
-                /* CARET_EQUAL
-                 * :    '^='
-                 * ;
-                 *
-                 * CARET
-                 * :    '^'
-                 * ;
-                 */
-                case '^' : {
-                    /* Consume and discard the '^' character. */
-                    zen_AssemblyLexer_consume(lexer);
-
-                    if (lexer->m_la1 == '=') {
-                        /* Consume and discard the '=' character. */
-                        zen_AssemblyLexer_consume(lexer);
-                        /* The lexer has recognized the '^=' token. */
-                        lexer->m_type = ZEN_TOKEN_CARET_EQUAL;
-                    }
-                    else {
-                        /* The lexer has recognized the '^' token. */
-                        lexer->m_type = ZEN_TOKEN_CARET;
-                    }
-
-                    break;
-                }
-
-                /* VERTICAL_BAR_2
-                 * :    '||'
-                 * ;
-                 *
-                 * VERTICAL_BAR_EQUAL
-                 * :    '|='
-                 * ;
-                 *
-                 * VERTICAL_BAR
-                 * :    '|'
-                 * ;
-                 */
-                case '|' : {
-                    /* Consume and discard the '|' character. */
-                    zen_AssemblyLexer_consume(lexer);
-
-                    if (lexer->m_la1 == '|') {
-                        /* Consume and discard the '|' character. */
-                        zen_AssemblyLexer_consume(lexer);
-                        /* The lexer has recognized the '||' token. */
-                        lexer->m_type = ZEN_TOKEN_VERTICAL_BAR_2;
-                    }
-                    else if (lexer->m_la1 == '=') {
-                        /* Consume and discard the '=' character. */
-                        zen_AssemblyLexer_consume(lexer);
-                        /* The lexer has recognized the '|=' token. */
-                        lexer->m_type = ZEN_TOKEN_VERTICAL_BAR_EQUAL;
-                    }
-                    else {
-                        /* The lexer has recognized the '|' token. */
-                        lexer->m_type = ZEN_TOKEN_VERTICAL_BAR;
-                    }
-
-                    break;
-                }
-
-                /* TILDE_EQUAL
-                 * :    '~='
-                 * ;
-                 *
-                 * TILDE
-                 * :    '~'
-                 * ;
-                 */
-                case '~' : {
-                    /* Consume and discard the '~' character. */
-                    zen_AssemblyLexer_consume(lexer);
-
-                    if (lexer->m_la1 == '=') {
-                        /* Consume and discard the '=' character. */
-                        zen_AssemblyLexer_consume(lexer);
-                        /* The lexer has recognized the '~=' token. */
-                        lexer->m_type = ZEN_TOKEN_TILDE_EQUAL;
-                    }
-                    else {
-                        /* The lexer has recognized the '~' token. */
-                        lexer->m_type = ZEN_TOKEN_TILDE;
-                    }
 
                     break;
                 }
 
                 /* STRING_LITERAL
                  * :    '"' STRING_CHARACTER* '"'
-                 * |    '\'' STRING_CHARACTER* '\''
                  * ;
                  *
                  * STRING_CHARACTER
@@ -1434,16 +790,13 @@ zen_Token_t* zen_AssemblyLexer_nextToken(zen_AssemblyLexer_t* lexer) {
                  * :    [0-9a-fA-F]
                  * ;
                  */
-                case '"':
-                case '\'' : {
-                    uint8_t terminator = lexer->m_la1;
-
+                case '"': {
                     /* Consume and discard the character which marks the
                      * beginning of this string.
                      */
                     zen_AssemblyLexer_consume(lexer);
 
-                    while (lexer->m_la1 != terminator) {
+                    while (lexer->m_la1 != '"') {
                         if (lexer->m_la1 == ZEN_END_OF_STREAM) {
                             zen_AssemblyLexerError_t* error = zen_AssemblyLexer_createError(lexer, "Unexpected end of stream in string literal");
                             zen_ArrayList_add(lexer->m_errors, error);
@@ -1537,7 +890,7 @@ zen_Token_t* zen_AssemblyLexer_nextToken(zen_AssemblyLexer_t* lexer) {
                          * Another solution, would be to use a hash map with token
                          * text as key and token type as values. This is obviously
                          * more efficient than the current algorithm. Unfortunately,
-                         * I neither have patience nor time.
+                         * I neither have patience nor time to implement this.
                          *
                          * The following algorithm tries to prevent redundant comparisons
                          * between strings (as many as possible).
@@ -1546,162 +899,654 @@ zen_Token_t* zen_AssemblyLexer_nextToken(zen_AssemblyLexer_t* lexer) {
                          * are compared against the token. The keywords are always
                          * arranged in ascending lexicographical order. Thus, we
                          * reduce the worst case scenario for number of comparisons
-                         * from 40 to 7.
+                         * from 198 to 20.
+                         * The algorithm described here was not hand written.
+                         * It was generated by a program.
                          */
                         lexer->m_type = ZEN_TOKEN_IDENTIFIER;
                         switch (length) {
-                            case 2 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_DO], 2)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_DO;
-                                }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_IF], 2)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_IF;
-                                }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_IN], 2)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_IN;
-                                }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_IS], 2)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_IS;
-                                }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_OR], 2)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_OR;
-                                }
-                                break;
-                            }
-
                             case 3 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_AND], 3)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_AND;
+                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEW], 3)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_NEW;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_FOR], 3)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_FOR;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NOP], 3)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_NOP;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_NAN], 3)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_NAN;
-                                }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_NEW], 3)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_NEW;
-                                }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_TRY], 3)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_TRY;
-                                }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_VAR], 3)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_VAR;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_POP], 3)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_POP;
                                 }
                                 break;
                             }
-
                             case 4 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_CASE], 4)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_CASE;
+                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP], 4)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_ELSE], 4)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_ELSE;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_OR_I], 4)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_OR_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_ENUM], 4)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_ENUM;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_OR_L], 4)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_OR_L;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_NULL], 4)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_NULL;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_POP2], 4)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_POP2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_THEN], 4)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_THEN;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RTTI], 4)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_RTTI;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_TRUE], 4)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_TRUE;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SWAP], 4)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_SWAP;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_WITH], 4)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_WITH;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_WIDE], 4)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_WIDE;
                                 }
                                 break;
                             }
-
                             case 5 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_BREAK], 5)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_BREAK;
+                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_ADD_F], 5)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_ADD_F;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_CATCH], 5)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_CATCH;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_ADD_I], 5)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_ADD_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_CLASS], 5)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_CLASS;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_ADD_L], 5)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_ADD_L;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_FALSE], 5)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_FALSE;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_ADD_d], 5)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_ADD_d;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_FINAL], 5)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_FINAL;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_AND_I], 5)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_AND_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_THROW], 5)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_THROW;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_AND_L], 5)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_AND_L;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_WHILE], 5)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_WHILE;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_THROW], 5)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_THROW;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_XOR_I], 5)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_XOR_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_XOR_L], 5)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_XOR_L;
                                 }
                                 break;
                             }
-
                             case 6 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_ASSERT], 6)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_ASSERT;
+                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_A], 6)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_A;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_IMPORT], 6)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_IMPORT;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_D], 6)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_D;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_NATIVE], 6)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_NATIVE;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_F], 6)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_F;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_PUBLIC], 6)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_PUBLIC;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_I], 6)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_RETURN], 6)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_RETURN;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_L], 6)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_L;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_STATIC], 6)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_STATIC;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_B], 6)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_B;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_SWITCH], 6)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_SWITCH;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_S], 6)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_S;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN], 6)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_RETURN;
                                 }
                                 break;
                             }
-
                             case 7 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_DEFAULT], 7)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_DEFAULT;
+                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_A0], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_A0;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_FINALLY], 7)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_FINALLY;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_A1], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_A1;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_PACKAGE], 7)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_PACKAGE;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_A2], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_A2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_PRIVATE], 7)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_PRIVATE;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_A3], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_A3;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AA], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_AA;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AB], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_AB;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AC], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_AC;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AD], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_AD;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AF], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_AF;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AI], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_AI;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AL], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_AL;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AS], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_AS;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_D0], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_D0;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_D1], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_D1;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_D2], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_D2;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_D3], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_D3;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_F0], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_F0;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_F1], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_F1;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_F2], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_F2;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_F3], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_F3;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_I0], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_I0;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_I1], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_I1;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_I2], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_I2;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_I3], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_I3;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_L0], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_L0;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_L1], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_L1;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_L2], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_L2;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_L3], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_L3;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_D0], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_D0;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_D1], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_D1;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_D2], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_D2;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_F0], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_F0;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_F1], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_F1;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_F2], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_F2;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_I0], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_I0;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_I1], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_I1;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_I2], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_I2;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_I3], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_I3;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_I4], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_I4;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_I5], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_I5;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_L0], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_L0;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_L1], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_L1;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_L2], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_L2;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_A], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_A;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_D], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_D;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_F], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_F;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_I], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_L], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_L;
                                 }
                                 break;
                             }
-
                             case 8 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_CONTINUE], 8)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_CONTINUE;
+                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_DTF], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_DTF;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_FUNCTION], 8)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_FUNCTION;
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_DTI], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_DTI;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_DTL], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_DTL;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_FTD], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_FTD;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_FTI], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_FTI;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_FTL], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_FTL;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_ITB], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_ITB;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_ITC], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_ITC;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_ITD], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_ITD;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_ITF], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_ITF;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_ITL], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_ITL;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_ITS], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_ITS;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_LTD], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_LTD;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_LTF], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_LTF;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_LTI], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_LTI;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DIVIDE_D], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_DIVIDE_D;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DIVIDE_F], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_DIVIDE_F;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DIVIDE_I], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_DIVIDE_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DIVIDE_L], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_DIVIDE_L;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_CPR], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_CPR;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MODULO_D], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_MODULO_D;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MODULO_F], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_MODULO_F;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MODULO_I], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_MODULO_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MODULO_L], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_MODULO_L;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEGATE_D], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_NEGATE_D;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEGATE_F], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_NEGATE_F;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEGATE_I], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_NEGATE_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEGATE_L], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_NEGATE_L;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_IN1], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_IN1;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN_A], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_RETURN_A;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN_D], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_RETURN_D;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN_F], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_RETURN_F;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN_I], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_RETURN_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN_L], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_RETURN_L;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_A0], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_A0;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_A1], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_A1;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_A2], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_A2;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_A3], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_A3;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AA], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_AA;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AB], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_AB;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AC], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_AC;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AD], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_AD;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AF], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_AF;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AI], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_AI;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AL], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_AL;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AS], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_AS;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_D0], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_D0;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_D1], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_D1;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_D2], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_D2;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_D3], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_D3;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_F0], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_F0;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_F1], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_F1;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_F2], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_F2;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_F3], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_F3;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_I0], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_I0;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_I1], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_I1;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_I2], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_I2;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_I3], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_I3;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_L0], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_L0;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_L1], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_L1;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_L2], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_L2;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_L3], 8)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_L3;
                                 }
                                 break;
                             }
-
-                            case 9: {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_UNDEFINED], 9)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_UNDEFINED;
+                            case 9 : {
+                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_COMPARE_L], 9)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_COMPARE_L;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DUPLICATE], 9)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_DUPLICATE;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_EQ_A], 9)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_EQ_A;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_EQ_I], 9)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_EQ_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_GE_I], 9)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_GE_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_GT_I], 9)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_GT_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_LE_I], 9)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_LE_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_LT_I], 9)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_LT_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_NE_A], 9)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_NE_A;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_NE_I], 9)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_NE_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEW_ARRAY], 9)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_NEW_ARRAY;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_NULL], 9)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_NULL;
                                 }
                                 break;
                             }
-
+                            case 10 : {
+                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CHECK_CAST], 10)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_CHECK_CAST;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DUPLICATE2], 10)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_DUPLICATE2;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_EQ0_I], 10)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_EQ0_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_EQN_A], 10)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_EQN_A;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_GE0_I], 10)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_GE0_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_GT0_I], 10)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_GT0_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_LE0_I], 10)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_LE0_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_LT0_I], 10)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_LT0_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_NE0_I], 10)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_NE0_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_NEN_A], 10)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_NEN_A;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MULTIPLY_D], 10)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_MULTIPLY_D;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MULTIPLY_F], 10)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_MULTIPLY_F;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MULTIPLY_I], 10)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_MULTIPLY_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MULTIPLY_L], 10)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_MULTIPLY_L;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SUBTRACT_D], 10)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_SUBTRACT_D;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SUBTRACT_F], 10)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_SUBTRACT_F;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SUBTRACT_I], 10)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_SUBTRACT_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SUBTRACT_L], 10)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_SUBTRACT_L;
+                                }
+                                break;
+                            }
                             case 11 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_SYNCHRONIZE], 11)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_SYNCHRONIZE;
+                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_INCREMENT_I], 11)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_INCREMENT_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEW_ARRAY_A], 11)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_NEW_ARRAY_A;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEW_ARRAY_N], 11)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_NEW_ARRAY_N;
+                                }
+                                break;
+                            }
+                            case 12 : {
+                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_COMPARE_GT_D], 12)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_COMPARE_GT_D;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_COMPARE_GT_F], 12)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_COMPARE_GT_F;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_COMPARE_LT_D], 12)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_COMPARE_LT_D;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_COMPARE_LT_F], 12)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_COMPARE_LT_F;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DUPLICATE_X1], 12)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_DUPLICATE_X1;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DUPLICATE_X2], 12)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_DUPLICATE_X2;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_LEFT_I], 12)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_SHIFT_LEFT_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_LEFT_I], 12)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_SHIFT_LEFT_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_LEFT_L], 12)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_SHIFT_LEFT_L;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SWITCH_TABLE], 12)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_SWITCH_TABLE;
+                                }
+                                break;
+                            }
+                            case 13 : {
+                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DUPLICATE2_X1], 13)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_DUPLICATE2_X1;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DUPLICATE2_X2], 13)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_DUPLICATE2_X2;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_INVOKE_STATIC], 13)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_INVOKE_STATIC;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_I], 13)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_I;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_L], 13)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_L;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SWITCH_SEARCH], 13)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_SWITCH_SEARCH;
+                                }
+                                break;
+                            }
+                            case 14 : {
+                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_INVOKE_DYNAMIC], 14)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_INVOKE_DYNAMIC;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_INVOKE_SPECIAL], 14)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_INVOKE_SPECIAL;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_INVOKE_VIRTUAL], 14)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_INVOKE_VIRTUAL;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_UI], 14)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_UI;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_UL], 14)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_UL;
+                                }
+                                break;
+                            }
+                            case 15 : {
+                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_INVOKE_FRAGMENT], 15)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_INVOKE_FRAGMENT;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_ARRAY_SIZE], 15)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_ARRAY_SIZE;
+                                }
+                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN_FRAGMENT], 15)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_RETURN_FRAGMENT;
+                                }
+                                break;
+                            }
+                            case 17 : {
+                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_STATIC_FIELD], 17)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_STATIC_FIELD;
+                                }
+                                break;
+                            }
+                            case 18 : {
+                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_STATIC_FIELD], 18)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_STATIC_FIELD;
+                                }
+                                break;
+                            }
+                            case 19 : {
+                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_INSTANCE_FIELD], 19)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_INSTANCE_FIELD;
+                                }
+                                break;
+                            }
+                            case 20 : {
+                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_INSTANCE_FIELD], 20)) {
+                                    lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_INSTANCE_FIELD;
                                 }
                                 break;
                             }

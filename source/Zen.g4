@@ -58,4 +58,4 @@ assignmentExpression:	conditionalExpression (assignmentOperator assignmentExpre
  postfixOperator:	'++'|	'--';
 primaryExpression:	IDENTIFIER|	literal|	'(' expression ')'|	mapExpression|	listExpression|   newExpression;literal:	INTEGER_LITERAL|	FLOATING_POINT_LITERAL|	'true'|	'false'|	STRING_LITERAL|	'null'|	'undefined';mapExpression:	'{' mapEntries? '}';mapEntries:	mapEntry (',' mapEntry)*;
  mapEntry:	expression ':' expression;
-listExpression:    '[' expressions ']';newExpression:   'new' typeName functionArguments?;aliasDeclaration:   'alias' IDENTIFIER '=' aliasTarget;aliasTarget:   IDENTIFIER ('.' IDENTIFIER)*;import xyz.Objectalias XObject = Object
+listExpression:    '[' expressions ']';newExpression:   'new' typeName functionArguments?;lambdaExpression:   '@' lambdaParameters? lambdaBody;lambdaParameters:   parameters|   IDENTIFIER;lambdaBody:   '{' functionBody NEWLINE '}'|   '->' expression;

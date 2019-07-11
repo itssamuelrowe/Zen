@@ -317,6 +317,30 @@ void zen_Lexer_emit(zen_Lexer_t* lexer, zen_Token_t* token) {
  * A single lexical recognition may result in multiple errors. For example,
  * when recognizing a string literal we may encounter a number of malformed
  * escape sequences and an unexpected end of stream.
+ *
+ * When the lambda operator is encountered, the lexer marks a flag that indicates
+ * the encouter. If the lexer encounters a left brace after such an encounter,
+ * a flag which allows indentation is pushed onto the stack. When the lexer encouters
+ * a left brace without encountering the lambda operator, a flag which disallows
+ * indentation is pushed onto the stack. When the right brace is encountered, the
+ * stack is popped. Thus, the compiler recognizes the following function
+ * as valid.
+ * 
+ * function main()
+ *     var array = [
+ *         'Samuel Rowe',
+ *         'Nikola Tesla',
+ *         'Bill Gates',
+ *         'Isaac Newton',
+ *         'Keanu Reeves'
+ *     ]
+ *     array.forEach(@(item, index) {
+ *             if index.isEven()
+ *                 print('[even] ' + index + '->' + item)
+ *             else
+ *                 print('[odd] ' + index + '->' + item)
+ *         }
+ *     )
  */
 zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
     jtk_Assert_assertObject(lexer, "The specified lexer is null.");
@@ -326,7 +350,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
      */
     if (zen_ArrayQueue_isEmpty(lexer->m_tokens)) {
         /* We don't exit the loop until
-         * -- We have token.
+         * -- We have a token.
          * -- We have reached the end of the stream.
          * -- We have encountered an error. (Interestingly, this condition
          *    is not explicitly checked because errorneous token recognition

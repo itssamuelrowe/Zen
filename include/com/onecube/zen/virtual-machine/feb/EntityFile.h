@@ -54,7 +54,7 @@ struct zen_EntityFile_t {
      * A mask of flags which denote various properties of this entity file.
      */
     uint16_t m_flags;
-    
+
     /**
      * The constant pool is a table where references to various constants,
      * identifiers, and other such entries are stored.

@@ -63,8 +63,8 @@ void zen_BinaryEntityParser_delete(zen_BinaryEntityParser_t* parser);
 zen_EntityFile_t* zen_BinaryEntityParser_parse(zen_BinaryEntityParser_t* parser,
     jtk_InputStream_t* inputStream);
 zen_EntityFile_t* zen_BinaryEntityParser_parseEntityFile(zen_BinaryEntityParser_t* parser);
-zen_ConstantPool_t* zen_BinaryEntityParser_parseConstantPool(zen_BinaryEntityParser_t* parser);
-void zen_BinaryEntityParser_parseConstantPoolEntries(zen_BinaryEntityParser_t* parser, zen_ConstantPool_t* constantPool);
+void zen_BinaryEntityParser_parseConstantPool(zen_BinaryEntityParser_t* parser);
+void zen_BinaryEntityParser_parseConstantPoolEntries(zen_BinaryEntityParser_t* parser);
 
 zen_ConstantPoolInteger_t* zen_BinaryEntityParser_parseConstantPoolInteger(zen_BinaryEntityParser_t* parser);
 zen_ConstantPoolLong_t* zen_BinaryEntityParser_parseConstantPoolLong(zen_BinaryEntityParser_t* parser);
@@ -78,19 +78,19 @@ zen_ConstantPoolEnumerate_t* zen_BinaryEntityParser_parseConstantPoolEnumerate(z
 zen_ConstantPoolEnumeration_t* zen_BinaryEntityParser_parseConstantPoolEnumeration(zen_BinaryEntityParser_t* parser);
 
 zen_ConstantPoolField_t* zen_BinaryEntityParser_parseConstantPoolField(zen_BinaryEntityParser_t* parser);
-zen_Entity_t* zen_BinaryEntityParser_parseEntity(zen_BinaryEntityParser_t* parser, zen_ConstantPool_t* constantPool);
-zen_AttributeTable_t* zen_BinaryEntityParser_parseAttributeTable(zen_BinaryEntityParser_t* parser, zen_ConstantPool_t* constantPool);
-void zen_BinaryEntityParser_parseAttributes(zen_BinaryEntityParser_t* parser, zen_ConstantPool_t* constantPool, zen_AttributeTable_t* attributeTable);
+zen_Entity_t* zen_BinaryEntityParser_parseEntity(zen_BinaryEntityParser_t* parser);
+zen_AttributeTable_t* zen_BinaryEntityParser_parseAttributeTable(zen_BinaryEntityParser_t* parser);
+void zen_BinaryEntityParser_parseAttributes(zen_BinaryEntityParser_t* parser, zen_AttributeTable_t* attributeTable);
 zen_AuxillaryAttribute_t* zen_BinaryEntityParser_parseAuxillaryAttribute(zen_BinaryEntityParser_t* parser, int32_t nameIndex, int32_t length);
 zen_CodeAttribute_t* zen_BinaryEntityParser_parseCodeAttribute(zen_BinaryEntityParser_t* parser, int32_t nameIndex, int32_t length);
 zen_ExceptionTableAttribute_t* zen_BinaryEntityParser_parseExceptionTableAttribute(zen_BinaryEntityParser_t* parser, int32_t nameIndex, int32_t length);
 zen_SourceFileAttribute_t* zen_BinaryEntityParser_parseSourceFileAttribute(zen_BinaryEntityParser_t* parser, int32_t nameIndex, int32_t length);
-zen_FieldEntity_t* zen_BinaryEntityParser_parseField(zen_BinaryEntityParser_t* parser, zen_ConstantPool_t* constantPool);
-zen_ClassEntity_t* zen_BinaryEntityParser_parseClass(zen_BinaryEntityParser_t* parser, zen_ConstantPool_t* constantPool);
-zen_FunctionEntity_t* zen_BinaryEntityParser_parseFunction(zen_BinaryEntityParser_t* parser, zen_ConstantPool_t* constantPool);
-zen_EnumerateEntity_t* zen_BinaryEntityParser_parseEnumerate(zen_BinaryEntityParser_t* parser, zen_ConstantPool_t* constantPool);
-zen_EnumerationEntity_t* zen_BinaryEntityParser_parseEnumeration(zen_BinaryEntityParser_t* parser, zen_ConstantPool_t* constantPool);
-zen_AnnotationEntity_t* zen_BinaryEntityParser_parseAnnotation(zen_BinaryEntityParser_t* parser, zen_ConstantPool_t* constantPool);
-zen_PackageEntity_t* zen_BinaryEntityParser_parsePackage(zen_BinaryEntityParser_t* parser, zen_ConstantPool_t* constantPool);
+zen_FieldEntity_t* zen_BinaryEntityParser_parseField(zen_BinaryEntityParser_t* parser);
+zen_ClassEntity_t* zen_BinaryEntityParser_parseClass(zen_BinaryEntityParser_t* parser);
+zen_FunctionEntity_t* zen_BinaryEntityParser_parseFunction(zen_BinaryEntityParser_t* parser);
+zen_EnumerateEntity_t* zen_BinaryEntityParser_parseEnumerate(zen_BinaryEntityParser_t* parser);
+zen_EnumerationEntity_t* zen_BinaryEntityParser_parseEnumeration(zen_BinaryEntityParser_t* parser);
+zen_AnnotationEntity_t* zen_BinaryEntityParser_parseAnnotation(zen_BinaryEntityParser_t* parser);
+zen_PackageEntity_t* zen_BinaryEntityParser_parsePackage(zen_BinaryEntityParser_t* parser);
 
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_LOADER_BINARY_ENTITY_PARSER_H */
