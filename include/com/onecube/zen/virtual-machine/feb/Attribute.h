@@ -17,7 +17,7 @@
  *     interpretation of a binary entity. A virtual machine should implement
  *     these attributes in order to adhere to this specification.
  *         <ul>
- *             <li>ByteCodeAttribute</li>
+ *             <li>InstructionAttribute</li>
  *             <li>ExceptionsAttribute</li>
  *         </ul>
  *     </li>

@@ -307,27 +307,8 @@ zen_AttributeTable_t* zen_BinaryEntityParser_parseAttributeTable(
     zen_BinaryEntityParser_t* parser) {
     jtk_Assert_assertObject(parser, "The specified binary entity parser is null.");
 
-    zen_AttributeTable_t* attributeTable =
-        (zen_AttributeTable_t*)zen_MemoryManager_allocateEx(parser->m_memoryManager,
-            sizeof (zen_AttributeTable_t), ZEN_ALIGNMENT_CONSTRAINT_DEFAULT,
-            ZEN_ALLOCATION_FLAG_MANUAL);
-
-    attributeTable->m_size = jtk_Tape_readUncheckedShort(parser->m_tape);
-    attributeTable->m_attributes = zen_MemoryManager_allocateEx(parser->m_memoryManager,
-        sizeof (zen_Attribute_t*) * attributeTable->m_size, ZEN_ALIGNMENT_CONSTRAINT_DEFAULT,
-        ZEN_ALLOCATION_FLAG_MANUAL);
-
-    zen_BinaryEntityParser_parseAttributes(parser, attributeTable);
-
-    return attributeTable;
-}
-
-/* Parse Attributes */
-
-void zen_BinaryEntityParser_parseAttributes(zen_BinaryEntityParser_t* parser, zen_AttributeTable_t* attributeTable) {
-    jtk_Assert_assertObject(parser, "The specified binary entity parser is null.");
-
-    int32_t size = attributeTable->m_size;
+    uint16_t size = jtk_Tape_readUncheckedShort(parser->m_tape);
+    
     for (int32_t i = 0; i < size; i++) {
         uint16_t nameIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
         uint32_t length = jtk_Tape_readUncheckedInteger(parser->m_tape);
@@ -353,11 +334,20 @@ void zen_BinaryEntityParser_parseAttributes(zen_BinaryEntityParser_t* parser, ze
             /* Do not waste memory representing an unrecognized attribute.
              * It is represented as null in the attributes table.
              */
-            attributeTable->m_attributes[i] = NULL;
 
             // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Skipped unrecognized attribute `%s`. Null value stored at index %d.", name, i);
         }
     }
+
+    return NULL;
+}
+
+/* Parse Attributes */
+
+void zen_BinaryEntityParser_parseAttributes(zen_BinaryEntityParser_t* parser, zen_AttributeTable_t* attributeTable) {
+    jtk_Assert_assertObject(parser, "The specified binary entity parser is null.");
+
+    
 }
 
 /* Parse Auxillary Attribute */
