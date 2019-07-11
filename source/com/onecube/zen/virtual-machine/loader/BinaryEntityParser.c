@@ -313,7 +313,7 @@ zen_AttributeTable_t* zen_BinaryEntityParser_parseAttributeTable(
         uint16_t nameIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
         uint32_t length = jtk_Tape_readUncheckedInteger(parser->m_tape);
 
-        uint8_t* name = NULL; // zen_ConstantPool_resolveUtf8(constantPool, nameIndex);
+        uint8_t* name = zen_ConstantPool_resolveUtf8(constantPool, nameIndex);
         zen_AttributeParseRuleFunction_t attributeParseRule = NULL; // zen_AttributeParseRuleMap_getValue(parser->m_attributeParseRuleMap, name);
 
         if (attributeParseRule != NULL) {

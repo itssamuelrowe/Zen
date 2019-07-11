@@ -44,7 +44,6 @@ struct zen_ExceptionHandlerSite_t {
      */
     uint16_t m_handlerIndex;
     
-    
     uint16_t m_exceptionClass;
 };
 
