@@ -1,7 +1,7 @@
 // Saturday, March 17, 2018
 
-#ifndef ZEN_VM_BYTE_CODE_H
-#define ZEN_VM_BYTE_CODE_H
+#ifndef COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_BYTE_CODE_H
+#define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_BYTE_CODE_H
 
 #include <com/onecube/zen/Configuration.h>
 
@@ -18,6 +18,13 @@
 
 /* NOTE: Please update the "Instruction.c" file if enumerations are added or
  * removed from this file.
+ */
+
+/**
+ * @author Samuel Rowe
+ * @since Zen 1.0
+ * @class ByteCode
+ * @ingroup zen_virtualMachine_feb
  */
 enum zen_ByteCode_t {
 
@@ -92,10 +99,10 @@ enum zen_ByteCode_t {
     ZEN_BYTE_CODE_ADD_L,
 
     /**
-     * Add two {@code float} values.
+     * Add two `float` values.
      *
      * The following rules, as specified by IEEE 754, should be observed when
-     * adding two {@code float} values.
+     * adding two `float` values.
      *     - If either the first or the second operand is NaN, the result is
      *       always NaN.
      *     - The sum of two infinities of opposite sign is NaN.
@@ -113,9 +120,9 @@ enum zen_ByteCode_t {
      *       zero, or NaN and the values have the same sign or have different
      *       magnitudes, the sum is computed and rounded to the nearest
      *       representable value using IEEE 754 round to nearest mode. If
-     *       the magnitude is too large to represent as a {@code float},
+     *       the magnitude is too large to represent as a `float`,
      *       the result is an infinity of an appropriate sign. If the magnitude
-     *       is too small to represent as a {@code float}, the result is a
+     *       is too small to represent as a `float`, the result is a
      *       zero of an appropriate sign.
      *
      * [Format]
@@ -129,20 +136,20 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value1
-     *     A {@code float} value. It is popped off the operand stack.
+     *     A `float` value. It is popped off the operand stack.
      * value2
-     *     A {@code float} value. It is popped off the operand stack.
+     *     A `float` value. It is popped off the operand stack.
      * result
-     *     A {@code float} value which is computed by addition of the
-     *     specified {@code float} values.
+     *     A `float` value which is computed by addition of the
+     *     specified `float` values.
      */
     ZEN_BYTE_CODE_ADD_F,
 
     /**
-     * Add two {@code double} values.
+     * Add two `double` values.
      *
      * The following rules, as specified by IEEE 754, should be observed when
-     * adding two {@code double} values.
+     * adding two `double` values.
      *     - If either the first or the second operand is NaN, the result is
      *       always NaN.
      *     - The sum of two infinities of opposite sign is NaN.
@@ -160,9 +167,9 @@ enum zen_ByteCode_t {
      *       zero, or NaN and the values have the same sign or have different
      *       magnitudes, the sum is computed and rounded to the nearest
      *       representable value using IEEE 754 round to nearest mode. If
-     *       the magnitude is too large to represent as a {@code double},
+     *       the magnitude is too large to represent as a `double`,
      *       the result is an infinity of an appropriate sign. If the magnitude
-     *       is too small to represent as a {@code double}, the result is a
+     *       is too small to represent as a `double`, the result is a
      *       zero of an appropriate sign.
      *
      * [Format]
@@ -176,12 +183,12 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value1
-     *     A {@code double} value. It is popped off the operand stack.
+     *     A `double` value. It is popped off the operand stack.
      * value2
-     *     A {@code double} value. It is popped off the operand stack.
+     *     A `double` value. It is popped off the operand stack.
      * result
-     *     A {@code double} value which is computed by addition of the
-     *     specified {@code double} values.
+     *     A `double` value which is computed by addition of the
+     *     specified `double` values.
      */
     ZEN_BYTE_CODE_ADD_D,
 
@@ -672,7 +679,7 @@ enum zen_ByteCode_t {
      * value
      *     A 32-bit integer value. It is popped off the operand stack.
      * result
-     *     A 32-bit {@code float} value derived from converting the specified
+     *     A 32-bit `float` value derived from converting the specified
      *     32-bit integer value to 32-bit `float` value.
      */
     ZEN_BYTE_CODE_CAST_ITF,
@@ -698,7 +705,7 @@ enum zen_ByteCode_t {
      * value
      *     A 32-bit integer value. It is popped off the operand stack.
      * result
-     *     A 64-bit {@code double} value derived from converting the specified
+     *     A 64-bit `double` value derived from converting the specified
      *     32-bit integer value to 64-bit `double` value.
      */
     ZEN_BYTE_CODE_CAST_ITD,
@@ -808,7 +815,7 @@ enum zen_ByteCode_t {
      * value
      *     A 64-bit integer value. It is popped off the operand stack.
      * result
-     *     A 32-bit {@code float} value derived from converting the specified
+     *     A 32-bit `float` value derived from converting the specified
      *     32-bit integer value to 32-bit `float` value.
      */
     ZEN_BYTE_CODE_CAST_LTF,
@@ -834,13 +841,13 @@ enum zen_ByteCode_t {
      * value
      *     A 64-bit integer value. It is popped off the operand stack.
      * result
-     *     A 64-bit {@code double} value derived from converting the specified
+     *     A 64-bit `double` value derived from converting the specified
      *     64-bit integer value to 64-bit `double` value.
      */
     ZEN_BYTE_CODE_CAST_LTD,
 
     /**
-     * Convert a {@code float} value to a {@code integer} value.
+     * Convert a `float` value to a {@code integer} value.
      *
      * The following cases should be carefully observed:
      *  - A NaN value is always converted to {@code 0}.
@@ -851,7 +858,7 @@ enum zen_ByteCode_t {
      *  - A positive value of very large magnitude or positive infinity is
      *    represented by the largest integer value that occupies 32-bits.
      *
-     * The instruction narrows the {@code float} value. Therefore, loss of
+     * The instruction narrows the `float` value. Therefore, loss of
      * information in regards to magnitude and precision may be observed.
      *
      * [Format]
@@ -865,16 +872,16 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     A 32-bit {@code float} value. It is popped off the operand stack.
+     *     A 32-bit `float` value. It is popped off the operand stack.
      * result
      *     A 32-bit {@code integer} value derived from converting the specified
-     *     {@code float} value to {@code integer} value. It is pushed onto
+     *     `float` value to {@code integer} value. It is pushed onto
      *     the operand stack.
      */
     ZEN_BYTE_CODE_CAST_FTI,
 
     /**
-     * Convert a {@code float} value to a {@code double} value.
+     * Convert a `float` value to a `double` value.
      *
      * The following cases should be carefully observed:
      *  - A NaN value is always converted to {@code 0}.
@@ -887,7 +894,7 @@ enum zen_ByteCode_t {
      *    represented by the largest signed integer value that occupies
      *    64-bits.
      *
-     * The instruction narrows the {@code double} value. Therefore, loss of
+     * The instruction narrows the `double` value. Therefore, loss of
      * information in regards to magnitude and precision may be observed.
      *
      * [Format]
@@ -901,20 +908,20 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     A 32-bit {@code float} value. It is popped off the operand stack.
+     *     A 32-bit `float` value. It is popped off the operand stack.
      * result
      *     A 64-bit integer value derived from converting the specified
-     *     {@code float} value to a {@code long} value. It is pushed onto
+     *     `float` value to a {@code long} value. It is pushed onto
      *     the operand stack.
      */
     ZEN_BYTE_CODE_CAST_FTL,
 
     /**
-     * Convert a {@code float} value to a {@code double} value.
+     * Convert a `float` value to a `double` value.
      *
-     * The specified {@code float} value is converted to a {@code double}
+     * The specified `float` value is converted to a `double`
      * value using IEEE 754 round to nearest mode. In other words, the
-     * instruction widens the {@code float} value. Therefore, no loss of
+     * instruction widens the `float` value. Therefore, no loss of
      * information in regards to magnitude and precision may be observed.
      *
      * [Format]
@@ -928,16 +935,16 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     A 32-bit {@code float} value. It is popped off the operand stack.
+     *     A 32-bit `float` value. It is popped off the operand stack.
      * result
-     *     A 64-bit {@code double} value derived from converting the specified
-     *     {@code float} value to {@code double} value. It is pushed onto
+     *     A 64-bit `double` value derived from converting the specified
+     *     `float` value to `double` value. It is pushed onto
      *     the operand stack.
      */
     ZEN_BYTE_CODE_CAST_FTD,
 
     /**
-     * Convert a {@code double} value to an {@code integer} value.
+     * Convert a `double` value to an {@code integer} value.
      *
      * The following cases should be carefully observed:
      *  - A NaN value is always converted to {@code 0}.
@@ -948,7 +955,7 @@ enum zen_ByteCode_t {
      *  - A positive value of very large magnitude or positive infinity is
      *    represented by the largest integer value that occupies 32-bits.
      *
-     * The instruction narrows the {@code double} value. Therefore, loss of
+     * The instruction narrows the `double` value. Therefore, loss of
      * information in regards to magnitude and precision may be observed.
      *
      * [Format]
@@ -962,16 +969,16 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     A 64-bit {@code double} value. It is popped off the operand stack.
+     *     A 64-bit `double` value. It is popped off the operand stack.
      * result
      *     A 32-bit integer value derived from converting the specified
-     *     {@code double} value to {@code integer} value. It is pushed onto
+     *     `double` value to {@code integer} value. It is pushed onto
      *     the operand stack.
      */
     ZEN_BYTE_CODE_CAST_DTI,
 
     /**
-     * Convert a {@code double} value to a {@code long} value.
+     * Convert a `double` value to a {@code long} value.
      *
      * The following cases should be carefully observed:
      *  - A NaN value is always converted to {@code 0}.
@@ -984,7 +991,7 @@ enum zen_ByteCode_t {
      *    represented by the largest signed integer value that occupies
      *    64-bits.
      *
-     * The instruction narrows the {@code double} value. Therefore, loss of
+     * The instruction narrows the `double` value. Therefore, loss of
      * information in regards to magnitude and precision may be observed.
      *
      * [Format]
@@ -998,26 +1005,26 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     A 64-bit {@code double} value. It is popped off the operand stack.
+     *     A 64-bit `double` value. It is popped off the operand stack.
      * result
      *     A 64-bit integer value derived from converting the specified
-     *     {@code double} value to {@code long} value. It is pushed onto
+     *     `double` value to {@code long} value. It is pushed onto
      *     the operand stack.
      */
     ZEN_BYTE_CODE_CAST_DTL,
 
     /**
-     * Convert a {@code double} value to a {@code float} value.
+     * Convert a `double` value to a `float` value.
      *
-     * The specified {@code double} value is converted to a {@code float}
+     * The specified `double` value is converted to a `float`
      * value using IEEE 754 round to nearest mode. In other words, the
-     * instruction narrows the {@code double} value. Therefore, loss of
+     * instruction narrows the `double` value. Therefore, loss of
      * information in regards to magnitude and precision may be observed.
      *
      * The following cases should be carefully observed:
-     *  - Values too small to represent as a {@code float} value is represented
+     *  - Values too small to represent as a `float` value is represented
      *    as zero.
-     *  - Values too big to represents as a {@code float} value is represented
+     *  - Values too big to represents as a `float` value is represented
      *    as infinity.
      * In both cases, the sign of the value is always retained.
      *
@@ -1032,10 +1039,10 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     A 64-bit {@code double} value. It is popped off the operand stack.
+     *     A 64-bit `double` value. It is popped off the operand stack.
      * result
      *     A 32-bit float value derived from converting the specified
-     *     {@code double} value to {@code float} value. It is pushed onto
+     *     `double` value to `float` value. It is pushed onto
      *     the operand stack.
      */
     ZEN_BYTE_CODE_CAST_DTF,
@@ -1090,7 +1097,7 @@ enum zen_ByteCode_t {
     ZEN_BYTE_CODE_COMPARE_L,
 
     /**
-     * Compare two {@code float} values.
+     * Compare two `float` values.
      *
      * If at least one of the values is NaN, the pair of values is unordered.
      * Therefore, in order to prevent failure in comparison of such a pair and
@@ -1108,9 +1115,9 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value1
-     *     A {@code float} value. It is popped off the operand stack.
+     *     A `float` value. It is popped off the operand stack.
      * value2
-     *     A {@code float} value. It is popped off the operand stack.
+     *     A `float` value. It is popped off the operand stack.
      * result
      *     The result varies contingent on the following cases. It is pushed
      *     onto the stack.
@@ -1126,7 +1133,7 @@ enum zen_ByteCode_t {
     ZEN_BYTE_CODE_COMPARE_LT_F,
 
     /**
-     * Compare two {@code float} values.
+     * Compare two `float` values.
      *
      * If at least one of the values is NaN, the pair of values is unordered.
      * Therefore, in order to prevent failure in comparison of such a pair and
@@ -1144,9 +1151,9 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value1
-     *     A {@code float} value. It is popped off the operand stack.
+     *     A `float` value. It is popped off the operand stack.
      * value2
-     *     A {@code float} value. It is popped off the operand stack.
+     *     A `float` value. It is popped off the operand stack.
      * result
      *     The result varies contingent on the following cases. It is pushed
      *     onto the stack.
@@ -1162,7 +1169,7 @@ enum zen_ByteCode_t {
     ZEN_BYTE_CODE_COMPARE_GT_F,
 
     /**
-     * Compare two {@code double} values.
+     * Compare two `double` values.
      *
      * If at least one of the values is NaN, the pair of values is unordered.
      * Therefore, in order to prevent failure in comparison of such a pair and
@@ -1180,9 +1187,9 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value1
-     *     A {@code double} value. It is popped off the operand stack.
+     *     A `double` value. It is popped off the operand stack.
      * value2
-     *     A {@code double} value. It is popped off the operand stack.
+     *     A `double` value. It is popped off the operand stack.
      * result
      *     The result varies contingent on the following cases. It is pushed
      *     onto the stack.
@@ -1198,7 +1205,7 @@ enum zen_ByteCode_t {
     ZEN_BYTE_CODE_COMPARE_LT_D,
 
     /**
-     * Compare two {@code double} values.
+     * Compare two `double` values.
      *
      * If at least one of the values is NaN, the pair of values is unordered.
      * Therefore, in order to prevent failure in comparison of such a pair and
@@ -1216,9 +1223,9 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value1
-     *     A {@code double} value. It is popped off the operand stack.
+     *     A `double` value. It is popped off the operand stack.
      * value2
-     *     A {@code double} value. It is popped off the operand stack.
+     *     A `double` value. It is popped off the operand stack.
      * result
      *     The result varies contingent on the following cases. It is pushed
      *     onto the stack.
@@ -1239,10 +1246,10 @@ enum zen_ByteCode_t {
     ZEN_BYTE_CODE_DIVIDE_L,
 
     /**
-     * Divide two {@code float} values.
+     * Divide two `float` values.
      *
      * The following rules, in accordance with IEEE 754, should be observed
-     * when dividing two {@code float} values.
+     * when dividing two `float` values.
      *     - If either the first or the second operand is NaN, the result is
      *       always NaN.
      *     - The result is positive if both the operands have the same sign.
@@ -1271,9 +1278,9 @@ enum zen_ByteCode_t {
      *     - In all other cases, where neither operand is an infinity, a
      *       zero, or NaN, the quotient is computed and rounded to the nearest
      *       representable value using IEEE 754 round to nearest mode. If
-     *       the magnitude is too large to represent as a {@code float},
+     *       the magnitude is too large to represent as a `float`,
      *       the result is an infinity of an appropriate sign. If the magnitude
-     *       is too small to represent as a {@code float}, the result is a
+     *       is too small to represent as a `float`, the result is a
      *       zero of an appropriate sign.
      *
      * [Format]
@@ -1287,21 +1294,21 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value1
-     *     A {@code float} value. It is popped off the operand stack.
+     *     A `float` value. It is popped off the operand stack.
      * value2
-     *     A {@code float} value. It is popped off the operand stack.
+     *     A `float` value. It is popped off the operand stack.
      * result
-     *     A {@code float} value which is the quotient computed by the
+     *     A `float` value which is the quotient computed by the
      *     division of `value1` and `value2`, represented as
      *     {@code value1 / value2}.
      */
     ZEN_BYTE_CODE_DIVIDE_F,
 
     /**
-     * Divide two {@code double} values.
+     * Divide two `double` values.
      *
      * The following rules, in accordance with IEEE 754, should be observed
-     * when dividing two {@code double} values.
+     * when dividing two `double` values.
      *     - If either the first or the second operand is NaN, the result is
      *       always NaN.
      *     - The result is positive if both the operands have the same sign.
@@ -1330,9 +1337,9 @@ enum zen_ByteCode_t {
      *     - In all other cases, where neither operand is an infinity, a
      *       zero, or NaN, the quotient is computed and rounded to the nearest
      *       representable value using IEEE 754 round to nearest mode. If
-     *       the magnitude is too large to represent as a {@code double},
+     *       the magnitude is too large to represent as a `double`,
      *       the result is an infinity of an appropriate sign. If the magnitude
-     *       is too small to represent as a {@code double}, the result is a
+     *       is too small to represent as a `double`, the result is a
      *       zero of an appropriate sign.
      *
      * [Format]
@@ -1346,11 +1353,11 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value1
-     *     A {@code double} value. It is popped off the operand stack.
+     *     A `double` value. It is popped off the operand stack.
      * value2
-     *     A {@code double} value. It is popped off the operand stack.
+     *     A `double` value. It is popped off the operand stack.
      * result
-     *     A {@code double} value which is the quotient computed by the
+     *     A `double` value which is the quotient computed by the
      *     division of `value1` and `value2`, represented as
      *     {@code value1 / value2}.
      */
@@ -2188,10 +2195,25 @@ enum zen_ByteCode_t {
      */
     ZEN_BYTE_CODE_INVOKE_STATIC,
 
-    ZEN_BYTE_CODE_INVOKE_FRAGMENT,
-
     /* Jump */
 
+    /**
+     * Jump to the specified index.
+     *
+     * The instruction pointer (IP) of the current frame is updated to the
+     * instruction at the specified index. The control transfers to that
+     * instruction.
+     *
+     * [Format]
+     * jump index0 index1
+     *
+     * [Arguments]
+     * index0
+     *     An unsigned byte, along with `index1` forms an index into the constant
+     *     pool. The instruction at the specified index should be a valid instruction.
+     * index1
+     *    Please refer the documentation of `index0` for more details.
+     */
     ZEN_BYTE_CODE_JUMP,
 
     /* Load */
@@ -2256,7 +2278,7 @@ enum zen_ByteCode_t {
     ZEN_BYTE_CODE_LOAD_L,
 
     /**
-     * Load a {@code float} value from a local variable.
+     * Load a `float` value from a local variable.
      *
      * The `load_f` instruction can be used in conjunction with the `wide`
      * mode, in which case the index occupies two bytes.
@@ -2268,7 +2290,7 @@ enum zen_ByteCode_t {
      * index
      *     An unsigned byte which is a valid index into the local variable
      *     array of the current frame. The local variable at the index should
-     *     be a {@code float}. This value is pushed onto the operand
+     *     be a `float`. This value is pushed onto the operand
      *     stack.
      *
      * [Operand Stack]
@@ -2279,13 +2301,13 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     The {@code float} value stored at the specified index. It is
+     *     The `float` value stored at the specified index. It is
      *     pushed onto the stack.
      */
     ZEN_BYTE_CODE_LOAD_F,
 
     /**
-     * Load a {@code double} value from a local variable.
+     * Load a `double` value from a local variable.
      *
      * The `load_d` instruction can be used in conjunction with the `wide`
      * mode, in which case the index occupies two bytes.
@@ -2297,7 +2319,7 @@ enum zen_ByteCode_t {
      * index
      *     An unsigned byte which is a valid index into the local variable
      *     array of the current frame. The local variable at the index should
-     *     be a {@code double}. This reference is pushed onto the operand
+     *     be a `double`. This reference is pushed onto the operand
      *     stack.
      *
      * [Operand Stack]
@@ -2308,7 +2330,7 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     The {@code double} value stored at the specified index. It is
+     *     The `double` value stored at the specified index. It is
      *     pushed onto the stack.
      */
     ZEN_BYTE_CODE_LOAD_D,
@@ -2527,10 +2549,10 @@ enum zen_ByteCode_t {
     ZEN_BYTE_CODE_LOAD_L3,
 
     /**
-     * Load a {@code float} value from a local variable.
+     * Load a `float` value from a local variable.
      *
      * Here, 0 should be a valid index into the local variable array. The local
-     * variable at this index should be a {@code float} value. This reference
+     * variable at this index should be a `float` value. This reference
      * is pushed onto the operand stack.
      *
      * [Format]
@@ -2544,16 +2566,16 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     The {@code float} value at the specified index in the local
+     *     The `float` value at the specified index in the local
      *     variable array. It is pushed onto the operand stack.
      */
     ZEN_BYTE_CODE_LOAD_F0,
 
     /**
-     * Load a {@code float} value from a local variable.
+     * Load a `float` value from a local variable.
      *
      * Here, 1 should be a valid index into the local variable array. The local
-     * variable at this index should be a {@code float} value. This reference
+     * variable at this index should be a `float` value. This reference
      * is pushed onto the operand stack.
      *
      * [Format]
@@ -2567,16 +2589,16 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     The {@code float} value at the specified index in the local
+     *     The `float` value at the specified index in the local
      *     variable array. It is pushed onto the operand stack.
      */
     ZEN_BYTE_CODE_LOAD_F1,
 
     /**
-     * Load a {@code float} value from a local variable.
+     * Load a `float` value from a local variable.
      *
      * Here, 2 should be a valid index into the local variable array. The local
-     * variable at this index should be a {@code float} value. This reference
+     * variable at this index should be a `float` value. This reference
      * is pushed onto the operand stack.
      *
      * [Format]
@@ -2590,16 +2612,16 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     The {@code float} value at the specified index in the local
+     *     The `float` value at the specified index in the local
      *     variable array. It is pushed onto the operand stack.
      */
     ZEN_BYTE_CODE_LOAD_F2,
 
     /**
-     * Load a {@code float} value from a local variable.
+     * Load a `float` value from a local variable.
      *
      * Here, 3 should be a valid index into the local variable array. The local
-     * variable at this index should be a {@code float} value. This reference
+     * variable at this index should be a `float` value. This reference
      * is pushed onto the operand stack.
      *
      * [Format]
@@ -2613,16 +2635,16 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     The {@code float} value at the specified index in the local
+     *     The `float` value at the specified index in the local
      *     variable array. It is pushed onto the operand stack.
      */
     ZEN_BYTE_CODE_LOAD_F3,
 
     /**
-     * Load a {@code double} value from a local variable.
+     * Load a `double` value from a local variable.
      *
      * Here, 0 should be a valid index into the local variable array. The local
-     * variable at this index should be a {@code double} value. This reference
+     * variable at this index should be a `double` value. This reference
      * is pushed onto the operand stack.
      *
      * [Format]
@@ -2636,16 +2658,16 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     The {@code double} value at the specified index in the local
+     *     The `double` value at the specified index in the local
      *     variable array. It is pushed onto the operand stack.
      */
     ZEN_BYTE_CODE_LOAD_D0,
 
     /**
-     * Load a {@code double} value from a local variable.
+     * Load a `double` value from a local variable.
      *
      * Here, 1 should be a valid index into the local variable array. The local
-     * variable at this index should be a {@code double} value. This reference
+     * variable at this index should be a `double` value. This reference
      * is pushed onto the operand stack.
      *
      * [Format]
@@ -2659,16 +2681,16 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     The {@code double} value at the specified index in the local
+     *     The `double` value at the specified index in the local
      *     variable array. It is pushed onto the operand stack.
      */
     ZEN_BYTE_CODE_LOAD_D1,
 
     /**
-     * Load a {@code double} value from a local variable.
+     * Load a `double` value from a local variable.
      *
      * Here, 2 should be a valid index into the local variable array. The local
-     * variable at this index should be a {@code double} value. This reference
+     * variable at this index should be a `double` value. This reference
      * is pushed onto the operand stack.
      *
      * [Format]
@@ -2682,16 +2704,16 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     The {@code double} value at the specified index in the local
+     *     The `double` value at the specified index in the local
      *     variable array. It is pushed onto the operand stack.
      */
     ZEN_BYTE_CODE_LOAD_D2,
 
     /**
-     * Load a {@code double} value from a local variable.
+     * Load a `double` value from a local variable.
      *
      * Here, 3 should be a valid index into the local variable array. The local
-     * variable at this index should be a {@code double} value. This reference
+     * variable at this index should be a `double` value. This reference
      * is pushed onto the operand stack.
      *
      * [Format]
@@ -2705,7 +2727,7 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     The {@code double} value at the specified index in the local
+     *     The `double` value at the specified index in the local
      *     variable array. It is pushed onto the operand stack.
      */
     ZEN_BYTE_CODE_LOAD_D3,
@@ -2973,7 +2995,7 @@ enum zen_ByteCode_t {
     ZEN_BYTE_CODE_LOAD_AL,
 
     /**
-     * Load a {@code float} value from an array.
+     * Load a `float` value from an array.
      *
      * The value at the specified index is pushed onto the operand stack.
      *
@@ -2988,14 +3010,14 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * array
-     *     A reference to an array whose component type is {@code float}.
+     *     A reference to an array whose component type is `float`.
      *     It is popped off the stack.
      * index
      *     A signed 32-bit integer which indicates the index of the
      *     component to retrieve. It is popped off the stack.
      * value
-     *    A 32-bit {@code float} value that is stored at the specified index
-     *    in the specified {@code float} array. It is pushed onto the stack.
+     *    A 32-bit `float` value that is stored at the specified index
+     *    in the specified `float` array. It is pushed onto the stack.
      *
      * [Exception]
      *
@@ -3012,7 +3034,7 @@ enum zen_ByteCode_t {
     ZEN_BYTE_CODE_LOAD_AF,
 
     /**
-     * Load a {@code double} value from an array.
+     * Load a `double` value from an array.
      *
      * The value at the specified index is pushed onto the operand stack.
      *
@@ -3027,14 +3049,14 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * array
-     *     A reference to an array whose component type is {@code double}.
+     *     A reference to an array whose component type is `double`.
      *     It is popped off the stack.
      * index
      *     A signed 32-bit integer which indicates the index of the
      *     component to retrieve. It is popped off the stack.
      * value
-     *    A 64-bit {@code double} value that is stored at the specified index
-     *    in the specified {@code double} array. It is pushed onto the stack.
+     *    A 64-bit `double` value that is stored at the specified index
+     *    in the specified `double` array. It is pushed onto the stack.
      *
      * [Exception]
      *
@@ -3126,7 +3148,7 @@ enum zen_ByteCode_t {
      * is retrieved and pushed onto the operand stack.
      *
      * [Format]
-     * load_instance_field index0 index1
+     * load_static_field index0 index1
      *
      * [Operand Stack]
      * Before
@@ -3263,7 +3285,7 @@ enum zen_ByteCode_t {
     ZEN_BYTE_CODE_MODULO_L,
 
     /**
-     * Divide two {@code float} values to compute the remainder.
+     * Divide two `float` values to compute the remainder.
      *
      * It should be noted that the remainder operation is not in
      * accordance with the IEEE 754. Otherwise, the {@code remainder_f}
@@ -3301,18 +3323,18 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value1
-     *     A {@code float} value. It is popped off the operand stack.
+     *     A `float` value. It is popped off the operand stack.
      * value2
-     *     A {@code float} value. It is popped off the operand stack.
+     *     A `float` value. It is popped off the operand stack.
      * result
-     *     A {@code float} value which is the remainder of dividing
+     *     A `float` value which is the remainder of dividing
      *     `value1` and `value2`. It is pushed onto the
      *     stack.
      */
     ZEN_BYTE_CODE_MODULO_F,
 
     /**
-     * Divide two {@code double} values to compute the remainder.
+     * Divide two `double` values to compute the remainder.
      *
      * It should be noted that the remainder operation is not in
      * accordance with the IEEE 754. Otherwise, the {@code remainder_d}
@@ -3350,11 +3372,11 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value1
-     *     A {@code double} value. It is popped off the operand stack.
+     *     A `double` value. It is popped off the operand stack.
      * value2
-     *     A {@code double} value. It is popped off the operand stack.
+     *     A `double` value. It is popped off the operand stack.
      * result
-     *     A {@code double} value which is the remainder of dividing
+     *     A `double` value which is the remainder of dividing
      *     `value1` and `value2`. It is pushed onto the
      *     stack.
      */
@@ -3411,10 +3433,10 @@ enum zen_ByteCode_t {
     ZEN_BYTE_CODE_MULTIPLY_L,
 
     /**
-     * Multiply two {@code float} values.
+     * Multiply two `float` values.
      *
      * The following rules, in accordance with IEEE 754, should be observed
-     * when two {@code float} values are multiplied.
+     * when two `float` values are multiplied.
      *     - If either the first or the second operand is NaN, the result is
      *       always NaN.
      *     - The result is positive if both the operands have the same sign.
@@ -3428,9 +3450,9 @@ enum zen_ByteCode_t {
      *     - In all other cases, where neither operand is an infinity nor NaN
      *       is involved the multiplication is computed and rounded to the
      *       nearest representable value using IEEE 754 round to nearest mode.
-     *       If the magnitude is too large to represent as a {@code float},
+     *       If the magnitude is too large to represent as a `float`,
      *       the result is an infinity of an appropriate sign. If the magnitude
-     *       is too small to represent as a {@code float}, the result is a
+     *       is too small to represent as a `float`, the result is a
      *       zero of an appropriate sign.
      *
      * [Format]
@@ -3444,21 +3466,21 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value1
-     *     A {@code float} value. It is popped off the operand stack.
+     *     A `float` value. It is popped off the operand stack.
      * value2
-     *     A {@code float} value. It is popped off the operand stack.
+     *     A `float` value. It is popped off the operand stack.
      * result
-     *     A {@code float} value which is the quotient computed by the
+     *     A `float` value which is the quotient computed by the
      *     multiplication of `value1` and `value2`, represented
      *     as `value1 * value2`.
      */
     ZEN_BYTE_CODE_MULTIPLY_F,
 
     /**
-     * Multiply two {@code double} values.
+     * Multiply two `double` values.
      *
      * The following rules, in accordance with IEEE 754, should be observed
-     * when two {@code float} values are multiplied.
+     * when two `float` values are multiplied.
      *     - If either the first or the second operand is NaN, the result is
      *       always NaN.
      *     - The result is positive if both the operands have the same sign.
@@ -3472,9 +3494,9 @@ enum zen_ByteCode_t {
      *     - In all other cases, where neither operand is an infinity nor NaN
      *       is involved the multiplication is computed and rounded to the
      *       nearest representable value using IEEE 754 round to nearest mode.
-     *       If the magnitude is too large to represent as a {@code double},
+     *       If the magnitude is too large to represent as a `double`,
      *       the result is an infinity of an appropriate sign. If the magnitude
-     *       is too small to represent as a {@code double}, the result is a
+     *       is too small to represent as a `double`, the result is a
      *       zero of an appropriate sign.
      *
      * [Format]
@@ -3488,11 +3510,11 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value1
-     *     A {@code double} value. It is popped off the operand stack.
+     *     A `double` value. It is popped off the operand stack.
      * value2
-     *     A {@code double} value. It is popped off the operand stack.
+     *     A `double` value. It is popped off the operand stack.
      * result
-     *     A {@code double} value which is the quotient computed by the
+     *     A `double` value which is the quotient computed by the
      *     multiplication of `value1` and `value2`, represented
      *     as `value1 * value2`.
      */
@@ -3577,7 +3599,7 @@ enum zen_ByteCode_t {
      *     specified 32-bit decimal value.
      */
     ZEN_BYTE_CODE_NEGATE_F,
-    
+
     /**
      * Negate a 64-bit decimal value.
      *
@@ -3635,7 +3657,7 @@ enum zen_ByteCode_t {
      *     A reference to the new instance of the specified class.
      */
     ZEN_BYTE_CODE_NEW,
-    
+
     /**
      * Create a new single dimension primitive array.
      *
@@ -3670,7 +3692,7 @@ enum zen_ByteCode_t {
      *     if it is less than zero.
      */
     ZEN_BYTE_CODE_NEW_ARRAY,
-    
+
     /**
      * Create a new single dimension reference array.
      *
@@ -3829,7 +3851,7 @@ enum zen_ByteCode_t {
      * instruction. Other values are pushed with `load_cpr` instruction.
      */
     ZEN_BYTE_CODE_PUSH_IN1,
-    
+
     /**
      * Push a 32-bit integer value of `0` onto the operand stack.
      *
@@ -3857,7 +3879,7 @@ enum zen_ByteCode_t {
      *     A 32-bit integer value of `0`. It is pushed onto the stack.
      */
     ZEN_BYTE_CODE_PUSH_I0,
-    
+
     /**
      * Push a 32-bit integer value of `1` onto the operand stack.
      *
@@ -3885,7 +3907,7 @@ enum zen_ByteCode_t {
      *     A 32-bit integer value of `1`. It is pushed onto the stack.
      */
     ZEN_BYTE_CODE_PUSH_I1,
-    
+
     /**
      * Push a 32-bit integer value of `2` onto the operand stack.
      *
@@ -3913,7 +3935,7 @@ enum zen_ByteCode_t {
      *     A 32-bit integer value of `2`. It is pushed onto the stack.
      */
     ZEN_BYTE_CODE_PUSH_I2,
-    
+
     /**
      * Push a 32-bit integer value of `3` onto the operand stack.
      *
@@ -3941,7 +3963,7 @@ enum zen_ByteCode_t {
      *     A 32-bit integer value of `3`. It is pushed onto the stack.
      */
     ZEN_BYTE_CODE_PUSH_I3,
-    
+
     /**
      * Push a 32-bit integer value of `4` onto the operand stack.
      *
@@ -3969,7 +3991,7 @@ enum zen_ByteCode_t {
      *     A 32-bit integer value of `4`. It is pushed onto the stack.
      */
     ZEN_BYTE_CODE_PUSH_I4,
-    
+
     /**
      * Push a 32-bit integer value of `5` onto the operand stack.
      *
@@ -3997,7 +4019,7 @@ enum zen_ByteCode_t {
      *     A 32-bit integer value of `5`. It is pushed onto the stack.
      */
     ZEN_BYTE_CODE_PUSH_I5,
-    
+
     /**
      * Push a 64-bit integer value of `0` onto the operand stack.
      *
@@ -4015,7 +4037,7 @@ enum zen_ByteCode_t {
      *     A 64-bit integer value of `0`. It is pushed onto the stack.
      */
     ZEN_BYTE_CODE_PUSH_L0,
-    
+
     /**
      * Push a 64-bit integer value of `1` onto the operand stack.
      *
@@ -4033,7 +4055,7 @@ enum zen_ByteCode_t {
      *     A 64-bit integer value of `1`. It is pushed onto the stack.
      */
     ZEN_BYTE_CODE_PUSH_L1,
-    
+
     /**
      * Push a 64-bit integer value of `2` onto the operand stack.
      *
@@ -4053,7 +4075,7 @@ enum zen_ByteCode_t {
     ZEN_BYTE_CODE_PUSH_L2,
 
     /**
-     * Push a {@code float} value of `0.0` onto the operand stack.
+     * Push a `float` value of `0.0` onto the operand stack.
      *
      * [Format]
      * push_f0
@@ -4066,12 +4088,12 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     A {@code float} value of `0.0`. It is pushed onto the stack.
+     *     A `float` value of `0.0`. It is pushed onto the stack.
      */
     ZEN_BYTE_CODE_PUSH_F0,
 
     /**
-     * Push a {@code float} value of {@code 1.0} onto the operand stack.
+     * Push a `float` value of {@code 1.0} onto the operand stack.
      *
      * [Format]
      * push_f1
@@ -4084,12 +4106,12 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     A {@code float} value of {@code 1.0}. It is pushed onto the stack.
+     *     A `float` value of {@code 1.0}. It is pushed onto the stack.
      */
     ZEN_BYTE_CODE_PUSH_F1,
 
     /**
-     * Push a {@code float} value of {@code 2.0} onto the operand stack.
+     * Push a `float` value of {@code 2.0} onto the operand stack.
      *
      * [Format]
      * push_f2
@@ -4102,12 +4124,12 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     A {@code float} value of {@code 2.0}. It is pushed onto the stack.
+     *     A `float` value of {@code 2.0}. It is pushed onto the stack.
      */
     ZEN_BYTE_CODE_PUSH_F2,
 
     /**
-     * Push a {@code double} value of `0.0` onto the operand stack.
+     * Push a `double` value of `0.0` onto the operand stack.
      *
      * [Format]
      * push_d0
@@ -4120,12 +4142,12 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     A {@code double} value of `0.0`. It is pushed onto the stack.
+     *     A `double` value of `0.0`. It is pushed onto the stack.
      */
     ZEN_BYTE_CODE_PUSH_D0,
 
     /**
-     * Push a {@code double} value of {@code 1.0} onto the operand stack.
+     * Push a `double` value of {@code 1.0} onto the operand stack.
      *
      * [Format]
      * push_d1
@@ -4138,12 +4160,12 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     A {@code double} value of {@code 1.0}. It is pushed onto the stack.
+     *     A `double` value of {@code 1.0}. It is pushed onto the stack.
      */
     ZEN_BYTE_CODE_PUSH_D1,
 
     /**
-     * Push a {@code double} value of {@code 2.0} onto the operand stack.
+     * Push a `double` value of {@code 2.0} onto the operand stack.
      *
      * [Format]
      * push_d2
@@ -4156,7 +4178,7 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     A {@code double} value of {@code 2.0}. It is pushed onto the stack.
+     *     A `double` value of {@code 2.0}. It is pushed onto the stack.
      */
     ZEN_BYTE_CODE_PUSH_D2,
 
@@ -4210,13 +4232,122 @@ enum zen_ByteCode_t {
 
     /* Return */
 
+    /**
+     * Execution of this instruction results in termination of the currently
+     * executing function. The control is returned to the invoker function.
+     *
+     * The instruction is completely unaware of locks. In other words, any
+     * locks acquired within the function should be released before the
+     * execution of this instruction.
+     *
+     * All values, other than the top most value, on the operand stack are
+     * discarded. Whereas, the top most value is popped off the operand stack
+     * of the current frame and pushed onto the operand stack of the invoker
+     * frame.
+     *
+     * [Format]
+     * return
+     */
     ZEN_BYTE_CODE_RETURN,
+
+    /**
+     * Return an `integer` value.
+     *
+     * Execution of this instruction results in termination of the currently
+     * executing function. The control is returned to the invoker function.
+     *
+     * The instruction is completely unaware of locks. In other words, any
+     * locks acquired within the function should be released before the
+     * execution of this instruction.
+     *
+     * All values, other than the top most value, on the operand stack are
+     * discarded. Whereas, the top most value is popped off the operand stack
+     * of the current frame and pushed onto the operand stack of the invoker
+     * frame.
+     *
+     * [Format]
+     * return_i
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     [invalid]
+     *
+     * [Operands]
+     * value
+     *     An `integer` value. This value is popped off the operand stack
+     *     of the current frame and pushed onto the operand stack of the
+     *     invoker frame.
+     */
     ZEN_BYTE_CODE_RETURN_I,
+
+    /**
+     * Return a `long` value.
+     *
+     * Execution of this instruction results in termination of the currently
+     * executing function. The control is returned to the invoker function.
+     *
+     * The instruction is completely unaware of locks. In other words, any
+     * locks acquired within the function should be released before the
+     * execution of this instruction.
+     *
+     * All values, other than the top most value, on the operand stack are
+     * discarded. Whereas, the top most value is popped off the operand stack
+     * of the current frame and pushed onto the operand stack of the invoker
+     * frame.
+     *
+     * [Format]
+     * return_l
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     [invalid]
+     *
+     * [Operands]
+     * value
+     *     An `long` value. This value is popped off the operand stack
+     *     of the current frame and pushed onto the operand stack of the
+     *     invoker frame.
+     */
     ZEN_BYTE_CODE_RETURN_L,
+
+    /**
+     * Return a `float` value.
+     *
+     * Execution of this instruction results in termination of the currently
+     * executing function. The control is returned to the invoker function.
+     *
+     * The instruction is completely unaware of locks. In other words, any
+     * locks acquired within the function should be released before the
+     * execution of this instruction.
+     *
+     * All values, other than the top most value, on the operand stack are
+     * discarded. Whereas, the top most value is popped off the operand stack
+     * of the current frame and pushed onto the operand stack of the invoker
+     * frame.
+     *
+     * [Format]
+     * return_f
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     [invalid]
+     *
+     * [Operands]
+     * value
+     *     An `float` value. This value is popped off the operand stack
+     *     of the current frame and pushed onto the operand stack of the
+     *     invoker frame.
+     */
     ZEN_BYTE_CODE_RETURN_F,
 
     /**
-     * Return a {@code double} value.
+     * Return a `double` value.
      *
      * Execution of this instruction results in termination of the currently
      * executing function. The control is returned to the invoker function.
@@ -4241,7 +4372,7 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     A {@code double} value. This value is popped off the operand stack
+     *     A `double` value. This value is popped off the operand stack
      *     of the current frame and pushed onto the operand stack of the
      *     invoker frame.
      */
@@ -4279,34 +4410,359 @@ enum zen_ByteCode_t {
      */
     ZEN_BYTE_CODE_RETURN_A,
 
-    ZEN_BYTE_CODE_RETURN_FRAGMENT,
-
     /* RTTI */
 
     ZEN_BYTE_CODE_RTTI,
 
     /* Store */
 
+    /**
+     * Store a 32-bit integer value in a local variable.
+     *
+     * Further, a local variable can be accessed using a two-byte unsigned
+     * index using the wide mode of this instruction.
+     *
+     * [Format]
+     * store_i index
+     *
+     * [Arguments]
+     * index
+     *     An unsigned byte which should be valid index into the local
+     *     variable array of the current frame.
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * value
+     *     The 32-bit integer value which is assigned to the local variable.
+     *     It is popped off the operand stack.
+     */
     ZEN_BYTE_CODE_STORE_I,
+
+    /**
+     * Store a 32-bit integer value in a local variable.
+     *
+     * Here, `0` should be valid index into the local variable array of the
+     * current frame.
+     *
+     * [Format]
+     * store_i0
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * value
+     *     The 32-bit integer value which is assigned to the local variable.
+     *     It is popped off the operand stack.
+     */
     ZEN_BYTE_CODE_STORE_I0,
+
+    /**
+     * Store a 32-bit integer value in a local variable.
+     *
+     * Here, `1` should be valid index into the local variable array of the
+     * current frame.
+     *
+     * [Format]
+     * store_i0
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * value
+     *     The 32-bit integer value which is assigned to the local variable.
+     *     It is popped off the operand stack.
+     */
     ZEN_BYTE_CODE_STORE_I1,
+
+    /**
+     * Store a  32-bit integer value in a local variable.
+     *
+     * Here, `2` should be valid index into the local variable array of the
+     * current frame.
+     *
+     * [Format]
+     * store_i0
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * value
+     *     The 32-bit integer value which is assigned to the local variable.
+     *     It is popped off the operand stack.
+     */
     ZEN_BYTE_CODE_STORE_I2,
+
+    /**
+     * Store a 32-bit integer value in a local variable.
+     *
+     * Here, `3` should be valid index into the local variable array of the
+     * current frame.
+     *
+     * [Format]
+     * store_i0
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * value
+     *     The 32-bit integer value which is assigned to the local variable.
+     *     It is popped off the operand stack.
+     */
     ZEN_BYTE_CODE_STORE_I3,
 
+    /**
+     * Store a 64-bit integer value in a local variable.
+     *
+     * Further, a local variable can be accessed using a two-byte unsigned
+     * index using the wide mode of this instruction.
+     *
+     * [Format]
+     * store_l index
+     *
+     * [Arguments]
+     * index
+     *     An unsigned byte which should be valid index into the local
+     *     variable array of the current frame.
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * value
+     *     The 64-bit integer value which is assigned to the local variable.
+     *     It is popped off the operand stack.
+     */
     ZEN_BYTE_CODE_STORE_L,
+
+    /**
+     * Store a 64-bit integer value in a local variable.
+     *
+     * Here, `0` should be valid index into the local variable array of the
+     * current frame.
+     *
+     * [Format]
+     * store_l0
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * value
+     *     The 64-bit integer value which is assigned to the local variable.
+     *     It is popped off the operand stack.
+     */
     ZEN_BYTE_CODE_STORE_L0,
+
+    /**
+     * Store a 64-bit integer value in a local variable.
+     *
+     * Here, `1` should be valid index into the local variable array of the
+     * current frame.
+     *
+     * [Format]
+     * store_l1
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * value
+     *     The 64-bit integer value which is assigned to the local variable.
+     *     It is popped off the operand stack.
+     */
     ZEN_BYTE_CODE_STORE_L1,
+
+    /**
+     * Store a 64-bit integer value in a local variable.
+     *
+     * Here, `2` should be valid index into the local variable array of the
+     * current frame.
+     *
+     * [Format]
+     * store_l2
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * value
+     *     The 64-bit integer value which is assigned to the local variable.
+     *     It is popped off the operand stack.
+     */
     ZEN_BYTE_CODE_STORE_L2,
+
+    /**
+     * Store a 64-bit integer value in a local variable.
+     *
+     * Here, `3` should be valid index into the local variable array of the
+     * current frame.
+     *
+     * [Format]
+     * store_l3
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * value
+     *     The 64-bit integer value which is assigned to the local variable.
+     *     It is popped off the operand stack.
+     */
     ZEN_BYTE_CODE_STORE_L3,
 
+    /**
+     * Store a 32-bit decimal value in a local variable.
+     *
+     * Further, a local variable can be accessed using a two-byte unsigned
+     * index using the wide mode of this instruction.
+     *
+     * [Format]
+     * store_f index
+     *
+     * [Arguments]
+     * index
+     *     An unsigned byte which should be valid index into the local
+     *     variable array of the current frame.
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * value
+     *     The 32-bit decimal value which is assigned to the local variable.
+     *     It is popped off the operand stack.
+     */
     ZEN_BYTE_CODE_STORE_F,
+
+    /**
+     * Store a 32-bit decimal value in a local variable.
+     *
+     * Here, `0` should be valid index into the local variable array of the
+     * current frame.
+     *
+     * [Format]
+     * store_f0
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * value
+     *     The 32-bit decimal value which is assigned to the local variable.
+     *     It is popped off the operand stack.
+     */
     ZEN_BYTE_CODE_STORE_F0,
+
+    /**
+     * Store a 32-bit decimal value in a local variable.
+     *
+     * Here, `1` should be valid index into the local variable array of the
+     * current frame.
+     *
+     * [Format]
+     * store_f1
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * value
+     *     The 32-bit decimal value which is assigned to the local variable.
+     *     It is popped off the operand stack.
+     */
     ZEN_BYTE_CODE_STORE_F1,
+
+    /**
+     * Store a 32-bit decimal value in a local variable.
+     *
+     * Here, `2` should be valid index into the local variable array of the
+     * current frame.
+     *
+     * [Format]
+     * store_f2
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * value
+     *     The 32-bit decimal value which is assigned to the local variable.
+     *     It is popped off the operand stack.
+     */
     ZEN_BYTE_CODE_STORE_F2,
+
+    /**
+     * Store a 32-bit decimal value in a local variable.
+     *
+     * Here, `3` should be valid index into the local variable array of the
+     * current frame.
+     *
+     * [Format]
+     * store_f3
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * value
+     *     The 32-bit decimal value which is assigned to the local variable.
+     *     It is popped off the operand stack.
+     */
     ZEN_BYTE_CODE_STORE_F3,
 
     /**
-     * Store a {@code double} value into local variable.
+     * Store a `double` value into local variable.
      *
      * Further, a local variable can be accessed using a two-byte unsigned
      * index using the wide version of this instruction, {@code store_wd}.
@@ -4327,13 +4783,13 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     The {@code double} value which is assigned to the local variable.
+     *     The `double` value which is assigned to the local variable.
      *     It is popped off the operand stack.
      */
     ZEN_BYTE_CODE_STORE_D,
 
     /**
-     * Store a {@code double} value into local variable.
+     * Store a `double` value into local variable.
      *
      * Here, 0 should be valid index into the local variable array of the
      * current frame.
@@ -4349,13 +4805,13 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     The {@code double} value which is assigned to the local variable.
+     *     The `double` value which is assigned to the local variable.
      *     It is popped off the operand stack.
      */
     ZEN_BYTE_CODE_STORE_D0,
 
     /**
-     * Store a {@code double} value into local variable.
+     * Store a `double` value into local variable.
      *
      * Here, 1 should be valid index into the local variable array of the
      * current frame.
@@ -4371,13 +4827,13 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     The {@code double} value which is assigned to the local variable.
+     *     The `double` value which is assigned to the local variable.
      *     It is popped off the operand stack.
      */
     ZEN_BYTE_CODE_STORE_D1,
 
     /**
-     * Store a {@code double} value into local variable.
+     * Store a `double` value into local variable.
      *
      * Here, 2 should be valid index into the local variable array of the
      * current frame.
@@ -4393,13 +4849,13 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     The {@code double} value which is assigned to the local variable.
+     *     The `double` value which is assigned to the local variable.
      *     It is popped off the operand stack.
      */
     ZEN_BYTE_CODE_STORE_D2,
 
     /**
-     * Store a {@code double} value into local variable.
+     * Store a `double` value into local variable.
      *
      * Here, 3 should be valid index into the local variable array of the
      * current frame.
@@ -4415,7 +4871,7 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * value
-     *     The {@code double} value which is assigned to the local variable.
+     *     The `double` value which is assigned to the local variable.
      *     It is popped off the operand stack.
      */
     ZEN_BYTE_CODE_STORE_D3,
@@ -4531,6 +4987,41 @@ enum zen_ByteCode_t {
      */
     ZEN_BYTE_CODE_STORE_A3,
 
+    /* Store Array */
+
+    /**
+     * Store a 8-bit integer value in a `byte` array.
+     *
+     * [Format]
+     * store_ab
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., array, index, value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * array
+     *     A reference to an array whose component type is `byte`.
+     *     It is popped off the operand stack.
+     * index
+     *     A 32-bit signed integer index into the specified array. The value is
+     *     stored here. It is popped off the operand stack.
+     * value
+     *     A 32-bit integer value which represents the 8-bit value to store.
+     *
+     * [Exception]
+     * zen.core.NullPointerException
+     *     An instance of the {@code NullPointerException} class is thrown
+     *     if the specified array is `null`.
+     * zen.base.InvalidArrayIndexException
+     *     An instance of the {@code InvalidArrayIndexException} class is
+     *     thrown if the specified index is invalid. An array index is invalid
+     *     if one of the following is true:
+     *         - Index is negative
+     *         - Index is greater than or equal to the array size
+     */
     ZEN_BYTE_CODE_STORE_AB,
 
     /**
@@ -4571,12 +5062,113 @@ enum zen_ByteCode_t {
 
     // TODO: 16-bit or 8-bit characters?
 
+    /**
+     * Store a 16-bit integer value in a `short` array.
+     *
+     * [Format]
+     * store_as
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., array, index, value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * array
+     *     A reference to an array whose component type is `short`.
+     *     It is popped off the operand stack.
+     * index
+     *     A 32-bit signed integer index into the specified array. The value is
+     *     stored here. It is popped off the operand stack.
+     * value
+     *     A 32-bit integer value which represents the 16-bit value to store.
+     *
+     * [Exception]
+     * zen.core.NullPointerException
+     *     An instance of the {@code NullPointerException} class is thrown
+     *     if the specified array is `null`.
+     * zen.base.InvalidArrayIndexException
+     *     An instance of the {@code InvalidArrayIndexException} class is
+     *     thrown if the specified index is invalid. An array index is invalid
+     *     if one of the following is true:
+     *         - Index is negative
+     *         - Index is greater than or equal to the array size
+     */
     ZEN_BYTE_CODE_STORE_AS,
+
+    /**
+     * Store a 32-bit integer value in a `integer` array.
+     *
+     * [Format]
+     * store_ai
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., array, index, value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * array
+     *     A reference to an array whose component type is `integer`.
+     *     It is popped off the operand stack.
+     * index
+     *     A 32-bit signed integer index into the specified array. The value is
+     *     stored here. It is popped off the operand stack.
+     * value
+     *     A 32-bit integer value which represents the value to store.
+     *
+     * [Exception]
+     * zen.core.NullPointerException
+     *     An instance of the {@code NullPointerException} class is thrown
+     *     if the specified array is `null`.
+     * zen.base.InvalidArrayIndexException
+     *     An instance of the {@code InvalidArrayIndexException} class is
+     *     thrown if the specified index is invalid. An array index is invalid
+     *     if one of the following is true:
+     *         - Index is negative
+     *         - Index is greater than or equal to the array size
+     */
     ZEN_BYTE_CODE_STORE_AI,
+
+    /**
+     * Store a 64-bit integer value in a `long` array.
+     *
+     * [Format]
+     * store_al
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., array, index, value
+     * After
+     *     ...
+     *
+     * [Operands]
+     * array
+     *     A reference to an array whose component type is `long`.
+     *     It is popped off the operand stack.
+     * index
+     *     A 32-bit signed integer index into the specified array. The value is
+     *     stored here. It is popped off the operand stack.
+     * value
+     *     A 64-bit integer value which represents the value to store.
+     *
+     * [Exception]
+     * zen.core.NullPointerException
+     *     An instance of the {@code NullPointerException} class is thrown
+     *     if the specified array is `null`.
+     * zen.base.InvalidArrayIndexException
+     *     An instance of the {@code InvalidArrayIndexException} class is
+     *     thrown if the specified index is invalid. An array index is invalid
+     *     if one of the following is true:
+     *         - Index is negative
+     *         - Index is greater than or equal to the array size
+     */
     ZEN_BYTE_CODE_STORE_AL,
 
     /**
-     * Store a {@code float} value in a {@code float} array.
+     * Store a `float` value in a `float` array.
      *
      * [Format]
      * store_af
@@ -4589,13 +5181,13 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * array
-     *     A reference to an array whose component type is {@code float}.
+     *     A reference to an array whose component type is `float`.
      *     It is popped off the operand stack.
      * index
      *     A 32-bit signed integer index into the specified array. The value is
      *     stored here. It is popped off the operand stack.
      * value
-     *     A 32-bit {@code float} value which represents the {@code float}
+     *     A 32-bit `float` value which represents the `float`
      *     value to store.
      *
      * [Exception]
@@ -4612,7 +5204,7 @@ enum zen_ByteCode_t {
     ZEN_BYTE_CODE_STORE_AF,
 
     /**
-     * Store a {@code double} value in a {@code double} array.
+     * Store a `double` value in a `double` array.
      *
      * [Format]
      * store_ad
@@ -4625,13 +5217,13 @@ enum zen_ByteCode_t {
      *
      * [Operands]
      * array
-     *     A reference to an array whose component type is {@code double}.
+     *     A reference to an array whose component type is `double`.
      *     It is popped off the operand stack.
      * index
      *     A 32-bit signed integer index into the specified array. The value is
      *     stored here. It is popped off the operand stack.
      * value
-     *     A 64-bit {@code double} value which represents the {@code double}
+     *     A 64-bit `double` value which represents the `double`
      *     value to store.
      *
      * [Exception]
@@ -4675,11 +5267,84 @@ enum zen_ByteCode_t {
      *         -
      *
      * [Exception]
+     * zen.core.NullPointerException
+     *     An instance of the {@code NullPointerException} class is thrown
+     *     if the specified array is `null`.
+     * zen.base.InvalidArrayIndexException
+     *     An instance of the {@code InvalidArrayIndexException} class is
+     *     thrown if the specified index is invalid. An array index is invalid
+     *     if one of the following is true:
+     *         - Index is negative
+     *         - Index is greater than or equal to the array size
      */
     ZEN_BYTE_CODE_STORE_AA,
 
+    /* Store Field */
+
+    /**
+     * Store a value in an instance field.
+     *
+     * Pops the arguments from the operand stack. The value is stored in the
+     * instance field.
+     *
+     * [Format]
+     * store_instance_field index0 index1
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., instance_reference, value
+     * After
+     *     ...
+     *
+     * [Arguments]
+     * index0
+     *     An unsigned byte, along with `index1`, forms a valid index into the
+     *     constant pool where the entry is a `ConstantPoolField` instance.
+     * index1
+     *     Please refer the documentation for `index0` for more details.
+     *
+     * [Operands]
+     * instance_reference
+     *     A reference to an instance whose field is to be modified.
+     *     It is popped off the operand stack. The size is contingent on the
+     *     machine, which is transparent to the binary entity format. The
+     *     reference is popped off the operand stack.
+     * value
+     *     The value stored in the instance field.
+     *
+     * [Exception]
+     * zen.core.NullPointerException
+     *     An instance of the {@code NullPointerException} class is thrown
+     *     if the specified instance reference is `null`.
+     */
     ZEN_BYTE_CODE_STORE_INSTANCE_FIELD,
 
+    /**
+     * Store a value in a static field.
+     *
+     * Pops the argument from the stack. The value is stored in the static
+     * field.
+     *
+     * [Format]
+     * store_static_field index0 index1
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., value
+     * After
+     *     ...
+     *
+     * [Arguments]
+     * index0
+     *     An unsigned byte, along with `index1`, forms a valid index into the
+     *     constant pool where the entry is a `ConstantPoolField` instance.
+     * index1
+     *     Please refer the documentation for `index0` for more details.
+     *
+     * [Operands]
+     * value
+     *     The value stored in the static field.
+     */
     ZEN_BYTE_CODE_STORE_STATIC_FIELD,
 
     /* Subtract */
@@ -4887,12 +5552,15 @@ enum zen_ByteCode_t {
 
     /* Wide */
 
+    /**
+     * Extend the argument length of an instruction.
+     */
     ZEN_BYTE_CODE_WIDE,
 };
 
 typedef enum zen_ByteCode_t zen_ByteCode_t;
 
-#endif /* ZEN_VM_BYTE_CODE_H */
+#endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_BYTE_CODE_H */
 
 /*
  * [Instruction (or Mnemonic) Nomenclature]
