@@ -18,6 +18,11 @@
 struct zen_ConstantPoolString_t {
 
     /**
+     * The type of the constant pool entry.
+     */
+    uint8_t m_tag;
+
+    /**
      * A valid index into the constant pool. The entry at this index is an
      * UTF-8 element which represents the sequence of Unicode code points
      * contained in this string entry.

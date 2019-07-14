@@ -1,3 +1,4 @@
+
 // Saturday, April 28, 2018
 
 #ifndef ZEN_FEB_CONSTANT_POOL_UTF8_CONSTANT_POOL_H
@@ -13,6 +14,11 @@
  * Represents various strings referenced by the code.
  */
 struct zen_ConstantPoolUtf8_t {
+
+    /**
+     * The type of the constant pool entry.
+     */
+    uint8_t m_tag;
 
     /**
      * The number of bytes the {@code m_bytes} array occupies.

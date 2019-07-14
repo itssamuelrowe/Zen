@@ -21,18 +21,36 @@
 struct zen_ClassEntity_t {
 
     /**
+     * The tag byte which determines the type of this entity.
+     */
+    uint8_t m_type;
+
+    /**
+     * A mask of flags which denote various properties of this entity.
+     */
+    uint16_t m_flags;
+
+    /**
+     * A valid index into the constant pool table. The entry at this index
+     * should be a {@code ConstantPoolClass} which represents this entity.
+     */
+    uint16_t m_reference;
+
+    /**
      * The number of super-classes.
      */
     uint16_t m_superClassCount;
-    
+
     uint16_t* m_superClasses;
-    
+
+    zen_AttributeTable_t m_attributeTable;
+
     uint16_t m_fieldCount;
-    
+
     zen_Entity_t** m_fields;
-    
+
     uint16_t m_functionCount;
-    
+
     zen_Entity_t** m_functions;
 };
 

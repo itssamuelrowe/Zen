@@ -16,6 +16,12 @@
  * @since  zen 1.0
  */
 struct zen_ConstantPoolDouble_t {
+
+    /**
+     * The type of the constant pool entry.
+     */
+    uint8_t m_tag;
+
     uint32_t m_highBytes;
     uint32_t m_lowBytes;
 };

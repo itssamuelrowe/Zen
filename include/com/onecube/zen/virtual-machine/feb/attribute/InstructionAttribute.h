@@ -25,7 +25,7 @@
  */
 struct zen_InstructionAttribute_t {
     uint16_t m_maxStackSize;
-    uint16_t m_localCount;
+    uint16_t m_localVariableCount;
     uint32_t m_instructionCount;
     uint8_t* m_instructions;
     zen_ExceptionTable_t m_exceptionTable;

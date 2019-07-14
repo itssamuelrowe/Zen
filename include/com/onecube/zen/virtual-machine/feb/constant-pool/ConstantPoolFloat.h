@@ -18,6 +18,11 @@
 struct zen_ConstantPoolFloat_t {
 
     /**
+     * The type of the constant pool entry.
+     */
+    uint8_t m_tag;
+
+    /**
      * The value of the float constant. The bytes are stored in the
      * big-endian order.
      *
