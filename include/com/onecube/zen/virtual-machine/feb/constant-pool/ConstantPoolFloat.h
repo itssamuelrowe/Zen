@@ -1,7 +1,7 @@
 // Saturday, April 28, 2018
 
-#ifndef ZEN_FEB_CONSTANT_POOL_FLOAT_H
-#define ZEN_FEB_CONSTANT_POOL_FLOAT_H
+#ifndef ZEN_FEB_CONSTANT_POOL_FLOAT_CONSTANT_POOL_H
+#define ZEN_FEB_CONSTANT_POOL_FLOAT_CONSTANT_POOL_H
 
 #include <com/onecube/zen/Configuration.h>
 
@@ -39,4 +39,4 @@ typedef struct zen_ConstantPoolFloat_t zen_ConstantPoolFloat_t;
  */
 float zen_ConstantPoolFloat_getValue(zen_ConstantPoolFloat_t* constantPoolFloat);
 
-#endif /* ZEN_FEB_CONSTANT_POOL_FLOAT_H */
+#endif /* ZEN_FEB_CONSTANT_POOL_FLOAT_CONSTANT_POOL_H */

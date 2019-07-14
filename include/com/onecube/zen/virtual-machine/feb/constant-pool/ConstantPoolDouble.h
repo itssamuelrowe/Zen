@@ -1,7 +1,7 @@
 // Saturday, April 28, 2018
 
-#ifndef ZEN_FEB_CONSTANT_POOL_DOUBLE_H
-#define ZEN_FEB_CONSTANT_POOL_DOUBLE_H
+#ifndef ZEN_FEB_CONSTANT_POOL_DOUBLE_CONSTANT_POOL_H
+#define ZEN_FEB_CONSTANT_POOL_DOUBLE_CONSTANT_POOL_H
 
 #include <com/onecube/zen/Configuration.h>
 
@@ -22,4 +22,4 @@ struct zen_ConstantPoolDouble_t {
 
 typedef struct zen_ConstantPoolDouble_t zen_ConstantPoolDouble_t;
 
-#endif /* ZEN_FEB_CONSTANT_POOL_DOUBLE_H */
+#endif /* ZEN_FEB_CONSTANT_POOL_DOUBLE_CONSTANT_POOL_H */

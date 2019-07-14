@@ -111,7 +111,13 @@ enum zen_EntityFlag_t {
     ZEN_ENTITY_FLAG_VARIABLE_ARGUMENTS = (1 << 9),
 
     ZEN_ENTITY_FLAG_VOLATILE = (1 << 10),
+
     ZEN_ENTITY_FLAG_TRANSIENT = (1 << 11),
+
+    /**
+     * The entity is available without instantiating its enclosing class.
+     */
+    ZEN_ENTITY_FLAG_STATIC = (1 << 12)
 };
 
 typedef enum zen_EntityFlag_t zen_EntityFlag_t;

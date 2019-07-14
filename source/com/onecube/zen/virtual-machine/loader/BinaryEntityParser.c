@@ -75,7 +75,7 @@ zen_EntityFile_t* zen_BinaryEntityParser_parseEntityFile(zen_BinaryEntityParser_
 
                 zen_BinaryEntityParser_parseConstantPool(parser);
 
-                // zen_BinaryEntityParser_parseEntity(parser);
+                zen_BinaryEntityParser_parseEntity(parser);
 
                 /*
                 entityFile->m_magicNumber = magicNumber;
@@ -236,34 +236,10 @@ zen_Entity_t* zen_BinaryEntityParser_parseEntity(zen_BinaryEntityParser_t* parse
     zen_BinaryEntityParser_parseAttributeTable(parser);
 
     switch (type) {
-        case ZEN_ENTITY_TYPE_FUNCTION: {
-            zen_BinaryEntityParser_parseFunction(parser);
-
-            // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed function entity, with type %d.", type);
-
-            break;
-        }
-
-        case ZEN_ENTITY_TYPE_FIELD: {
-            zen_BinaryEntityParser_parseField(parser);
-
-            // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed field entity, with type %d.", type);
-
-            break;
-        }
-
         case ZEN_ENTITY_TYPE_CLASS: {
             zen_BinaryEntityParser_parseClass(parser);
 
             // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed class entity, with type %d.", type);
-
-            break;
-        }
-
-        case ZEN_ENTITY_TYPE_ENUMERATE: {
-            zen_BinaryEntityParser_parseEnumerate(parser);
-
-            // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed enumerate entity, with type %d.", type);
 
             break;
         }
@@ -468,13 +444,18 @@ zen_FieldEntity_t* zen_BinaryEntityParser_parseField(zen_BinaryEntityParser_t* p
 
     uint16_t nameIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
     uint16_t descriptorIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t flags = jtk_Tape_readUncheckedShort(parser->m_tape);
+    zen_BinaryEntityParser_parseAttributeTable(parser);
 
+    /*
     zen_FieldEntity_t* entity = (zen_FieldEntity_t*)zen_MemoryManager_allocateEx(parser->m_memoryManager,
         sizeof (zen_FieldEntity_t), ZEN_ALIGNMENT_CONSTRAINT_DEFAULT, ZEN_ALLOCATION_FLAG_MANUAL);
     entity->m_nameIndex = nameIndex;
     entity->m_descriptorIndex = descriptorIndex;
 
     return entity;
+    */
+    return NULL;
 }
 
 /* Parse Class */
@@ -483,33 +464,33 @@ zen_ClassEntity_t* zen_BinaryEntityParser_parseClass(zen_BinaryEntityParser_t* p
     jtk_Assert_assertObject(parser, "The specified binary entity parser is null.");
 
     uint16_t superClassCount = jtk_Tape_readUncheckedShort(parser->m_tape);
-    uint16_t* superClasses = (uint16_t*)zen_MemoryManager_allocateEx(parser->m_memoryManager,
+    uint16_t* superClasses = zen_Memory_allocate(uint16_t, superClassCount);/*(uint16_t*)zen_MemoryManager_allocate(parser->m_memoryManager,
         sizeof (uint16_t) * superClassCount, ZEN_ALIGNMENT_CONSTRAINT_DEFAULT,
-        ZEN_ALLOCATION_FLAG_MANUAL);
+        ZEN_ALLOCATION_FLAG_MANUAL);*/
     int32_t i;
     for (i = 0; i < superClassCount; i++) {
         superClasses[i] = jtk_Tape_readUncheckedShort(parser->m_tape);
     }
 
     uint16_t fieldCount = jtk_Tape_readUncheckedShort(parser->m_tape);
-    zen_Entity_t** fields = (zen_Entity_t**)zen_MemoryManager_allocateEx(parser->m_memoryManager,
+    /*zen_Entity_t** fields = /*(zen_Entity_t**)zen_MemoryManager_allocateEx(parser->m_memoryManager,
         sizeof (zen_Entity_t*) * fieldCount, ZEN_ALIGNMENT_CONSTRAINT_DEFAULT,
-        ZEN_ALLOCATION_FLAG_MANUAL);
+        ZEN_ALLOCATION_FLAG_MANUAL);*/
     int32_t j;
     for (j = 0; j < fieldCount; j++) {
-        fields[j] = zen_BinaryEntityParser_parseEntity(parser);
+        zen_BinaryEntityParser_parseField(parser);
     }
 
     uint16_t functionCount = jtk_Tape_readUncheckedShort(parser->m_tape);
-    zen_Entity_t** functions = (zen_Entity_t**)zen_MemoryManager_allocateEx(parser->m_memoryManager,
+    /*zen_Entity_t** functions = (zen_Entity_t**)zen_MemoryManager_allocateEx(parser->m_memoryManager,
         sizeof (zen_Entity_t*) * functionCount, ZEN_ALIGNMENT_CONSTRAINT_DEFAULT,
-        ZEN_ALLOCATION_FLAG_MANUAL);
+        ZEN_ALLOCATION_FLAG_MANUAL);*/
     int32_t k;
     for (k = 0; k < fieldCount; k++) {
-        functions[k] = zen_BinaryEntityParser_parseEntity(parser);
+        zen_BinaryEntityParser_parseFunction(parser);
     }
 
-    zen_ClassEntity_t* entity = (zen_ClassEntity_t*)zen_MemoryManager_allocateEx(parser->m_memoryManager,
+    /*zen_ClassEntity_t* entity = (zen_ClassEntity_t*)zen_MemoryManager_allocateEx(parser->m_memoryManager,
         sizeof (zen_ClassEntity_t), ZEN_ALIGNMENT_CONSTRAINT_DEFAULT, ZEN_ALLOCATION_FLAG_MANUAL);
     entity->m_superClassCount = superClassCount;
     entity->m_superClasses = superClasses;
@@ -518,7 +499,9 @@ zen_ClassEntity_t* zen_BinaryEntityParser_parseClass(zen_BinaryEntityParser_t* p
     entity->m_functionCount = functionCount;
     entity->m_functions = functions;
 
-    return entity;
+    return entity;*/
+    
+    return NULL;
 }
 
 /* Parse Enumerate */

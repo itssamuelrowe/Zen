@@ -1,7 +1,7 @@
 // Saturday, April 28, 2018
 
-#ifndef ZEN_FEB_CONSTANT_POOL_TAG_H
-#define ZEN_FEB_CONSTANT_POOL_TAG_H
+#ifndef ZEN_FEB_CONSTANT_POOL_TAG_CONSTANT_POOL_H
+#define ZEN_FEB_CONSTANT_POOL_TAG_CONSTANT_POOL_H
 
 #include <com/onecube/zen/Configuration.h>
 
@@ -29,4 +29,4 @@ enum zen_ConstantPoolTag_t {
 
 typedef enum zen_ConstantPoolTag_t zen_ConstantPoolTag_t;
 
-#endif /* ZEN_FEB_CONSTANT_POOL_TAG_H */
+#endif /* ZEN_FEB_CONSTANT_POOL_TAG_CONSTANT_POOL_H */

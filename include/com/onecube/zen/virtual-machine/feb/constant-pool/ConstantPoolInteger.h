@@ -1,7 +1,7 @@
 // Saturday, April 28, 2018
 
-#ifndef ZEN_FEB_CONSTANT_POOL_INTEGER_H
-#define ZEN_FEB_CONSTANT_POOL_INTEGER_H
+#ifndef ZEN_FEB_CONSTANT_POOL_INTEGER_CONSTANT_POOL_H
+#define ZEN_FEB_CONSTANT_POOL_INTEGER_CONSTANT_POOL_H
 
 #include <com/onecube/zen/Configuration.h>
 
@@ -36,4 +36,4 @@ typedef struct zen_ConstantPoolInteger_t zen_ConstantPoolInteger_t;
  */
 int32_t zen_ConstantPoolInteger_getValue(zen_ConstantPoolInteger_t* constantPoolInteger);
 
-#endif /* ZEN_FEB_CONSTANT_POOL_INTEGER_H */
+#endif /* ZEN_FEB_CONSTANT_POOL_INTEGER_CONSTANT_POOL_H */

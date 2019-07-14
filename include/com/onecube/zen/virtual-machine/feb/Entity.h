@@ -29,14 +29,14 @@ struct zen_Entity_t {
      */
     uint16_t m_reference;
 
-    zen_AttributeTable_t* m_attributeTable;
+    zen_AttributeTable_t m_attributeTable;
 
     /**
      * The body of this entity. Contingent on the tag byte, the length of the
      * body may vary. Please refer to the documentation of various entities
      * for further information.
      */
-    void* m_body;
+    // void* m_body;
 };
 
 typedef struct zen_Entity_t zen_Entity_t;

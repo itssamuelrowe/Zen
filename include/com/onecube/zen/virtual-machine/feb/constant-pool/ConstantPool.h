@@ -1,7 +1,7 @@
 // Saturday, April 28, 2018
 
-#ifndef ZEN_FEB_CONSTANT_POOL_H
-#define ZEN_FEB_CONSTANT_POOL_H
+#ifndef ZEN_FEB_CONSTANT_POOL_CONSTANT_POOL_H
+#define ZEN_FEB_CONSTANT_POOL_CONSTANT_POOL_H
 
 #include <com/onecube/zen/Configuration.h>
 
@@ -61,4 +61,4 @@ typedef struct zen_ConstantPool_t zen_ConstantPool_t;
 
 uint8_t* zen_ConstantPool_resolveUtf8(zen_ConstantPool_t* constantPool, uint16_t nameIndex);
 
-#endif /* ZEN_FEB_CONSTANT_POOL_H */
+#endif /* ZEN_FEB_CONSTANT_POOL_CONSTANT_POOL_H */
