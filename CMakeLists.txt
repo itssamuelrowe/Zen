@@ -120,6 +120,7 @@ set (
 
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/loader/BinaryEntityParser.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/loader/EntityLoader.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/loader/AttributeParseRules.c
     #${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/loader/BinaryEntityVerifier.c
 
     # Memory

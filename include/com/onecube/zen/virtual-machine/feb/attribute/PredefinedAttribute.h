@@ -12,7 +12,10 @@
 /* Primary */
 
 #define ZEN_PREDEFINED_ATTRIBUTE_CONSTANT_VALUE "vm/primary/ConstantValue"
-#define ZEN_PREDEFINED_ATTRIBUTE_CODE "vm/primary/Instruction"
+
+#define ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION "vm/primary/Instruction"
+#define ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION_SIZE 22
+
 #define ZEN_PREDEFINED_ATTRIBUTE_STACK_MAP_TABLE "vm/primary/StackMapTable"
 #define ZEN_PREDEFINED_ATTRIBUTE_EXCEPTION_LIST "vm/primary/ExceptionList"
 

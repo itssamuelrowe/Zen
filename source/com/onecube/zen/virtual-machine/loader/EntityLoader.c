@@ -24,7 +24,8 @@ zen_EntityLoader_t* zen_EntityLoader_new() {
     loader->m_flags = ZEN_ENTITY_LOADER_FLAG_PRIORITIZE_DIRECTORIES;
     loader->m_entities = jtk_HashMap_newEx(stringObjectAdapter, NULL,
         ZEN_ENTITY_LOADER_DEFAULT_ENTITIES_MAP_CAPCITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
-    // loader->m_parser = zen_BinaryEntityParser_new();
+    // loader->m_parser = zen_BinaryEntityParser_new(attributeParseRules, );
+    loader->m_attributeParseRules = zen_AttributeParseRules_new();
 
     return loader;
 }
@@ -42,6 +43,7 @@ zen_EntityLoader_t* zen_EntityLoader_newWithEntityDirectories(jtk_Iterator_t* en
 }
 
 void zen_Entity_delete(zen_Entity_t* entity) {
+    zen_AttributeParseRules_delete(entity->m_attributeParseRules);
     // TODO: ...
 }
 
@@ -266,7 +268,8 @@ zen_Entity_t* zen_EntityLoader_loadEntityFromHandle(zen_EntityLoader_t* loader,
 
         jtk_Array_t* input = jtk_InputStreamHelper_toArray(inputStream);
 
-        zen_BinaryEntityParser_t* parser = zen_BinaryEntityParser_new(NULL, input->m_values, input->m_size);
+        zen_BinaryEntityParser_t* parser = zen_BinaryEntityParser_new(
+            attributeParseRules, input->m_values, input->m_size);
         result = zen_BinaryEntityParser_parse(parser, inputStream);
 
         zen_BinaryEntityParser_delete(parser);

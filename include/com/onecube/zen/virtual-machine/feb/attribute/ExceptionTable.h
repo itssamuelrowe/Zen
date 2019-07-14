@@ -1,7 +1,7 @@
 // Saturday, September 22, 2018
 
-#ifndef COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_EXCEPTION_TABLE_H
-#define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_EXCEPTION_TABLE_H
+#ifndef COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ATTRIBUTE_EXCEPTION_TABLE_H
+#define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ATTRIBUTE_EXCEPTION_TABLE_H
 
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/virtual-machine/feb/ExceptionHandlerSite.h>
@@ -26,4 +26,4 @@ struct zen_ExceptionTable_t {
  */
 typedef struct zen_ExceptionTable_t zen_ExceptionTable_t;
 
-#endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_EXCEPTION_TABLE_H */
+#endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ATTRIBUTE_EXCEPTION_TABLE_H */

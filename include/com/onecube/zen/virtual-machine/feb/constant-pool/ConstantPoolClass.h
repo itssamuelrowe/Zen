@@ -16,6 +16,12 @@
  * @since  zen 1.0
  */
 struct zen_ConstantPoolClass_t {
+    
+    /**
+     * The type of the constant pool entry.
+     */
+    uint8_t m_tag;
+
     /**
      * A valid index into the constant pool. The entry at this index is an
      * UTF-8 entry which represents the encoded name of a class.

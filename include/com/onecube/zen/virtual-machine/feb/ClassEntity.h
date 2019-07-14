@@ -4,7 +4,8 @@
 #define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_CLASS_ENTITY_H
 
 #include <com/onecube/zen/Configuration.h>
-#include <com/onecube/zen/virtual-machine/feb/Entity.h>
+#include <com/onecube/zen/virtual-machine/feb/FunctionEntity.h>
+#include <com/onecube/zen/virtual-machine/feb/FieldEntity.h>
 
 /*******************************************************************************
  * ClassEntity                                                                 *
@@ -39,19 +40,19 @@ struct zen_ClassEntity_t {
     /**
      * The number of super-classes.
      */
-    uint16_t m_superClassCount;
+    uint16_t m_superclassCount;
 
-    uint16_t* m_superClasses;
+    uint16_t* m_superclasses;
 
     zen_AttributeTable_t m_attributeTable;
 
     uint16_t m_fieldCount;
 
-    zen_Entity_t** m_fields;
+    zen_FieldEntity_t** m_fields;
 
     uint16_t m_functionCount;
 
-    zen_Entity_t** m_functions;
+    zen_FunctionEntity_t** m_functions;
 };
 
 /**

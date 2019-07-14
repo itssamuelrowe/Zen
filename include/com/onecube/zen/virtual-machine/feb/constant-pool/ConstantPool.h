@@ -4,6 +4,7 @@
 #define ZEN_FEB_CONSTANT_POOL_CONSTANT_POOL_H
 
 #include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolEntry.h>
 
 /*******************************************************************************
  * ConstantPool                                                                *
@@ -54,7 +55,7 @@ struct zen_ConstantPool_t {
     /**
      * The various entries stored in the constant pool table.
      */
-    void** m_entries;
+    zen_ConstantPoolEntry_t** m_entries;
 };
 
 typedef struct zen_ConstantPool_t zen_ConstantPool_t;

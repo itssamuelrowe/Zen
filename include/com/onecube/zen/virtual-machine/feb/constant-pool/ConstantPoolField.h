@@ -18,6 +18,11 @@
 struct zen_ConstantPoolField_t {
 
     /**
+     * The type of the constant pool entry.
+     */
+    uint8_t m_tag;
+
+    /**
      * A valid index into the constant pool table. The entry at this index is
      * a {@code zen_ConstantPoolClass_t} entry which encloses this field.
      */

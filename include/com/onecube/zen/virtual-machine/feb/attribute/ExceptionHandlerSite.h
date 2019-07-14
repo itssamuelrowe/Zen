@@ -1,7 +1,7 @@
 // Saturday, September 22, 2018
 
-#ifndef COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_EXCEPTION_HANDLER_SITE_H
-#define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_EXCEPTION_HANDLER_SITE_H
+#ifndef COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ATTRIBUTE_EXCEPTION_HANDLER_SITE_H
+#define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ATTRIBUTE_EXCEPTION_HANDLER_SITE_H
 
 #include <com/onecube/zen/Configuration.h>
 
@@ -28,7 +28,7 @@ struct zen_ExceptionHandlerSite_t {
      * The instructions array is located in the code attribute.
      */
     uint16_t m_startIndex;
-    
+
     /**
      * A valid index into the instructions array, which indicates the stopping
      * index of the range where the exception handler is active.
@@ -37,14 +37,14 @@ struct zen_ExceptionHandlerSite_t {
      * The instructions array is located in the code attribute.
      */
     uint16_t m_stopIndex;
-    
+
     /**
      * A valid index into the instructions array. It indicates the starting
      * index of the implementation of the exception handler.
      */
     uint16_t m_handlerIndex;
-    
-    uint16_t m_exceptionClass;
+
+    uint16_t m_exceptionClassIndex;
 };
 
 /**
@@ -52,4 +52,4 @@ struct zen_ExceptionHandlerSite_t {
  */
 typedef struct zen_ExceptionHandlerSite_t zen_ExceptionHandlerSite_t;
 
-#endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_EXCEPTION_HANDLER_SITE_H */
+#endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ATTRIBUTE_EXCEPTION_HANDLER_SITE_H

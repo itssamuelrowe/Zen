@@ -118,7 +118,6 @@ zen_Instruction_t zen_Instruction_instructions[] = {
     { "invoke_virtual", ZEN_BYTE_CODE_INVOKE_VIRTUAL, 1, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "invoke_dynamic", ZEN_BYTE_CODE_INVOKE_DYNAMIC, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "invoke_static", ZEN_BYTE_CODE_INVOKE_STATIC, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "invoke_fragment", ZEN_BYTE_CODE_INVOKE_FRAGMENT, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
 
     /* Jump */
 
@@ -225,7 +224,6 @@ zen_Instruction_t zen_Instruction_instructions[] = {
     { "return_f", ZEN_BYTE_CODE_RETURN_F, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "return_d", ZEN_BYTE_CODE_RETURN_D, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "return_a", ZEN_BYTE_CODE_RETURN_A, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "return_fragment", ZEN_BYTE_CODE_RETURN_FRAGMENT, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
 
     /* RTTI */
 
