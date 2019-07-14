@@ -31,10 +31,10 @@ zen_Instruction_t zen_Instruction_instructions[] = {
 
     /* Bitwise Shift */
 
-    { "shift_left_si", ZEN_BYTE_CODE_SHIFT_LEFT_I, 0, 2, 1 },
-    { "shift_left_sl", ZEN_BYTE_CODE_SHIFT_LEFT_L, 0, 2, 1 },
-    { "shift_right_si", ZEN_BYTE_CODE_SHIFT_RIGHT_I, 0, 2, 1 },
-    { "shift_right_sl", ZEN_BYTE_CODE_SHIFT_RIGHT_L, 0, 2, 1 },
+    { "shift_left_i", ZEN_BYTE_CODE_SHIFT_LEFT_I, 0, 2, 1 },
+    { "shift_left_l", ZEN_BYTE_CODE_SHIFT_LEFT_L, 0, 2, 1 },
+    { "shift_right_i", ZEN_BYTE_CODE_SHIFT_RIGHT_I, 0, 2, 1 },
+    { "shift_right_l", ZEN_BYTE_CODE_SHIFT_RIGHT_L, 0, 2, 1 },
     { "shift_right_ui", ZEN_BYTE_CODE_SHIFT_RIGHT_UI, 0, 2, 1 },
     { "shift_right_ul", ZEN_BYTE_CODE_SHIFT_RIGHT_UL, 0, 2, 1 },
 
@@ -45,9 +45,13 @@ zen_Instruction_t zen_Instruction_instructions[] = {
 
     /* Cast */
 
+    { "cast_itb", ZEN_BYTE_CODE_CAST_ITL, 0, 1, 1 },
+    { "cast_its", ZEN_BYTE_CODE_CAST_ITL, 0, 1, 1 },
     { "cast_itl", ZEN_BYTE_CODE_CAST_ITL, 0, 1, 1 },
     { "cast_itf", ZEN_BYTE_CODE_CAST_ITF, 0, 1, 1 },
     { "cast_itd", ZEN_BYTE_CODE_CAST_ITD, 0, 1, 1 },
+    { "cast_ltb", ZEN_BYTE_CODE_CAST_LTI, 0, 1, 1 },
+    { "cast_lts", ZEN_BYTE_CODE_CAST_LTI, 0, 1, 1 },
     { "cast_lti", ZEN_BYTE_CODE_CAST_LTI, 0, 1, 1 },
     { "cast_ltf", ZEN_BYTE_CODE_CAST_LTF, 0, 1, 1 },
     { "cast_ltd", ZEN_BYTE_CODE_CAST_LTD, 0, 1, 1 },
@@ -57,9 +61,7 @@ zen_Instruction_t zen_Instruction_instructions[] = {
     { "cast_dti", ZEN_BYTE_CODE_CAST_DTI, 0, 1, 1 },
     { "cast_dtl", ZEN_BYTE_CODE_CAST_DTL, 0, 1, 1 },
     { "cast_dtf", ZEN_BYTE_CODE_CAST_DTF, 0, 1, 1 },
-    { "cast_itb", ZEN_BYTE_CODE_CAST_ITB, 0, 1, 1 },
     { "cast_itc", ZEN_BYTE_CODE_CAST_ITC, 0, 1, 1 },
-    { "cast_its", ZEN_BYTE_CODE_CAST_ITS, 0, 1, 1 },
 
     /* Check Cast */
 
@@ -130,10 +132,6 @@ zen_Instruction_t zen_Instruction_instructions[] = {
     { "load_f", ZEN_BYTE_CODE_LOAD_F, 1, 0, 1 },
     { "load_d", ZEN_BYTE_CODE_LOAD_D, 1, 0, 1 },
     { "load_a", ZEN_BYTE_CODE_LOAD_A, 1, 0, 1 },
-    { "load_a0", ZEN_BYTE_CODE_LOAD_A0, 1, 0, 1 },
-    { "load_a1", ZEN_BYTE_CODE_LOAD_A1, 1, 0, 1 },
-    { "load_a2", ZEN_BYTE_CODE_LOAD_A2, 1, 0, 1 },
-    { "load_a3", ZEN_BYTE_CODE_LOAD_A3, 1, 0, 1 },
     { "load_i0", ZEN_BYTE_CODE_LOAD_I0, 1, 0, 1 },
     { "load_i1", ZEN_BYTE_CODE_LOAD_I1, 1, 0, 1 },
     { "load_i2", ZEN_BYTE_CODE_LOAD_I2, 1, 0, 1 },
@@ -150,6 +148,10 @@ zen_Instruction_t zen_Instruction_instructions[] = {
     { "load_d1", ZEN_BYTE_CODE_LOAD_D1, 1, 0, 1 },
     { "load_d2", ZEN_BYTE_CODE_LOAD_D2, 1, 0, 1 },
     { "load_d3", ZEN_BYTE_CODE_LOAD_D3, 1, 0, 1 },
+    { "load_a0", ZEN_BYTE_CODE_LOAD_A0, 1, 0, 1 },
+    { "load_a1", ZEN_BYTE_CODE_LOAD_A1, 1, 0, 1 },
+    { "load_a2", ZEN_BYTE_CODE_LOAD_A2, 1, 0, 1 },
+    { "load_a3", ZEN_BYTE_CODE_LOAD_A3, 1, 0, 1 },
     { "load_ab", ZEN_BYTE_CODE_LOAD_AB, 0, 2, 1 },
     { "load_ac", ZEN_BYTE_CODE_LOAD_AC, 0, 2, 1 },
     { "load_as", ZEN_BYTE_CODE_LOAD_AS, 0, 2, 1 },
@@ -162,6 +164,13 @@ zen_Instruction_t zen_Instruction_instructions[] = {
     { "load_static_field", ZEN_BYTE_CODE_LOAD_STATIC_FIELD, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "load_cpr", ZEN_BYTE_CODE_LOAD_CPR, 1, 0, 1 },
     { "load_array_size", ZEN_BYTE_CODE_LOAD_ARRAY_SIZE, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+
+    /* Modulo */
+
+    { "modulo_i", ZEN_BYTE_CODE_MODULO_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "modulo_l", ZEN_BYTE_CODE_MODULO_L, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "modulo_f", ZEN_BYTE_CODE_MODULO_F, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "modulo_d", ZEN_BYTE_CODE_MODULO_D, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
 
     /* Multiply */
 
@@ -181,8 +190,8 @@ zen_Instruction_t zen_Instruction_instructions[] = {
 
     { "new", ZEN_BYTE_CODE_NEW, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "new_array", ZEN_BYTE_CODE_NEW_ARRAY, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "new_array_n", ZEN_BYTE_CODE_NEW_ARRAY_N, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "new_array_a", ZEN_BYTE_CODE_NEW_ARRAY_A, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "new_array_an", ZEN_BYTE_CODE_NEW_ARRAY_AN, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
 
     /* Pop */
 
@@ -208,13 +217,6 @@ zen_Instruction_t zen_Instruction_instructions[] = {
     { "push_d1", ZEN_BYTE_CODE_PUSH_D1, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "push_b", ZEN_BYTE_CODE_PUSH_B, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "push_s", ZEN_BYTE_CODE_PUSH_S, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-
-    /* Modulo */
-
-    { "modulo_i", ZEN_BYTE_CODE_MODULO_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "modulo_l", ZEN_BYTE_CODE_MODULO_L, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "modulo_f", ZEN_BYTE_CODE_MODULO_F, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "modulo_d", ZEN_BYTE_CODE_MODULO_D, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
 
     /* Return */
 
