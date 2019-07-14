@@ -1,10 +1,10 @@
 // Friday, September 21, 2018
 
-#ifndef COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ATTRIBUTE_TABLE_H
-#define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ATTRIBUTE_TABLE_H
+#ifndef COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ATTRIBUTE_ATTRIBUTE_TABLE_H
+#define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ATTRIBUTE_ATTRIBUTE_TABLE_H
 
 #include <com/onecube/zen/Configuration.h>
-#include <com/onecube/zen/virtual-machine/feb/Attribute.h>
+#include <com/onecube/zen/virtual-machine/feb/attribute/Attribute.h>
 
 /*******************************************************************************
  * AttributeTable                                                              *
@@ -34,4 +34,4 @@ struct zen_AttributeTable_t {
  */
 typedef struct zen_AttributeTable_t zen_AttributeTable_t;
 
-#endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ATTRIBUTE_TABLE_H */
+#endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ATTRIBUTE_ATTRIBUTE_TABLE_H */

@@ -42,11 +42,6 @@ zen_EntityLoader_t* zen_EntityLoader_newWithEntityDirectories(jtk_Iterator_t* en
     return loader;
 }
 
-void zen_Entity_delete(zen_Entity_t* entity) {
-    zen_AttributeParseRules_delete(entity->m_attributeParseRules);
-    // TODO: ...
-}
-
 void zen_EntityLoader_delete(zen_EntityLoader_t* loader) {
     jtk_Assert_assertObject(loader, "The specified entity loader is null.");
 
@@ -67,9 +62,11 @@ void zen_EntityLoader_delete(zen_EntityLoader_t* loader) {
         jtk_String_delete(descriptor);
 
 #warning "Should the entity be destroyed this way?"
-        zen_Entity_t* entity = (zen_Entity_t*)jtk_HashMapEntry_getValue(entry->m_value);
-        zen_Entity_delete(entity);
+        zen_EntityFile_t* entityFile = (zen_EntityFile_t*)jtk_HashMapEntry_getValue(entry->m_value);
+        // zen_EntityFile_delete(entityFile);
     }
+
+    zen_AttributeParseRules_delete(loader->m_attributeParseRules);
 
     jtk_Memory_deallocate(loader);
 }
@@ -116,11 +113,11 @@ bool zen_EntityLoader_addDirectory_s(zen_EntityLoader_t* loader, jtk_String_t* d
 
 // Find Entity
 
-zen_Entity_t* zen_EntityLoader_findEntity(zen_EntityLoader_t* loader, const uint8_t* descriptor) {
+zen_EntityFile_t* zen_EntityLoader_findEntity(zen_EntityLoader_t* loader, const uint8_t* descriptor) {
     jtk_Assert_assertObject(loader, "The specified entity loader is null.");
     jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
 
-    zen_Entity_t* result = (zen_Entity_t*)jtk_HashMap_getValue(loader->m_entities, descriptor);
+    zen_EntityFile_t* result = (zen_EntityFile_t*)jtk_HashMap_getValue(loader->m_entities, descriptor);
     if (result == NULL) {
         result = zen_EntityLoader_loadEntity(loader, descriptor);
     }
@@ -130,13 +127,13 @@ zen_Entity_t* zen_EntityLoader_findEntity(zen_EntityLoader_t* loader, const uint
 
 // Get Entity
 
-zen_Entity_t* zen_EntityLoader_getEntity(zen_EntityLoader_t* loader,
+zen_EntityFile_t* zen_EntityLoader_getEntity(zen_EntityLoader_t* loader,
     const uint8_t* descriptor) {
     jtk_Assert_assertObject(loader, "The specified entity loader is null.");
     jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
 
     jtk_String_t* string = jtk_String_new(descriptor);
-    zen_Entity_t* entity = (zen_Entity_t*)jtk_HashMap_getValue(loader->m_entities, string);
+    zen_EntityFile_t* entity = (zen_EntityFile_t*)jtk_HashMap_getValue(loader->m_entities, string);
     jtk_String_delete(string);
     
     return entity;
@@ -144,12 +141,12 @@ zen_Entity_t* zen_EntityLoader_getEntity(zen_EntityLoader_t* loader,
 
 // Load Entity
 
-zen_Entity_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader,
+zen_EntityFile_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader,
     const uint8_t* descriptor) {
     jtk_Assert_assertObject(loader, "The specified entity loader is null.");
     jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
 
-    zen_Entity_t* result = NULL;
+    zen_EntityFile_t* result = NULL;
 
     /* Question. Why is joining two strings so complicated?! */
     // const uint8_t* strings[] = { descriptor, ".feb" };
@@ -254,12 +251,12 @@ jtk_Array_t* jtk_InputStreamHelper_toArray(jtk_InputStream_t* stream) {
     return array;
 }
 
-zen_Entity_t* zen_EntityLoader_loadEntityFromHandle(zen_EntityLoader_t* loader,
+zen_EntityFile_t* zen_EntityLoader_loadEntityFromHandle(zen_EntityLoader_t* loader,
     jtk_PathHandle_t* handle) {
     jtk_Assert_assertObject(loader, "The specified entity loader is null.");
     jtk_Assert_assertObject(handle, "The specified entity path handle is null.");
 
-    zen_Entity_t* result = NULL;
+    zen_EntityFile_t* result = NULL;
     jtk_FileInputStream_t* fileInputStream = jtk_FileInputStream_newFromHandle(handle);
     if (fileInputStream != NULL) {
         jtk_BufferedInputStream_t* bufferedInputStream = jtk_BufferedInputStream_newEx(
@@ -269,8 +266,9 @@ zen_Entity_t* zen_EntityLoader_loadEntityFromHandle(zen_EntityLoader_t* loader,
         jtk_Array_t* input = jtk_InputStreamHelper_toArray(inputStream);
 
         zen_BinaryEntityParser_t* parser = zen_BinaryEntityParser_new(
-            attributeParseRules, input->m_values, input->m_size);
-        result = zen_BinaryEntityParser_parse(parser, inputStream);
+            loader->m_attributeParseRules, input->m_values, input->m_size);
+        result = zen_BinaryEntityParser_parse(parser, 
+inputStream);
 
         zen_BinaryEntityParser_delete(parser);
         jtk_Array_delete(input);

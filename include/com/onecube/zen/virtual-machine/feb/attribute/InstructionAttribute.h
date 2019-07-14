@@ -4,8 +4,8 @@
 #define ZEN_FEB_INSTRUCTION_ATTRIBUTE_H
 
 #include <com/onecube/zen/Configuration.h>
-#include <com/onecube/zen/virtual-machine/feb/ExceptionTable.h>
-#include <com/onecube/zen/virtual-machine/feb/AttributeTable.h>
+#include <com/onecube/zen/virtual-machine/feb/attribute/ExceptionTable.h>
+#include <com/onecube/zen/virtual-machine/feb/attribute/AttributeTable.h>
 
 /*******************************************************************************
  * InstructionAttribute                                                        *
@@ -28,7 +28,7 @@ struct zen_InstructionAttribute_t {
     uint32_t m_length;
     uint16_t m_maxStackSize;
     uint16_t m_localVariableCount;
-    uint32_t m_instructionCount;
+    uint32_t m_instructionLength;
     uint8_t* m_instructions;
     zen_ExceptionTable_t m_exceptionTable;
 };

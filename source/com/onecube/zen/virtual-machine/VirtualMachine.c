@@ -18,6 +18,7 @@ zen_VirtualMachine_t* zen_VirtualMachine_new(zen_VirtualMachineConfiguration_t* 
     zen_VirtualMachine_t* virtualMachine = zen_Memory_allocate(zen_VirtualMachine_t, 1);
     virtualMachine->m_configuration = configuration;
     virtualMachine->m_entityLoader = zen_EntityLoader_newWithEntityDirectories(entityDirectoryIterator);
+    virtualMachine->m_classLoader = zen_ClassLoader_new(virtualMachine->m_entityLoader);
 
     return virtualMachine;
 }
@@ -27,6 +28,8 @@ zen_VirtualMachine_t* zen_VirtualMachine_new(zen_VirtualMachineConfiguration_t* 
 void zen_VirtualMachine_delete(zen_VirtualMachine_t* virtualMachine) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
 
+    zen_ClassLoader_delete(virtualMachine->m_classLoader);
+    zen_EntityLoader_delete(virtualMachine->m_entityLoader);
     zen_Memory_deallocate(virtualMachine);
 }
 
@@ -46,18 +49,13 @@ zen_Class_t* zen_VirtualMachine_getClass(zen_VirtualMachine_t* virtualMachine,
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
     jtk_Assert_assertObject(descriptor, "The specified class descriptor is null.");
 
-    zen_EntityLoader_t* loader = zen_VirtualMachine_getEntityLoader(virtualMachine);
-#warning "Ignoring return value of findEntity!"
-    zen_EntityLoader_findEntity(loader, descriptor);
-
-    zen_Class_t* class0 = NULL;
-
-    /* The class with the specified descriptor was not found. Throw an instance
-     * of the `zen.base.ClassNotFoundException` class.
-     */
+    zen_Class_t* class0 = zen_ClassLoader_findClass(
+        virtualMachine->m_classLoader, descriptor);
+    
     if (class0 == NULL) {
         zen_VirtualMachine_raiseClassNotFoundException(virtualMachine, descriptor);
     }
+    
     return class0;
 }
 

@@ -4,7 +4,7 @@
 #define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ENTITY_FILE_H
 
 #include <com/onecube/zen/Configuration.h>
-#include <com/onecube/zen/virtual-machine/feb/ConstantPool.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPool.h>
 #include <com/onecube/zen/virtual-machine/feb/Entity.h>
 #include <com/onecube/zen/virtual-machine/feb/FebVersion.h>
 

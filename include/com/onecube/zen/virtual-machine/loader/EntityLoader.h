@@ -12,6 +12,7 @@
 #include <com/onecube/zen/virtual-machine/object/Class.h>
 #include <com/onecube/zen/virtual-machine/feb/Entity.h>
 #include <com/onecube/zen/virtual-machine/loader/BinaryEntityParser.h>
+#include <com/onecube/zen/virtual-machine/loader/AttributeParseRules.h>
 
 #define ZEN_ENTITY_LOADER_FLAG_PRIORITIZE_DIRECTORIES (1 << 0)
 #define ZEN_ENTITY_LOADER_FLAG_IGNORE_CORRUPT_ENTITY (1 << 1)
@@ -54,6 +55,8 @@ struct zen_EntityLoader_t {
      * Cache to store entities loaded previously.
      */
     jtk_HashMap_t* m_entities;
+    
+    zen_AttributeParseRules_t* m_attributeParseRules;
 };
 
 /**

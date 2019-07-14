@@ -1,7 +1,7 @@
 // Saturday, April 28, 2018
 
-#ifndef ZEN_FEB_ATTRIBUTE_H
-#define ZEN_FEB_ATTRIBUTE_H
+#ifndef COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ATTRIBUTE_ATTRIBUTE_H
+#define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ATTRIBUTE_ATTRIBUTE_H
 
 #include <com/onecube/zen/Configuration.h>
 
@@ -50,7 +50,6 @@
 struct zen_Attribute_t {
     uint16_t m_nameIndex;
     uint32_t m_length;
-    uint8_t* m_body;
 };
 
 typedef struct zen_Attribute_t zen_Attribute_t;
@@ -64,4 +63,4 @@ typedef struct zen_Attribute_t zen_Attribute_t;
 extern const uint8_t* ZEN_PRIMARY_ATTRIBUTE_CODE;
 extern const int32_t ZEN_PRIMARY_ATTRIBUTE_CODE_LENGTH;
 
-#endif /* ZEN_FEB_ATTRIBUTE_H */
+#endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ATTRIBUTE_ATTRIBUTE_H */

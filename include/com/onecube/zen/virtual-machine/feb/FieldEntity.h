@@ -4,6 +4,7 @@
 #define ZEN_FEB_FIELD_ENTITY_H
 
 #include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/virtual-machine/feb/attribute/AttributeTable.h>
 
 /*******************************************************************************
  * FieldEntity                                                                 *

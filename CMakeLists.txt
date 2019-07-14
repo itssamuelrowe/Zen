@@ -110,8 +110,7 @@ set (
     ZEN_VIRTUAL_MACHINE_SOURCE
 
     # Binary Entity Format
-
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/Attribute.c
+    
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/Instruction.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/ConstantPool.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/Entity.c

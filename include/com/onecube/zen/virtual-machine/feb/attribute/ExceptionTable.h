@@ -4,7 +4,7 @@
 #define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ATTRIBUTE_EXCEPTION_TABLE_H
 
 #include <com/onecube/zen/Configuration.h>
-#include <com/onecube/zen/virtual-machine/feb/ExceptionHandlerSite.h>
+#include <com/onecube/zen/virtual-machine/feb/attribute/ExceptionHandlerSite.h>
 
 /*******************************************************************************
  * ExceptionTable                                                              *

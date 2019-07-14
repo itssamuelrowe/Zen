@@ -5,6 +5,7 @@
 
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolEntry.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolUtf8.h>
 
 /*******************************************************************************
  * ConstantPool                                                                *
@@ -60,6 +61,6 @@ struct zen_ConstantPool_t {
 
 typedef struct zen_ConstantPool_t zen_ConstantPool_t;
 
-uint8_t* zen_ConstantPool_resolveUtf8(zen_ConstantPool_t* constantPool, uint16_t nameIndex);
+zen_ConstantPoolUtf8_t* zen_ConstantPool_resolveUtf8(zen_ConstantPool_t* constantPool, uint16_t nameIndex);
 
 #endif /* ZEN_FEB_CONSTANT_POOL_CONSTANT_POOL_H */

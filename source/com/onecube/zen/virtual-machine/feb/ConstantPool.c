@@ -1,13 +1,14 @@
 // Tuesday, March 26, 2019
 
-#include <com/onecube/zen/virtual-machine/feb/ConstantPool.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPool.h>
 
 /*******************************************************************************
  * ConstantPool                                                                *
  *******************************************************************************/
  
-uint8_t* zen_ConstantPool_resolveUtf8(zen_ConstantPool_t* constantPool, uint16_t index) {
-    return NULL;
+zen_ConstantPoolUtf8_t* zen_ConstantPool_resolveUtf8(zen_ConstantPool_t* constantPool,
+    uint16_t index) {
+    return constantPool->m_entries[index];
 }
 
 void* zen_ConstantPool_getEntry(zen_ConstantPool_t* constantPool, int32_t index) {
@@ -19,10 +20,10 @@ int32_t zen_ConstantPoolEntry_getTag(void* x) {
 }
 
 
-#include <com/onecube/zen/virtual-machine/feb/ConstantPoolInteger.h>
-#include <com/onecube/zen/virtual-machine/feb/ConstantPoolLong.h>
-#include <com/onecube/zen/virtual-machine/feb/ConstantPoolFloat.h>
-#include <com/onecube/zen/virtual-machine/feb/ConstantPoolDouble.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolInteger.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolLong.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFloat.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolDouble.h>
 
 int32_t zen_ConstantPoolInteger_getValue(zen_ConstantPoolInteger_t* entry) {
     return entry->m_bytes;

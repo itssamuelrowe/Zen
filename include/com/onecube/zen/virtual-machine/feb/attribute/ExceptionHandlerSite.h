@@ -52,4 +52,4 @@ struct zen_ExceptionHandlerSite_t {
  */
 typedef struct zen_ExceptionHandlerSite_t zen_ExceptionHandlerSite_t;
 
-#endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ATTRIBUTE_EXCEPTION_HANDLER_SITE_H
+#endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ATTRIBUTE_EXCEPTION_HANDLER_SITE_H */

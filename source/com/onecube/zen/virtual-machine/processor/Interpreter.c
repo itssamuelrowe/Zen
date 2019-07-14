@@ -5,14 +5,14 @@
 #include <jtk/core/Double.h>
 
 #include <com/onecube/zen/virtual-machine/feb/ByteCode.h>
-#include <com/onecube/zen/virtual-machine/feb/ConstantPool.h>
-#include <com/onecube/zen/virtual-machine/feb/ConstantPoolInteger.h>
-#include <com/onecube/zen/virtual-machine/feb/ConstantPoolLong.h>
-#include <com/onecube/zen/virtual-machine/feb/ConstantPoolFloat.h>
-#include <com/onecube/zen/virtual-machine/feb/ConstantPoolDouble.h>
-#include <com/onecube/zen/virtual-machine/feb/ConstantPoolString.h>
-#include <com/onecube/zen/virtual-machine/feb/ConstantPoolUtf8.h>
-#include <com/onecube/zen/virtual-machine/feb/ConstantPoolTag.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPool.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolInteger.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolLong.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFloat.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolDouble.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolString.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolUtf8.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolTag.h>
 #include <com/onecube/zen/virtual-machine/feb/Entity.h>
 #include <com/onecube/zen/virtual-machine/object/Class.h>
 #include <com/onecube/zen/virtual-machine/object/Object.h>
@@ -1480,7 +1480,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         const uint8_t* functionDescriptor = zen_Function_getDescriptor(targetFunction);
 
                         /* TODO: The resolution of the virtual function should not fail. */
-                        targetFunction = zen_Class_getFunction(objectClass, functionName,
+                        targetFunction = zen_Class_getInstanceFunction(objectClass, functionName,
                             functionDescriptor);
                     }
 
@@ -1526,10 +1526,6 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     /* TODO: Throw an instance of the UnknownFunctionException class. */
                 }
 
-                break;
-            }
-
-            case ZEN_BYTE_CODE_INVOKE_FRAGMENT: { /* invoke_fragment */
                 break;
             }
 
@@ -2022,7 +2018,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     // ...
                 }
 
-                zen_Entity_t* entity = zen_Class_getEntity(currentStackFrame->m_class);
+                zen_Entity_t* entity = zen_Class_getEntityFile(currentStackFrame->m_class)->m_entity;
                 zen_ConstantPool_t* pool = zen_Entity_getConstantPool(entity);
                 void* entry = zen_ConstantPool_getEntry(pool, index);
                 switch (zen_ConstantPoolEntry_getTag(entry)) {
@@ -2282,7 +2278,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 break;
             }
 
-            case ZEN_BYTE_CODE_NEW_ARRAY_N: { /* new_array_n */
+            case ZEN_BYTE_CODE_NEW_ARRAY_AN: { /* new_array_an */
                 break;
             }
 
@@ -2646,10 +2642,6 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `return_a` (operand = 0x%X, operand stack = %d)",
                     returnValue, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
-                break;
-            }
-
-            case ZEN_BYTE_CODE_RETURN_FRAGMENT: { /* return_fragment */
                 break;
             }
 
