@@ -23,7 +23,7 @@ int32_t zen_OperandStack_referenceSlotCountError() {
 
 /* Constructor */
 
-zen_OperandStack_t* zen_OperandStack_new(zen_MemoryManager_t* manager, int32_t capacity) {
+zen_OperandStack_t* zen_OperandStack_new(int32_t capacity) {
     zen_OperandStack_t* stack = jtk_Memory_allocate(zen_OperandStack_t, 1);
     stack->m_values = (capacity > 0)? jtk_Memory_allocate(uint32_t, capacity) : NULL;
     stack->m_size = 0;
@@ -34,12 +34,14 @@ zen_OperandStack_t* zen_OperandStack_new(zen_MemoryManager_t* manager, int32_t c
 
 /* Destructor */
 
-void zen_OperandStack_delete(zen_MemoryManager_t* manager, zen_OperandStack_t* stack) {
-    jtk_Assert_assertObject(manager, "The specified memory manager is null.");
+void zen_OperandStack_delete(zen_OperandStack_t* stack) {
     jtk_Assert_assertObject(stack, "The specified operand stack is null.");
 
     // zen_MemoryManager_deallocate(manager, stack->m_values);
     // zen_MemoryManager_deallocate(manager, stack);
+    
+    jtk_Memory_deallocate(stack->m_values);
+    jtk_Memory_deallocate(stack);
 }
 
 /* Available */

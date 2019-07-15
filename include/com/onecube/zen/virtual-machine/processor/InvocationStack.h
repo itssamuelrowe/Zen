@@ -23,7 +23,7 @@
  */
 struct zen_InvocationStack_t {
     // TODO: Replace this with a singly-linked list.
-    jtk_DoublyLinkedList_t* m_stakFrames;
+    jtk_DoublyLinkedList_t* m_stackFrames;
 };
 
 /**

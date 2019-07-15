@@ -39,7 +39,7 @@ zen_OperandStack_t* zen_OperandStack_new(int32_t capacity);
 /**
  * @memberof OperandStack
  */
-void zen_OperandStack_delete(zen_MemoryManager_t* memoryManager, zen_OperandStack_t* operandStack);
+void zen_OperandStack_delete(zen_OperandStack_t* operandStack);
 
 /* Available */
 

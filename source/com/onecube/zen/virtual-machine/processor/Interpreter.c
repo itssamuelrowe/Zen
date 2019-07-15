@@ -57,11 +57,10 @@ zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* manager,
 
 /* Destructor */
 
-void zen_Interpreter_delete(zen_MemoryManager_t* manager, zen_Interpreter_t* interpreter) {
-    jtk_Assert_assertObject(manager, "The specified memory manager is null.");
+void zen_Interpreter_delete(zen_Interpreter_t* interpreter) {
     jtk_Assert_assertObject(interpreter, "The specified interpreter is null.");
 
-    jtk_Iterator_t* iterator = zen_InvocationStack_getIterator();
+    jtk_Iterator_t* iterator = zen_InvocationStack_getIterator(interpreter->m_invocationStack);
     while (jtk_Iterator_hasNext(iterator)) {
         zen_StackFrame_t* stackFrame = (zen_StackFrame_t*)jtk_Iterator_getNext(iterator);
         zen_StackFrame_delete(stackFrame);

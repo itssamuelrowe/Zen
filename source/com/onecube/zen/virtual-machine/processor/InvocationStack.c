@@ -18,7 +18,7 @@ zen_InvocationStack_t* zen_InvocationStack_new() {
 /* Destructor */
 
 void zen_InvocationStack_delete(zen_InvocationStack_t* invocationStack) {
-    jtk_Assert_assertObject(stack, "The specified invocation stack is null.");
+    jtk_Assert_assertObject(invocationStack, "The specified invocation stack is null.");
 
     jtk_DoublyLinkedList_delete(invocationStack->m_stackFrames);
     jtk_Memory_deallocate(invocationStack);

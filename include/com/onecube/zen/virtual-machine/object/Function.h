@@ -27,6 +27,7 @@ struct zen_Function_t {
     jtk_String_t* m_descriptor;
     uint16_t m_flags;
     zen_Class_t* m_class;
+    zen_FunctionEntity_t* m_functionEntity;
 };
 
 /**

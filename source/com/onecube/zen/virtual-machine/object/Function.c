@@ -20,6 +20,7 @@ zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
     function->m_descriptor = jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
     function->m_class = class0;
     function->m_flags = 0;
+    function->m_functionEntity = functionEntity;
 
     return function;
 }

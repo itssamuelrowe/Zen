@@ -20,7 +20,7 @@ zen_StackFrame_t* zen_StackFrame_new(zen_Function_t* function) {
     zen_Class_t* class0 = function->m_class;
     zen_EntityFile_t* entityFile = class0->m_entityFile;
     zen_FunctionEntity_t* functionEntity = function->m_functionEntity;
-    zen_ConstantPool_t* constantPool = classEntity->m_constantPool;
+    zen_ConstantPool_t* constantPool = entityFile->m_constantPool;
 
     int32_t maxStackSize = 0;
     int32_t localVariableCount = 0;
@@ -32,18 +32,18 @@ zen_StackFrame_t* zen_StackFrame_new(zen_Function_t* function) {
      * as the first attribute for functions in general.
      */
     zen_InstructionAttribute_t* instructionAttribute = NULL;
-    int32_t limit = functionEntity->m_attributeTable.size;
+    int32_t limit = functionEntity->m_attributeTable.m_size;
     int32_t i;
     for (i = 0; i < limit; i++) {
-        zen_Attribute_t* attribute = function->m_attributeTable.m_attributes[i];
+        zen_Attribute_t* attribute = functionEntity->m_attributeTable.m_attributes[i];
         zen_ConstantPoolUtf8_t* nameEntry =
             (zen_ConstantPoolUtf8_t*)constantPool->m_entries[attribute->m_nameIndex];
 
-        if (jtk_CString_equalsEx(nameEntry->m_bytes, nameEntry->m_length,
+        if (jtk_CString_equals(nameEntry->m_bytes, nameEntry->m_length,
             ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION, ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION_SIZE)) {
             instructionAttribute = (zen_InstructionAttribute_t*)attribute;
             maxStackSize = instructionAttribute->m_maxStackSize;
-            localVariableCount = instructionAttribute->m_localVariableCount
+            localVariableCount = instructionAttribute->m_localVariableCount;
     
             break;
         }

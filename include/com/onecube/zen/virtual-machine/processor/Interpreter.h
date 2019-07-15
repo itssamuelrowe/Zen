@@ -48,7 +48,7 @@ zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* memoryManager, zen_P
 /**
  * @memberof Interpreter
  */
-void zen_Interpreter_delete(zen_MemoryManager_t* memoryManager, zen_Interpreter_t* interpreter);
+void zen_Interpreter_delete(zen_Interpreter_t* interpreter);
 
 /* Invoke Static Function */
 

@@ -38,7 +38,7 @@ zen_LocalVariableArray_t* zen_LocalVariableArray_new(int32_t size);
 /**
  * @memberof LocalVariableArray
  */
-void zen_LocalVariableArray_delete(zen_MemoryManager_t* manager, zen_LocalVariableArray_t* array);
+void zen_LocalVariableArray_delete(zen_LocalVariableArray_t* array);
 
 /* Integer Value */
 

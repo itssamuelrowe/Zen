@@ -142,6 +142,7 @@ set (
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/processor/InvocationStack.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/processor/OperandStack.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/processor/LocalVariableArray.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/processor/StackFrame.c
 
     # Common
 

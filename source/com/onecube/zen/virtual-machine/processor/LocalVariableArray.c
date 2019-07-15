@@ -29,8 +29,7 @@ int32_t zen_LocalVariableArray_referenceSlotCountError() {
 /* NOTE: The virtual machine does not initialize the local variables. It is left
  * to the compiler to force initialization of local variables.
  */
-zen_LocalVariableArray_t* zen_LocalVariableArray_new(zen_MemoryManager_t* memoryManager,
-    int32_t size) {
+zen_LocalVariableArray_t* zen_LocalVariableArray_new(int32_t size) {
     zen_LocalVariableArray_t* localVariableArray = jtk_Memory_allocate(zen_LocalVariableArray_t, 1);
     localVariableArray->m_values = (size > 0)? jtk_Memory_allocate(uint32_t, size) : NULL;
     localVariableArray->m_size = size;
@@ -39,8 +38,7 @@ zen_LocalVariableArray_t* zen_LocalVariableArray_new(zen_MemoryManager_t* memory
 }
 
 /* Destructor */
-void zen_LocalVariableArray_delete(zen_MemoryManager_t* memoryManager, zen_LocalVariableArray_t* localVariableArray) {
-    jtk_Assert_assertObject(memoryManager, "The specified memory memoryManager is null.");
+void zen_LocalVariableArray_delete(zen_LocalVariableArray_t* localVariableArray) {
     jtk_Assert_assertObject(localVariableArray, "The specified local variable array is null.");
 
     // zen_MemoryManager_deallocate(memoryManager, localVariableArray->m_values);
