@@ -10,7 +10,7 @@
 
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/virtual-machine/object/Class.h>
-#include <com/onecube/zen/virtual-machine/feb/Entity.h>
+#include <com/onecube/zen/virtual-machine/feb/EntityFile.h>
 #include <com/onecube/zen/virtual-machine/loader/BinaryEntityParser.h>
 #include <com/onecube/zen/virtual-machine/loader/AttributeParseRules.h>
 
@@ -83,7 +83,7 @@ void zen_EntityLoader_delete(zen_EntityLoader_t* loader);
  *
  * @memberof EntityLoader
  */
-zen_Entity_t* zen_EntityLoader_findEntity(zen_EntityLoader_t* loader, const uint8_t* descriptor);
+zen_EntityFile_t* zen_EntityLoader_findEntity(zen_EntityLoader_t* loader, const uint8_t* descriptor);
 
 /**
  * It tries to find a previously loaded class with the specified descriptor in
@@ -91,7 +91,7 @@ zen_Entity_t* zen_EntityLoader_findEntity(zen_EntityLoader_t* loader, const uint
  *
  * @memberof EntityLoader
  */
-zen_Entity_t* zen_EntityLoader_getEntity(zen_EntityLoader_t* loader, const uint8_t* descriptor);
+zen_EntityFile_t* zen_EntityLoader_getEntity(zen_EntityLoader_t* loader, const uint8_t* descriptor);
 /**
  * It tries to load a class with the specified descriptor from a physical
  * description, i.e., a binary entity. It fails if a class was previously
@@ -99,7 +99,7 @@ zen_Entity_t* zen_EntityLoader_getEntity(zen_EntityLoader_t* loader, const uint8
  *
  * @memberof EntityLoader
  */
-zen_Entity_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader, const uint8_t* descriptor);
+zen_EntityFile_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader, const uint8_t* descriptor);
 
 // Load Class From
 
@@ -109,7 +109,7 @@ zen_Entity_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader, const uint
  *
  * @memberof EntityLoader
  */
-zen_Entity_t* zen_EntityLoader_loadEntityFromFile(zen_EntityLoader_t* loader,
+zen_EntityFile_t* zen_EntityLoader_loadEntityFromFile(zen_EntityLoader_t* loader,
     jtk_Path_t* path);
 
 /**
@@ -118,7 +118,7 @@ zen_Entity_t* zen_EntityLoader_loadEntityFromFile(zen_EntityLoader_t* loader,
  *
  * @memberof EntityLoader
  */
-zen_Entity_t* zen_EntityLoader_loadEntityFromHandle(zen_EntityLoader_t* loader,
+zen_EntityFile_t* zen_EntityLoader_loadEntityFromHandle(zen_EntityLoader_t* loader,
     jtk_PathHandle_t* handle);
 
 // Ignore Corrupt Entity

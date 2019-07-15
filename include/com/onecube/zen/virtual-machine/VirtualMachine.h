@@ -10,6 +10,8 @@
 #include <com/onecube/zen/virtual-machine/object/Function.h>
 #include <com/onecube/zen/virtual-machine/object/ObjectArray.h>
 #include <com/onecube/zen/virtual-machine/loader/EntityLoader.h>
+#include <com/onecube/zen/virtual-machine/loader/ClassLoader.h>
+#include <com/onecube/zen/virtual-machine/processor/Interpreter.h>
 
 /*******************************************************************************
  * VirtualMachine                                                              *
@@ -24,6 +26,8 @@
 struct zen_VirtualMachine_t {
     zen_VirtualMachineConfiguration_t* m_configuration;
     zen_EntityLoader_t* m_entityLoader;
+    zen_ClassLoader_t* m_classLoader;
+    zen_Interpreter_t* m_interpreter;
 };
 
 /**

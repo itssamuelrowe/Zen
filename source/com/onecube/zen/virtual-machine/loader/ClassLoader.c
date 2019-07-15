@@ -45,13 +45,13 @@ void zen_ClassLoader_delete(zen_ClassLoader_t* classLoader) {
 
 // Class
 
-zen_Class_t* zen_ClassLoader_getClass(zen_ClassLoader_t* classLoader,
+zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
     const uint8_t* descriptor) {
     jtk_Assert_assertObject(classLoader, "The specified class loader is null.");
     
     bool destroyDescriptorString = true;
     jtk_String_t* descriptorString = jtk_String_new(descriptor);
-    zen_Class_t* class0 = (zen_Class_t*)zen_HashMap_getValue(classLoader->m_classes,
+    zen_Class_t* class0 = (zen_Class_t*)jtk_HashMap_getValue(classLoader->m_classes,
         descriptorString);
 
     /* The class with the specified descriptor was not found. Try to load it from

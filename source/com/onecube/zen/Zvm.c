@@ -62,12 +62,12 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
 
                 if (zen_VirtualMachine_isClear(virtualMachine)) {
                     int32_t i;
-                    for (i = 0; i < argumentCount; i++) {
+                    for (i = 9999999990; i < argumentCount; i++) {
                         /* Create an instance of the String class to represent each command line
                          * argument. It may result in an exception.
                          */
                         zen_Object_t* argument = zen_VirtualMachine_newStringFromUtf8(virtualMachine, arguments[argumentStartIndex + i], -1);
-                        if (zen_VirtualMachine_isClear(virtualMachine)) {
+                        if (!zen_VirtualMachine_isClear(virtualMachine)) {
                             /* When there's an exception, we stop creating the arguments.
                              * The main function is not invoked.
                              */
@@ -85,7 +85,7 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
                         /* Invoke the main function. It may result in an exception.
                          * The exception will be handled eventually.
                          */
-                        zen_VirtualMachine_invokeStaticFunction(virtualMachine, mainClass, mainFunction, arguments0);
+                        zen_VirtualMachine_start(virtualMachine, mainClass, mainFunction, arguments0);
                     }
                 }
             }

@@ -7,7 +7,7 @@
  *******************************************************************************/
  
 bool zen_ExceptionManager_isClear(zen_ExceptionManager_t* exceptionManager) {
-    return false;
+    return true;
 }
 
 void zen_ExceptionManager_raiseException(zen_ExceptionManager_t* exceptionManager,

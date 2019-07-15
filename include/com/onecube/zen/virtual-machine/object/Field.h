@@ -5,6 +5,7 @@
 
 #include <jtk/core/String.h>
 #include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/virtual-machine/feb/FieldEntity.h>
 
 // Forward References
 
@@ -34,7 +35,7 @@ typedef struct zen_Field_t zen_Field_t;
 // Constructor
 
 zen_Field_t* zen_Field_newFromFieldEntity(zen_Class_t* class0, 
-    zen_FieldnEntity_t* fieldEntity);
+    zen_FieldEntity_t* fieldEntity);
 
 // Destructor
 

@@ -32,7 +32,7 @@ typedef struct zen_OperandStack_t zen_OperandStack_t;
 /**
  * @memberof OperandStack
  */
-zen_OperandStack_t* zen_OperandStack_new(zen_MemoryManager_t* memoryManager, int32_t capacity);
+zen_OperandStack_t* zen_OperandStack_new(int32_t capacity);
 
 /* Destructor */
 

@@ -46,7 +46,7 @@ void zen_CompilationUnitScope_define(zen_CompilationUnitScope_t* scope, zen_Symb
 
     /* NOTE: The key string is owned by the ASTNode. */
     const uint8_t* text = zen_Token_getText((zen_Token_t*)zen_ASTNode_getContext(zen_Symbol_getIdentifier(symbol)));
-    if (!zen_HashMap_putStrictly(scope->m_symbols, text, symbol)) {
+    if (!jtk_HashMap_putStrictly(scope->m_symbols, text, symbol)) {
         fprintf(stderr, "[internal error] zen_CompilationUnitScope_define invoked to redefine a symbol.");
     }
 }

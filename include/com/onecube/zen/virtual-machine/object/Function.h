@@ -4,7 +4,9 @@
 #define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_OBJECT_FUNCTION_H
 
 #include <jtk/core/String.h>
+
 #include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/virtual-machine/feb/FunctionEntity.h>
 
 // Forward References
 

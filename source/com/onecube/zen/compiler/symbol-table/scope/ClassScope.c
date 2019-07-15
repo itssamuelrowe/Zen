@@ -50,7 +50,7 @@ void zen_ClassScope_define(zen_ClassScope_t* scope, zen_Symbol_t* symbol) {
     if (zen_Symbol_isFunction(symbol) || zen_Symbol_isConstant(symbol) ||
         zen_Symbol_isVariable(symbol) || zen_Symbol_isEnumeration(symbol)) {
         const uint8_t* text = zen_Token_getText((zen_Token_t*)zen_ASTNode_getContext(zen_Symbol_getIdentifier(symbol)));
-        if (!zen_HashMap_putStrictly(scope->m_symbols, (void*)text, symbol)) {
+        if (!jtk_HashMap_putStrictly(scope->m_symbols, (void*)text, symbol)) {
             fprintf(stderr, "[internal error] zen_ClassScope_define() invoked to redefine a symbol.\n");
         }
     }

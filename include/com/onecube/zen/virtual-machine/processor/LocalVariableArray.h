@@ -31,7 +31,7 @@ typedef struct zen_LocalVariableArray_t zen_LocalVariableArray_t;
 /**
  * @memberof LocalVariableArray
  */
-zen_LocalVariableArray_t* zen_LocalVariableArray_new(zen_MemoryManager_t* manager, int32_t size);
+zen_LocalVariableArray_t* zen_LocalVariableArray_new(int32_t size);
 
 /* Destructor */
 

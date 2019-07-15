@@ -8,7 +8,9 @@
 
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/virtual-machine/feb/EntityFile.h>
+#include <com/onecube/zen/virtual-machine/feb/ClassEntity.h>
 #include <com/onecube/zen/virtual-machine/object/Function.h>
+#include <com/onecube/zen/virtual-machine/object/Field.h>
 
 /*******************************************************************************
  * Class                                                                       *

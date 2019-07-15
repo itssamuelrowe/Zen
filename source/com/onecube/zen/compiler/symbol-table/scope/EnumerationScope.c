@@ -53,7 +53,7 @@ void zen_EnumerationScope_define(zen_EnumerationScope_t* scope, zen_Symbol_t* sy
 
     if (zen_Symbol_isEnumerate(symbol)) {
         const uint8_t* text = zen_Token_getText((zen_Token_t*)zen_ASTNode_getContext(zen_Symbol_getIdentifier(symbol)));
-        if (!zen_HashMap_putStrictly(scope->m_enumerates, (void*)text, symbol)) {
+        if (!jtk_HashMap_putStrictly(scope->m_enumerates, (void*)text, symbol)) {
             fprintf(stderr, "[internal error] zen_ClassScope_define() invoked to redefine a symbol.\n");
         }
     }

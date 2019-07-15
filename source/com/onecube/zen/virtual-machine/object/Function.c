@@ -11,7 +11,7 @@
 
 zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
     zen_FunctionEntity_t* functionEntity) {
-    zen_ConstantPool_t* constantPool = class0->m_classEntity->m_constantPool;
+    zen_ConstantPool_t* constantPool = class0->m_entityFile->m_constantPool;
     zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[functionEntity->m_nameIndex];
     zen_ConstantPoolUtf8_t* descriptorEntry = constantPool->m_entries[functionEntity->m_descriptorIndex];
 

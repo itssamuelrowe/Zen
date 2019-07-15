@@ -7,6 +7,9 @@
 #include <jtk/core/String.h>
 
 #include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/virtual-machine/feb/EntityFile.h>
+#include <com/onecube/zen/virtual-machine/loader/EntityLoader.h>
+#include <com/onecube/zen/virtual-machine/object/Class.h>
 
 /*******************************************************************************
  * ClassLoader                                                                 *
@@ -43,7 +46,7 @@ void zen_ClassLoader_delete(zen_ClassLoader_t* classLoader);
 
 // Class
 
-zen_Class_t* zen_ClassLoader_getClass(zen_ClassLoader_t* classLoader,
+zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
     const uint8_t* descriptor);
 
 // Load
@@ -53,6 +56,6 @@ zen_Class_t* zen_ClassLoader_getClass(zen_ClassLoader_t* classLoader,
  * previously loaded. This behavior can cause memory leaks if used incorrectly.
  */
 zen_Class_t* zen_ClassLoader_loadFromEntityFile(zen_ClassLoader_t* classLoader,
-    jtk_String_t* descriptor, zen_EntityFile_t* entityFile)
+    jtk_String_t* descriptor, zen_EntityFile_t* entityFile);
     
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_LOADER_CLASS_LOADER_H */

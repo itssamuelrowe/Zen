@@ -14,9 +14,7 @@
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolUtf8.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolTag.h>
 #include <com/onecube/zen/virtual-machine/feb/Entity.h>
-#include <com/onecube/zen/virtual-machine/object/Class.h>
 #include <com/onecube/zen/virtual-machine/object/Object.h>
-#include <com/onecube/zen/virtual-machine/object/Function.h>
 #include <com/onecube/zen/virtual-machine/processor/Interpreter.h>
 #include <com/onecube/zen/virtual-machine/memory/MemoryManager.h>
 
@@ -46,18 +44,15 @@ xjtk_Logger_debug(void* logger, const uint8_t* tag, const uint8_t* message, ...)
 
 zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* manager,
     zen_ProcessorThread_t* processorThread) {
-    jtk_Assert_assertObject(manager, "The specified memory manager is null.");
+    // jtk_Assert_assertObject(manager, "The specified memory manager is null.");
 
-    /*
-    zen_Interpreter_t* interpreter = zen_MemoryManager_allocateEx(manager,
-        sizeof (zen_Interpreter_t), ZEN_ALIGNMENT_CONSTRAINT_DEFAULT,
-        ZEN_ALLOCATION_FLAG_MANUAL);
+    zen_Interpreter_t* interpreter = jtk_Memory_allocate(zen_Interpreter_t, 1);
+    interpreter->m_counter = -1;
+    interpreter->m_invocationStack = zen_InvocationStack_new();
     interpreter->m_processorThread = processorThread;
+    interpreter->m_logger = NULL;
 
     return interpreter;
-    */
-    
-    return NULL;
 }
 
 /* Destructor */
@@ -66,7 +61,15 @@ void zen_Interpreter_delete(zen_MemoryManager_t* manager, zen_Interpreter_t* int
     jtk_Assert_assertObject(manager, "The specified memory manager is null.");
     jtk_Assert_assertObject(interpreter, "The specified interpreter is null.");
 
-    // jtk_MemoryManager_deallocate(manager, interpreter);
+    jtk_Iterator_t* iterator = zen_InvocationStack_getIterator();
+    while (jtk_Iterator_hasNext(iterator)) {
+        zen_StackFrame_t* stackFrame = (zen_StackFrame_t*)jtk_Iterator_getNext(iterator);
+        zen_StackFrame_delete(stackFrame);
+    }
+    jtk_Iterator_delete(iterator);
+
+    zen_InvocationStack_delete(interpreter->m_invocationStack);
+    jtk_Memory_deallocate(interpreter);
 }
 
 /* Class Initialization */
@@ -80,7 +83,7 @@ void zen_Interpreter_handleClassInitialization(zen_Interpreter_t* interpreter,
 
 uint8_t* zen_Interpreter_getCurrentClassName(zen_Interpreter_t* interpreter) {
     jtk_Assert_assertObject(interpreter, "The specified interpreter is null.");
-    
+
     return NULL;
 }
 
@@ -88,7 +91,7 @@ uint8_t* zen_Interpreter_getCurrentClassName(zen_Interpreter_t* interpreter) {
 
 uint8_t* zen_Interpreter_getCurrentFunctionName(zen_Interpreter_t* interpreter) {
     jtk_Assert_assertObject(interpreter, "The specified interpreter is null.");
-    
+
     return NULL;
 }
 
@@ -665,7 +668,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             case ZEN_BYTE_CODE_CAST_ITC: { /* cast_itc */
                 break;
             }
-            
+
             case ZEN_BYTE_CODE_CAST_ITS: { /* cast_its */
                 /* Retrieve the operand from the operand stack. */
                 int32_t operand = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
@@ -1975,7 +1978,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             case ZEN_BYTE_CODE_LOAD_AC: { /* load_ac */
                 break;
             }
-            
+
             case ZEN_BYTE_CODE_LOAD_AS: { /* load_as */
                 break;
             }
@@ -3215,7 +3218,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             case ZEN_BYTE_CODE_STORE_AC: { /* store_ac */
                 break;
             }
-            
+
             case ZEN_BYTE_CODE_STORE_AS: { /* store_as */
                 break;
             }
@@ -3369,7 +3372,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                      * frame and repeat.
                      */
                     currentStackFrame = zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
-                    
+
                     exceptionHandler: {
                     }
                 }
@@ -3419,6 +3422,16 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
 void zen_Interpreter_invokeNativeFunction(zen_Interpreter_t* interpreter,
     zen_Class_t* targetClass, zen_Function_t* targetFunction, zen_OperandStack_t* operandStack) {
+}
+
+/* Invoke Static Function */
+
+void zen_Interpreter_invokeStaticFunctionEx(zen_Interpreter_t* interpreter,
+    zen_Function_t* function, jtk_VariableArguments_t variableArguments) {
+    
+    zen_StackFrame_t* stackFrame = zen_StackFrame_new(function);
+    zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
+    zen_Interpreter_interpret(interpreter);
 }
 
 /* Invoke Thread Exception Handler */

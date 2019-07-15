@@ -4,8 +4,11 @@
 #define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_PROCESSOR_INTERPRETER_H
 
 #include <jtk/log/Logger.h>
+#include <jtk/core/VariableArguments.h>
 
 #include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/virtual-machine/object/Class.h>
+#include <com/onecube/zen/virtual-machine/object/Function.h>
 #include <com/onecube/zen/virtual-machine/processor/InvocationStack.h>
 #include <com/onecube/zen/virtual-machine/processor/ProcessorThread.h>
 
@@ -46,6 +49,11 @@ zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* memoryManager, zen_P
  * @memberof Interpreter
  */
 void zen_Interpreter_delete(zen_MemoryManager_t* memoryManager, zen_Interpreter_t* interpreter);
+
+/* Invoke Static Function */
+
+void zen_Interpreter_invokeStaticFunctionEx(zen_Interpreter_t* interpreter,
+    zen_Function_t* function, jtk_VariableArguments_t variableArguments);
 
 /* Read */
 

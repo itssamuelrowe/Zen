@@ -29,7 +29,7 @@ void* zen_AstAnnotations_get(zen_AstAnnotations_t* annotations, zen_ASTNode_t* n
 void zen_AstAnnotations_put(zen_AstAnnotations_t* annotations, zen_ASTNode_t* node, void* value) {
     jtk_Assert_assertObject(annotations, "The specified annotations is null.");
 
-    zen_HashMap_put(annotations->m_map, (void*)node, value);
+    jtk_HashMap_put(annotations->m_map, (void*)node, value);
 }
 
 void zen_AstAnnotations_remove(zen_AstAnnotations_t* annotations, zen_ASTNode_t* node) {

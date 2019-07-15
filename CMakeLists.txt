@@ -118,6 +118,7 @@ set (
     # Loader
 
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/loader/BinaryEntityParser.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/loader/ClassLoader.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/loader/EntityLoader.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/loader/AttributeParseRules.c
     #${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/loader/BinaryEntityVerifier.c
@@ -130,6 +131,7 @@ set (
     # Object
 
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/object/Class.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/object/Field.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/object/Function.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/object/Object.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/object/ObjectArray.c

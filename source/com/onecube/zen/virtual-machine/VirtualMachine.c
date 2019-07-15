@@ -1,5 +1,6 @@
 // Friday, June 08, 2018
 
+#include <jtk/core/VariableArguments.h>
 #include <com/onecube/zen/virtual-machine/VirtualMachine.h>
 #include <com/onecube/zen/virtual-machine/loader/EntityLoader.h>
 #include <com/onecube/zen/virtual-machine/ExceptionManager.h>
@@ -19,6 +20,7 @@ zen_VirtualMachine_t* zen_VirtualMachine_new(zen_VirtualMachineConfiguration_t* 
     virtualMachine->m_configuration = configuration;
     virtualMachine->m_entityLoader = zen_EntityLoader_newWithEntityDirectories(entityDirectoryIterator);
     virtualMachine->m_classLoader = zen_ClassLoader_new(virtualMachine->m_entityLoader);
+    virtualMachine->m_interpreter = zen_Interpreter_new(NULL, NULL);
 
     return virtualMachine;
 }
@@ -184,8 +186,15 @@ zen_Function_t* zen_VirtualMachine_getStaticFunction(zen_VirtualMachine_t* virtu
     return function;
 }
 
-void zen_VirtualMachine_invokeStaticFunction(zen_VirtualMachine_t* virtualMachine,
+void zen_VirtualMachine_start(zen_VirtualMachine_t* virtualMachine,
     zen_Function_t* function, ...) {
+    jtk_VariableArguments_t variableArguments;
+    jtk_VariableArguments_start(variableArguments, function);
+    
+    zen_Interpreter_invokeStaticFunctionEx(virtualMachine->m_interpreter,
+        function, variableArguments);
+        
+    jtk_VariableArguments_end(variableArguments);
 }
 
 /* String */
