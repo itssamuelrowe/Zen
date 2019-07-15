@@ -133,6 +133,7 @@ set (
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/object/Class.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/object/Field.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/object/Function.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/object/NativeFunction.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/object/Object.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/object/ObjectArray.c
 

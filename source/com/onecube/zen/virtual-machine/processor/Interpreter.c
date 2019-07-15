@@ -5,6 +5,7 @@
 #include <jtk/core/Double.h>
 #include <jtk/collection/array/Array.h>
 
+#include <com/onecube/zen/virtual-machine/VirtualMachine.h>
 #include <com/onecube/zen/virtual-machine/feb/ByteCode.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPool.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFunction.h>
@@ -48,23 +49,7 @@ void zen_print(jtk_Array_t* arguments) {
     fflush(stdout);
 }
 
-zen_NativeFunction_t* zen_NativeFunction_new(
-    zen_NativeFunction_InvokeFunction_t invoke) {
-    zen_NativeFunction_t* nativeFunction = jtk_Memory_allocate(zen_NativeFunction_t, 1);
-    nativeFunction->m_invoke = invoke;
 
-    return nativeFunction;
-}
-
-// TODO: Move to virtual machine.
-void zen_Interpreter_loadLibrary(zen_Interpreter_t* interpreter) {
-    zen_NativeFunction_t* printNativeFunction = zen_NativeFunction_new(zen_print);
-
-    jtk_String_t* key = jtk_String_newEx("printv/(zen.core.String)@(zen.core.String)", 42);
-    jtk_HashMap_put(interpreter->m_nativeFunctions, key, printNativeFunction);
-
-    // TODO: Unload native functions
-}
 
 
 
@@ -81,7 +66,7 @@ void zen_Interpreter_loadLibrary(zen_Interpreter_t* interpreter) {
 /* Constructor */
 
 zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* manager,
-    zen_ProcessorThread_t* processorThread) {
+    zen_VirtualMachine_t* virtualMachine, zen_ProcessorThread_t* processorThread) {
     jtk_ObjectAdapter_t* stringObjectAdapter = jtk_StringObjectAdapter_getInstance();
 
     // jtk_Assert_assertObject(manager, "The specified memory manager is null.");
@@ -91,10 +76,7 @@ zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* manager,
     interpreter->m_invocationStack = zen_InvocationStack_new();
     interpreter->m_processorThread = processorThread;
     interpreter->m_logger = NULL;
-    interpreter->m_nativeFunctions = jtk_HashMap_newEx(stringObjectAdapter, NULL,
-        JTK_HASH_MAP_DEFAULT_CAPACITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
-
-    zen_Interpreter_loadLibrary(interpreter);
+    interpreter->m_virtualMachine = virtualMachine;
 
     return interpreter;
 }
@@ -161,13 +143,13 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
     while (true) {
         // TODO: Check if the instruction stream is exhausted.
         zen_InstructionAttribute_t* instructionAttribute = currentStackFrame->m_instructionAttribute;
-        
+
         // Temporary fix. In reality, the return instruction should be provided. */
         if ((currentStackFrame->m_ip + 1) >= instructionAttribute->m_instructionLength) {
             break;
         }
-        
-        
+
+
         uint8_t instruction = instructionAttribute->m_instructions[currentStackFrame->m_ip++];
 
         xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Fetched instruction... (instruction pointer = %d, instruction = 0x%X, function = %s -> %s)",
@@ -3509,9 +3491,9 @@ void zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interpreter,
     zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
 
     if (zen_Function_isNative(function)) {
-        jtk_String_t* key = jtk_String_append(function->m_name, function->m_descriptor);
-        zen_NativeFunction_t* nativeFunction =
-            (zen_NativeFunction_t*)jtk_HashMap_getValue(interpreter->m_nativeFunctions, key);
+        zen_NativeFunction_t* nativeFunction = zen_VirtualMachine_getNativeFunction(
+            interpreter->m_virtualMachine, function->m_name, function->m_descriptor);
+
         if (nativeFunction != NULL) {
             nativeFunction->m_invoke(arguments);
         }

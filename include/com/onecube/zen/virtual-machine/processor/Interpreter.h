@@ -5,7 +5,6 @@
 
 #include <jtk/log/Logger.h>
 #include <jtk/core/VariableArguments.h>
-#include <jtk/collection/map/HashMap.h>
 
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/virtual-machine/object/Class.h>
@@ -15,14 +14,7 @@
 
 #define ZEN_INTERPRETER_NULL_REFERENCE 0
 
-typedef void (*zen_NativeFunction_InvokeFunction_t)(jtk_Array_t* arguments);
-
-struct zen_NativeFunction_t {
-    // source file
-    zen_NativeFunction_InvokeFunction_t m_invoke;
-};
-
-typedef struct zen_NativeFunction_t zen_NativeFunction_t;
+typedef struct zen_VirtualMachine_t zen_VirtualMachine_t;
 
 /*******************************************************************************
  * Interpreter                                                                 *
@@ -39,8 +31,7 @@ struct zen_Interpreter_t {
     zen_InvocationStack_t* m_invocationStack;
     zen_ProcessorThread_t* m_processorThread;
     jtk_Logger_t* m_logger;
-    // TODO: Move to zen_VirtualMachine_t.
-    jtk_HashMap_t* m_nativeFunctions;
+    zen_VirtualMachine_t* m_virtualMachine;
 };
 
 /**
@@ -53,7 +44,8 @@ typedef struct zen_Interpreter_t zen_Interpreter_t;
 /**
  * @memberof Interpreter
  */
-zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* memoryManager, zen_ProcessorThread_t* processorThread);
+zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* memoryManager,
+    zen_VirtualMachine_t* virtualMachine, zen_ProcessorThread_t* processorThread);
 
 /* Destructor */
 

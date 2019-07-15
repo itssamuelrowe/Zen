@@ -3,6 +3,8 @@
 #ifndef COM_ONECUBE_ZEN_VIRTUAL_MACHINE_VIRTUAL_MACHINE_H
 #define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_VIRTUAL_MACHINE_H
 
+#include <jtk/collection/map/HashMap.h>
+
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/virtual-machine/ExceptionManager.h>
 #include <com/onecube/zen/virtual-machine/VirtualMachineConfiguration.h>
@@ -28,6 +30,7 @@ struct zen_VirtualMachine_t {
     zen_EntityLoader_t* m_entityLoader;
     zen_ClassLoader_t* m_classLoader;
     zen_Interpreter_t* m_interpreter;
+    jtk_HashMap_t* m_nativeFunctions;
 };
 
 /**

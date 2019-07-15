@@ -20,7 +20,11 @@ zen_VirtualMachine_t* zen_VirtualMachine_new(zen_VirtualMachineConfiguration_t* 
     virtualMachine->m_configuration = configuration;
     virtualMachine->m_entityLoader = zen_EntityLoader_newWithEntityDirectories(entityDirectoryIterator);
     virtualMachine->m_classLoader = zen_ClassLoader_new(virtualMachine->m_entityLoader);
-    virtualMachine->m_interpreter = zen_Interpreter_new(NULL, NULL);
+    virtualMachine->m_interpreter = zen_Interpreter_new(NULL, virtualMachine, NULL);
+    interpreter->m_nativeFunctions = jtk_HashMap_newEx(stringObjectAdapter, NULL,
+        JTK_HASH_MAP_DEFAULT_CAPACITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
+
+    zen_VirtualMachine_loadDefaultLibraries(interpreter);
 
     return virtualMachine;
 }
@@ -29,6 +33,8 @@ zen_VirtualMachine_t* zen_VirtualMachine_new(zen_VirtualMachineConfiguration_t* 
 
 void zen_VirtualMachine_delete(zen_VirtualMachine_t* virtualMachine) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+
+    zen_VirtualMachine_unloadLibraries(virtualMachine);
 
     zen_ClassLoader_delete(virtualMachine->m_classLoader);
     zen_EntityLoader_delete(virtualMachine->m_entityLoader);
@@ -53,12 +59,39 @@ zen_Class_t* zen_VirtualMachine_getClass(zen_VirtualMachine_t* virtualMachine,
 
     zen_Class_t* class0 = zen_ClassLoader_findClass(
         virtualMachine->m_classLoader, descriptor);
-    
+
     if (class0 == NULL) {
         zen_VirtualMachine_raiseClassNotFoundException(virtualMachine, descriptor);
     }
-    
+
     return class0;
+}
+
+/* Load Library */
+
+void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachine) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+
+    zen_NativeFunction_t* printNativeFunction = zen_NativeFunction_new(zen_print);
+
+    jtk_String_t* key = jtk_String_newEx("printv/(zen.core.String)@(zen.core.String)", 42);
+    jtk_HashMap_put(virtualMachine->m_nativeFunctions, key, printNativeFunction);
+
+    // TODO: Unload native functions
+}
+
+void zen_VirtualMachine_unloadLibraries(zen_VirtualMachine_t* virtualMachine) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+
+    jtk_Iterator_t* entryIterator = jtk_HashMap_getEntryIterator(virtualMachine->m_nativeFunctions);
+    while (jtk_Iterator_hasNext(entryIterator)) {
+        jtk_HashMapEntry_t* entry = (jtk_HashMapEntry_t*)jtk_Iterator_getNext(entryIterator);
+        jtk_String_t* key = (jtk_String_t*)jtk_HashMapEntry_getKey(entry);
+        zen_NativeFunction_t* value = (zen_NativeFunction_t*)jtk_HashMapEntry_getValue(entry);
+
+        jtk_String_delete(key);
+        zen_NativeFunction_delete(value);
+    }
 }
 
 /* Raise Exception */
@@ -145,6 +178,23 @@ zen_ExceptionManager_t* zen_VirtualMachine_getExceptionManager(zen_VirtualMachin
 void zen_VirtualMachine_handleException(zen_VirtualMachine_t* virtualMachine) {
 }
 
+/* Native Function */
+
+zen_NativeFunction_t* zen_VirtualMachine_getNativeFunction(
+    zen_VirtualMachine_t* virtualMachine, jtk_String_t* name,
+    jtk_String_t* descriptor) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+    jtk_Assert_assertObject(name, "The specified name is null.");
+    jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
+
+    jtk_String_t* key = jtk_String_append(name, descriptor);
+    zen_NativeFunction_t* result = (zen_NativeFunction_t*)jtk_HashMap_getValue(
+        virtualMachine->m_nativeFunctions, key);
+    jtk_String_delete(key);
+
+    return result;
+}
+
 /* Object */
 
 zen_Object_t* zen_VirtualMachine_newObject(zen_VirtualMachine_t* virtualMachine,
@@ -190,10 +240,10 @@ void zen_VirtualMachine_start(zen_VirtualMachine_t* virtualMachine,
     zen_Function_t* function, ...) {
     jtk_VariableArguments_t variableArguments;
     jtk_VariableArguments_start(variableArguments, function);
-    
+
     zen_Interpreter_invokeStaticFunctionEx(virtualMachine->m_interpreter,
         function, variableArguments);
-        
+
     jtk_VariableArguments_end(variableArguments);
 }
 
