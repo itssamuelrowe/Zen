@@ -24,12 +24,8 @@ int32_t zen_OperandStack_referenceSlotCountError() {
 /* Constructor */
 
 zen_OperandStack_t* zen_OperandStack_new(zen_MemoryManager_t* manager, int32_t capacity) {
-    zen_OperandStack_t* stack = (zen_OperandStack_t*)zen_MemoryManager_allocateEx(
-        manager, sizeof (zen_OperandStack_t), ZEN_ALIGNMENT_CONSTRAINT_DEFAULT,
-        ZEN_ALLOCATION_FLAG_MANUAL);
-    stack->m_values = (uint32_t*)zen_MemoryManager_allocateEx(manager,
-        sizeof (uint32_t) * capacity, ZEN_ALIGNMENT_CONSTRAINT_DEFAULT,
-        ZEN_ALLOCATION_FLAG_MANUAL);
+    zen_OperandStack_t* stack = jtk_Memory_allocate(zen_OperandStack_t, 1);
+    stack->m_values = (capacity > 0)? jtk_Memory_allocate(uint32_t, capacity) : NULL;
     stack->m_size = 0;
     stack->m_capacity = capacity;
 

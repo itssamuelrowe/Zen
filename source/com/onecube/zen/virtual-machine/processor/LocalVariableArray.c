@@ -31,11 +31,8 @@ int32_t zen_LocalVariableArray_referenceSlotCountError() {
  */
 zen_LocalVariableArray_t* zen_LocalVariableArray_new(zen_MemoryManager_t* memoryManager,
     int32_t size) {
-    zen_LocalVariableArray_t* localVariableArray = (zen_LocalVariableArray_t*)zen_MemoryManager_allocateEx(
-        memoryManager, sizeof (zen_LocalVariableArray_t), ZEN_ALIGNMENT_CONSTRAINT_DEFAULT,
-        ZEN_ALLOCATION_FLAG_MANUAL);
-    localVariableArray->m_values = (uint32_t*)zen_MemoryManager_allocateEx(memoryManager,
-        sizeof (uint32_t) * size, ZEN_ALIGNMENT_CONSTRAINT_DEFAULT, ZEN_ALLOCATION_FLAG_MANUAL);
+    zen_LocalVariableArray_t* localVariableArray = jtk_Memory_allocate(zen_LocalVariableArray_t, 1);
+    localVariableArray->m_values = (size > 0)? jtk_Memory_allocate(uint32_t, size) : NULL;
     localVariableArray->m_size = size;
 
     return localVariableArray;

@@ -22,6 +22,15 @@ zen_StackFrame_t* zen_StackFrame_new(zen_Function_t* function) {
     zen_FunctionEntity_t* functionEntity = function->m_functionEntity;
     zen_ConstantPool_t* constantPool = classEntity->m_constantPool;
 
+    int32_t maxStackSize = 0;
+    int32_t localVariableCount = 0;
+    
+    // Check if the function is native or not.
+
+    /* Search in a linear fashion for the instruction attribute in the specified
+     * function. It is recommended that the compilers generate instruction attribute
+     * as the first attribute for functions in general.
+     */
     zen_InstructionAttribute_t* instructionAttribute = NULL;
     int32_t limit = functionEntity->m_attributeTable.size;
     int32_t i;
@@ -33,6 +42,9 @@ zen_StackFrame_t* zen_StackFrame_new(zen_Function_t* function) {
         if (jtk_CString_equalsEx(nameEntry->m_bytes, nameEntry->m_length,
             ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION, ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION_SIZE)) {
             instructionAttribute = (zen_InstructionAttribute_t*)attribute;
+            maxStackSize = instructionAttribute->m_maxStackSize;
+            localVariableCount = instructionAttribute->m_localVariableCount
+    
             break;
         }
     }
@@ -42,8 +54,8 @@ zen_StackFrame_t* zen_StackFrame_new(zen_Function_t* function) {
      */
 
     zen_StackFrame_t* stackFrame = jtk_Memory_allocate(zen_StackFrame_t, 1);
-    stackFrame->m_operandStack = zen_OperandStack_new(instructionAttribute->m_maxStackSize);
-    stackFrame->m_localVariableArray = zen_LocalVariableArray_new(instructionAttribute->m_localVariableCount);
+    stackFrame->m_operandStack = zen_OperandStack_new(maxStackSize);
+    stackFrame->m_localVariableArray = zen_LocalVariableArray_new(localVariableCount);
     stackFrame->m_class = class0;
     stackFrame->m_function = function;
     stackFrame->m_instructionAttribute = instructionAttribute;

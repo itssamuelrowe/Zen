@@ -116,7 +116,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
     zen_StackFrame_t* currentStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
     uint32_t flags = 0;
     while (true) {
-        uint8_t instruction = currentStackFrame->m_code[currentStackFrame->m_ip++];
+        // TODO: Check if the instruction stream is exhausted.
+        zen_InstructionAttribute_t* instructionAttribute = currentStackFrame->m_instructionAttribute;
+        uint8_t instruction = instructionAttribute->m_instructions[currentStackFrame->m_ip++];
 
         xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Fetched instruction... (instruction pointer = %d, instruction = 0x%X, function = %s -> %s)",
             currentStackFrame->m_ip, instruction, zen_Interpreter_getCurrentFunctionName(interpreter),
