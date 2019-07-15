@@ -3,9 +3,11 @@
 #include <jtk/math/Math.h>
 #include <jtk/core/Float.h>
 #include <jtk/core/Double.h>
+#include <jtk/collection/array/Array.h>
 
 #include <com/onecube/zen/virtual-machine/feb/ByteCode.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPool.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFunction.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolInteger.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolLong.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFloat.h>
@@ -40,10 +42,48 @@ const uint8_t* ZEN_BOOTSTRAP_CLASS_ZEN_CORE_NULL_POINTER_EXCEPTION = "zen.core.N
 xjtk_Logger_debug(void* logger, const uint8_t* tag, const uint8_t* message, ...) {
 }
 
+void zen_print(jtk_Array_t* arguments) {
+    jtk_String_t* format = (jtk_String_t*)jtk_Array_getValue(arguments, 0);
+    fwrite(format->m_value, 1, format->m_size, stdout);
+    fflush(stdout);
+}
+
+zen_NativeFunction_t* zen_NativeFunction_new(
+    zen_NativeFunction_InvokeFunction_t invoke) {
+    zen_NativeFunction_t* nativeFunction = jtk_Memory_allocate(zen_NativeFunction_t, 1);
+    nativeFunction->m_invoke = invoke;
+
+    return nativeFunction;
+}
+
+// TODO: Move to virtual machine.
+void zen_Interpreter_loadLibrary(zen_Interpreter_t* interpreter) {
+    zen_NativeFunction_t* printNativeFunction = zen_NativeFunction_new(zen_print);
+
+    jtk_String_t* key = jtk_String_newEx("printv/(zen.core.String)@(zen.core.String)", 42);
+    jtk_HashMap_put(interpreter->m_nativeFunctions, key, printNativeFunction);
+
+    // TODO: Unload native functions
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* Constructor */
 
 zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* manager,
     zen_ProcessorThread_t* processorThread) {
+    jtk_ObjectAdapter_t* stringObjectAdapter = jtk_StringObjectAdapter_getInstance();
+
     // jtk_Assert_assertObject(manager, "The specified memory manager is null.");
 
     zen_Interpreter_t* interpreter = jtk_Memory_allocate(zen_Interpreter_t, 1);
@@ -51,6 +91,10 @@ zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* manager,
     interpreter->m_invocationStack = zen_InvocationStack_new();
     interpreter->m_processorThread = processorThread;
     interpreter->m_logger = NULL;
+    interpreter->m_nativeFunctions = jtk_HashMap_newEx(stringObjectAdapter, NULL,
+        JTK_HASH_MAP_DEFAULT_CAPACITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
+
+    zen_Interpreter_loadLibrary(interpreter);
 
     return interpreter;
 }
@@ -117,6 +161,13 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
     while (true) {
         // TODO: Check if the instruction stream is exhausted.
         zen_InstructionAttribute_t* instructionAttribute = currentStackFrame->m_instructionAttribute;
+        
+        // Temporary fix. In reality, the return instruction should be provided. */
+        if ((currentStackFrame->m_ip + 1) >= instructionAttribute->m_instructionLength) {
+            break;
+        }
+        
+        
         uint8_t instruction = instructionAttribute->m_instructions[currentStackFrame->m_ip++];
 
         xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Fetched instruction... (instruction pointer = %d, instruction = 0x%X, function = %s -> %s)",
@@ -1511,20 +1562,35 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             case ZEN_BYTE_CODE_INVOKE_STATIC: { /* invoke_static */
                 uint16_t index = zen_Interpreter_readShort(interpreter);
 
-                zen_Function_t* function = NULL; /*zen_ConstantPool_resolveFunctionObject(
-                    currentClass->m_constantPool, index);*/
+                zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
+                zen_ConstantPool_t* constantPool = entityFile->m_constantPool;
+                zen_ConstantPoolFunction_t* functionEntry =
+                    (zen_ConstantPoolFunction_t*)constantPool->m_entries[index];
+                zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[functionEntry->m_nameIndex];
+                zen_ConstantPoolUtf8_t* descriptorEntry = constantPool->m_entries[functionEntry->m_descriptorIndex];
+
+                jtk_String_t* name = jtk_String_newEx(nameEntry->m_bytes, nameEntry->m_length);
+                jtk_String_t* descriptor = jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
+
+                zen_Function_t* function = zen_Class_getStaticFunction(currentStackFrame->m_class,
+                    name, descriptor);
+
+                jtk_String_delete(name);
+                jtk_String_delete(descriptor);
 
                 if (function != NULL) {
-                    zen_Class_t* class0 = zen_Function_getClass(function);
-                    zen_Interpreter_handleClassInitialization(interpreter, class0);
+                    // zen_Interpreter_handleClassInitialization(interpreter, class0);
 
-                    if (zen_Function_isNative(function)) {
-                        zen_Interpreter_invokeNativeFunction(interpreter, class0, function, currentStackFrame->m_operandStack);
-                    }
-                    else {
-                        // currentFrame = ...;
-                        // code = ...;
-                    }
+                    void* argument1 = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+                    void* argument0 = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+
+                    jtk_Array_t* arguments = jtk_Array_new(2);
+                    jtk_Array_setValue(arguments, 0, argument0);
+                    jtk_Array_setValue(arguments, 1, argument1);
+
+                    zen_Interpreter_invokeStaticFunction(interpreter, function, arguments);
+
+                    jtk_Array_delete(arguments);
                 }
                 else {
                     /* TODO: Throw an instance of the UnknownFunctionException class. */
@@ -2013,48 +2079,57 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             }
 
             case ZEN_BYTE_CODE_LOAD_CPR: { /* load_cpr */
-                int32_t index /*= ...*/;
+                int32_t index = zen_Interpreter_readByte(interpreter);
 
-                if ((flags & ZEN_INTERPRETER_FLAG_WIDE_MODE) != 0) {
-                    // ...
-                }
-                else {
-                    // ...
-                }
-
-                zen_Entity_t* entity = zen_Class_getEntityFile(currentStackFrame->m_class)->m_entity;
-                zen_ConstantPool_t* pool = zen_Entity_getConstantPool(entity);
-                void* entry = zen_ConstantPool_getEntry(pool, index);
-                switch (zen_ConstantPoolEntry_getTag(entry)) {
+                zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
+                zen_ConstantPool_t* constantPool = entityFile->m_constantPool;
+                zen_ConstantPoolEntry_t* entry = constantPool->m_entries[index];
+                switch (entry->m_tag) {
                     case ZEN_CONSTANT_POOL_TAG_INTEGER: {
-                        int32_t value = zen_ConstantPoolInteger_getValue((zen_ConstantPoolInteger_t*)entry);
+                        zen_ConstantPoolInteger_t* constantPoolInteger = (zen_ConstantPoolInteger_t*)entry;
+                        int32_t value = zen_ConstantPoolInteger_getValue(constantPoolInteger);
                         zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, value);
 
                         break;
                     }
 
                     case ZEN_CONSTANT_POOL_TAG_LONG: {
-                        int64_t value = zen_ConstantPoolLong_getValue((zen_ConstantPoolLong_t*)entry);
+                        zen_ConstantPoolLong_t* constantPoolLong = (zen_ConstantPoolLong_t*)entry;
+                        int64_t value = zen_ConstantPoolLong_getValue(constantPoolLong);
                         zen_OperandStack_pushLong(currentStackFrame->m_operandStack, value);
 
                         break;
                     }
 
                     case ZEN_CONSTANT_POOL_TAG_FLOAT: {
-                        float value = zen_ConstantPoolFloat_getValue((zen_ConstantPoolFloat_t*)entry);
+                        zen_ConstantPoolFloat_t* constantPoolFloat = (zen_ConstantPoolFloat_t*)entry;
+                        float value = zen_ConstantPoolFloat_getValue(constantPoolFloat);
                         zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, value);
 
                         break;
                     }
 
                     case ZEN_CONSTANT_POOL_TAG_DOUBLE: {
-                        double value = zen_ConstantPoolDouble_getValue((zen_ConstantPoolDouble_t*)entry);
+                        zen_ConstantPoolDouble_t* constantPoolDouble = (zen_ConstantPoolDouble_t*)entry;
+                        double value = zen_ConstantPoolDouble_getValue(constantPoolDouble);
                         zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, value);
 
                         break;
                     }
 
-                    // ...
+                    case ZEN_CONSTANT_POOL_TAG_STRING: {
+                        zen_ConstantPoolString_t* constantPoolString = (zen_ConstantPoolString_t*)entry;
+                        zen_ConstantPoolUtf8_t* constantPoolUtf8 =
+                            (zen_ConstantPoolString_t*)constantPool->m_entries[constantPoolString->m_stringIndex];
+                        jtk_String_t* value = jtk_String_newEx(constantPoolUtf8->m_bytes, constantPoolUtf8->m_length);
+                        zen_OperandStack_pushReference(currentStackFrame->m_operandStack, value);
+
+                        break;
+                    }
+
+                    default: {
+                        // ERROR: load_cpr cannot load other types of constants.
+                    }
                 }
 
                 break;
@@ -3427,9 +3502,31 @@ void zen_Interpreter_invokeNativeFunction(zen_Interpreter_t* interpreter,
 
 /* Invoke Static Function */
 
+void zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interpreter,
+    zen_Function_t* function, jtk_Array_t* arguments) {
+
+    zen_StackFrame_t* stackFrame = zen_StackFrame_new(function);
+    zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
+
+    if (zen_Function_isNative(function)) {
+        jtk_String_t* key = jtk_String_append(function->m_name, function->m_descriptor);
+        zen_NativeFunction_t* nativeFunction =
+            (zen_NativeFunction_t*)jtk_HashMap_getValue(interpreter->m_nativeFunctions, key);
+        if (nativeFunction != NULL) {
+            nativeFunction->m_invoke(arguments);
+        }
+        else {
+            // ERROR: Unknown native function.
+        }
+    }
+    else {
+        zen_Interpreter_interpret(interpreter);
+    }
+}
+
 void zen_Interpreter_invokeStaticFunctionEx(zen_Interpreter_t* interpreter,
     zen_Function_t* function, jtk_VariableArguments_t variableArguments) {
-    
+
     zen_StackFrame_t* stackFrame = zen_StackFrame_new(function);
     zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
     zen_Interpreter_interpret(interpreter);
@@ -3443,9 +3540,19 @@ void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter
 /* Read */
 
 uint8_t zen_Interpreter_readByte(zen_Interpreter_t* interpreter) {
+    zen_StackFrame_t* currentStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
+    zen_InstructionAttribute_t* instructionAttribute = currentStackFrame->m_instructionAttribute;
+
+    return instructionAttribute->m_instructions[currentStackFrame->m_ip++];
 }
 
 uint16_t zen_Interpreter_readShort(zen_Interpreter_t* interpreter) {
+zen_StackFrame_t* currentStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
+    zen_InstructionAttribute_t* instructionAttribute = currentStackFrame->m_instructionAttribute;
+
+    uint8_t byte0 = instructionAttribute->m_instructions[currentStackFrame->m_ip++];
+    uint8_t byte1 = instructionAttribute->m_instructions[currentStackFrame->m_ip++];
+    return (byte0 << 8) | byte1;
 }
 
 

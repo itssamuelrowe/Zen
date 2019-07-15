@@ -28,8 +28,8 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
 
     const uint8_t* mainClassDescriptor = "Test";
     const uint8_t* stringClassDescriptor = "zen.core.String";
-    const uint8_t* mainFunctionIdentifier = "main";
-    const uint8_t* mainFunctionSignature = "(O)V";
+    jtk_String_t* mainFunctionIdentifier = jtk_String_newEx("main", 4);
+    jtk_String_t* mainFunctionSignature = jtk_String_newEx("v/@(zen.core.String)", 20);
 
     /* The configuration of the virtual machine is stored in an instance of
      * jtk_VirtualMachineConfiguration_t.
@@ -53,12 +53,12 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
 
         if (zen_VirtualMachine_isClear(virtualMachine)) {
             /* Find the String class. If the class is not found, an exception is thrown. */
-            zen_Class_t* stringClass = zen_VirtualMachine_getClass(virtualMachine,
-                stringClassDescriptor);
+            zen_Class_t* stringClass = NULL; /*zen_VirtualMachine_getClass(virtualMachine,
+                stringClassDescriptor);*/
 
             if (zen_VirtualMachine_isClear(virtualMachine)) {
                 /* Create a String array capable. It may result in an exception. */
-                zen_ObjectArray_t* arguments0 = zen_VirtualMachine_newObjectArray(virtualMachine, stringClass, argumentCount);
+                zen_ObjectArray_t* arguments0 = NULL; // zen_VirtualMachine_newObjectArray(virtualMachine, stringClass, argumentCount);
 
                 if (zen_VirtualMachine_isClear(virtualMachine)) {
                     int32_t i;
@@ -85,7 +85,7 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
                         /* Invoke the main function. It may result in an exception.
                          * The exception will be handled eventually.
                          */
-                        zen_VirtualMachine_start(virtualMachine, mainClass, mainFunction, arguments0);
+                        zen_VirtualMachine_start(virtualMachine, mainFunction, arguments0);
                     }
                 }
             }
@@ -102,6 +102,9 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
 
     /* Wait for other threds to complete and tear down the virtual machine. */
     zen_VirtualMachine_shutDown(virtualMachine);
+    
+    jtk_String_delete(mainFunctionSignature);
+    jtk_String_delete(mainFunctionIdentifier);
 
     /* Destroy the virtual machine and its configuration. Objects allocated
      * via the VirtualMachine class are automatically collected by the garbage

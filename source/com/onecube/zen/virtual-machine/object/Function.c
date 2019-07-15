@@ -1,5 +1,6 @@
 // Tuesday, March 26, 2019
 
+#include <com/onecube/zen/virtual-machine/feb/EntityFlag.h>
 #include <com/onecube/zen/virtual-machine/object/Function.h>
 #include <com/onecube/zen/virtual-machine/object/Class.h>
 
@@ -54,5 +55,5 @@ jtk_String_t* zen_Function_getName(zen_Function_t* function) {
 // Native
 
 bool zen_Function_isNative(zen_Function_t* function) {
-    return false;
+    return (function->m_functionEntity->m_flags & ZEN_ENTITY_FLAG_NATIVE) != 0;
 }

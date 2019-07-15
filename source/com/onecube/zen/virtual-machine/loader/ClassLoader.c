@@ -34,7 +34,7 @@ void zen_ClassLoader_delete(zen_ClassLoader_t* classLoader) {
         jtk_String_t* descriptor = (jtk_String_t*)jtk_HashMapEntry_getKey(entry);
         zen_Class_t* class0 = (zen_Class_t*)jtk_HashMapEntry_getValue(entry);
         
-        jtk_String_delete(descriptor);
+        // TODO: jtk_String_delete(descriptor);
         zen_Class_delete(class0);
     }
     jtk_Iterator_delete(entryIterator);
