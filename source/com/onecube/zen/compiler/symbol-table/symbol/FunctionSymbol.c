@@ -1,6 +1,6 @@
 // Saturday, February 24, 2018
 
-#include <zen/st/FunctionSymbol.h>
+#include <com/onecube/zen/st/FunctionSymbol.h>
 
 /*******************************************************************************
  * FunctionSymbol                                                              *
@@ -34,7 +34,7 @@ void zen_FunctionSymbol_delete(zen_FunctionSymbol_t* symbol) {
     zen_Memory_deallocate(symbol);
 }
 
-zen_ArrayList_t* zen_FunctionSymbol_getSignatures(zen_FunctionSymbol_t* symbol) {
+jtk_ArrayList_t* zen_FunctionSymbol_getSignatures(zen_FunctionSymbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
     return symbol->m_signatures;

@@ -4,10 +4,10 @@
 #define ZEN_TOKEN_STREAM_H
 
 #include <com/onecube/zen/Configuration.h>
-#include <zen/collection/ArrayList.h>
-#include <zen/Lexer.h>
-#include <zen/Token.h>
-#include <zen/TokenType.h>
+#include <com/onecube/zen/collection/ArrayList.h>
+#include <com/onecube/zen/Lexer.h>
+#include <com/onecube/zen/Token.h>
+#include <com/onecube/zen/TokenType.h>
 
 /*******************************************************************************
  * TokenStream                                                           *
@@ -32,7 +32,7 @@ struct zen_TokenStream_t {
      * far. It is considered a complete view of the input source
      * once the lexer recognizes the end-of-stream token.
      */
-    zen_ArrayList_t* m_tokens;
+    jtk_ArrayList_t* m_tokens;
 
     /**
      * The index of the current token.
@@ -62,7 +62,7 @@ void zen_TokenStream_consume(zen_TokenStream_t* stream);
 bool zen_TokenStream_synchronize(zen_TokenStream_t* stream, int32_t i);
 int32_t zen_TokenStream_fetch(zen_TokenStream_t* stream, int32_t n);
 zen_Token_t* zen_TokenStream_getToken(zen_TokenStream_t* stream, int32_t index);
-zen_ArrayList_t* zen_TokenStream_getTokens(zen_TokenStream_t* stream, int32_t startIndex, int32_t stopIndex);
+jtk_ArrayList_t* zen_TokenStream_getTokens(zen_TokenStream_t* stream, int32_t startIndex, int32_t stopIndex);
 zen_TokenType_t zen_TokenStream_la(zen_TokenStream_t* stream, int32_t i);
 zen_Token_t* zen_TokenStream_lt(zen_TokenStream_t* stream, int32_t k);
 void zen_TokenStream_initialize(zen_TokenStream_t* stream);

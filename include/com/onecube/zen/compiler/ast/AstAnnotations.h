@@ -1,25 +1,25 @@
 // Saturday, March 10, 2018
 
-#ifndef ZEN_ST_AST_AST_NODE_ANNOTATIONS_H
-#define ZEN_ST_AST_AST_NODE_ANNOTATIONS_H
+#ifndef COM_ONECUBE_COM_ONECUBE_COM_ONECUBE_ZEN_COMPILER_COMPILER_COMPILER_ST_AST_AST_NODE_ANNOTATIONS_H
+#define COM_ONECUBE_COM_ONECUBE_ZEN_COMPILER_COMPILER_ST_AST_AST_NODE_ANNOTATIONS_H
 
-#include <zen/ASTNode.h>
-#include <zen/collection/HashMap.h>
+#include <jtk/collection/map/HashMap.h>
+#include <com/onecube/zen/compiler/ast/ASTNode.h>
 
 /*******************************************************************************
- * AstAnnotations                                                             *
+ * ASTAnnotations                                                             *
  *******************************************************************************/
 
-struct zen_AstAnnotations_t {
-    zen_HashMap_t* m_map;
+struct zen_ASTAnnotations_t {
+    jtk_HashMap_t* m_map;
 };
 
-typedef struct zen_AstAnnotations_t zen_AstAnnotations_t;
+typedef struct zen_ASTAnnotations_t zen_ASTAnnotations_t;
 
-zen_AstAnnotations_t* zen_AstAnnotations_new();
-void zen_AstAnnotations_delete(zen_AstAnnotations_t* annotations);
-void* zen_AstAnnotations_get(zen_AstAnnotations_t* annotations, zen_ASTNode_t* node);
-void zen_AstAnnotations_put(zen_AstAnnotations_t* annotations, zen_ASTNode_t* node, void* value);
-void zen_AstAnnotations_remove(zen_AstAnnotations_t* annotations, zen_ASTNode_t* node);
+zen_ASTAnnotations_t* zen_ASTAnnotations_new();
+void zen_ASTAnnotations_delete(zen_ASTAnnotations_t* annotations);
+void* zen_ASTAnnotations_get(zen_ASTAnnotations_t* annotations, zen_ASTNode_t* node);
+void zen_ASTAnnotations_put(zen_ASTAnnotations_t* annotations, zen_ASTNode_t* node, void* value);
+void zen_ASTAnnotations_remove(zen_ASTAnnotations_t* annotations, zen_ASTNode_t* node);
 
-#endif /* ZEN_ST_AST_AST_NODE_ANNOTATIONS_H */
+#endif /* COM_ONECUBE_COM_ONECUBE_ZEN_COMPILER_COMPILER_ST_AST_AST_NODE_ANNOTATIONS_H */

@@ -1,10 +1,10 @@
-#include <zen/ASTNode.h>
-#include <zen/Token.h>
-#include <zen/st/ClassScope.h>
-#include <zen/st/FunctionSignature.h>
-#include <zen/st/FunctionSymbol.h>
-#include <zen/st/SymbolDefinitionListener.h>
-#include <zen/st/SymbolTable.h>
+#include <com/onecube/zen/compiler/astNode.h>
+#include <com/onecube/zen/Token.h>
+#include <com/onecube/zen/st/ClassScope.h>
+#include <com/onecube/zen/st/FunctionSignature.h>
+#include <com/onecube/zen/st/FunctionSymbol.h>
+#include <com/onecube/zen/st/SymbolDefinitionListener.h>
+#include <com/onecube/zen/st/SymbolTable.h>
 
 zen_SymbolDefinitionListener_t* zen_SymbolDefinitionListener_new(zen_SymbolTable_t* symbolTable) {
     zen_SymbolDefinitionListener_t* listener = zen_Memory_allocate(zen_SymbolDefinitionListener_t, 1);
@@ -66,7 +66,7 @@ void zen_SymbolDefinitionListener_onEnterFunctionParameters(
     /* Retrieve the variableParameter associated with the context of the
      * function arguments.
      */
-    zen_ArrayList_t* fixedParameters = functionParametersContext->m_fixedParameters;
+    jtk_ArrayList_t* fixedParameters = functionParametersContext->m_fixedParameters;
     /* Retrieve the variableParameter associated with the context of the
      * function arguments.
      */
@@ -111,7 +111,7 @@ void zen_SymbolDefinitionListener_onEnterFunctionParameters(
                      * to be unique.
                      */
                     /* Retrieve the overloaded signatures of the function symbol. */
-                    zen_ArrayList_t* signatures = zen_FunctionSymbol_getSignatures(memberFunctionSymbol);
+                    jtk_ArrayList_t* signatures = zen_FunctionSymbol_getSignatures(memberFunctionSymbol);
                     /* Let X be a function. If an overload of function X, say Xi, has k
                      * fixed parameters and a variable parameter, then the maximum number
                      * of fixed parameters for any overload of function X is limited to k.

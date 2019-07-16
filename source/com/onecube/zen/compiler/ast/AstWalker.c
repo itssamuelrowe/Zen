@@ -1,6 +1,6 @@
-#include <zen/ASTWalker.h>
-#include <zen/collection/ArrayList.h>
-#include <zen/Parser.h>
+#include <com/onecube/zen/compiler/astWalker.h>
+#include <com/onecube/zen/collection/ArrayList.h>
+#include <com/onecube/zen/Parser.h>
 
 void zen_ASTWalker_walk(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
     jtk_Assert_assertObject(listener, "The specified listener is null.");
@@ -20,7 +20,7 @@ void zen_ASTWalker_walk(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
         zen_ASTWalker_enterRule(listener, node);
 
         // TODO: Use a stack based traversal.
-        zen_ArrayList_t* children = zen_ASTNode_getChildren(node);
+        jtk_ArrayList_t* children = zen_ASTNode_getChildren(node);
         int32_t size = zen_ArrayList_getSize(children);
         int32_t i;
         for (i = 0; i < size; i++) {

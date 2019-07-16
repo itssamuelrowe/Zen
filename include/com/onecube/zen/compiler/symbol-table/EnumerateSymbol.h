@@ -3,10 +3,10 @@
 #ifndef ZEN_ST_ENUMERATE_SYMBOL_H
 #define ZEN_ST_ENUMERATE_SYMBOL_H
 
-#include <zen/ASTNode.h>
-#include <zen/st/Symbol.h>
-#include <zen/st/Modifier.h>
-#include <zen/collection/ArrayList.h>
+#include <com/onecube/zen/compiler/ast/Node.h>
+#include <com/onecube/zen/st/Symbol.h>
+#include <com/onecube/zen/st/Modifier.h>
+#include <com/onecube/zen/collection/ArrayList.h>
 
 /*******************************************************************************
  * EnumerateSymbol                                                             *

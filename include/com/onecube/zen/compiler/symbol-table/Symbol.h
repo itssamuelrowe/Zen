@@ -3,9 +3,9 @@
 #ifndef ZEN_ST_SYMBOL_H
 #define ZEN_ST_SYMBOL_H
 
-#include <zen/ASTNode.h>
-#include <zen/st/Scope.h>
-#include <zen/st/SymbolCategory.h>
+#include <com/onecube/zen/compiler/ast/Node.h>
+#include <com/onecube/zen/st/Scope.h>
+#include <com/onecube/zen/st/SymbolCategory.h>
 
 /*******************************************************************************
  * Symbol                                                                      *

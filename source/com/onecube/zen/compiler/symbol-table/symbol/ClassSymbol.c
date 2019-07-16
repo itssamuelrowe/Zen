@@ -1,6 +1,6 @@
 // Saturday, February 24, 2018
 
-#include <zen/st/ClassSymbol.h>
+#include <com/onecube/zen/st/ClassSymbol.h>
 
 /*******************************************************************************
  * ClassSymbol                                                                 *
@@ -36,7 +36,7 @@ zen_Scope_t* zen_ClassSymbol_getClassScope(zen_ClassSymbol_t* symbol) {
     return symbol->m_classScope;
 }
 
-zen_ArrayList_t* zen_ClassSymbol_getSuperClasses(zen_ClassSymbol_t* symbol) {
+jtk_ArrayList_t* zen_ClassSymbol_getSuperClasses(zen_ClassSymbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
     return symbol->m_superClasses;

@@ -4,8 +4,8 @@
 #define ZEN_TOKEN_H
 
 #include <com/onecube/zen/Configuration.h>
-#include <zen/TokenType.h>
-#include <zen/TokenChannel.h>
+#include <com/onecube/zen/TokenType.h>
+#include <com/onecube/zen/TokenChannel.h>
 
 /*******************************************************************************
  * Token                                                                       *

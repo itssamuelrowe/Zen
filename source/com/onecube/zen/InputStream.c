@@ -1,7 +1,7 @@
 // Saturday, November 04, 2017
 
 #include <string.h>
-#include <zen/InputStream.h>
+#include <com/onecube/zen/InputStream.h>
 
 /*******************************************************************************
  * InputStream                                                                 *

@@ -4,7 +4,7 @@
 #define ZEN_BEG_BINARY_ENTITY_GENERATOR_H
 
 #include <com/onecube/zen/Configuration.h>
-#include <zen/feb/ConstantPool.h>
+#include <com/onecube/zen/feb/ConstantPool.h>
 
 /*******************************************************************************
  * BinaryEntityGenerator                                                       *

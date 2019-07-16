@@ -1,6 +1,6 @@
 // Friday, March 09, 2018
 
-#include <zen/st/EnumerateSymbol.h>
+#include <com/onecube/zen/st/EnumerateSymbol.h>
 
 /*******************************************************************************
  * EnumerateSymbol                                                             *

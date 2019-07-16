@@ -1,6 +1,6 @@
 // Monday, June 11, 2018
 
-#include <zen/vm/BinaryEntityVerifier.h>
+#include <com/onecube/zen/vm/BinaryEntityVerifier.h>
 
 /*******************************************************************************
  * BinaryEntityVerifier                                                        *

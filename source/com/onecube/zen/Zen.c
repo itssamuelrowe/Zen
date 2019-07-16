@@ -2,23 +2,23 @@
 #include <string.h>
 
 #include <com/onecube/zen/Configuration.h>
-#include <zen/InputStream.h>
-#include <zen/Lexer.h>
-#include <zen/LexerError.h>
-#include <zen/collection/ArrayList.h>
-#include <zen/TokenStream.h>
-#include <zen/Parser.h>
-#include <zen/ASTNode.h>
-#include <zen/ASTListener.h>
-#include <zen/ASTWalker.h>
-#include <zen/ast/AstAnnotations.h>
-#include <zen/ast/AstPrinter.h>
-#include <zen/bcg/BinaryEntityBuilder.h>
-#include <zen/bcg/BinaryEntityGenerator.h>
-#include <zen/feb/Instruction.h>
-#include <zen/st/SymbolDefinitionListener.h>
-#include <zen/st/SymbolResolutionListener.h>
-#include <zen/st/SymbolTable.h>
+#include <com/onecube/zen/InputStream.h>
+#include <com/onecube/zen/Lexer.h>
+#include <com/onecube/zen/LexerError.h>
+#include <com/onecube/zen/collection/ArrayList.h>
+#include <com/onecube/zen/TokenStream.h>
+#include <com/onecube/zen/Parser.h>
+#include <com/onecube/zen/compiler/astNode.h>
+#include <com/onecube/zen/compiler/astListener.h>
+#include <com/onecube/zen/compiler/astWalker.h>
+#include <com/onecube/zen/compiler/ast/AstAnnotations.h>
+#include <com/onecube/zen/compiler/ast/AstPrinter.h>
+#include <com/onecube/zen/bcg/BinaryEntityBuilder.h>
+#include <com/onecube/zen/bcg/BinaryEntityGenerator.h>
+#include <com/onecube/zen/feb/Instruction.h>
+#include <com/onecube/zen/st/SymbolDefinitionListener.h>
+#include <com/onecube/zen/st/SymbolResolutionListener.h>
+#include <com/onecube/zen/st/SymbolTable.h>
 
 /* lexer -> parser -> symbol table -> semantic errors -> byte code generator -> interpreter */
 
@@ -26,7 +26,7 @@ void printToken(zen_Token_t* token) {
     printf("[%d-%d:%d-%d:%s:%s]\n", token->m_startLine + 1, token->m_stopLine + 1, token->m_startColumn + 1, token->m_stopColumn + 1, token->m_channel == ZEN_TOKEN_CHANNEL_DEFAULT? "default" : "hidden", zen_Lexer_getLiteralName(token->m_type));
 }
 
-void printTokens(zen_ArrayList_t* tokens) {
+void printTokens(jtk_ArrayList_t* tokens) {
     int32_t limit = zen_ArrayList_getSize(tokens);
     zen_Token_t* token;
     int32_t i;
@@ -42,7 +42,7 @@ void zen_Interpreter_onLexerError(zen_LexerError_t* error) {
     fflush(stderr);
 }
 
-#include <zen/collection/DoublyLinkedList.h>
+#include <com/onecube/zen/collection/DoublyLinkedList.h>
 int32_t xmain() {
     zen_DoublyLinkedList_t* list = zen_DoublyLinkedList_new();
     
@@ -67,7 +67,7 @@ int32_t xmain() {
 int32_t main(int32_t length, char** arguments) {
     jtk_Assert_assertTrue(zen_Instruction_verify(), "The instruction set is invalid.");
     
-    zen_ArrayList_t* inputFiles = zen_ArrayList_new();
+    jtk_ArrayList_t* inputFiles = zen_ArrayList_new();
     bool internalDumpTokens = false;
     bool internalDumpNodes = false;
     bool internalFootprint = false;

@@ -4,16 +4,16 @@
 #define ZEN_BCG_CHANNEL_MANAGER_H
 
 #include <com/onecube/zen/Configuration.h>
-#include <zen/collection/DoublyLinkedList.h>
-#include <zen/bcg/ByteCodeChannel.h>
-#include <zen/collection/ArrayList.h>
+#include <com/onecube/zen/collection/DoublyLinkedList.h>
+#include <com/onecube/zen/bcg/ByteCodeChannel.h>
+#include <com/onecube/zen/collection/ArrayList.h>
 
 /*******************************************************************************
  * ChannelManager                                                      *
  *******************************************************************************/
 
 struct zen_ChannelManager_t {
-    zen_ArrayList_t* m_stack;
+    jtk_ArrayList_t* m_stack;
 };
 
 typedef struct zen_ChannelManager_t zen_ChannelManager_t;

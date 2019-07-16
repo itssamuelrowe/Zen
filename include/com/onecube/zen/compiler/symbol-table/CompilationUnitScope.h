@@ -3,9 +3,9 @@
 #ifndef ZEN_ST_COMPILATION_UNIT_SCOPE_H
 #define ZEN_ST_COMPILATION_UNIT_SCOPE_H
 
-#include <zen/st/Scope.h>
-#include <zen/st/Symbol.h>
-#include <zen/collection/HashMap.h>
+#include <com/onecube/zen/st/Scope.h>
+#include <com/onecube/zen/st/Symbol.h>
+#include <com/onecube/zen/collection/HashMap.h>
 
 /*******************************************************************************
  * CompilationUnitScope                                                        *

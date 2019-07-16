@@ -3,9 +3,9 @@
 #ifndef ZEN_ST_SYMBOL_RESOLUTION_LISTENER_H
 #define ZEN_ST_SYMBOL_RESOLUTION_LISTENER_H
 
-#include <zen/ASTListener.h>
-#include <zen/st/SymbolTable.h>
-#include <zen/ast/AstAnnotations.h>
+#include <com/onecube/zen/compiler/ast/Listener.h>
+#include <com/onecube/zen/st/SymbolTable.h>
+#include <com/onecube/zen/compiler/ast//AstAnnotations.h>
 
 /*******************************************************************************
  * SymbolResolutionListener                                                    *

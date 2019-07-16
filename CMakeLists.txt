@@ -59,13 +59,10 @@ set (
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/ast/AstPrinter.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/ast/AstWalker.c
 
-    # Binary Code Generator
+    # Generator
 
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/bcg/BinaryEntityBuilder.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/bcg/BinaryEntityGenerator.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/bcg/ByteCodeChannel.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/bcg/ChannelManager.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/bcg/ConstantPoolBuilder.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/generator/BinaryEntityBuilder.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/generator/DataChannel.c
 
     # Lexer
 
@@ -175,8 +172,8 @@ set (
 
 set(CMAKE_VERBOSE_MAKEFILE off)
 
-# add_executable (zen ${ZEN_PUBLIC_HEADERS} ${ZEN_COMMON_SOURCE} ${ZEN_COMPILER_SOURCE} ${ZEN_PRIVATE_HEADERS})
-# target_compile_options(zen PUBLIC -Wall -Wswitch)
+add_executable (zen ${ZEN_PUBLIC_HEADERS} ${ZEN_COMMON_SOURCE} ${ZEN_COMPILER_SOURCE} ${ZEN_PRIVATE_HEADERS})
+target_compile_options(zen PUBLIC -Wall -Wswitch)
 
 # add_executable (zsv ${ZEN_PUBLIC_HEADERS} ${ZEN_COMMON_SOURCE} ${ZEN_ZVM_SPECIFICATION_VIEWER} ${ZEN_PRIVATE_HEADERS})
 # target_compile_options(zsv PUBLIC -Wall -Wswitch)

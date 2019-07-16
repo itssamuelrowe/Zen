@@ -1,5 +1,5 @@
-#include <zen/Token.h>
-#include <zen/CString.h>
+#include <com/onecube/zen/Token.h>
+#include <com/onecube/zen/CString.h>
 
 zen_Token_t* zen_Token_new(
     zen_TokenChannel_t channel,

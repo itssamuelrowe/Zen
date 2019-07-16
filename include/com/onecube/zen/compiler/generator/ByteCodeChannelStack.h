@@ -3,7 +3,7 @@
 #ifndef ZEN_BCG_BYTE_CODE_CHANNEL_STACK_H
 #define ZEN_BCG_BYTE_CODE_CHANNEL_STACK_H
 
-#include <zen/bcg/ByteCodeChannel.h>
+#include <com/onecube/zen/bcg/ByteCodeChannel.h>
 
 /*******************************************************************************
  * ByteCodeChannelStack                                                        *

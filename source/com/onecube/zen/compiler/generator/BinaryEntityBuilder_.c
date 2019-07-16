@@ -1,14 +1,14 @@
 #include <stdarg.h>
-#include <zen/ASTWalker.h>
-#include <zen/Token.h>
-#include <zen/TokenType.h>
-#include <zen/Context.h>
-#include <zen/ast/ASTHelper.h>
-#include <zen/ast/AstAnnotation.h>
-#include <zen/bcg/BinaryEntityBuilder.h>
-#include <zen/core/Integer.h>
-#include <zen/feb/Instruction.h>
-#include <zen/st/Symbol.h>
+#include <com/onecube/zen/compiler/astWalker.h>
+#include <com/onecube/zen/Token.h>
+#include <com/onecube/zen/TokenType.h>
+#include <com/onecube/zen/Context.h>
+#include <com/onecube/zen/compiler/ast/ASTHelper.h>
+#include <com/onecube/zen/compiler/ast/AstAnnotation.h>
+#include <com/onecube/zen/bcg/BinaryEntityBuilder.h>
+#include <com/onecube/zen/core/Integer.h>
+#include <com/onecube/zen/feb/Instruction.h>
+#include <com/onecube/zen/st/Symbol.h>
 
 zen_BinaryEntityBuilder_t* zen_BinaryEntityBuilder_new(zen_SymbolTable_t* symbolTable, zen_AstAnnotations_t* scopes) {
     zen_BinaryEntityBuilder_t* builder = zen_Memory_allocate(zen_BinaryEntityBuilder_t, 1);
@@ -231,7 +231,7 @@ void zen_BinaryEntityBuilder_pushInteger(zen_BinaryEntityBuilder_t* builder, int
     zen_BinaryEntityBuilder_emitLoadCpr(builder, 0);
 }
 
-int32_t zen_BinaryEntityBuilder_findFieldDescriptorIndex(zen_BinaryEntityBuilder_t* builder, zen_ArrayList_t* identifiers) {
+int32_t zen_BinaryEntityBuilder_findFieldDescriptorIndex(zen_BinaryEntityBuilder_t* builder, jtk_ArrayList_t* identifiers) {
     return 0;
 }
 
@@ -432,7 +432,7 @@ void zen_BinaryEntityBuilder_onEnterAssignmentExpression(zen_ASTListener_t* astL
      * side of the assignment operator evaluates to an identifier or
      * field access.
      */
-    // zen_ArrayList_t* children = zen_ArrayList_new();
+    // jtk_ArrayList_t* children = zen_ArrayList_new();
     // zen_ASTHelper_getFilteredTokens(context->m_conditionalExpression, children, ZEN_TOKEN_IDENTIFIER);
 
     /* The following line is valid when zen_ASTHelper_getFilteredTerminalNodes() function

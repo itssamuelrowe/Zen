@@ -3,9 +3,9 @@
 #ifndef ZEN_ST_FUNCTION_SCOPE_H
 #define ZEN_ST_FUNCTION_SCOPE_H
 
-#include <zen/collection/ArrayList.h>
-#include <zen/st/ConstantSymbol.h>
-#include <zen/st/Scope.h>
+#include <com/onecube/zen/collection/ArrayList.h>
+#include <com/onecube/zen/st/ConstantSymbol.h>
+#include <com/onecube/zen/st/Scope.h>
 
 /*******************************************************************************
  * FunctionScope                                                               *
@@ -14,7 +14,7 @@
 struct zen_FunctionScope_t {
     zen_Scope_t* m_scope;
     /* TODO: Use an OrderedMap here. */
-    zen_ArrayList_t* m_fixedParameters; /* <zen_Symbol*> */
+    jtk_ArrayList_t* m_fixedParameters; /* <zen_Symbol*> */
     zen_Symbol_t* m_variableParameter;
 };
 

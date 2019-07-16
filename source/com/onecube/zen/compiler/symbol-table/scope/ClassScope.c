@@ -1,11 +1,11 @@
 // Monday, January 08, 2018
 
-#include <zen/st/ClassScope.h>
-#include <zen/st/ClassSymbol.h>
-#include <zen/collection/ArrayList.h>
-#include <zen/collection/LinkedStack.h>
-#include <zen/core/StringObjectAdapter.h>
-#include <zen/Token.h>
+#include <com/onecube/zen/st/ClassScope.h>
+#include <com/onecube/zen/st/ClassSymbol.h>
+#include <com/onecube/zen/collection/ArrayList.h>
+#include <com/onecube/zen/collection/LinkedStack.h>
+#include <com/onecube/zen/core/StringObjectAdapter.h>
+#include <com/onecube/zen/Token.h>
 
 static const char* zen_ClassScope_name = "class";
 
@@ -102,7 +102,7 @@ zen_Symbol_t* zen_ClassScope_resolve(zen_ClassScope_t* scope,
             break;
         }
         else {
-            zen_ArrayList_t* superClasses = zen_ClassSymbol_getSuperClasses(classSymbol);
+            jtk_ArrayList_t* superClasses = zen_ClassSymbol_getSuperClasses(classSymbol);
             int32_t size = zen_ArrayList_getSize(superClasses);
             int32_t i;
             for (i = 0; i < size; i++) {

@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <zen/ASTNode.h>
-#include <zen/Parser.h>
+#include <com/onecube/zen/compiler/astNode.h>
+#include <com/onecube/zen/Parser.h>
 
 /******************************************************************************
  * ASTNode																	  *
@@ -20,7 +20,7 @@ zen_ASTNode_t* zen_ASTNode_new(zen_ASTNode_t* parent) {
 
 void zen_ASTNode_delete(zen_ASTNode_t* node) {
     if (zen_ASTNode_isRule(node)) {
-        zen_ArrayList_t* children = zen_ASTNode_getChildren(node);
+        jtk_ArrayList_t* children = zen_ASTNode_getChildren(node);
         int32_t size = zen_ArrayList_getSize(children);
         int32_t i;
         for (i = 0; i < size; i++) {
@@ -78,7 +78,7 @@ int32_t zen_ASTNode_getDepth(zen_ASTNode_t* node) {
 }
 
 /* The returned array list should not be modified externally. */
-zen_ArrayList_t* zen_ASTNode_getChildren(zen_ASTNode_t* node) {
+jtk_ArrayList_t* zen_ASTNode_getChildren(zen_ASTNode_t* node) {
     jtk_Assert_assertObject(node, "The specified node is null.");
 
     if (node->m_children == NULL) {

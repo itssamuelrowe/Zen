@@ -1,4 +1,4 @@
-#include <zen/RuleNode.h>
+#include <com/onecube/zen/RuleNode.h>
 
 /*******************************************************************************
  * RuleNode                                                                    *

@@ -1,21 +1,21 @@
-#include <zen/ASTNode.h>
-#include <zen/Token.h>
-#include <zen/collection/LinkedStack.h>
-#include <zen/st/ClassScope.h>
-#include <zen/st/FunctionSignature.h>
-#include <zen/st/FunctionSymbol.h>
-#include <zen/st/SymbolDefinitionListener.h>
-#include <zen/st/SymbolTable.h>
-#include <zen/st/FunctionScope.h>
-#include <zen/st/ConstantSymbol.h>
-#include <zen/st/LocalScope.h>
-#include <zen/st/VariableSymbol.h>
-#include <zen/st/LabelSymbol.h>
-#include <zen/st/ClassSymbol.h>
-#include <zen/st/EnumerationSymbol.h>
-#include <zen/st/EnumerationScope.h>
-#include <zen/st/CompilationUnitScope.h>
-#include <zen/st/EnumerateSymbol.h>
+#include <com/onecube/zen/compiler/astNode.h>
+#include <com/onecube/zen/Token.h>
+#include <com/onecube/zen/collection/LinkedStack.h>
+#include <com/onecube/zen/st/ClassScope.h>
+#include <com/onecube/zen/st/FunctionSignature.h>
+#include <com/onecube/zen/st/FunctionSymbol.h>
+#include <com/onecube/zen/st/SymbolDefinitionListener.h>
+#include <com/onecube/zen/st/SymbolTable.h>
+#include <com/onecube/zen/st/FunctionScope.h>
+#include <com/onecube/zen/st/ConstantSymbol.h>
+#include <com/onecube/zen/st/LocalScope.h>
+#include <com/onecube/zen/st/VariableSymbol.h>
+#include <com/onecube/zen/st/LabelSymbol.h>
+#include <com/onecube/zen/st/ClassSymbol.h>
+#include <com/onecube/zen/st/EnumerationSymbol.h>
+#include <com/onecube/zen/st/EnumerationScope.h>
+#include <com/onecube/zen/st/CompilationUnitScope.h>
+#include <com/onecube/zen/st/EnumerateSymbol.h>
 
 void zen_ErrorHandler_reportError(void* handler, const char* message, zen_Token_t* token) {
     fprintf(stderr, "[error] %d:%d-%d: %s\n", token->m_startLine, token->m_startColumn, token->m_stopColumn, message);
@@ -108,7 +108,7 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
     /* Retrieve the variableParameter associated with the context of the
      * function arguments.
      */
-    zen_ArrayList_t* fixedParameters = NULL;
+    jtk_ArrayList_t* fixedParameters = NULL;
     /* Retrieve the variableParameter associated with the context of the
      * function arguments.
      */
@@ -219,7 +219,7 @@ void zen_SymbolDefinitionListener_onExitFunctionDeclaration(
 // TODO: Declare function even if it has no parameters.
 
 void zen_SymbolDefinitionListener_declareOverloadedFunction(zen_FunctionSymbol_t* functionSymbol,
-    zen_ArrayList_t* fixedParameters, zen_ASTNode_t* variableParameter) {
+    jtk_ArrayList_t* fixedParameters, zen_ASTNode_t* variableParameter) {
 
     zen_Token_t* identifierToken = (zen_Token_t*)functionSymbol->m_symbol->m_identifier->m_context;
 
@@ -253,7 +253,7 @@ void zen_SymbolDefinitionListener_declareOverloadedFunction(zen_FunctionSymbol_t
     }
 
     /* Retrieve the overloaded signatures of the function symbol. */
-    zen_ArrayList_t* signatures = zen_FunctionSymbol_getSignatures(functionSymbol);
+    jtk_ArrayList_t* signatures = zen_FunctionSymbol_getSignatures(functionSymbol);
     /* Determine the number of signatures. */
     int32_t size = zen_ArrayList_getSize(signatures);
     /* Iterate over the signatures to determine if the signature of the
@@ -320,7 +320,7 @@ void zen_SymbolDefinitionListener_declareOverloadedFunction(zen_FunctionSymbol_t
 }
 
 void zen_SymbolDefinitionListener_declareFunction(zen_SymbolTable_t* symbolTable,
-    zen_ASTNode_t* identifier, zen_ArrayList_t* fixedParameters,
+    zen_ASTNode_t* identifier, jtk_ArrayList_t* fixedParameters,
     zen_ASTNode_t* variableParameter) {
     /* Create a member function symbol to store in the symbol table. */
     zen_FunctionSymbol_t* functionSymbol = zen_FunctionSymbol_new(identifier, symbolTable->m_currentScope);

@@ -1,6 +1,6 @@
 // Tuesday, February 27, 2018
 
-#include <zen/st/VariableSymbol.h>
+#include <com/onecube/zen/st/VariableSymbol.h>
 
 /*******************************************************************************
  * VariableSymbol                                                              *

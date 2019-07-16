@@ -1,7 +1,9 @@
 // Sunday, November 26, 2017
 
-#ifndef ZEN_RULE_NODE_H
-#define ZEN_RULE_NODE_H
+#ifndef COM_ONECUBE_ZEN_COMPILER_COMPILER_RULE_NODE_H
+#define COM_ONECUBE_ZEN_COMPILER_COMPILER_RULE_NODE_H
+
+#include <com/onecube/zen/Configuration.h>
 
 /*******************************************************************************
  * RuleNode                                                                    *
@@ -25,4 +27,4 @@ zen_ASTNode_t* zen_RuleNode_getChildCount(zen_RuleNode_t* ruleNode, int32_t inde
 zen_ASTNode_t* zen_RuleNode_getToken(zen_RuleNode_t* ruleNode, zen_TokenType_t type, int32_t index);
 zen_ArrayList_t* zen_RuleNode_getTokens(zen_RuleNode_t* ruleNode, zen_TokenType_t type);
 
-#endif /* ZEN_RULE_NODE_H */
+#endif /* COM_ONECUBE_ZEN_COMPILER_COMPILER_RULE_NODE_H */

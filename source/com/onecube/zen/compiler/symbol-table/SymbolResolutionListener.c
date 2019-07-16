@@ -1,11 +1,11 @@
 // Sunday, March 11, 2018
 
-#include <zen/st/SymbolResolutionListener.h>
-#include <zen/Token.h>
-#include <zen/Context.h>
-#include <zen/collection/LinkedStack.h>
-#include <zen/st/FunctionSymbol.h>
-#include <zen/st/ClassSymbol.h>
+#include <com/onecube/zen/st/SymbolResolutionListener.h>
+#include <com/onecube/zen/Token.h>
+#include <com/onecube/zen/Context.h>
+#include <com/onecube/zen/collection/LinkedStack.h>
+#include <com/onecube/zen/st/FunctionSymbol.h>
+#include <com/onecube/zen/st/ClassSymbol.h>
 
 zen_SymbolResolutionListener_t* zen_SymbolResolutionListener_new(zen_SymbolTable_t* symbolTable, zen_AstAnnotations_t* scopes) {
     zen_SymbolResolutionListener_t* listener = zen_Memory_allocate(zen_SymbolResolutionListener_t, 1);
@@ -103,7 +103,7 @@ void zen_SymbolResolutionListener_onEnterFunctionDeclaration(
 //
 //        zen_LinkedStack_t* stack = zen_LinkedStack_new();
 //
-//        zen_ArrayList_t* superClasses = zen_ClassSymbol_getSuperClasses(classSymbol);
+//        jtk_ArrayList_t* superClasses = zen_ClassSymbol_getSuperClasses(classSymbol);
 //        int32_t size = zen_ArrayList_getSize(superClasses);
 //        int32_t i;
 //        for (i = 0; i < size; i++) {
@@ -147,7 +147,7 @@ void zen_SymbolResolutionListener_onEnterFunctionDeclaration(
 //                    }
 //                    else if ((currentScopeFunctionSymbol->m_parameterThreshold != -1) &&
 //                        (superScopeFunctionSymbol->m_parameterThreshold == -1)) {
-//                        zen_ArrayList_t* superScopeSignatures = zen_FunctionSymbol_getSignatures(superScopeFunctionSymbol);
+//                        jtk_ArrayList_t* superScopeSignatures = zen_FunctionSymbol_getSignatures(superScopeFunctionSymbol);
 //                        int32_t superScopeSignatureCount = zen_ArrayList_getSize(superScopeSignatures);
 //                        int32_t j;
 //                        for (j = 0; j < superScopeSignatureCount; j++) {
@@ -160,7 +160,7 @@ void zen_SymbolResolutionListener_onEnterFunctionDeclaration(
 //                    }
 //                    else if ((currentScopeFunctionSymbol->m_parameterThreshold == -1) &&
 //                        (superScopeFunctionSymbol->m_parameterThreshold != -1)) {
-//                        zen_ArrayList_t* currentScopeSignatures = zen_FunctionSymbol_getSignatures(currentScopeFunctionSymbol);
+//                        jtk_ArrayList_t* currentScopeSignatures = zen_FunctionSymbol_getSignatures(currentScopeFunctionSymbol);
 //                        int32_t currentScopeSignatureCount = zen_ArrayList_getSize(currentScopeSignatures);
 //                        int32_t j;
 //                        for (j = 0; j < currentScopeSignatureCount; j++) {
@@ -233,7 +233,7 @@ void zen_SymbolResolutionListener_onEnterClassDeclaration(zen_ASTListener_t* ast
 
         zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, zen_Token_getText((zen_Token_t*)classDeclarationContext->m_identifier->m_context));
         zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
-        zen_ArrayList_t* superClasses = zen_ClassSymbol_getSuperClasses(classSymbol);
+        jtk_ArrayList_t* superClasses = zen_ClassSymbol_getSuperClasses(classSymbol);
 
         int32_t superClassCount = zen_ArrayList_getSize(classExtendsClauseContext->m_typeNames);
         int32_t i;
@@ -242,7 +242,7 @@ void zen_SymbolResolutionListener_onEnterClassDeclaration(zen_ASTListener_t* ast
             // const uint8_t* qualifiedTypeName = zen_SymbolResolutionListener_getQualifiedTypeName(typeName);
             // TODO!!
             zen_TypeNameContext_t* typeNameContext = (zen_TypeNameContext_t*)(typeName->m_context);
-            zen_ArrayList_t* identifiers = typeNameContext->m_identifiers;
+            jtk_ArrayList_t* identifiers = typeNameContext->m_identifiers;
             zen_Token_t* first = ((zen_ASTNode_t*)zen_ArrayList_get(identifiers, 0))->m_context;
             const uint8_t* firstText = zen_Token_getText(first);
             zen_Symbol_t* superClassSymbol = zen_SymbolTable_resolve(listener->m_symbolTable, firstText);

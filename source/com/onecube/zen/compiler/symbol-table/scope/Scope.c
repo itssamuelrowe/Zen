@@ -1,5 +1,5 @@
-#include <zen/CString.h>
-#include <zen/st/Scope.h>
+#include <com/onecube/zen/CString.h>
+#include <com/onecube/zen/st/Scope.h>
 
 zen_Scope_t* zen_Scope_new(const uint8_t* name, zen_ScopeType_t type,
     zen_Scope_t* enclosingScope, void* context) {

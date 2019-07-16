@@ -3,9 +3,9 @@
 #ifndef ZEN_ST_ENUMERATION_SYMBOL_H
 #define ZEN_ST_ENUMERATION_SYMBOL_H
 
-#include <zen/st/Symbol.h>
-#include <zen/st/Modifier.h>
-#include <zen/st/ClassSymbol.h>
+#include <com/onecube/zen/st/Symbol.h>
+#include <com/onecube/zen/st/Modifier.h>
+#include <com/onecube/zen/st/ClassSymbol.h>
 
 /*******************************************************************************
  * EnumerationSymbol                                                           *
@@ -15,7 +15,7 @@ struct zen_EnumerationSymbol_t {
     zen_Symbol_t* m_symbol;
     /* The superclass attribute is updated during the resolution phase. */
     zen_ClassSymbol_t* m_superclass;
-    zen_ArrayList_t* m_explicitModifiers;
+    jtk_ArrayList_t* m_explicitModifiers;
     int32_t m_modifiers;
     zen_Scope_t* m_enumerationScope;
 };

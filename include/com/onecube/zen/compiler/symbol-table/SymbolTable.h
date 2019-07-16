@@ -3,9 +3,9 @@
 #ifndef ZEN_ST_SYMBOL_TABLE_H
 #define ZEN_ST_SYMBOL_TABLE_H
 
-#include <zen/st/ClassScope.h>
-#include <zen/st/Scope.h>
-#include <zen/st/Symbol.h>
+#include <com/onecube/zen/st/ClassScope.h>
+#include <com/onecube/zen/st/Scope.h>
+#include <com/onecube/zen/st/Symbol.h>
 
 /*******************************************************************************
  * SymbolTable                                                                 *

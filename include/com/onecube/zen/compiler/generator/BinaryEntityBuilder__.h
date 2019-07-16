@@ -3,14 +3,14 @@
 #ifndef ZEN_BCG_BINARY_ENTITY_BUILDER_H
 #define ZEN_BCG_BINARY_ENTITY_BUILDER_H
 
-#include <zen/ASTListener.h>
-#include <zen/ASTNode.h>
-#include <zen/ast/AstAnnotations.h>
-#include <zen/bcg/ConstantPoolBuilder.h>
-#include <zen/bcg/ChannelManager.h>
-#include <zen/collection/ArrayList.h>
-#include <zen/feb/ByteCode.h>
-#include <zen/st/SymbolTable.h>
+#include <com/onecube/zen/compiler/ast/Listener.h>
+#include <com/onecube/zen/compiler/ast/Node.h>
+#include <com/onecube/zen/compiler/ast//AstAnnotations.h>
+#include <com/onecube/zen/bcg/ConstantPoolBuilder.h>
+#include <com/onecube/zen/bcg/ChannelManager.h>
+#include <com/onecube/zen/collection/ArrayList.h>
+#include <com/onecube/zen/feb/ByteCode.h>
+#include <com/onecube/zen/st/SymbolTable.h>
 
 /*******************************************************************************
  * BinaryEntityBuilder                                                         *
@@ -54,7 +54,7 @@ void zen_BinaryEntityBuilder_emitDuplicate(zen_BinaryEntityBuilder_t* builder);
 void zen_BinaryEntityBuilder_emitStoreRerenceArray(zen_BinaryEntityBuilder_t* builder);
 void zen_BinaryEntityBuilder_emitPushByte(zen_BinaryEntityBuilder_t* builder, int8_t byte);
 
-int32_t zen_BinaryEntityBuilder_findFieldDescriptorIndex(zen_BinaryEntityBuilder_t* builder, zen_ArrayList_t* identifiers);
+int32_t zen_BinaryEntityBuilder_findFieldDescriptorIndex(zen_BinaryEntityBuilder_t* builder, jtk_ArrayList_t* identifiers);
 int32_t zen_BinaryEntityBuilder_findLocalVariableIndex(zen_BinaryEntityBuilder_t* builder, const char* identifier);
 
 void zen_BinaryEntityBuilder_onEnterExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node);

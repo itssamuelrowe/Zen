@@ -3,8 +3,8 @@
 #ifndef ZEN_SCOPE_H
 #define ZEN_SCOPE_H
 
-#include <zen/collection/HashMap.h>
-#include <zen/st/ScopeType.h>
+#include <com/onecube/zen/collection/HashMap.h>
+#include <com/onecube/zen/st/ScopeType.h>
 
 typedef struct zen_Symbol_t zen_Symbol_t;
 

@@ -1,15 +1,15 @@
 // Monday, 24 June, 2019
 
 #include <jtk/collection/list/ArrayList.h>
-#include <zen/collection/queue/LinkedQueue.h>
-#include <zen/collection/stack/ArrayStack.h>
+#include <com/onecube/zen/collection/queue/LinkedQueue.h>
+#include <com/onecube/zen/collection/stack/ArrayStack.h>
 #include <jtk/core/CString.h>
 #include <jtk/core/StringBuilder.h>
 #include <jtk/io/InputStream.h>
 
 #include <com/onecube/zen/assembler/lexer/AssemblyLexer.h>
-#include <zen/onecube/zen/assembler/lexer/AssemblyToken.h>
-#include <zen/onecube/zen/assembler/AssemblyTokenType.h>
+#include <com/onecube/zen/onecube/zen/assembler/lexer/AssemblyToken.h>
+#include <com/onecube/zen/onecube/zen/assembler/AssemblyTokenType.h>
 
 #warning "AssemblyLexer does not recognize decimal values!"
 

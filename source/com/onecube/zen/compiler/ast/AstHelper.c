@@ -1,8 +1,8 @@
 // Saturday, April 28, 2018
 
-#include <zen/Token.h>
-#include <zen/ast/ASTHelper.h>
-#include <zen/collection/LinkedStack.h>
+#include <com/onecube/zen/Token.h>
+#include <com/onecube/zen/compiler/ast/ASTHelper.h>
+#include <com/onecube/zen/collection/LinkedStack.h>
 
 /*******************************************************************************
  * ASTHelper                                                                   *
@@ -43,23 +43,23 @@ bool zen_ASTHelper_isDescendant(zen_ASTNode_t* node, zen_ASTNode_t* subject) {
     return zen_ASTHelper_isAncestor(subject, node);
 }
 
-void zen_ASTHelper_getTokens(zen_ASTNode_t* node, zen_ArrayList_t* list) {
+void zen_ASTHelper_getTokens(zen_ASTNode_t* node, jtk_ArrayList_t* list) {
     zen_ASTHelper_getNodes(node, list, -1, true, true);
 }
 
-void zen_ASTHelper_getFilteredTokens(zen_ASTNode_t* node, zen_ArrayList_t* list, zen_TokenType_t type) {
+void zen_ASTHelper_getFilteredTokens(zen_ASTNode_t* node, jtk_ArrayList_t* list, zen_TokenType_t type) {
     zen_ASTHelper_getNodes(node, list, (int32_t)type, true, true);
 }
 
-void zen_ASTHelper_getTerminalNodes(zen_ASTNode_t* node, zen_ArrayList_t* list) {
+void zen_ASTHelper_getTerminalNodes(zen_ASTNode_t* node, jtk_ArrayList_t* list) {
     zen_ASTHelper_getNodes(node, list, -1, true, false);
 }
 
-void zen_ASTHelper_getFilteredTerminalNodes(zen_ASTNode_t* node, zen_ArrayList_t* list, zen_TokenType_t type) {
+void zen_ASTHelper_getFilteredTerminalNodes(zen_ASTNode_t* node, jtk_ArrayList_t* list, zen_TokenType_t type) {
     zen_ASTHelper_getNodes(node, list, (int32_t)type, true, false);
 }
  
-void zen_ASTHelper_getNodes(zen_ASTNode_t* node, zen_ArrayList_t* list,
+void zen_ASTHelper_getNodes(zen_ASTNode_t* node, jtk_ArrayList_t* list,
     int32_t filter, bool captureTerminals, bool strip) {
     zen_LinkedStack_t* stack = zen_LinkedStack_new();
     zen_LinkedStack_push(stack, node);
@@ -98,7 +98,7 @@ void zen_ASTHelper_getNodes(zen_ASTNode_t* node, zen_ArrayList_t* list,
                 }
             }
 
-            zen_ArrayList_t* children = zen_ASTNode_getChildren(currentNode);
+            jtk_ArrayList_t* children = zen_ASTNode_getChildren(currentNode);
             int32_t size = zen_ArrayList_getSize(children);
             int32_t i;
             for (i = 0; i < size; i++) {

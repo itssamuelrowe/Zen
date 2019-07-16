@@ -1,8 +1,8 @@
 // Saturday, November 04, 2017
 
-#include <zen/core/Character.h>
-#include <zen/CString.h>
-#include <zen/StringBuilder.h>
+#include <com/onecube/zen/core/Character.h>
+#include <com/onecube/zen/CString.h>
+#include <com/onecube/zen/StringBuilder.h>
 
 zen_StringBuilder_t* zen_StringBuilder_new() {
     return zen_StringBuilder_newWithCapacity(16);

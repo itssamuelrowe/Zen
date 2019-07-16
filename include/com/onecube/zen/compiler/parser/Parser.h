@@ -3,9 +3,9 @@
 #ifndef ZEN_PARSER_H
 #define ZEN_PARSER_H
 
-#include <zen/TokenStream.h>
-#include <zen/ASTNode.h>
-#include <zen/collection/ArrayList.h>
+#include <com/onecube/zen/TokenStream.h>
+#include <com/onecube/zen/compiler/ast/Node.h>
+#include <com/onecube/zen/collection/ArrayList.h>
 
 /*******************************************************************************
  * Parser                                                                      *
@@ -13,7 +13,7 @@
 
 struct zen_Parser_t {
     zen_TokenStream_t* m_tokens;
-    zen_ArrayList_t* m_errors;
+    jtk_ArrayList_t* m_errors;
 };
 
 typedef struct zen_Parser_t zen_Parser_t;

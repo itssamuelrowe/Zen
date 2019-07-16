@@ -1,11 +1,11 @@
 // Friday, March 09, 2018
 
-#include <zen/core/StringObjectAdapter.h>
-#include <zen/collection/HashMap.h>
-#include <zen/st/Scope.h>
-#include <zen/st/EnumerationScope.h>
-#include <zen/st/Symbol.h>
-#include <zen/Token.h>
+#include <com/onecube/zen/core/StringObjectAdapter.h>
+#include <com/onecube/zen/collection/HashMap.h>
+#include <com/onecube/zen/st/Scope.h>
+#include <com/onecube/zen/st/EnumerationScope.h>
+#include <com/onecube/zen/st/Symbol.h>
+#include <com/onecube/zen/Token.h>
 
 static const char* zen_EnumerationScope_name = "enumeration";
 

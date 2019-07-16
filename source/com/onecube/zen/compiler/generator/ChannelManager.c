@@ -1,6 +1,6 @@
 // Saturday, April 28, 2018
 
-#include <zen/bcg/ChannelManager.h>
+#include <com/onecube/zen/bcg/ChannelManager.h>
 
 zen_ChannelManager_t* zen_ChannelManager_new() {
     zen_ChannelManager_t* manager = zen_Memory_allocate(zen_ChannelManager_t, 1);

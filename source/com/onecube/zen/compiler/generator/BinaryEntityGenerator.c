@@ -1,29 +1,29 @@
 // Friday, March 30, 2018
 
-#include <zen/bcg/BinaryEntityGenerator.h>
-#include <zen/feb/Attribute.h>
-#include <zen/feb/BinaryEntityFormat.h>
-#include <zen/feb/BinaryFile.h>
-#include <zen/feb/ClassEntity.h>
-#include <zen/feb/CodeAttribute.h>
-#include <zen/feb/ConstantPoolClass.h>
-#include <zen/feb/ConstantPoolDouble.h>
-#include <zen/feb/ConstantPoolEntry.h>
-#include <zen/feb/ConstantPoolField.h>
-#include <zen/feb/ConstantPoolFloat.h>
-#include <zen/feb/ConstantPoolFunction.h>
-#include <zen/feb/ConstantPoolInteger.h>
-#include <zen/feb/ConstantPoolLong.h>
-#include <zen/feb/ConstantPoolString.h>
-#include <zen/feb/ConstantPoolTag.h>
-#include <zen/feb/ConstantPoolUtf8.h>
-#include <zen/feb/ConstantValueAttribute.h>
-#include <zen/feb/Entity.h>
-#include <zen/feb/EntityFlag.h>
-#include <zen/feb/EntityType.h>
-#include <zen/feb/FieldEntity.h>
-#include <zen/feb/FunctionEntity.h>
-#include <zen/feb/PredefinedAttribute.h>
+#include <com/onecube/zen/bcg/BinaryEntityGenerator.h>
+#include <com/onecube/zen/feb/Attribute.h>
+#include <com/onecube/zen/feb/BinaryEntityFormat.h>
+#include <com/onecube/zen/feb/BinaryFile.h>
+#include <com/onecube/zen/feb/ClassEntity.h>
+#include <com/onecube/zen/feb/CodeAttribute.h>
+#include <com/onecube/zen/feb/ConstantPoolClass.h>
+#include <com/onecube/zen/feb/ConstantPoolDouble.h>
+#include <com/onecube/zen/feb/ConstantPoolEntry.h>
+#include <com/onecube/zen/feb/ConstantPoolField.h>
+#include <com/onecube/zen/feb/ConstantPoolFloat.h>
+#include <com/onecube/zen/feb/ConstantPoolFunction.h>
+#include <com/onecube/zen/feb/ConstantPoolInteger.h>
+#include <com/onecube/zen/feb/ConstantPoolLong.h>
+#include <com/onecube/zen/feb/ConstantPoolString.h>
+#include <com/onecube/zen/feb/ConstantPoolTag.h>
+#include <com/onecube/zen/feb/ConstantPoolUtf8.h>
+#include <com/onecube/zen/feb/ConstantValueAttribute.h>
+#include <com/onecube/zen/feb/Entity.h>
+#include <com/onecube/zen/feb/EntityFlag.h>
+#include <com/onecube/zen/feb/EntityType.h>
+#include <com/onecube/zen/feb/FieldEntity.h>
+#include <com/onecube/zen/feb/FunctionEntity.h>
+#include <com/onecube/zen/feb/PredefinedAttribute.h>
 
 zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_new() {
     return NULL;

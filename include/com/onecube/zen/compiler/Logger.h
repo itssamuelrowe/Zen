@@ -3,7 +3,7 @@
 #ifndef ZEN_LOGGER_H
 #define ZEN_LOGGER_H
 
-#include <zen/LogPriority.h>
+#include <com/onecube/zen/LogPriority.h>
 
 /*******************************************************************************
  * Logger                                                                      *

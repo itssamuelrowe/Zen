@@ -1,5 +1,5 @@
 #include <string.h>
-#include <zen/LexerError.h>
+#include <com/onecube/zen/LexerError.h>
 
 zen_LexerError_t* zen_LexerError_new(const char* message, const char* path, int32_t line, int32_t column) {
     zen_LexerError_t* error = zen_Memory_allocate(zen_LexerError_t, 1);

@@ -3,7 +3,7 @@
 #ifndef ZEN_ST_MEMBER_CLASS_SYMBOL_H
 #define ZEN_ST_MEMBER_CLASS_SYMBOL_H
 
-#include <zen/st/Symbol.h>
+#include <com/onecube/zen/st/Symbol.h>
 
 /*******************************************************************************
  * MemberClassSymbol                                                           *

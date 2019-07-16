@@ -48,7 +48,7 @@ else if () {
         zen_LinkedStack_t* stack = zen_LinkedStack_new();
         zen_LinkedStack_push(stack, classSymbol);
 
-        zen_ArrayList_t* signatures = zen_ArrayList_new();
+        jtk_ArrayList_t* signatures = zen_ArrayList_new();
         while (!zen_LinkedStack_isEmpty(stack)) {
             classSymbol = (zen_ClassSymbol_t*)zen_LinkedStack_pop(stack);
             classScope = (zen_ClassScope_t*)(zen_ClassSymbol_getClassScope(classSymbol)->m_context); // The context is unset
@@ -75,7 +75,7 @@ else if () {
                         }
                     }
                     
-                    zen_ArrayList_t* oldSignatures = zen_FunctionSymbol_getSignatures(oldFunctionSymbol);
+                    jtk_ArrayList_t* oldSignatures = zen_FunctionSymbol_getSignatures(oldFunctionSymbol);
                     int32_t oldSignaturesSize = zen_ArrayList_getSize(oldSignatures);
                     int32_t i;
                     for (i = 0; i < oldSignaturesSize; i++) {
@@ -138,7 +138,7 @@ else if () {
                 }
             }
             else {
-                zen_ArrayList_t* superClasses = zen_ClassSymbol_getSuperClasses(classSymbol);
+                jtk_ArrayList_t* superClasses = zen_ClassSymbol_getSuperClasses(classSymbol);
                 int32_t size = zen_ArrayList_getSize(superClasses);
                 int32_t i;
                 for (i = 0; i < size; i++) {

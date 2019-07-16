@@ -1,5 +1,5 @@
-#include <zen/TokenStream.h>
-#include <zen/collection/Arrays.h>
+#include <com/onecube/zen/TokenStream.h>
+#include <com/onecube/zen/collection/Arrays.h>
 
 zen_TokenStream_t* zen_TokenStream_new(zen_Lexer_t* lexer, zen_TokenChannel_t channel) {
     jtk_Assert_assertObject(lexer, "The specified lexer is null.");
@@ -109,12 +109,12 @@ zen_Token_t* zen_TokenStream_getToken(zen_TokenStream_t* stream, int32_t index) 
     jtk_Assert_assertObject(stream, "The specified token source is null.");
 
     /* Index-out-of-range errors are checked by the
-     * zen_ArrayList_t class.
+     * jtk_ArrayList_t class.
      */
     return zen_ArrayList_get(stream->m_tokens, index);
 }
 
-zen_ArrayList_t* zen_TokenStream_getTokens(zen_TokenStream_t* stream,
+jtk_ArrayList_t* zen_TokenStream_getTokens(zen_TokenStream_t* stream,
     int32_t startIndex, int32_t stopIndex) {
     jtk_Assert_assertObject(stream, "The specified token source is null.");
 
@@ -122,7 +122,7 @@ zen_ArrayList_t* zen_TokenStream_getTokens(zen_TokenStream_t* stream,
     zen_Arrays_checkRange(size, startIndex, stopIndex);
 
     zen_TokenStream_initialize(stream);
-    zen_ArrayList_t* result = zen_ArrayList_new();
+    jtk_ArrayList_t* result = zen_ArrayList_new();
     int32_t i;
     for (i = startIndex; i < stopIndex; i++) {
         zen_Token_t* token = (zen_Token_t*)zen_ArrayList_get(stream->m_tokens, i);

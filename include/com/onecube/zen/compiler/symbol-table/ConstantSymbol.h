@@ -3,10 +3,10 @@
 #ifndef ZEN_ST_CONSTANT_SYMBOL_H
 #define ZEN_ST_CONSTANT_SYMBOL_H
 
-#include <zen/ASTNode.h>
-#include <zen/st/Symbol.h>
-#include <zen/st/Modifier.h>
-#include <zen/collection/ArrayList.h>
+#include <com/onecube/zen/compiler/ast/Node.h>
+#include <com/onecube/zen/st/Symbol.h>
+#include <com/onecube/zen/st/Modifier.h>
+#include <com/onecube/zen/collection/ArrayList.h>
 
 /*******************************************************************************
  * ConstantSymbol                                                              *
@@ -14,7 +14,7 @@
 
 struct zen_ConstantSymbol_t {
     zen_Symbol_t* m_symbol;
-    zen_ArrayList_t* m_explicitModifiers; /* Useful for reporting errors. */
+    jtk_ArrayList_t* m_explicitModifiers; /* Useful for reporting errors. */
     int32_t m_modifiers;
 };
 

@@ -3,12 +3,12 @@
 #ifndef ZEN_ST_SYMBOL_DEFINITION_LISTENER_H
 #define ZEN_ST_SYMBOL_DEFINITION_LISTENER_H
 
-#include <zen/ASTListener.h>
-#include <zen/Context.h>
-#include <zen/st/Scope.h>
-#include <zen/st/ScopeType.h>
-#include <zen/st/SymbolTable.h>
-#include <zen/ast/AstAnnotations.h>
+#include <com/onecube/zen/compiler/ast/Listener.h>
+#include <com/onecube/zen/Context.h>
+#include <com/onecube/zen/st/Scope.h>
+#include <com/onecube/zen/st/ScopeType.h>
+#include <com/onecube/zen/st/SymbolTable.h>
+#include <com/onecube/zen/compiler/ast//AstAnnotations.h>
 
 /*******************************************************************************
  * SymbolDefinitionListener                                                    *

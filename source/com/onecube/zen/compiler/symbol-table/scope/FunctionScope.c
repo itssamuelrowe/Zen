@@ -1,8 +1,8 @@
 // Tuesday, February 27, 2018
 
-#include <zen/st/FunctionScope.h>
-#include <zen/Token.h>
-#include <zen/CString.h>
+#include <com/onecube/zen/st/FunctionScope.h>
+#include <com/onecube/zen/Token.h>
+#include <com/onecube/zen/CString.h>
 
 /*******************************************************************************
  * FunctionScope                                                               *

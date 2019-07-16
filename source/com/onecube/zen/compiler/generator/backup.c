@@ -3,7 +3,7 @@
      * side of the assignment operator evaluates to an identifier or
      * field access.
      */
-    zen_ArrayList_t* children = zen_ASTNode_getChildren(context->m_conditionalExpression);
+    jtk_ArrayList_t* children = zen_ASTNode_getChildren(context->m_conditionalExpression);
     zen_ASTNode_t* identifier = zen_ArrayList_get(children, 0);
     zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
     const uint8_t* identifierText = zen_Token_getText(identifierToken);

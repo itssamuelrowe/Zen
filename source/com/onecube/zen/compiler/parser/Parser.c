@@ -1,8 +1,8 @@
-#include <zen/Context.h>
-#include <zen/Pair.h>
-#include <zen/Parser.h>
-#include <zen/TokenStream.h>
-#include <zen/StackTrace.h>
+#include <com/onecube/zen/Context.h>
+#include <com/onecube/zen/Pair.h>
+#include <com/onecube/zen/Parser.h>
+#include <com/onecube/zen/TokenStream.h>
+#include <com/onecube/zen/StackTrace.h>
 
 /*******************************************************************************
  * Parser                                                                      *

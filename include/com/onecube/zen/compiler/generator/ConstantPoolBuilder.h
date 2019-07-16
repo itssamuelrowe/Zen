@@ -3,15 +3,15 @@
 #ifndef ZEN_BCG_CONSTANT_POOL_BUILDER_H
 #define ZEN_BCG_CONSTANT_POOL_BUILDER_H
 
-#include <zen/collection/ArrayList.h>
-#include <zen/feb/ConstantPool.h>
+#include <com/onecube/zen/collection/ArrayList.h>
+#include <com/onecube/zen/feb/ConstantPool.h>
 
 /*******************************************************************************
  * ConstantPoolBuilder                                                         *
  *******************************************************************************/
 
 struct zen_ConstantPoolBuilder_t {
-    zen_ArrayList_t* m_constants;
+    jtk_ArrayList_t* m_constants;
     zen_ConstantPool_t* m_constantPool;
 };
 

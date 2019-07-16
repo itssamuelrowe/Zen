@@ -1,14 +1,14 @@
-#include <zen/Lexer.h>
-#include <zen/Token.h>
-#include <zen/TokenType.h>
-#include <zen/CString.h>
-#include <zen/StringBuilder.h>
-#include <zen/collection/ArrayList.h>
-#include <zen/collection/ArrayQueue.h>
-#include <zen/collection/ArrayStack.h>
-#include <zen/Logger.h>
-#include <zen/LogPriority.h>
-#include <zen/InputStream.h>
+#include <com/onecube/zen/Lexer.h>
+#include <com/onecube/zen/Token.h>
+#include <com/onecube/zen/TokenType.h>
+#include <com/onecube/zen/CString.h>
+#include <com/onecube/zen/StringBuilder.h>
+#include <com/onecube/zen/collection/ArrayList.h>
+#include <com/onecube/zen/collection/ArrayQueue.h>
+#include <com/onecube/zen/collection/ArrayStack.h>
+#include <com/onecube/zen/Logger.h>
+#include <com/onecube/zen/LogPriority.h>
+#include <com/onecube/zen/InputStream.h>
 
 #warning "Lexer does not recognize decimal values!"
 

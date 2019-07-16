@@ -4,14 +4,14 @@
 #define ZEN_LEXER_H
 
 #include <com/onecube/zen/Configuration.h>
-#include <zen/InputStream.h>
-#include <zen/LexerError.h>
-#include <zen/Token.h>
-#include <zen/collection/ArrayList.h>
-#include <zen/StringBuilder.h>
-#include <zen/TokenChannel.h>
-#include <zen/collection/ArrayQueue.h>
-#include <zen/collection/ArrayStack.h>
+#include <com/onecube/zen/InputStream.h>
+#include <com/onecube/zen/LexerError.h>
+#include <com/onecube/zen/Token.h>
+#include <com/onecube/zen/collection/ArrayList.h>
+#include <com/onecube/zen/StringBuilder.h>
+#include <com/onecube/zen/TokenChannel.h>
+#include <com/onecube/zen/collection/ArrayQueue.h>
+#include <com/onecube/zen/collection/ArrayStack.h>
 
 #define ZEN_LEXER_DEFAULT_CHANNEL 0
 #define ZEN_LEXER_HIDDEN_CHANNEL 1
@@ -136,7 +136,7 @@ struct zen_Lexer_t {
      */
     int32_t m_enclosures;
     
-    zen_ArrayList_t* m_errors;
+    jtk_ArrayList_t* m_errors;
 };
 
 typedef struct zen_Lexer_t zen_Lexer_t;

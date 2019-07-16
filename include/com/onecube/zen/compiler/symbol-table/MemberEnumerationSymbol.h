@@ -3,8 +3,8 @@
 #ifndef ZEN_ST_MEMBER_ENUMERATION_SYMBOL_H
 #define ZEN_ST_MEMBER_ENUMERATION_SYMBOL_H
 
-#include <zen/ASTNode.h>
-#include <zen/st/Symbol.h>
+#include <com/onecube/zen/compiler/ast/Node.h>
+#include <com/onecube/zen/st/Symbol.h>
 
 /*******************************************************************************
  * MemberEnumerationSymbol                                                     *

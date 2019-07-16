@@ -1,8 +1,8 @@
 // Tuesday, February 27, 2018
 
-#include <zen/core/StringObjectAdapter.h>
-#include <zen/st/LocalScope.h>
-#include <zen/Token.h>
+#include <com/onecube/zen/core/StringObjectAdapter.h>
+#include <com/onecube/zen/st/LocalScope.h>
+#include <com/onecube/zen/Token.h>
 
 /*******************************************************************************
  * LocalScope                                                                  *

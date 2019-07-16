@@ -1,9 +1,9 @@
 // Sunday, February 25, 2018
 
-#include <zen/st/CompilationUnitScope.h>
-#include <zen/core/StringObjectAdapter.h>
-#include <zen/CString.h>
-#include <zen/Token.h>
+#include <com/onecube/zen/st/CompilationUnitScope.h>
+#include <com/onecube/zen/core/StringObjectAdapter.h>
+#include <com/onecube/zen/CString.h>
+#include <com/onecube/zen/Token.h>
 
 /*******************************************************************************
  * CompilationUnitScope                                                        *

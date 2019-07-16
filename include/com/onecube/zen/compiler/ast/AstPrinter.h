@@ -1,27 +1,59 @@
 // Saturday, March 10, 2018
 
-#ifndef ZEN_AST_AST_PRINTER_H
-#define ZEN_AST_AST_PRINTER_H
+#ifndef COM_ONECUBE_ZEN_COMPILER_COMPILER_AST_AST_PRINTER_H
+#define COM_ONECUBE_ZEN_COMPILER_COMPILER_AST_AST_PRINTER_H
 
-#include <zen/ASTListener.h>
+#include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/compiler/ast/ASTListener.h>
 
 /*******************************************************************************
- * AstPrinter                                                                  *
+ * ASTPrinter                                                                  *
  *******************************************************************************/
 
-struct zen_AstPrinter_t {
+/**
+ * @class ASTPrinter
+ * @ingroup zen_compiler_ast
+ * @author Samuel Rowe
+ * @since zen 1.0
+ */
+struct zen_ASTPrinter_t {
     zen_ASTListener_t* m_astListener;
     int32_t m_depth;
 };
 
-typedef struct zen_AstPrinter_t zen_AstPrinter_t;
+/**
+ * @memberof ASTPrinter
+ */
+typedef struct zen_ASTPrinter_t zen_ASTPrinter_t;
 
-zen_AstPrinter_t* zen_AstPrinter_new();
-void zen_AstPrinter_delete(zen_AstPrinter_t* listener);
-zen_ASTListener_t* zen_AstPrinter_getAstListener(zen_AstPrinter_t* listener);
+/**
+ * @memberof ASTPrinter
+ */
+zen_ASTPrinter_t* zen_ASTPrinter_new();
 
-void zen_AstPrinter_onEnterEveryRule(zen_ASTListener_t* listener, zen_ASTNode_t* node);
-void zen_AstPrinter_onExitEveryRule(zen_ASTListener_t* listener, zen_ASTNode_t* node);
-void zen_AstPrinter_onVisitTerminal(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+/**
+ * @memberof ASTPrinter
+ */
+void zen_ASTPrinter_delete(zen_ASTPrinter_t* listener);
 
-#endif /* ZEN_AST_AST_PRINTER_H */
+/**
+ * @memberof ASTPrinter
+ */
+zen_ASTListener_t* zen_ASTPrinter_getASTListener(zen_ASTPrinter_t* listener);
+
+/**
+ * @memberof ASTPrinter
+ */
+void zen_ASTPrinter_onEnterEveryRule(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTPrinter
+ */
+void zen_ASTPrinter_onExitEveryRule(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTPrinter
+ */
+void zen_ASTPrinter_onVisitTerminal(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+#endif /* COM_ONECUBE_ZEN_COMPILER_COMPILER_AST_AST_PRINTER_H */

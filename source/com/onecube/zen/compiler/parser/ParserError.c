@@ -1,7 +1,7 @@
 // Sunday, December 03, 2017
 
-#include <zen/ParserError.h>
-#include <zen/CString.h>
+#include <com/onecube/zen/ParserError.h>
+#include <com/onecube/zen/CString.h>
 
 zen_ParserError_t* zen_ParserError_new() {
     zen_ParserError_t* error = zen_Memory_allocate(zen_ParserError_t, 1);
