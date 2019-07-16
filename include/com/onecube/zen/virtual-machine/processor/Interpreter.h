@@ -9,6 +9,7 @@
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/virtual-machine/object/Class.h>
 #include <com/onecube/zen/virtual-machine/object/Function.h>
+#include <com/onecube/zen/virtual-machine/object/NativeFunction.h>
 #include <com/onecube/zen/virtual-machine/processor/InvocationStack.h>
 #include <com/onecube/zen/virtual-machine/processor/ProcessorThread.h>
 

@@ -3,6 +3,9 @@
 #ifndef COM_ONECUBE_ZEN_VIRTUAL_MACHINE_OBJECT_NATIVE_FUNCTION_H
 #define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_OBJECT_NATIVE_FUNCTION_H
 
+#include <jtk/collection/array/Array.h>
+#include <com/onecube/zen/Configuration.h>
+
 /*******************************************************************************
  * NativeFunction                                                              *
  *******************************************************************************/

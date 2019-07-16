@@ -1,1331 +1,2417 @@
-#include <stdarg.h>
-#include <zen/ASTWalker.h>
-#include <zen/Token.h>
-#include <zen/TokenType.h>
-#include <zen/Context.h>
-#include <zen/ast/ASTHelper.h>
-#include <zen/ast/AstAnnotation.h>
-#include <zen/bcg/BinaryEntityBuilder.h>
-#include <zen/core/Integer.h>
-#include <zen/feb/Instruction.h>
-#include <zen/st/Symbol.h>
+// Tuesday, July 16, 2019
 
-zen_BinaryEntityBuilder_t* zen_BinaryEntityBuilder_new(zen_SymbolTable_t* symbolTable, zen_AstAnnotations_t* scopes) {
-    zen_BinaryEntityBuilder_t* builder = zen_Memory_allocate(zen_BinaryEntityBuilder_t, 1);
-    builder->m_astListener = zen_ASTListener_newWithContext(builder);
-    builder->m_constantPoolBuilder = zen_ConstantPoolBuilder_new();
-    builder->m_annotations = zen_AstAnnotations_new();
-    builder->m_channelManager = zen_ChannelManager_new();
-    builder->m_symbolTable = symbolTable;
-    builder->m_scopes = scopes;
+#include <jtk/collection/stack/ArrayStack.h>
+#include <com/onecube/zen/compiler/generator/BinaryEntityBuilder.h>
 
-    zen_ASTListener_t* astListener = builder->m_astListener;
+/*******************************************************************************
+ * BinaryEntityBuilder                                                         *
+ *******************************************************************************/
 
-    astListener->m_onEnterCompilationUnit = zen_BinaryEntityBuilder_onEnterCompilationUnit;
-    astListener->m_onExitCompilationUnit = zen_BinaryEntityBuilder_onExitCompilationUnit;
+// Constructor
 
-    astListener->m_onEnterFunctionDeclaration = zen_BinaryEntityBuilder_onEnterFunctionDeclaration;
-    astListener->m_onExitFunctionDeclaration = zen_BinaryEntityBuilder_onExitFunctionDeclaration;
-
-    astListener->m_onEnterStatementSuite = zen_BinaryEntityBuilder_onEnterStatementSuite;
-    astListener->m_onExitStatementSuite = zen_BinaryEntityBuilder_onExitStatementSuite;
-
-    astListener->m_onEnterClassDeclaration = zen_BinaryEntityBuilder_onEnterClassDeclaration;
-    astListener->m_onExitClassDeclaration = zen_BinaryEntityBuilder_onExitClassDeclaration;
-
-    astListener->m_onEnterExpression = zen_BinaryEntityBuilder_onEnterExpression;
-
-    astListener->m_onEnterAssignmentExpression = zen_BinaryEntityBuilder_onEnterAssignmentExpression;
-    astListener->m_onExitAssignmentExpression = zen_BinaryEntityBuilder_onExitAssignmentExpression;
-
-    astListener->m_onEnterConditionalExpression = zen_BinaryEntityBuilder_onEnterConditionalExpression;
-    astListener->m_onExitConditionalExpression = zen_BinaryEntityBuilder_onExitConditionalExpression;
-
-    astListener->m_onEnterLogicalOrExpression = zen_BinaryEntityBuilder_onEnterLogicalOrExpression;
-    astListener->m_onExitLogicalOrExpression = zen_BinaryEntityBuilder_onExitLogicalOrExpression;
-
-    astListener->m_onEnterLogicalAndExpression = zen_BinaryEntityBuilder_onEnterLogicalAndExpression;
-    astListener->m_onExitLogicalAndExpression = zen_BinaryEntityBuilder_onExitLogicalAndExpression;
-
-    astListener->m_onEnterInclusiveOrExpression = zen_BinaryEntityBuilder_onEnterInclusiveOrExpression;
-    astListener->m_onExitInclusiveOrExpression = zen_BinaryEntityBuilder_onExitInclusiveOrExpression;
-
-    astListener->m_onEnterExclusiveOrExpression = zen_BinaryEntityBuilder_onEnterExclusiveOrExpression;
-    astListener->m_onExitExclusiveOrExpression = zen_BinaryEntityBuilder_onExitExclusiveOrExpression;
-
-    astListener->m_onEnterAndExpression = zen_BinaryEntityBuilder_onEnterAndExpression;
-    astListener->m_onExitAndExpression = zen_BinaryEntityBuilder_onExitAndExpression;
-
-    astListener->m_onEnterEqualityExpression = zen_BinaryEntityBuilder_onEnterEqualityExpression;
-    astListener->m_onExitEqualityExpression = zen_BinaryEntityBuilder_onExitEqualityExpression;
-
-    astListener->m_onEnterRelationalExpression = zen_BinaryEntityBuilder_onEnterRelationalExpression;
-    astListener->m_onExitRelationalExpression = zen_BinaryEntityBuilder_onExitRelationalExpression;
-
-    astListener->m_onEnterShiftExpression = zen_BinaryEntityBuilder_onEnterShiftExpression;
-    astListener->m_onExitShiftExpression = zen_BinaryEntityBuilder_onExitShiftExpression;
-
-    astListener->m_onEnterAdditiveExpression = zen_BinaryEntityBuilder_onEnterAdditiveExpression;
-    astListener->m_onExitAdditiveExpression = zen_BinaryEntityBuilder_onExitAdditiveExpression;
-
-    astListener->m_onEnterMultiplicativeExpression = zen_BinaryEntityBuilder_onEnterMultiplicativeExpression;
-    astListener->m_onExitMultiplicativeExpression = zen_BinaryEntityBuilder_onExitMultiplicativeExpression;
-
-    astListener->m_onEnterUnaryExpression = zen_BinaryEntityBuilder_onEnterUnaryExpression;
-    astListener->m_onExitUnaryExpression = zen_BinaryEntityBuilder_onExitUnaryExpression;
-
-    astListener->m_onEnterPostfixExpression = zen_BinaryEntityBuilder_onEnterPostfixExpression;
-    astListener->m_onExitPostfixExpression = zen_BinaryEntityBuilder_onExitPostfixExpression;
-
-    astListener->m_onEnterPrimaryExpression = zen_BinaryEntityBuilder_onEnterPrimaryExpression;
-
-    astListener->m_onEnterListExpression = zen_BinaryEntityBuilder_onEnterListExpression;
-    astListener->m_onExitListExpression = zen_BinaryEntityBuilder_onExitListExpression;
-
-    astListener->m_onEnterMapExpression = zen_BinaryEntityBuilder_onEnterMapExpression;
-    astListener->m_onExitMapExpression = zen_BinaryEntityBuilder_onExitMapExpression;
-
-    astListener->m_onEnterMapEntries = zen_BinaryEntityBuilder_onEnterMapEntries;
-    astListener->m_onExitMapEntries = zen_BinaryEntityBuilder_onExitMapEntries;
-
-    astListener->m_onEnterMapEntry = zen_BinaryEntityBuilder_onEnterMapEntry;
-    astListener->m_onExitMapEntry = zen_BinaryEntityBuilder_onExitMapEntry;
+zen_BinaryEntityBuilder_t* zen_BinaryEntityBuilder_new() {
+    zen_BinaryEntityBuilder_t* builder = jtk_Memory_allocate(zen_BinaryEntityBuilder_t, 1);
+    builder->m_channels = jtk_ArrayStack_new();
+    builder->m_constantPoolIndex = 0;
+    builder->m_identifier = 0;
 
     return builder;
 }
 
+// Destructor
+
 void zen_BinaryEntityBuilder_delete(zen_BinaryEntityBuilder_t* builder) {
-    jtk_Assert_assertObject(builder, "The specified builder is null.");
-
-    zen_ASTListener_delete(builder->m_astListener);
-    zen_ConstantPoolBuilder_delete(builder->m_constantPoolBuilder);
-    zen_AstAnnotations_delete(builder->m_annotations);
-    zen_ChannelManager_delete(builder->m_channelManager);
-    zen_Memory_deallocate(builder);
-}
-
-void zen_BinaryEntityBuilder_build(zen_BinaryEntityBuilder_t* builder, zen_ASTNode_t* compilationUnit) {
-    jtk_Assert_assertObject(builder, "The specified builder is null.");
-
-    zen_ASTWalker_walk(builder->m_astListener, compilationUnit);
-}
-
-void zen_BinaryEntityBuilder_emit(zen_BinaryEntityBuilder_t* builder, zen_ByteCode_t byteCode, ...) {
     jtk_Assert_assertObject(builder, "The specified binary entity builder is null.");
 
-    zen_ByteCodeChannel_t* channel = zen_ChannelManager_peek(builder->m_channelManager);
-    zen_ByteCodeChannel_appendByte(channel, (uint8_t)byteCode);
+    jtk_Iterator_t* iterator = jtk_ArrayStack_getIterator(builder->m_channels);
+    while (jtk_Iterator_hasNext(iterator)) {
+        zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_Iterator_getNext(iterator);
+        zen_DataChannel_delete(channel);
+    }
+    jtk_Iterator_delete(iterator);
 
-    zen_Instruction_t* instruction = zen_Instruction_getInstance(byteCode);
-    uint8_t argumentCount = zen_Instruction_getArgumentCount(instruction);
-    if (argumentCount > 0) {
-        /*
-        int32_t i;
-        for (i = 0; i < argumentCount; i++) {
-            zen_ByteCodeChannel_appendByte(channel, 0);
-        }
-        */
+    jtk_ArrayStack_delete(builder->m_channels);
+    jtk_Memory_deallocate(builder);
+}
 
-        va_list variableParameters;
-        va_start(variableParameters, byteCode);
+// Channel
 
-        uint8_t* arguments = zen_Memory_allocate(uint8_t, argumentCount);
-        int32_t i;
-        for (i = 0; i < argumentCount; i++) {
-            arguments[i] = (uint8_t)(va_arg(variableParameters, int32_t));
-        }
-        zen_ByteCodeChannel_appendBytes(channel, arguments, argumentCount);
-        zen_Memory_deallocate(arguments);
+void zen_BinaryEntityBuilder_pushChannel(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified binary entity builder is null.");
 
-        va_end(variableParameters);
+    zen_DataChannel_t* channel = zen_DataChannel_new(builder->m_identifier++);
+    jtk_ArrayStack_push(builder->m_channels, channel);
+}
+
+void zen_BinaryEntityBuilder_popChannel(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified binary entity builder is null.");
+
+    // TODO: Add a return value to jtk_ArrayStack_pop()
+    zen_DataChannel_t* deadChannel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    jtk_ArrayStack_pop(builder->m_channels);
+
+    if (!jtk_ArrayStack_isEmpty(builder->m_channels)) {
+        zen_DataChannel_t* activeChannel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+        zen_DataChannel_appendChannel(activeChannel, deadChannel);
+    }
+
+    zen_DataChannel_delete(deadChannel);
+}
+
+// Magic Number
+
+void zen_BinaryEntityBuilder_writeMagicNumber(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 4);
+
+    channel->m_bytes[channel->m_index++] = 0xFE;
+    channel->m_bytes[channel->m_index++] = 0xB7;
+    channel->m_bytes[channel->m_index++] = 0x20;
+    channel->m_bytes[channel->m_index++] = 0x00;
+}
+
+void zen_BinaryEntityBuilder_writeMajorVersion(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
+
+    channel->m_bytes[channel->m_index++] = 0x00;
+    channel->m_bytes[channel->m_index++] = 0x01;
+}
+
+void zen_BinaryEntityBuilder_writeMinorVersion(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
+
+    channel->m_bytes[channel->m_index++] = 0x00;
+    channel->m_bytes[channel->m_index++] = 0x00;
+}
+
+void zen_BinaryEntityBuilder_writeStreamSize(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 4);
+
+    channel->m_bytes[channel->m_index++] = 0x00;
+    channel->m_bytes[channel->m_index++] = 0x00;
+    channel->m_bytes[channel->m_index++] = 0x00;
+    channel->m_bytes[channel->m_index++] = 0xFF;
+}
+
+void zen_BinaryEntityBuilder_writeStreamFlags(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
+
+    channel->m_bytes[channel->m_index++] = 0x00;
+    channel->m_bytes[channel->m_index++] = 0x00;
+}
+
+void zen_BinaryEntityBuilder_writeConstantPoolHeader(zen_BinaryEntityBuilder_t* builder, int32_t entries) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 4);
+
+    channel->m_bytes[channel->m_index++] = (entries & 0x0000FF00) >> 8;
+    channel->m_bytes[channel->m_index++] = (entries & 0x000000FF);
+}
+
+uint16_t zen_BinaryEntityBuilder_writeConstantPoolInteger(zen_BinaryEntityBuilder_t* builder, uint32_t value) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 5);
+
+    channel->m_bytes[channel->m_index++] = ZEN_CONSTANT_POOL_TAG_INTEGER; // Tag
+    channel->m_bytes[channel->m_index++] = (value & 0xFF000000) >> 24;
+    channel->m_bytes[channel->m_index++] = (value & 0x00FF0000) >> 16;
+    channel->m_bytes[channel->m_index++] = (value & 0x0000FF00) >> 8;
+    channel->m_bytes[channel->m_index++] = (value & 0x000000FF);
+
+    return builder->m_constantPoolIndex++;
+}
+
+uint16_t zen_BinaryEntityBuilder_writeConstantPoolLong(zen_BinaryEntityBuilder_t* builder, uint64_t value) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 9);
+
+    channel->m_bytes[channel->m_index++] = ZEN_CONSTANT_POOL_TAG_LONG; // Tag
+    channel->m_bytes[channel->m_index++] = (value & 0xFF00000000000000L) >> 56; // Value
+    channel->m_bytes[channel->m_index++] = (value & 0x00FF000000000000L) >> 48;
+    channel->m_bytes[channel->m_index++] = (value & 0x0000FF0000000000L) >> 40;
+    channel->m_bytes[channel->m_index++] = (value & 0x000000FF00000000L) >> 32;
+    channel->m_bytes[channel->m_index++] = (value & 0x00000000FF000000L) >> 24;
+    channel->m_bytes[channel->m_index++] = (value & 0x0000000000FF0000L) >> 16;
+    channel->m_bytes[channel->m_index++] = (value & 0x000000000000FF00L) >> 8;
+    channel->m_bytes[channel->m_index++] = (value & 0x00000000000000FFL);
+
+    return builder->m_constantPoolIndex++;
+}
+
+uint16_t zen_BinaryEntityBuilder_writeConstantPoolFloat(zen_BinaryEntityBuilder_t* builder, float value) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 5);
+
+    uint32_t value0 = jtk_Float_unpack(value);
+
+    channel->m_bytes[channel->m_index++] = ZEN_CONSTANT_POOL_TAG_FLOAT; // Tag
+    channel->m_bytes[channel->m_index++] = (value0 & 0xFF000000) >> 24; // Value
+    channel->m_bytes[channel->m_index++] = (value0 & 0x00FF0000) >> 16;
+    channel->m_bytes[channel->m_index++] = (value0 & 0x0000FF00) >> 8;
+    channel->m_bytes[channel->m_index++] = (value0 & 0x000000FF);
+
+    return builder->m_constantPoolIndex++;
+}
+
+uint16_t zen_BinaryEntityBuilder_writeConstantPoolDouble(zen_BinaryEntityBuilder_t* builder, double value) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 9);
+
+    uint64_t value0 = jtk_Double_unpack(value);
+
+    channel->m_bytes[channel->m_index++] = ZEN_CONSTANT_POOL_TAG_DOUBLE; // Tag
+    channel->m_bytes[channel->m_index++] = (value0 & 0xFF00000000000000L) >> 56; // Value
+    channel->m_bytes[channel->m_index++] = (value0 & 0x00FF000000000000L) >> 48;
+    channel->m_bytes[channel->m_index++] = (value0 & 0x0000FF0000000000L) >> 40;
+    channel->m_bytes[channel->m_index++] = (value0 & 0x000000FF00000000L) >> 32;
+    channel->m_bytes[channel->m_index++] = (value0 & 0x00000000FF000000L) >> 24;
+    channel->m_bytes[channel->m_index++] = (value0 & 0x0000000000FF0000L) >> 16;
+    channel->m_bytes[channel->m_index++] = (value0 & 0x000000000000FF00L) >> 8;
+    channel->m_bytes[channel->m_index++] = (value0 & 0x00000000000000FFL);
+
+    return builder->m_constantPoolIndex++;
+}
+
+uint16_t zen_BinaryEntityBuilder_writeConstantPoolUtf8(zen_BinaryEntityBuilder_t* builder, uint16_t length, uint8_t* value) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3 + length);
+
+    channel->m_bytes[channel->m_index++] = ZEN_CONSTANT_POOL_TAG_UTF8; // Tag
+    channel->m_bytes[channel->m_index++] = (length & 0x0000FF00) >> 8;
+    channel->m_bytes[channel->m_index++] = (length & 0x000000FF);
+    int32_t j = 0;
+    while (j < length) {
+        channel->m_bytes[i + j] = value[j];
+        j++;
+    }
+    i += length;
+
+    return builder->m_constantPoolIndex++;
+}
+
+uint16_t zen_BinaryEntityBuilder_writeConstantPoolString(zen_BinaryEntityBuilder_t* builder, uint16_t stringIndex) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_CONSTANT_POOL_TAG_STRING; // Tag
+    channel->m_bytes[channel->m_index++] = (stringIndex & 0x0000FF00) >> 8;
+    channel->m_bytes[channel->m_index++] = (stringIndex & 0x000000FF);
+
+    return builder->m_constantPoolIndex++;
+}
+
+uint16_t zen_BinaryEntityBuilder_writeConstantPoolFunction(zen_BinaryEntityBuilder_t* builder, uint16_t classIndex, uint16_t descriptorIndex,
+    uint16_t nameIndex) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 7);
+
+    channel->m_bytes[channel->m_index++] = ZEN_CONSTANT_POOL_TAG_FUNCTION; // Tag
+    channel->m_bytes[channel->m_index++] = (classIndex & 0x0000FF00) >> 8; // class index
+    channel->m_bytes[channel->m_index++] = (classIndex & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (descriptorIndex & 0x0000FF00) >> 8; // descriptor index
+    channel->m_bytes[channel->m_index++] = (descriptorIndex & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (nameIndex & 0x0000FF00) >> 8; // name index
+    channel->m_bytes[channel->m_index++] = (nameIndex & 0x000000FF);
+
+    return builder->m_constantPoolIndex++;
+}
+
+uint16_t zen_BinaryEntityBuilder_writeConstantPoolField(zen_BinaryEntityBuilder_t* builder, uint16_t classIndex, uint16_t descriptorIndex,
+    uint16_t nameIndex) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 7);
+
+    channel->m_bytes[channel->m_index++] = ZEN_CONSTANT_POOL_TAG_FIELD; // Tag
+    channel->m_bytes[channel->m_index++] = (classIndex & 0x0000FF00) >> 8; // class index
+    channel->m_bytes[channel->m_index++] = (classIndex & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (descriptorIndex & 0x0000FF00) >> 8; // descriptor index
+    channel->m_bytes[channel->m_index++] = (descriptorIndex & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (nameIndex & 0x0000FF00) >> 8; // name index
+    channel->m_bytes[channel->m_index++] = (nameIndex & 0x000000FF);
+
+    return builder->m_constantPoolIndex++;
+}
+
+uint16_t zen_BinaryEntityBuilder_writeConstantPoolClass(zen_BinaryEntityBuilder_t* builder, uint16_t nameIndex) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_CONSTANT_POOL_TAG_CLASS; // Tag
+    channel->m_bytes[channel->m_index++] = (nameIndex & 0x0000FF00) >> 8; // name index
+    channel->m_bytes[channel->m_index++] = (nameIndex & 0x000000FF);
+
+    return builder->m_constantPoolIndex++;
+}
+
+void zen_BinaryEntityBuilder_writeEntityHeader(zen_BinaryEntityBuilder_t* builder, uint8_t type, uint16_t flags,
+    uint16_t reference) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 5);
+
+    channel->m_bytes[channel->m_index++] = type; // type
+    channel->m_bytes[channel->m_index++] = (flags & 0x0000FF00) >> 8; // flags
+    channel->m_bytes[channel->m_index++] = (flags & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = ((reference & 0x0000FF00) >> 8; // reference
+    channel->m_bytes[channel->m_index++] = ((reference & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_writeClass(zen_BinaryEntityBuilder_t* builder, uint16_t flags, uint16_t reference,
+    uint16_t superclassCount, uint16_t* superclassIndexes) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 7 + (superclassCount * 2));
+
+    channel->m_bytes[channel->m_index++] = ZEN_ENTITY_TYPE_CLASS; // type
+    channel->m_bytes[channel->m_index++] = (flags & 0x0000FF00) >> 8; // flags
+    channel->m_bytes[channel->m_index++] = (flags & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = ((reference & 0x0000FF00) >> 8; // reference
+    channel->m_bytes[channel->m_index++] = ((reference & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (superclassCount & 0x0000FF00) >> 8; // superclass count
+    channel->m_bytes[channel->m_index++] = (superclassCount & 0x000000FF);
+    int32_t j;
+    for (j = 0; j < superclassCount; j++) {
+        uint16_t superclassIndex = superclassIndexes[j];
+        channel->m_bytes[channel->m_index++] = (zen_BinaryEntityBuilder_t* builder, superclassIndex & 0x0000FF00) >> 8; // superclass index
+        channel->m_bytes[channel->m_index++] = (zen_BinaryEntityBuilder_t* builder, superclassIndex & 0x000000FF);
     }
 }
 
-void zen_BinaryEntityBuilder_emitLoadReference(zen_BinaryEntityBuilder_t* builder, int32_t index) {
-    zen_BinaryEntityBuilder_emit(builder, ZEN_BYTE_CODE_LOAD_A, index);
+void zen_BinaryEntityBuilder_writeAttributeCount(zen_BinaryEntityBuilder_t* builder, uint16_t attributeCount) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
+
+    channel->m_bytes[channel->m_index++] = (attributeCount & 0x0000FF00) >> 8; // attribute count
+    channel->m_bytes[channel->m_index++] = (attributeCount & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_emitStoreReference(zen_BinaryEntityBuilder_t* builder, int32_t index) {
-    zen_BinaryEntityBuilder_emit(builder, ZEN_BYTE_CODE_STORE_A, index);
+void zen_BinaryEntityBuilder_writeFieldCount(zen_BinaryEntityBuilder_t* builder, uint16_t fieldCount) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
+
+    channel->m_bytes[channel->m_index++] = (fieldCount & 0x0000FF00) >> 8; // field count
+    channel->m_bytes[channel->m_index++] = (fieldCount & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_emitStoreInstanceField(zen_BinaryEntityBuilder_t* builder, int32_t index) {
-    zen_BinaryEntityBuilder_emit(builder, ZEN_BYTE_CODE_STORE_INSTANCE_FIELD, index);
+void zen_BinaryEntityBuilder_writeField(zen_BinaryEntityBuilder_t* builder, uint16_t flags, uint16_t nameIndex,
+    uint16_t descriptorIndex) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 6);
+
+    channel->m_bytes[channel->m_index++] = (flags & 0x0000FF00) >> 8; // flags
+    channel->m_bytes[channel->m_index++] = (flags & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (nameIndex & 0x0000FF00) >> 8; // name index
+    channel->m_bytes[channel->m_index++] = (nameIndex & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (descriptorIndex & 0x0000FF00) >> 8; // descriptor index
+    channel->m_bytes[channel->m_index++] = (descriptorIndex & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_emitStoreStaticField(zen_BinaryEntityBuilder_t* builder, int32_t index) {
-    zen_BinaryEntityBuilder_emit(builder, ZEN_BYTE_CODE_STORE_INSTANCE_FIELD, index);
+void zen_BinaryEntityBuilder_writeFunctionCount(zen_BinaryEntityBuilder_t* builder, uint16_t functionCount) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
+
+    channel->m_bytes[channel->m_index++] = (functionCount & 0x0000FF00) >> 8; // function count
+    channel->m_bytes[channel->m_index++] = (functionCount & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_emitInvokeVirtual(zen_BinaryEntityBuilder_t* builder, int32_t index) {
-    zen_BinaryEntityBuilder_emit(builder, ZEN_BYTE_CODE_INVOKE_VIRTUAL, index);
+void zen_BinaryEntityBuilder_writeFunction(zen_BinaryEntityBuilder_t* builder, uint16_t nameIndex, uint16_t descriptorIndex,
+    uint16_t flags) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 6);
+
+    channel->m_bytes[channel->m_index++] = (nameIndex & 0x0000FF00) >> 8; // name index
+    channel->m_bytes[channel->m_index++] = (nameIndex & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (descriptorIndex & 0x0000FF00) >> 8; // descriptor index
+    channel->m_bytes[channel->m_index++] = (descriptorIndex & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (flags & 0x0000FF00) >> 8; // flags
+    channel->m_bytes[channel->m_index++] = (flags & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_emitInvokeStatic(zen_BinaryEntityBuilder_t* builder, int32_t index) {
-    zen_BinaryEntityBuilder_emit(builder, ZEN_BYTE_CODE_INVOKE_STATIC, index);
+/* The localVariableCount and maxStackSize are in terms of 4-m_bytes. Therefore,
+ * long, double and reference types each occupy a magnitude of 2.
+ */
+void zen_BinaryEntityBuilder_writeInstructionAttributeHeader(zen_BinaryEntityBuilder_t* builder, uint16_t nameIndex,
+    uint32_t length, uint16_t maxStackSize, uint16_t localVariableCount,
+    uint32_t instructionCount) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 14);
+
+    channel->m_bytes[channel->m_index++] = (nameIndex & 0x0000FF00) >> 8; // Name Index
+    channel->m_bytes[channel->m_index++] = (nameIndex & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (length & 0xFF000000) >> 24; // Length
+    channel->m_bytes[channel->m_index++] = (length & 0x00FF0000) >> 16;
+    channel->m_bytes[channel->m_index++] = (length & 0x0000FF00) >> 8;
+    channel->m_bytes[channel->m_index++] = (length & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (maxStackSize & 0x0000FF00) >> 8; // Max Stack Size
+    channel->m_bytes[channel->m_index++] = (maxStackSize & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (localVariableCount & 0x0000FF00) >> 8; // Local Variable Count
+    channel->m_bytes[channel->m_index++] = (localVariableCount & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (instructionCount & 0xFF000000) >> 24; // Instruction Count
+    channel->m_bytes[channel->m_index++] = (instructionCount & 0x00FF0000) >> 16;
+    channel->m_bytes[channel->m_index++] = (instructionCount & 0x0000FF00) >> 8;
+    channel->m_bytes[channel->m_index++] = (instructionCount & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_emitJump(zen_BinaryEntityBuilder_t* builder, int32_t index) {
-    zen_BinaryEntityBuilder_emit(builder, ZEN_BYTE_CODE_JUMP, index);
+void zen_BinaryEntityBuilder_writeExceptionTableHeader(zen_BinaryEntityBuilder_t* builder, uint16_t size) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
+
+    channel->m_bytes[channel->m_index++] = (size & 0x0000FF00) >> 8; // Size
+    channel->m_bytes[channel->m_index++] = (size & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_emitLoadInstanceField(zen_BinaryEntityBuilder_t* builder, int32_t index) {
-    zen_BinaryEntityBuilder_emit(builder, ZEN_BYTE_CODE_LOAD_INSTANCE_FIELD, index);
+// Instructions
+
+/* NOP */
+
+void zen_BinaryEntityBuilder_emitNop(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_NOP;
 }
 
-void zen_BinaryEntityBuilder_emitLoadCpr(zen_BinaryEntityBuilder_t* builder, int32_t index) {
-    zen_BinaryEntityBuilder_emit(builder, ZEN_BYTE_CODE_LOAD_CPR, index);
+void zen_BinaryEntityBuilder_emitAddInteger(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_ADD_I;
 }
 
-void zen_BinaryEntityBuilder_emitPushIntegerEx(zen_BinaryEntityBuilder_t* builder, const uint8_t* text) {
-    // TODO: Parse hexadecimal values too!
-    int32_t integerValue = zen_Integer_parse(text, 10);
-    int32_t index = 0; // Find the index here
-    zen_BinaryEntityBuilder_emitLoadCpr(builder, index);
+void zen_BinaryEntityBuilder_emitAddLong(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_ADD_L;
 }
 
-void zen_BinaryEntityBuilder_emitPushTrue(zen_BinaryEntityBuilder_t* builder) {
-    zen_BinaryEntityBuilder_emitPushByte(builder, 1);
-    zen_BinaryEntityBuilder_emitInvokeStatic(builder, 0);
+void zen_BinaryEntityBuilder_emitAddFloat(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_ADD_F;
 }
 
-void zen_BinaryEntityBuilder_emitPushFalse(zen_BinaryEntityBuilder_t* builder) {
-    zen_BinaryEntityBuilder_emitPushByte(builder, 0);
-    zen_BinaryEntityBuilder_emitInvokeStatic(builder, 0);
+void zen_BinaryEntityBuilder_emitAddDouble(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_ADD_D;
 }
 
-void zen_BinaryEntityBuilder_emitPushNull(zen_BinaryEntityBuilder_t* builder) {
-    zen_BinaryEntityBuilder_emit(builder, ZEN_BYTE_CODE_PUSH_NULL);
+void zen_BinaryEntityBuilder_emitAndInteger(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_AND_I;
 }
 
-void zen_BinaryEntityBuilder_emitPushUndefined(zen_BinaryEntityBuilder_t* builder) {
-    zen_BinaryEntityBuilder_emit(builder, ZEN_BYTE_CODE_PUSH_UNDEFINED);
+void zen_BinaryEntityBuilder_emitAndLong(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_AND_L;
 }
 
-void zen_BinaryEntityBuilder_emitNewReferenceArray(zen_BinaryEntityBuilder_t* builder,
-    int32_t index) {
-    zen_BinaryEntityBuilder_emit(builder, ZEN_BYTE_CODE_NEW_ARRAY_A, index);
+void zen_BinaryEntityBuilder_emitOrInteger(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_OR_I;
 }
 
-void zen_BinaryEntityBuilder_emitNewReferenceArrayEx(zen_BinaryEntityBuilder_t* builder,
-    int32_t index, int32_t size) {
+void zen_BinaryEntityBuilder_emitOrLong(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_OR_L;
+}
+
+/* Shift Left */
+
+void zen_BinaryEntityBuilder_emitShiftLeftInteger(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_SHIFT_LEFT_I;
+}
+
+void zen_BinaryEntityBuilder_emitShiftLeftLong(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_SHIFT_LEFT_L;
+}
+
+/* Shift Right */
+
+void zen_BinaryEntityBuilder_emitShiftRightInteger(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_SHIFT_RIGHT_I;
+}
+
+void zen_BinaryEntityBuilder_emitShiftRightLong(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_SHIFT_RIGHT_L;
+}
+
+void zen_BinaryEntityBuilder_emitShiftRightUnsignedInteger(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_SHIFT_RIGHT_UI;
+}
+
+void zen_BinaryEntityBuilder_emitShiftRightUnsignedLong(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_SHIFT_RIGHT_UL;
+}
+
+/* XOR */
+
+void zen_BinaryEntityBuilder_emitXorInteger(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_XOR_I;
+}
+
+void zen_BinaryEntityBuilder_emitXorLong(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_XOR_L;
+}
+
+void zen_BinaryEntityBuilder_emitCastITB(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_CAST_ITB;
+}
+
+void zen_BinaryEntityBuilder_emitCastITS(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_CAST_ITS;
+}
+
+void zen_BinaryEntityBuilder_emitCastITL(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_CAST_ITL;
+}
+
+void zen_BinaryEntityBuilder_emitCastITF(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_CAST_ITF;
+}
+
+void zen_BinaryEntityBuilder_emitCastITD(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_CAST_ITD;
+}
+
+void zen_BinaryEntityBuilder_emitCastLTB(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_CAST_LTB;
+}
+
+void zen_BinaryEntityBuilder_emitCastLTS(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_CAST_LTS;
+}
+
+void zen_BinaryEntityBuilder_emitCastLTI(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_CAST_LTI;
+}
+
+void zen_BinaryEntityBuilder_emitCastLTF(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_CAST_LTF;
+}
+
+void zen_BinaryEntityBuilder_emitCastLTD(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_CAST_LTD;
+}
+
+void zen_BinaryEntityBuilder_emitCastFTI(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_CAST_FTI;
+}
+
+void zen_BinaryEntityBuilder_emitCastFTL(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_CAST_FTL;
+}
+
+void zen_BinaryEntityBuilder_emitCastFTD(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_CAST_FTD;
+}
+
+void zen_BinaryEntityBuilder_emitCastDTI(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_CAST_DTI;
+}
+
+void zen_BinaryEntityBuilder_emitCastDTL(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_CAST_DTL;
+}
+
+void zen_BinaryEntityBuilder_emitCastDTF(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_CAST_DTF;
+}
+
+void zen_BinaryEntityBuilder_emitCastITC(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_CAST_ITC;
+}
+
+void zen_BinaryEntityBuilder_emitCheckCast(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_CHECK_CAST;
+}
+
+void zen_BinaryEntityBuilder_emitCompareLong(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_COMPARE_L;
+}
+
+void zen_BinaryEntityBuilder_emitCompareLesserThanFloat(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_COMPARE_LT_F;
+}
+
+void zen_BinaryEntityBuilder_emitCompareGreaterThanFloat(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_COMPARE_GT_F;
+}
+
+void zen_BinaryEntityBuilder_emitCompareLesserThanDouble(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_COMPARE_LT_D;
+}
+
+void zen_BinaryEntityBuilder_emitCompareGreaterThanDouble(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_COMPARE_GT_D;
+}
+
+void zen_BinaryEntityBuilder_emitDivideInteger(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_DIVIDE_I;
+}
+
+void zen_BinaryEntityBuilder_emitDivideLong(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_DIVIDE_L;
+}
+void zen_BinaryEntityBuilder_emitDivideFloat(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_DIVIDE_F;
+}
+
+void zen_BinaryEntityBuilder_emitDivideDouble(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_DIVIDE_D;
 }
 
 void zen_BinaryEntityBuilder_emitDuplicate(zen_BinaryEntityBuilder_t* builder) {
-    zen_BinaryEntityBuilder_emit(builder, ZEN_BYTE_CODE_DUPLICATE);
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_DUPLICATE;
 }
 
-void zen_BinaryEntityBuilder_emitStoreReferenceArray(zen_BinaryEntityBuilder_t* builder) {
-    zen_BinaryEntityBuilder_emit(builder, ZEN_BYTE_CODE_STORE_AA);
+void zen_BinaryEntityBuilder_emitDuplicateX1(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_DUPLICATE_X1;
+}
+
+void zen_BinaryEntityBuilder_emitDuplicateX2(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_DUPLICATE_X2;
+}
+
+void zen_BinaryEntityBuilder_emitDuplicate2(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_DUPLICATE2;
+}
+
+void zen_BinaryEntityBuilder_emitDuplicate2X1(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_DUPLICATE2_X1;
+}
+
+void zen_BinaryEntityBuilder_emitDuplicate2X2(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_DUPLICATE2_X2;
+}
+
+void zen_BinaryEntityBuilder_emitJumpEqual0Integer(zen_BinaryEntityBuilder_t* builder, int16_t offset) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_JUMP_EQ0_I; // Byte Code
+    channel->m_bytes[channel->m_index++] = (offset & 0x0000FF00) >> 8; // Offset
+    channel->m_bytes[channel->m_index++] = (offset & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitJumpNotEqual0Integer(zen_BinaryEntityBuilder_t* builder, int16_t offset) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_JUMP_NE0_I; // Byte Code
+    channel->m_bytes[channel->m_index++] = (offset & 0x0000FF00) >> 8; // Offset
+    channel->m_bytes[channel->m_index++] = (offset & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitJumpLesserThan0Integer(zen_BinaryEntityBuilder_t* builder, int16_t offset) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_JUMP_LT0_I; // Byte Code
+    channel->m_bytes[channel->m_index++] = (offset & 0x0000FF00) >> 8; // Offset
+    channel->m_bytes[channel->m_index++] = (offset & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitJumpGreaterThan0Integer(zen_BinaryEntityBuilder_t* builder, int16_t offset) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_JUMP_GT0_I; // Byte Code
+    channel->m_bytes[channel->m_index++] = (offset & 0x0000FF00) >> 8; // Offset
+    channel->m_bytes[channel->m_index++] = (offset & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitJumpLesserThanOrEqualTo0Integer(zen_BinaryEntityBuilder_t* builder, int16_t offset) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_JUMP_LE0_I; // Byte Code
+    channel->m_bytes[channel->m_index++] = (offset & 0x0000FF00) >> 8; // Offset
+    channel->m_bytes[channel->m_index++] = (offset & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitJumpGreaterThanOrEqualTo0Integer(zen_BinaryEntityBuilder_t* builder, int16_t offset) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_JUMP_GE0_I; // Byte Code
+    channel->m_bytes[channel->m_index++] = (offset & 0x0000FF00) >> 8; // Offset
+    channel->m_bytes[channel->m_index++] = (offset & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitJumpEqualInteger(zen_BinaryEntityBuilder_t* builder, int16_t offset) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_JUMP_EQ_I; // Byte Code
+    channel->m_bytes[channel->m_index++] = (offset & 0x0000FF00) >> 8; // Offset
+    channel->m_bytes[channel->m_index++] = (offset & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitJumpNotEqualInteger(zen_BinaryEntityBuilder_t* builder, int16_t offset) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_JUMP_NE_I; // Byte Code
+    channel->m_bytes[channel->m_index++] = (offset & 0x0000FF00) >> 8; // Offset
+    channel->m_bytes[channel->m_index++] = (offset & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitJumpLesserThanInteger(zen_BinaryEntityBuilder_t* builder, int16_t offset) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_JUMP_LT_I; // Byte Code
+    channel->m_bytes[channel->m_index++] = (offset & 0x0000FF00) >> 8; // Offset
+    channel->m_bytes[channel->m_index++] = (offset & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitJumpGreaterThanInteger(zen_BinaryEntityBuilder_t* builder, int16_t offset) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_JUMP_GT_I; // Byte Code
+    channel->m_bytes[channel->m_index++] = (offset & 0x0000FF00) >> 8; // Offset
+    channel->m_bytes[channel->m_index++] = (offset & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitJumpLesserThanOrEqualInteger(zen_BinaryEntityBuilder_t* builder, int16_t offset) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_JUMP_LE_I; // Byte Code
+    channel->m_bytes[channel->m_index++] = (offset & 0x0000FF00) >> 8; // Offset
+    channel->m_bytes[channel->m_index++] = (offset & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitJumpGreaterThanOrEqualInteger(zen_BinaryEntityBuilder_t* builder, int16_t offset) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_JUMP_GE_I; // Byte Code
+    channel->m_bytes[channel->m_index++] = (offset & 0x0000FF00) >> 8; // Offset
+    channel->m_bytes[channel->m_index++] = (offset & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitJumpEqualReference(zen_BinaryEntityBuilder_t* builder, int16_t offset) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_JUMP_EQ_A; // Byte Code
+    channel->m_bytes[channel->m_index++] = (offset & 0x0000FF00) >> 8; // Offset
+    channel->m_bytes[channel->m_index++] = (offset & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitJumpNotEqualReference(zen_BinaryEntityBuilder_t* builder, int16_t offset) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_JUMP_NE_A; // Byte Code
+    channel->m_bytes[channel->m_index++] = (offset & 0x0000FF00) >> 8; // Offset
+    channel->m_bytes[channel->m_index++] = (offset & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitJumpEqualNullReference(zen_BinaryEntityBuilder_t* builder, int16_t offset) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_JUMP_EQN_A; // Byte Code
+    channel->m_bytes[channel->m_index++] = (offset & 0x0000FF00) >> 8; // Offset
+    channel->m_bytes[channel->m_index++] = (offset & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitJumpNotEqualNullReference(zen_BinaryEntityBuilder_t* builder, int16_t offset) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_JUMP_NEN_A; // Byte Code
+    channel->m_bytes[channel->m_index++] = (offset & 0x0000FF00) >> 8; // Offset
+    channel->m_bytes[channel->m_index++] = (offset & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitIncrementInteger(zen_BinaryEntityBuilder_t* builder, uint8_t index, uint8_t constant) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_INCREMENT_I; // Byte Code
+    channel->m_bytes[channel->m_index++] = index; // Index
+    channel->m_bytes[channel->m_index++] = constant; // Constant
+}
+
+void zen_BinaryEntityBuilder_emitWideIncrementInteger(zen_BinaryEntityBuilder_t* builder, uint16_t index, uint16_t constant) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 6);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_WIDE; // Byte Code
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_INCREMENT_I; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (constant & 0x0000FF00) >> 8; // Constant
+    channel->m_bytes[channel->m_index++] = (constant & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitInvokeSpecial(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_INVOKE_SPECIAL; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitInvokeVirtual(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_INVOKE_VIRTUAL; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitInvokeDynamic(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_INVOKE_DYNAMIC; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitInvokeStatic(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_INVOKE_STATIC; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
+}
+
+/* Jump */
+
+void zen_BinaryEntityBuilder_emitJump(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_JUMP; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
+}
+
+/* Load */
+
+void zen_BinaryEntityBuilder_emitLoadInteger(zen_BinaryEntityBuilder_t* builder, uint8_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_I; // Byte Code
+    channel->m_bytes[channel->m_index++] = index;
+}
+
+void zen_BinaryEntityBuilder_emitWideLoadInteger(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 4);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_WIDE; // Byte Code
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_I; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitLoadLong(zen_BinaryEntityBuilder_t* builder, uint8_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_L; // Byte Code
+    channel->m_bytes[channel->m_index++] = index;
+}
+
+void zen_BinaryEntityBuilder_emitWideLoadLong(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 4);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_WIDE; // Byte Code
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_L; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitLoadFloat(zen_BinaryEntityBuilder_t* builder, uint8_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_F; // Byte Code
+    channel->m_bytes[channel->m_index++] = index;
+}
+
+void zen_BinaryEntityBuilder_emitWideLoadFloat(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 4);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_WIDE; // Byte Code
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_F; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitLoadDouble(zen_BinaryEntityBuilder_t* builder, uint8_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_D; // Byte Code
+    channel->m_bytes[channel->m_index++] = index;
+}
+
+void zen_BinaryEntityBuilder_emitWideLoadDouble(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 4);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_WIDE; // Byte Code
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_D; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitLoadReference(zen_BinaryEntityBuilder_t* builder, uint8_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_A; // Byte Code
+    channel->m_bytes[channel->m_index++] = index;
+}
+
+void zen_BinaryEntityBuilder_emitWideLoadReference(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 4);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_WIDE; // Byte Code
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_A; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitLoad0Integer(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_I0; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad1Integer(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_I1; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad2Integer(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_I2; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad3Integer(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_I3; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad0Long(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_L0; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad1Long(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_L1; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad2Long(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_L2; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad3Long(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_L3; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad0Float(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_F0; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad1Float(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_F1; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad2Float(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_F2; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad3Float(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_F3; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad0Double(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_D0; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad1Double(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_D1; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad2Double(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_D2; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad3Double(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_D3; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad0Reference(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_A0; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad1Reference(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_A1; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad2Reference(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_A2; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoad3Reference(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_A3; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoadArrayByte(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_AB; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoadArrayCharacter(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_AC; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoadArrayShort(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_AS; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoadArrayInteger(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_AI; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoadArrayLong(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_AL; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoadArrayFloat(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_AF; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoadArrayDouble(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_AD; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoadArrayReference(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_AA; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitLoadInstanceField(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_INSTANCE_FIELD; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitLoadStaticField(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_STATIC_FIELD; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitLoadCPR(zen_BinaryEntityBuilder_t* builder, uint8_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_CPR; // Byte Code
+    channel->m_bytes[channel->m_index++] = index; // Index
+}
+
+void zen_BinaryEntityBuilder_emitWideLoadCPR(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 4);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_WIDE; // Byte Code
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_CPR; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitLoadArraySize(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_LOAD_ARRAY_SIZE; // Byte Code
+}
+
+/* Modulo */
+
+void zen_BinaryEntityBuilder_emitModuloInteger(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_MODULO_I; // Byte Code
+    zen_DataChannel_requestCapacity(channel, 1);
+}
+
+void zen_BinaryEntityBuilder_emitModuloLong(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_MODULO_L; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitModuloFloat(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_MODULO_F; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitModuloDouble(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_MODULO_D; // Byte Code
+}
+
+/* Multiply */
+
+void zen_BinaryEntityBuilder_emitMultiplyInteger(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_MULTIPLY_I; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitMultiplyLong(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_MULTIPLY_L; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitMultiplyFloat(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_MULTIPLY_F; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitMultiplyDouble(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_MULTIPLY_D; // Byte Code
+}
+
+/* Negate */
+
+void zen_BinaryEntityBuilder_emitNegateInteger(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_NEGATE_I; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitNegateLong(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_NEGATE_L; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitNegateFloat(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_NEGATE_F; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitNegateDouble(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_NEGATE_D; // Byte Code
+}
+
+/* New */
+
+void zen_BinaryEntityBuilder_emitNew(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_NEW; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitNewArray(zen_BinaryEntityBuilder_t* builder, uint8_t type) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_NEW; // Byte Code
+    channel->m_bytes[channel->m_index++] = (type & 0x0000FF00) >> 8; // Type
+    channel->m_bytes[channel->m_index++] = (type & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitNewReferenceArray(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_NEW_ARRAY_A; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_emitNewDimensionalArray(zen_BinaryEntityBuilder_t* builder, uint16_t index,
+    uint8_t dimensions) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 4);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_NEW_ARRAY_A; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = dimensions; // Dimensions
+}
+
+/* Pop */
+
+void zen_BinaryEntityBuilder_emitPop(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_POP; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitPop2(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_POP2; // Byte Code
+}
+
+/* Push */
+
+void zen_BinaryEntityBuilder_emitPushNull(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_NULL; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitPushIntegerNegative1(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_IN1; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitPushInteger0(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_I0; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitPushInteger1(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_I1; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitPushInteger2(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_I2; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitPushInteger3(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_I3; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitPushInteger4(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_I4; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitPushInteger5(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_I5; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitPushLong0(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_L0; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitPushLong1(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_L1; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitPushLong2(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_L2; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitPushFloat0(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_F0; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitPushFloat1(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_F1; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitPushFloat2(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_F2; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitPushDouble0(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_D0; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitPushDouble1(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_D1; // Byte Code
+}
+
+void zen_BinaryEntityBuilder_emitPushDouble2(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_D2; // Byte Code
 }
 
 void zen_BinaryEntityBuilder_emitPushByte(zen_BinaryEntityBuilder_t* builder, int8_t value) {
-    zen_BinaryEntityBuilder_emit(builder, ZEN_BYTE_CODE_PUSH_B, value);
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_D2; // Byte Code
+    channel->m_bytes[channel->m_index++] = value;
 }
 
+void zen_BinaryEntityBuilder_emitPushShort(zen_BinaryEntityBuilder_t* builder, int16_t value) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
 
-void zen_BinaryEntityBuilder_pushInteger(zen_BinaryEntityBuilder_t* builder, int64_t i) {
-    // TODO
-    zen_BinaryEntityBuilder_emitLoadCpr(builder, 0);
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_D2; // Byte Code
+    channel->m_bytes[channel->m_index++] = (value & 0x0000FF00) >> 8; // Value
+    channel->m_bytes[channel->m_index++] = (value & 0x000000FF);
 }
 
-int32_t zen_BinaryEntityBuilder_findFieldDescriptorIndex(zen_BinaryEntityBuilder_t* builder, zen_ArrayList_t* identifiers) {
-    return 0;
+/* Return */
+
+void zen_BinaryEntityBuilder_emitReturn(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_RETURN; // Byte Code
 }
 
-int32_t zen_BinaryEntityBuilder_findLocalVariableIndex(zen_BinaryEntityBuilder_t* builder, const char* identifier) {
-    return 0;
+void zen_BinaryEntityBuilder_emitReturnInteger(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_RETURN_I; // Byte Code
 }
 
+void zen_BinaryEntityBuilder_emitReturnLong(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-
-
-
-
-
-
-
-
-
-/* compilationUnit */
-
-void zen_BinaryEntityBuilder_onEnterCompilationUnit(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {
-    jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
-    jtk_Assert_assertObject(node, "The specified AST node is null.");
-
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_Scope_t* scope = zen_AstAnnotations_get(builder->m_scopes, node);
-    zen_SymbolTable_setCurrentScope(builder->m_symbolTable, scope);
-
-    zen_ChannelManager_add(builder->m_channelManager);
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_RETURN_L; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_printChannel(zen_ByteCodeChannel_t* channel) {
-    int32_t size = zen_ByteCodeChannel_getSize(channel);
-    int32_t i;
-    bool text = true;
-    for (i = 0; i < size; i++) {
-        zen_ByteCode_t byteCode = (zen_ByteCode_t)channel->m_bytes[i];
-        zen_Instruction_t* instruction = zen_Instruction_getInstance(byteCode);
-        int32_t argumentCount = instruction->m_argumentCount;
-        if (text) {
-            fprintf(stdout, "%s", zen_Instruction_getText(instruction));
-        }
-        else {
-            fprintf(stdout, "%c", byteCode);
-        }
-        if (argumentCount > 0) {
-            int32_t j;
-            int32_t limit = i + argumentCount;
-            for (j = i + 1; j <= argumentCount; j++) {
-                uint8_t nextByte = channel->m_bytes[j];
-                if (text) {
-                    fprintf(stdout, " %d", nextByte);
-                }
-                else {
-                    fprintf(stdout, "%c", nextByte);
-                }
-            }
-            i += argumentCount;
-        }
-        if (text) {
-            fprintf(stdout, "\n");
-        }
-        //fprintf(stdout, "%X ", );
-    }
+void zen_BinaryEntityBuilder_emitReturnFloat(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_RETURN_F; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onExitCompilationUnit(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {
-    jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
-    jtk_Assert_assertObject(node, "The specified AST node is null.");
+void zen_BinaryEntityBuilder_emitReturnDouble(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_SymbolTable_invalidateCurrentScope(builder->m_symbolTable);
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-    // Do something with the generated byte codes.
-
-    zen_BinaryEntityBuilder_printChannel(zen_ChannelManager_peek(builder->m_channelManager));
-
-    zen_ChannelManager_remove(builder->m_channelManager, 0);
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_RETURN_D; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onEnterFunctionDeclaration(
-    zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-    jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
-    jtk_Assert_assertObject(node, "The specified AST node is null.");
+void zen_BinaryEntityBuilder_emitReturnReference(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_FunctionDeclarationContext_t* context = (zen_FunctionDeclarationContext_t*)node->m_context;
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-    zen_Scope_t* scope = zen_AstAnnotations_get(builder->m_scopes, node);
-    zen_SymbolTable_setCurrentScope(builder->m_symbolTable, scope);
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_RETURN_A; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onExitFunctionDeclaration(
-    zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-    jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
-    jtk_Assert_assertObject(node, "The specified AST node is null.");
+/* RTTI */
 
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_SymbolTable_invalidateCurrentScope(builder->m_symbolTable);
+/* Store */
+
+void zen_BinaryEntityBuilder_emitStoreInteger(zen_BinaryEntityBuilder_t* builder, uint8_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_I; // Byte Code
+    channel->m_bytes[channel->m_index++] = index; // Index
 }
 
-void zen_BinaryEntityBuilder_onEnterStatementSuite(
-    zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-    jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
-    jtk_Assert_assertObject(node, "The specified AST node is null.");
+void zen_BinaryEntityBuilder_emitWideStoreInteger(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
 
-    zen_Scope_t* scope = zen_AstAnnotations_get(builder->m_scopes, node);
-    zen_SymbolTable_setCurrentScope(builder->m_symbolTable, scope);
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_I; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_onExitStatementSuite(
-    zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-    jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
-    jtk_Assert_assertObject(node, "The specified AST node is null.");
+void zen_BinaryEntityBuilder_emitStoreInteger0(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-    zen_SymbolTable_invalidateCurrentScope(builder->m_symbolTable);
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_I0; // Byte Code
 }
 
-// BUG: Looks like we are not setting the current scope in this function.
-void zen_BinaryEntityBuilder_onEnterClassDeclaration(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {
-    jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
-    jtk_Assert_assertObject(node, "The specified AST node is null.");
+void zen_BinaryEntityBuilder_emitStoreInteger1(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_I1; // Byte Code
 }
 
-// BUG
-void zen_BinaryEntityBuilder_onExitClassDeclaration(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {
-    jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
-    jtk_Assert_assertObject(node, "The specified AST node is null.");
+void zen_BinaryEntityBuilder_emitStoreInteger2(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-    zen_SymbolTable_invalidateCurrentScope(builder->m_symbolTable);
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_I2; // Byte Code
 }
 
+void zen_BinaryEntityBuilder_emitStoreInteger3(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-
-
-
-
-
-
-
-void zen_BinaryEntityBuilder_onEnterWhileStatement(zen_BinaryEntityBuilder_t* builder) {
-    zen_ChannelManager_add(builder->m_channelManager);
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_I3; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onExitWhileStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
+void zen_BinaryEntityBuilder_emitStoreLong(zen_BinaryEntityBuilder_t* builder, uint8_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    zen_ByteCodeChannel_t* statementSuiteChannel = zen_ChannelManager_peek(builder->m_channelManager);
-    uint32_t index = zen_ByteCodeChannel_getSize(statementSuiteChannel);
-    zen_BinaryEntityBuilder_emitJump(builder, index);
-    zen_ChannelManager_merge(builder->m_channelManager);
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_L; // Byte Code
+    channel->m_bytes[channel->m_index++] = index; // Index
 }
 
-void zen_BinaryEntityBuilder_onEnterVariableDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-    /*for () {
-        if (variableDeclarator->m_expression != NULL) {
-            zen_BinaryEntityBuilder_storeReference(variableDeclarator);
-        }
-    }*/
+void zen_BinaryEntityBuilder_emitWideStoreLong(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_L; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_onEnterExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_ExpressionContext_t* context = (zen_AssignmentExpressionContext_t*)node->m_context;
+void zen_BinaryEntityBuilder_emitStoreLong0(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    zen_AstAnnotation_t* annotation = zen_AstAnnotations_get(builder->m_annotations, node);
-    if (annotation != NULL) {
-        if (zen_AstAnnotation_getType(annotation) == ZEN_AST_ANNOTATION_TYPE_ASYMETRICAL_CHANNEL_MANAGEMENT) {
-            zen_ChannelManager_add(builder->m_channelManager);
-        }
-    }
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_L0; // Byte Code
 }
 
-// How to differentiate between function calls
+void zen_BinaryEntityBuilder_emitStoreLong1(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-/*
- *    ...
- *    invoke_virtual #function_descriptor_index
- *    store_a #x
- */
-void zen_BinaryEntityBuilder_onEnterAssignmentExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_AssignmentExpressionContext_t* context = (zen_AssignmentExpressionContext_t*)node->m_context;
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-    /* The resolution phase ensures that the expression on the left hand
-     * side of the assignment operator evaluates to an identifier or
-     * field access.
-     */
-    // zen_ArrayList_t* children = zen_ArrayList_new();
-    // zen_ASTHelper_getFilteredTokens(context->m_conditionalExpression, children, ZEN_TOKEN_IDENTIFIER);
-
-    /* The following line is valid when zen_ASTHelper_getFilteredTerminalNodes() function
-     * is invoked instead of zen_ASTHelper_getFilteredTokens().
-     */
-    // zen_ASTNode_t* identifier = (zen_ASTNode_t*)zen_ArrayList_get(children, 0);
-    // zen_Token_t* identifierToken = (zen_Token_t*)zen_ArrayList_get(children, 0);
-    // const uint8_t* identifierText = zen_Token_getText(identifierToken);
-
-    // zen_Symbol_t* symbol = zen_SymbolTable_resolve(builder->m_symbolTable, identifierText);
-    // if (zen_Symbol_isVariable(symbol)) {
-       //  int32_t targetIndex;
-        // bool localVariable = false;
-
-        // zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(symbol);
-        // if (zen_Scope_isClassScope(enclosingScope)) {
-           //  targetIndex = zen_BinaryEntityBuilder_findFieldDescriptorIndex(builder, children);
-        // }
-        // else {
-           /* int32_t size = zen_ArrayList_getSize(children);
-            if (size == 1) {
-                targetIndex = zen_BinaryEntityBuilder_findLocalVariableIndex(builder, identifierText);
-                localVariable = true;
-            }
-            else {
-                targetIndex = zen_BinaryEntityBuilder_findFieldDescriptorIndex(builder, children);
-            }
-        }
-
-        zen_BinaryEntityBuilder_emitLoadReference(builder, targetIndex);
-
-        zen_ASTNode_t* assignmentOperator = context->m_assignmentOperator;
-        zen_Token_t* operatorToken = (zen_Token_t*)assignmentOperator->m_context;
-        switch (operatorToken->m_type) {
-            case ZEN_TOKEN_EQUAL: {
-                break;
-            }
-
-            case ZEN_TOKEN_PLUS_EQUAL: {
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, "Czen.base.Object;plusOperator(Czen.base.Object;)Czen.base.Object;");
-                break;
-            }
-
-            case ZEN_TOKEN_DASH_EQUAL: {
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, "Czen.base.Object;minusOperator(Czen.base.Object;)Czen.base.Object;");
-                break;
-            }
-
-            default: {
-                // [internal error]
-            }
-        }
-
-        void** state = zen_Memory_allocate(void*, ZEN_ASSIGNMENT_EXPRESSION_STATE_SIZE);
-        state[ZEN_ASSIGNMENT_EXPRESSION_STATE_TARGET_INDEX] = (void*)targetIndex;
-        state[ZEN_ASSIGNMENT_EXPRESSION_STATE_LOCAL_VARIABLE] = (void*)localVariable;
-        zen_AstAnnotations_put(builder->m_annotations, node, state);
-
-    }
-    else if (zen_Symbol_isConstant(symbol)) {
-        // error: Constant cannot be assigned
-    }
-    else {
-        // error: LHS is not variable
-    }*/
-
-    // zen_ArrayList_delete(children);
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_L1; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onExitAssignmentExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_AssignmentExpressionContext_t* context = (zen_AssignmentExpressionContext_t*)node->m_context;
+void zen_BinaryEntityBuilder_emitStoreLong2(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    if (context->m_assignmentOperator != NULL) {
-        zen_ASTNode_t* assignmentOperator = context->m_assignmentOperator;
-        zen_Token_t* operatorToken = (zen_Token_t*)assignmentOperator->m_context;
-        switch (operatorToken->m_type) {
-            /* The equal operator only stores a reference. Therefore, it requires no
-             * special implementation.
-             */
-            /*
-            case ZEN_TOKEN_EQUAL: {
-                break;
-            }
-            */
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-            case ZEN_TOKEN_ASTERISK_EQUAL: {
-                break;
-            }
-
-            case ZEN_TOKEN_FORWARD_SLASH_EQUAL: {
-                break;
-            }
-
-            case ZEN_TOKEN_MODULUS_EQUAL: {
-                break;
-            }
-
-            case ZEN_TOKEN_PLUS_EQUAL: {
-                break;
-            }
-
-            case ZEN_TOKEN_DASH_EQUAL: {
-                break;
-            }
-
-            case ZEN_TOKEN_LEFT_ANGLE_BRACKET_2_EQUAL: {
-                break;
-            }
-
-            case ZEN_TOKEN_RIGHT_ANGLE_BRACKET_2_EQUAL: {
-                break;
-            }
-
-            case ZEN_TOKEN_RIGHT_ANGLE_BRACKET_3_EQUAL: {
-                break;
-            }
-
-            case ZEN_TOKEN_AMPERSAND_EQUAL: {
-                break;
-            }
-
-            case ZEN_TOKEN_CARET_EQUAL: {
-                break;
-            }
-
-            case ZEN_TOKEN_VERTICAL_BAR_EQUAL: {
-                break;
-            }
-
-            default: {
-                // [internal error]
-            }
-        }
-        // Depending on the first push reference
-        zen_BinaryEntityBuilder_emitStoreReference(builder, 10);
-    }
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_L2; // Byte Code
 }
 
-/* Conditional Expression */
+void zen_BinaryEntityBuilder_emitStoreLong3(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-void zen_BinaryEntityBuilder_onEnterConditionalExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_ConditionalExpressionContext_t* context = (zen_ConditionalExpressionContext_t*)node->m_context;
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_L3; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onExitConditionalExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_ConditionalExpressionContext_t* context = (zen_ConditionalExpressionContext_t*)node->m_context;
+void zen_BinaryEntityBuilder_emitStoreFloat(zen_BinaryEntityBuilder_t* builder, uint8_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    /* TODO */
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_F; // Byte Code
+    channel->m_bytes[channel->m_index++] = index; // Index
 }
 
-/* Logical Or Expression */
+void zen_BinaryEntityBuilder_emitWideStoreFloat(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-void zen_BinaryEntityBuilder_onEnterLogicalOrExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_LogicalOrExpressionContext_t* context = (zen_LogicalOrExpressionContext_t*)node->m_context;
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_F; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_onExitLogicalOrExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_LogicalOrExpressionContext_t* context = (zen_LogicalOrExpressionContext_t*)node->m_context;
+void zen_BinaryEntityBuilder_emitStoreFloat0(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    /* TODO */
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_F0; // Byte Code
 }
 
-/* Logical And Expression */
+void zen_BinaryEntityBuilder_emitStoreFloat1(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-void zen_BinaryEntityBuilder_onEnterLogicalAndExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_LogicalAndExpressionContext_t* context = (zen_LogicalAndExpressionContext_t*)node->m_context;
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_F1; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onExitLogicalAndExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_LogicalAndExpressionContext_t* context = (zen_LogicalAndExpressionContext_t*)node->m_context;
+void zen_BinaryEntityBuilder_emitStoreFloat2(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    /* TODO */
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_F2; // Byte Code
 }
 
-/* Inclusive Or Expression */
+void zen_BinaryEntityBuilder_emitStoreFloat3(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-void zen_BinaryEntityBuilder_onEnterInclusiveOrExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_InclusiveOrExpressionContext_t* context = (zen_InclusiveOrExpressionContext_t*)node->m_context;
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_F3; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onExitInclusiveOrExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_InclusiveOrExpressionContext_t* context = (zen_InclusiveOrExpressionContext_t*)node->m_context;
+void zen_BinaryEntityBuilder_emitStoreDouble(zen_BinaryEntityBuilder_t* builder, uint8_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    if (context->m_inclusiveOrExpression != NULL) {
-        zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-    }
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_D; // Byte Code
+    channel->m_bytes[channel->m_index++] = index; // Index
 }
 
-/* Exclusive Or Expression */
+void zen_BinaryEntityBuilder_emitWideStoreDouble(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
 
-void zen_BinaryEntityBuilder_onEnterExclusiveOrExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_ExclusiveOrExpressionContext_t* context = (zen_ExclusiveOrExpressionContext_t*)node->m_context;
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_D; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_onExitExclusiveOrExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_ExclusiveOrExpressionContext_t* context = (zen_ExclusiveOrExpressionContext_t*)node->m_context;
+void zen_BinaryEntityBuilder_emitStoreDouble0(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    if (context->m_exclusiveOrExpression != NULL) {
-        zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-    }
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_D0; // Byte Code
 }
 
-/* And Expression */
+void zen_BinaryEntityBuilder_emitStoreDouble1(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-void zen_BinaryEntityBuilder_onEnterAndExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_AndExpressionContext_t* context = (zen_AndExpressionContext_t*)node->m_context;
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_D1; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onExitAndExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_AndExpressionContext_t* context = (zen_AndExpressionContext_t*)node->m_context;
+void zen_BinaryEntityBuilder_emitStoreDouble2(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    if (context->m_andExpression != NULL) {
-        zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-    }
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_D2; // Byte Code
 }
 
-/* Equality Expression */
+void zen_BinaryEntityBuilder_emitStoreDouble3(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-void zen_BinaryEntityBuilder_onEnterEqualityExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_EqualityExpressionContext_t* context = (zen_EqualityExpressionContext_t*)node->m_context;
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_D3; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onExitEqualityExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_EqualityExpressionContext_t* context = (zen_EqualityExpressionContext_t*)node->m_context;
+void zen_BinaryEntityBuilder_emitStoreReference(zen_BinaryEntityBuilder_t* builder, uint8_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    zen_ASTNode_t* equalityOperator = context->m_equalityOperator;
-    if (equalityOperator != NULL) {
-        zen_Token_t* equalityOperatorToken = (zen_Token_t*)(equalityOperator->m_context);
-        zen_TokenType_t equalityOperatorTokenType = zen_Token_getType(equalityOperatorToken);
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 2);
 
-        switch (equalityOperatorTokenType) {
-            case ZEN_TOKEN_EQUAL_2: {
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
-
-            case ZEN_TOKEN_EXCLAMATION_MARK_EQUAL: {
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
-        }
-    }
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_A; // Byte Code
+    channel->m_bytes[channel->m_index++] = index; // Index
 }
 
-/* Relational Expression */
+void zen_BinaryEntityBuilder_emitWideStoreReference(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-void zen_BinaryEntityBuilder_onEnterRelationalExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_RelationalExpressionContext_t* context = (zen_RelationalExpressionContext_t*)node->m_context;
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_A; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_onExitRelationalExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_RelationalExpressionContext_t* context = (zen_RelationalExpressionContext_t*)node->m_context;
+void zen_BinaryEntityBuilder_emitStoreReference0(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    zen_ASTNode_t* relationalOperator = context->m_relationalOperator;
-    if (relationalOperator != NULL) {
-        zen_Token_t* relationalOperatorToken = (zen_Token_t*)(relationalOperator->m_context);
-        zen_TokenType_t relationalOperatorTokenType = zen_Token_getType(relationalOperatorToken);
-        switch (relationalOperatorTokenType) {
-            case ZEN_TOKEN_LEFT_ANGLE_BRACKET: {
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-            case ZEN_TOKEN_RIGHT_ANGLE_BRACKET: {
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
-
-            case ZEN_TOKEN_LEFT_ANGLE_BRACKET_EQUAL: {
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
-
-            case ZEN_TOKEN_RIGHT_ANGLE_BRACKET_EQUAL: {
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
-
-            case ZEN_TOKEN_KEYWORD_IS: {
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
-        }
-    }
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_A0; // Byte Code
 }
 
-/* Shift Expression */
+void zen_BinaryEntityBuilder_emitStoreReference1(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-void zen_BinaryEntityBuilder_onEnterShiftExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_ShiftExpressionContext_t* context = (zen_ShiftExpressionContext_t*)node->m_context;
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_A1; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onExitShiftExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_ShiftExpressionContext_t* context = (zen_ShiftExpressionContext_t*)node->m_context;
+void zen_BinaryEntityBuilder_emitStoreReference2(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    zen_ASTNode_t* shiftOperator = context->m_shiftOperator;
-    if (shiftOperator != NULL) {
-        zen_Token_t* shiftOperatorToken = (zen_Token_t*)(shiftOperator->m_context);
-        zen_TokenType_t shiftOperatorTokenType = zen_Token_getType(shiftOperatorToken);
-        switch (shiftOperatorTokenType) {
-            case ZEN_TOKEN_LEFT_ANGLE_BRACKET_2: {
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-            case ZEN_TOKEN_RIGHT_ANGLE_BRACKET_2: {
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
-
-            case ZEN_TOKEN_RIGHT_ANGLE_BRACKET_3: {
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
-        }
-    }
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_A2; // Byte Code
 }
 
-/* Additive Expression */
+void zen_BinaryEntityBuilder_emitStoreReference3(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-void zen_BinaryEntityBuilder_onEnterAdditiveExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_AdditiveExpressionContext_t* context = (zen_AdditiveExpressionContext_t*)node->m_context;
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_A3; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onExitAdditiveExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_AdditiveExpressionContext_t* context = (zen_AdditiveExpressionContext_t*)node->m_context;
+/* Store Array */
 
-    zen_ASTNode_t* additiveOperator = context->m_additiveOperator;
-    if (additiveOperator != NULL) {
-        zen_Token_t* additiveOperatorToken = (zen_Token_t*)(additiveOperator->m_context);
-        zen_TokenType_t additiveOperatorTokenType = zen_Token_getType(additiveOperatorToken);
-        switch (additiveOperatorTokenType) {
-            case ZEN_TOKEN_PLUS: {
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, /* "..." */ 0);
-                break;
-            }
+void zen_BinaryEntityBuilder_emitStoreArrayByte(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-            case ZEN_TOKEN_DASH: {
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-            default: {
-                fprintf(stderr, "[internal error] Control should not reach here.\n");
-                break;
-            }
-        }
-    }
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_AB; // Byte Code
 }
 
-/* Multiplicative Expression */
+void zen_BinaryEntityBuilder_emitStoreArrayCharacter(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-void zen_BinaryEntityBuilder_onEnterMultiplicativeExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_MultiplicativeExpressionContext_t* context = (zen_MultiplicativeExpressionContext_t*)node->m_context;
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_AC; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onExitMultiplicativeExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_MultiplicativeExpressionContext_t* context = (zen_MultiplicativeExpressionContext_t*)node->m_context;
+void zen_BinaryEntityBuilder_emitStoreArrayShort(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    zen_ASTNode_t* multiplicativeOperator = context->m_multiplicativeOperator;
-    if (multiplicativeOperator != NULL) {
-        zen_Token_t* multiplicativeOperatorToken = (zen_Token_t*)(multiplicativeOperator->m_context);
-        zen_TokenType_t multiplicativeOperatorTokenType = zen_Token_getType(multiplicativeOperatorToken);
-        switch (multiplicativeOperatorTokenType) {
-            case ZEN_TOKEN_ASTERISK: {
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-            case ZEN_TOKEN_FORWARD_SLASH: {
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
-
-            case ZEN_TOKEN_MODULUS: {
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
-        }
-    }
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_AS; // Byte Code
 }
 
-/* Unary Expression */
+void zen_BinaryEntityBuilder_emitStoreArrayInteger(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-void zen_BinaryEntityBuilder_onEnterUnaryExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_UnaryExpressionContext_t* context = (zen_UnaryExpressionContext_t*)node->m_context;
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_AI; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onExitUnaryExpression(zen_ASTListener_t* listener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)listener->m_context;
-    zen_UnaryExpressionContext_t* context = (zen_UnaryExpressionContext_t*)node->m_context;
+void zen_BinaryEntityBuilder_emitStoreArrayLong(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    zen_ASTNode_t* unaryOperator = context->m_unaryOperator;
-    if (unaryOperator != NULL) {
-        zen_Token_t* unaryOperatorToken = (zen_Token_t*)unaryOperator->m_context;
-        zen_TokenType_t unaryOperatorType = zen_Token_getType(unaryOperatorToken);
-        switch (unaryOperatorType) {
-            case ZEN_TOKEN_PLUS: {
-                /* The UnaryPlusOperator.applyUnaryPlus() function is invoked against the object
-                 * whose "positive" internal state is required. It returns an object with its
-                 * internal state "positive".
-                 */
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-            case ZEN_TOKEN_DASH: {
-                /* The UnaryPlusOperator.applyUnaryPlus() function is invoked against the object
-                 * whose "negative" internal state is required. It returns an object with its
-                 * internal state "negative".
-                 */
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
-
-            case ZEN_TOKEN_TILDE: {
-                /* The UnaryPlusOperator.applyUnaryPlus() function is invoked against the object
-                 * whose "deeply toggled" internal state is required. It returns an object with its
-                 * internal state "deeply toggled".
-                 */
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
-
-            case ZEN_TOKEN_EXCLAMATION_MARK: {
-                /* The UnaryPlusOperator.applyUnaryPlus() function is invoked against the object
-                 * whose "toggled" internal state is required. It returns an object with its
-                 * internal state "toggled".
-                 */
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
-
-            case ZEN_TOKEN_PLUS_2:
-            case ZEN_TOKEN_DASH_2: {
-                if (unaryOperatorType == ZEN_TOKEN_PLUS_2) {
-                    /* The onPreIncrement() function is invoked against the object whose internal
-                     * state has to be "incremented by 1". It returns an object with its internal
-                     * state "incremented by 1".
-                     */
-                    zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                }
-                else {
-                    /* The onPreDecrement() function is invoked against the object whose internal
-                     * state has to be "incremented by 1". It returns an object with its internal
-                     * state "incremented by 1".
-                     */
-                    zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                }
-                /* A copy of the "incremented" object is required on the operand stack for
-                 * assignment.
-                 */
-                zen_BinaryEntityBuilder_emitDuplicate(builder);
-                /* Assign the variable the object which represents the new state.
-                 *
-                 * TODO: Change store_a to store_a1 (and friends) and
-                 *       store_field when necessary.
-                 */
-                zen_BinaryEntityBuilder_emitStoreReference(builder, 0);
-
-                break;
-            }
-        }
-    }
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_AL; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onEnterPostfixExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {
+void zen_BinaryEntityBuilder_emitStoreArrayFloat(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_AF; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onExitPostfixExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_PostfixExpressionContext_t* context = (zen_PostfixExpressionContext_t*)node->m_context;
+void zen_BinaryEntityBuilder_emitStoreArrayDouble(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    int32_t size = zen_ArrayList_getSize(context->m_postfixParts);
-    int32_t i;
-    for (i = 0; i < size; i++) {
-        zen_ASTNode_t* postfixPart = (zen_ASTNode_t*)zen_ArrayList_get(context->m_postfixParts, i);
-        switch (zen_ASTNode_getType(postfixPart)) {
-            /*
-            case ZEN_AST_NODE_SUBSCRIPT: {
-                zen_SubscriptContext_t* subscriptContext = (zen_SubscriptContext_t*)postfixPart->m_context;
-                // TODO: Determine whether this invocation is a load or assignment.
-                zen_BinaryEntityBuilder_emitLoadArray(builder);
-                break;
-            }
-            */
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-            case ZEN_AST_NODE_POSTFIX_OPERATOR: {
-                zen_PostfixOperatorContext_t* postfixOperatorContext = (zen_PostfixOperatorContext_t*)postfixPart->m_context;
-                zen_Token_t* postfixOperator = (zen_Token_t*)(postfixOperatorContext->m_postfixOperator->m_context);
-
-                /* The virtual onPostIncrement() function is invoked against the object.
-                 * Therefore, a duplicate of it is necessary on the operand stack.
-                 */
-                zen_BinaryEntityBuilder_emitDuplicate(builder);
-                if (zen_Token_getType(postfixOperator) == ZEN_TOKEN_PLUS_2) {
-                    /* The onPostIncrement() function is invoked against the object whose internal
-                     * state has to be "incremented by 1". It returns an object with its internal
-                     * state "incremented by 1".
-                     */
-                    // TODO: Emit an invocation to PostIncrementOperator.applyPostDecrement()
-                    zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                }
-                else {
-                    /* The onPostDecrement() function is invoked against the object whose internal
-                     * state has to be "incremented by 1". It returns an object with its internal
-                     * state "incremented by 1".
-                     */
-                    // TODO: Emit an invocation to PostDecrementOperator.applyPostDecrement()
-                    zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                }
-                /* Assign the variable the object which represents the new state.
-                 *
-                 * TODO: Change store_a to store_a1 (and friends) and
-                 *       store_field when necessary.
-                 */
-                zen_BinaryEntityBuilder_emitStoreReference(builder, 0);
-
-                break;
-            }
-        }
-    }
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_AD; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onEnterPrimaryExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_PrimaryExpressionContext_t* context = (zen_PrimaryExpressionContext_t*)node->m_context;
+void zen_BinaryEntityBuilder_emitStoreArrayReference(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    if (zen_ASTNode_isTerminal(context->m_expression)) {
-        zen_Token_t* token = (zen_Token_t*)context->m_expression->m_context;
-        switch (zen_Token_getType(token)) {
-            case ZEN_TOKEN_IDENTIFIER: {
-                zen_ASTNode_t* assignmentExpression = zen_ASTHelper_getAncestor(context->m_expression, ZEN_AST_NODE_ASSIGNMENT_EXPRESSION);
-                zen_AssignmentExpressionContext_t* assignmentExpressionContext = (zen_AssignmentExpressionContext_t*)assignmentExpression->m_context;
-                if (assignmentExpression != NULL) {
-                    zen_ASTNode_t* assignmentOperator = assignmentExpressionContext->m_assignmentOperator;
-                    if (assignmentOperator != NULL) {
-                        zen_Token_t* operatorToken = (zen_Token_t*)(assignmentOperator->m_context);
-                        if (zen_Token_getType(operatorToken) == ZEN_TOKEN_EQUAL) {
-                            if (token->m_startIndex < operatorToken->m_startIndex) {
-                                return;
-                            }
-                        }
-                    }
-                }
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-                const uint8_t* identifierText = zen_Token_getText(token);
-                zen_Symbol_t* symbol = zen_SymbolTable_resolve(builder->m_symbolTable, identifierText);
-                zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(symbol);
-                if (zen_Scope_isClassScope(enclosingScope)) {
-                    zen_BinaryEntityBuilder_emitLoadReference(builder, 0);
-                    zen_BinaryEntityBuilder_emitLoadInstanceField(builder, 10);
-                }
-                else {
-                    zen_BinaryEntityBuilder_emitLoadReference(builder, 10);
-                }
-                break;
-            }
-
-            case ZEN_TOKEN_INTEGER_LITERAL: {
-                const uint8_t* integerText = zen_Token_getText(token);
-                zen_BinaryEntityBuilder_emitPushIntegerEx(builder, integerText);
-                zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0);
-                break;
-            }
-
-            case ZEN_TOKEN_KEYWORD_TRUE: {
-                zen_BinaryEntityBuilder_emitPushTrue(builder);
-                break;
-            }
-
-            case ZEN_TOKEN_KEYWORD_FALSE: {
-                zen_BinaryEntityBuilder_emitPushFalse(builder);
-                break;
-            }
-
-            case ZEN_TOKEN_STRING_LITERAL: {
-                zen_BinaryEntityBuilder_emitLoadCpr(builder, 0);
-                break;
-            }
-
-            case ZEN_TOKEN_KEYWORD_NULL: {
-                zen_BinaryEntityBuilder_emitPushNull(builder);
-                break;
-            }
-
-            case ZEN_TOKEN_KEYWORD_UNDEFINED: {
-                zen_BinaryEntityBuilder_emitPushUndefined(builder);
-                break;
-            }
-
-            default: {
-                /* [internal error] */
-            }
-        }
-    }
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_AA; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onEnterMapExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_MapExpressionContext_t* context = (zen_MapExpressionContext_t*)node->m_context;
+/* Store Field */
 
-    zen_BinaryEntityBuilder_emitPushByte(builder, 0); // TODO: With proper size
-    zen_BinaryEntityBuilder_emitNewReferenceArray(builder, 0); // TODO: new_array_n
+void zen_BinaryEntityBuilder_emitStoreInstanceField(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_INSTANCE_FIELD; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_onExitMapExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_MapExpressionContext_t* context = (zen_MapExpressionContext_t*)node->m_context;
+void zen_BinaryEntityBuilder_emitStoreStaticField(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    zen_BinaryEntityBuilder_emitInvokeVirtual(builder, 0); // TODO
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 3);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_STORE_STATIC_FIELD; // Byte Code
+    channel->m_bytes[channel->m_index++] = (index & 0x0000FF00) >> 8; // Index
+    channel->m_bytes[channel->m_index++] = (index & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_onEnterListExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_ListExpressionContext_t* context = (zen_ListExpressionContext_t*)node->m_context;
-    zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)context->m_expressions->m_context;
+/* Subtract */
 
-    int32_t size = zen_ArrayList_getSize(expressionsContext->m_expressions);
+void zen_BinaryEntityBuilder_emitSubtractInteger(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    zen_BinaryEntityBuilder_emitPushByte(builder, size);
-    zen_BinaryEntityBuilder_emitNewReferenceArray(builder, 0);
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-    int32_t i;
-    for (i = 0; i < size; i++) {
-        zen_ASTNode_t* expression = (zen_ASTNode_t*)zen_ArrayList_get(expressionsContext->m_expressions, i);
-        zen_AstAnnotation_t* expressionAnnotation = zen_AstAnnotation_new(ZEN_AST_ANNOTATION_TYPE_ASYMETRICAL_CHANNEL_MANAGEMENT, NULL);
-        zen_AstAnnotations_put(builder->m_annotations, expression, expressionAnnotation);
-    }
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_SUBTRACT_I; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onExitListExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_ListExpressionContext_t* context = (zen_ListExpressionContext_t*)node->m_context;
-    zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)context->m_expressions->m_context;
+void zen_BinaryEntityBuilder_emitSubtractLong(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    int32_t size = zen_ArrayList_getSize(expressionsContext->m_expressions);
-    /* Currently, an expression channel is on top of the stack. Whatever,
-     * byte codes are emitted will be placed on it. Therefore, we need to
-     * swap the expression channel with the local channel.
-     */
-    zen_ChannelManager_swap(builder->m_channelManager, 0, size);
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-    int32_t i;
-    for (i = 0; i < size; i++) {
-        /* A textual representation of the channels for an array with four
-         * elements.
-         *
-         * [0] local channel
-         * [1] expression_channel_3
-         * [2] expression_channel_2
-         * [3] expression_channel_1
-         * [4] expression_channel_4
-         * ...
-         */
-
-        /* Create a duplicate of the array. */
-        zen_BinaryEntityBuilder_emitDuplicate(builder);
-        zen_BinaryEntityBuilder_emitPushByte(builder, i);
-
-        int32_t expressionChannelIndex = ((i + 1) == size)? 1 : (size - i - 1);
-        zen_ChannelManager_append(builder->m_channelManager, expressionChannelIndex, 0);
-        zen_ChannelManager_remove(builder->m_channelManager, expressionChannelIndex);
-
-        zen_BinaryEntityBuilder_emitStoreReferenceArray(builder);
-
-        zen_ASTNode_t* expression = (zen_ASTNode_t*)zen_ArrayList_get(expressionsContext->m_expressions, i);
-        zen_AstAnnotation_t* expressionAnnotation = zen_AstAnnotations_get(builder->m_annotations, expression);
-        zen_AstAnnotation_delete(expressionAnnotation);
-    }
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_SUBTRACT_L; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onEnterMapEntries(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_MapEntriesContext_t* context = (zen_MapEntriesContext_t*)node->m_context;
+void zen_BinaryEntityBuilder_emitSubtractFloat(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    /*
-    int32_t i;
-    for (i = 0; i < size; i++) {
-        zen_ASTNode_t* mapEntry = (zen_ASTNode_t*)zen_ArrayList_get(context->m_mapEntries, i);
-        zen_AstAnnotation_t* mapEntryAnnotation = zen_AstAnnotation_new(ZEN_AST_ANNOTATION_TYPE_ASYMETRICAL_CHANNEL_MANAGEMENT, NULL);
-        zen_AstAnnotations_put(builder->m_annotations, mapEntryAnnotation);
-    }
-    */
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
+
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_SUBTRACT_F; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onExitMapEntries(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_MapEntriesContext_t* context = (zen_MapEntriesContext_t*)node->m_context;
+void zen_BinaryEntityBuilder_emitSubtractDouble(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    /* TODO: Apparently, storing integers as void* is dangerous. Find an alternative. */
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-    int32_t size = zen_ArrayList_getSize(context->m_mapEntries);
-    // TODO: Filter out map with 0 entries!
-    /* Currently, a map entry channel is on top of the stack. Whatever,
-     * byte codes are emitted will be placed on it. Therefore, we need to
-     * swap the map entry channel with the local channel.
-     */
-    zen_ChannelManager_swap(builder->m_channelManager, 0, size);
-
-    int32_t i;
-    for (i = 0; i < size; i++) {
-        /* The instructions which insert the second dimension array into the
-         * first dimension array.
-         *
-         * The instructions are generated in the reverse order because the
-         * channels are stored in a special stack, with an exception of the last
-         * element. The last element was previously swapped with the local
-         * channel which was previously on the bottom of the stack. Thus, the
-         * last element is swapped from top to bottom of the stack. Moreover,
-         * the execution order may remain the same for constant entries, but
-         * changes for variable entries when the stack ordered in followed.
-         */
-
-        /* A textual representation of the channels for a map with four
-         * entries.
-         *
-         * [0] local channel
-         * [1] entry_channel_3
-         * [2] entry_channel_2
-         * [3] entry_channel_1
-         * [4] entry_channel_4
-         * ...
-         */
-
-        /* A new array was previously created for the map entries. Create a
-         * duplicate of its reference on the operand stack for calling the
-         * {@code store_aa} instruction.
-         */
-
-        /* Create a duplicate of the 2-d array. */
-        zen_BinaryEntityBuilder_emitDuplicate(builder);
-        zen_BinaryEntityBuilder_emitPushByte(builder, i);
-
-        int32_t entryChannelIndex = ((i + 1) == size)? 1 : (size - i - 1);
-        zen_ChannelManager_append(builder->m_channelManager, entryChannelIndex, 0);
-        zen_ChannelManager_remove(builder->m_channelManager, entryChannelIndex);
-
-        zen_BinaryEntityBuilder_emitStoreReferenceArray(builder);
-    }
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_SUBTRACT_D; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onEnterMapEntry(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_MapEntryContext_t* context = (zen_MapEntryContext_t*)node->m_context;
+/* Swap */
 
-    /* The byte codes generated for every map entry is redirected on a new
-     * channel. Thus, an oppurtunity to insert some arbitrary instructions
-     * between the map entries is provided.
-     */
-    zen_ChannelManager_add(builder->m_channelManager);
+void zen_BinaryEntityBuilder_emitSwap(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    zen_BinaryEntityBuilder_emitPushByte(builder, 2);
-    zen_BinaryEntityBuilder_emitNewReferenceArray(builder, 0);
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-    zen_AstAnnotation_t* keyExpressionAnnotation = zen_AstAnnotation_new(ZEN_AST_ANNOTATION_TYPE_ASYMETRICAL_CHANNEL_MANAGEMENT, NULL);
-    zen_AstAnnotations_put(builder->m_annotations, context->m_keyExpression, keyExpressionAnnotation);
-
-    zen_AstAnnotation_t* valueExpressionAnnotation = zen_AstAnnotation_new(ZEN_AST_ANNOTATION_TYPE_ASYMETRICAL_CHANNEL_MANAGEMENT, NULL);
-    zen_AstAnnotations_put(builder->m_annotations, context->m_valueExpression, valueExpressionAnnotation);
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_SWAP; // Byte Code
 }
 
-void zen_BinaryEntityBuilder_onExitMapEntry(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-    zen_BinaryEntityBuilder_t* builder = (zen_BinaryEntityBuilder_t*)astListener->m_context;
-    zen_MapEntryContext_t* context = (zen_MapEntryContext_t*)node->m_context;
+/* Throw */
 
-    /* Before swapping:
-     *
-     *   value_expression_channel
-     *   key_expression_channel
-     *   map_entry_channel
-     *   ...
-     */
+void zen_BinaryEntityBuilder_emitThrow(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-    /* Currently, the value expression channel is on top of the stack. Whatever,
-     * byte codes are emitted will be placed on it. Therefore, we need to swap
-     * the value expression channel with the local channel.
-     */
-    zen_ChannelManager_swap(builder->m_channelManager, 0, 2);
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-    /* After swapping:
-     *
-     *   [0] map_entry_channel
-     *   [1] key_expression_channel
-     *   [2] value_expression_channel
-     *   ...
-     */
-
-    /* The following section generates instructions which insert the key into
-     * the array in second dimension.
-     */
-    /* A new array was previously created for this map entry. Create a duplicate
-     * of its reference on the operand stack for calling the {@code store_aa}
-     * instruction.
-     */
-    zen_BinaryEntityBuilder_emitDuplicate(builder);
-    zen_BinaryEntityBuilder_emitPushByte(builder, 0); // TODO: push_i0
-    zen_ChannelManager_append(builder->m_channelManager, 1, 0);
-    zen_ChannelManager_remove(builder->m_channelManager, 1);
-    zen_BinaryEntityBuilder_emitStoreReferenceArray(builder);
-
-    /* The following section generates instructions which insert the value into
-     * the array in second dimension.
-     */
-    /* A new array was previously created for this map entry. Create a duplicate
-     * of its reference on the operand stack for calling the {@code store_aa}
-     * instruction.
-     */
-    zen_BinaryEntityBuilder_emitDuplicate(builder);
-    zen_BinaryEntityBuilder_emitPushByte(builder, 1);
-    zen_ChannelManager_append(builder->m_channelManager, 1, 0);
-    zen_ChannelManager_remove(builder->m_channelManager, 1);
-    zen_BinaryEntityBuilder_emitStoreReferenceArray(builder);
-
-    zen_AstAnnotation_t* keyExpressionAnnotation = zen_AstAnnotations_get(builder->m_annotations, context->m_keyExpression);
-    zen_AstAnnotation_t* valueExpressionAnnotation = zen_AstAnnotations_get(builder->m_annotations, context->m_valueExpression);
-
-    zen_AstAnnotation_delete(keyExpressionAnnotation);
-    zen_AstAnnotation_delete(valueExpressionAnnotation);
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_THROW; // Byte Code
 }
 
-/*
-new_array_a #1
-push_i 0
-... -> key
-... -> value
-store_aa
+/* Wide */
 
+void zen_BinaryEntityBuilder_emitWide(zen_BinaryEntityBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
 
-new_array_a #1
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+    zen_DataChannel_requestCapacity(channel, 1);
 
-duplicate
-push_i 0
-... -> key
-store_aa
-
-duplicate
-push_i 1
-... -> value
-store_aa
-*/
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_WIDE; // Byte Code
+}

@@ -10,6 +10,7 @@
 #include <com/onecube/zen/virtual-machine/VirtualMachineConfiguration.h>
 #include <com/onecube/zen/virtual-machine/object/Class.h>
 #include <com/onecube/zen/virtual-machine/object/Function.h>
+#include <com/onecube/zen/virtual-machine/object/NativeFunction.h>
 #include <com/onecube/zen/virtual-machine/object/ObjectArray.h>
 #include <com/onecube/zen/virtual-machine/loader/EntityLoader.h>
 #include <com/onecube/zen/virtual-machine/loader/ClassLoader.h>

@@ -5,6 +5,12 @@
 #include <com/onecube/zen/virtual-machine/loader/EntityLoader.h>
 #include <com/onecube/zen/virtual-machine/ExceptionManager.h>
 
+void zen_print(jtk_Array_t* arguments) {
+    jtk_String_t* format = (jtk_String_t*)jtk_Array_getValue(arguments, 0);
+    fwrite(format->m_value, 1, format->m_size, stdout);
+    fflush(stdout);
+}
+
 /*******************************************************************************
  * VirtualMachine                                                              *
  *******************************************************************************/
@@ -14,6 +20,7 @@
 zen_VirtualMachine_t* zen_VirtualMachine_new(zen_VirtualMachineConfiguration_t* configuration) {
     jtk_Assert_assertObject(configuration, "The specified virtual machine configuration is null.");
 
+    jtk_ObjectAdapter_t* stringObjectAdapter = jtk_StringObjectAdapter_getInstance();
     jtk_Iterator_t* entityDirectoryIterator = jtk_ArrayList_getIterator(configuration->m_entityDirectories);
 
     zen_VirtualMachine_t* virtualMachine = zen_Memory_allocate(zen_VirtualMachine_t, 1);
@@ -21,10 +28,10 @@ zen_VirtualMachine_t* zen_VirtualMachine_new(zen_VirtualMachineConfiguration_t* 
     virtualMachine->m_entityLoader = zen_EntityLoader_newWithEntityDirectories(entityDirectoryIterator);
     virtualMachine->m_classLoader = zen_ClassLoader_new(virtualMachine->m_entityLoader);
     virtualMachine->m_interpreter = zen_Interpreter_new(NULL, virtualMachine, NULL);
-    interpreter->m_nativeFunctions = jtk_HashMap_newEx(stringObjectAdapter, NULL,
+    virtualMachine->m_nativeFunctions = jtk_HashMap_newEx(stringObjectAdapter, NULL,
         JTK_HASH_MAP_DEFAULT_CAPACITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
 
-    zen_VirtualMachine_loadDefaultLibraries(interpreter);
+    zen_VirtualMachine_loadDefaultLibraries(virtualMachine);
 
     return virtualMachine;
 }

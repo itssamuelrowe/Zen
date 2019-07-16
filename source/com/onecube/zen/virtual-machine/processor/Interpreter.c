@@ -43,32 +43,10 @@ const uint8_t* ZEN_BOOTSTRAP_CLASS_ZEN_CORE_NULL_POINTER_EXCEPTION = "zen.core.N
 xjtk_Logger_debug(void* logger, const uint8_t* tag, const uint8_t* message, ...) {
 }
 
-void zen_print(jtk_Array_t* arguments) {
-    jtk_String_t* format = (jtk_String_t*)jtk_Array_getValue(arguments, 0);
-    fwrite(format->m_value, 1, format->m_size, stdout);
-    fflush(stdout);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* Constructor */
 
 zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* manager,
     zen_VirtualMachine_t* virtualMachine, zen_ProcessorThread_t* processorThread) {
-    jtk_ObjectAdapter_t* stringObjectAdapter = jtk_StringObjectAdapter_getInstance();
-
     // jtk_Assert_assertObject(manager, "The specified memory manager is null.");
 
     zen_Interpreter_t* interpreter = jtk_Memory_allocate(zen_Interpreter_t, 1);
@@ -1564,7 +1542,8 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     // zen_Interpreter_handleClassInitialization(interpreter, class0);
 
                     void* argument1 = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
-                    void* argument0 = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+                    void* argument0 = !zen_OperandStack_isEmpty(currentStackFrame->m_operandStack)?
+                        zen_OperandStack_popReference(currentStackFrame->m_operandStack) : NULL;
 
                     jtk_Array_t* arguments = jtk_Array_new(2);
                     jtk_Array_setValue(arguments, 0, argument0);
