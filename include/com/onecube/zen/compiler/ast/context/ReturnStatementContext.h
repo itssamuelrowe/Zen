@@ -1,0 +1,50 @@
+// Wednesday, July 17, 2019
+
+#ifndef COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_RETURN_STATEMENT_CONTEXT_H
+#define COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_RETURN_STATEMENT_CONTEXT_H
+
+#include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/compiler/ast/ASTNode.h>
+
+/*******************************************************************************
+ * ReturnStatementContext                                                      *
+ *******************************************************************************/
+
+/**
+ * @class ReturnStatementContext
+ * @ingroup zen_compiler_ast
+ * @author Samuel Rowe
+ * @since zen 1.0
+ */
+struct zen_ReturnStatementContext_t {
+    zen_ASTNode_t* m_node;
+    zen_ASTNode_t* m_expression;
+};
+
+/**
+ * @memberof ReturnStatementContext
+ */
+typedef struct zen_ReturnStatementContext_t zen_ReturnStatementContext_t;
+
+// Constructor
+
+/**
+ * @memberof ReturnStatementContext
+ */
+zen_ReturnStatementContext_t* zen_ReturnStatementContext_new(zen_ASTNode_t* node);
+
+// Destructor
+
+/**
+ * @memberof ReturnStatementContext
+ */
+void zen_ReturnStatementContext_delete(zen_ReturnStatementContext_t* context);
+
+// Children
+
+/**
+ * @memberof ReturnStatementContext
+ */
+void zen_ReturnStatementContext_getChildren(zen_ReturnStatementContext_t* context, jtk_ArrayList_t* children);
+
+#endif /* COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_RETURN_STATEMENT_CONTEXT_H */

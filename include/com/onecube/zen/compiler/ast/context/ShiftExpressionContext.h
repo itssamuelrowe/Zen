@@ -1,0 +1,52 @@
+// Wednesday, July 17, 2019
+
+#ifndef COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_SHIFT_EXPRESSION_CONTEXT_H
+#define COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_SHIFT_EXPRESSION_CONTEXT_H
+
+#include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/compiler/ast/ASTNode.h>
+
+/*******************************************************************************
+ * ShiftExpressionContext                                                      *
+ *******************************************************************************/
+
+/**
+ * @class ShiftExpressionContext
+ * @ingroup zen_compiler_ast
+ * @author Samuel Rowe
+ * @since zen 1.0
+ */
+struct zen_ShiftExpressionContext_t {
+    zen_ASTNode_t* m_node;
+    zen_ASTNode_t* m_additiveExpression;
+    zen_ASTNode_t* m_shiftOperator;
+    zen_ASTNode_t* m_shiftExpression;
+};
+
+/**
+ * @memberof ShiftExpressionContext
+ */
+typedef struct zen_ShiftExpressionContext_t zen_ShiftExpressionContext_t;
+
+// Constructor
+
+/**
+ * @memberof ShiftExpressionContext
+ */
+zen_ShiftExpressionContext_t* zen_ShiftExpressionContext_new(zen_ASTNode_t* node);
+
+// Destructor
+
+/**
+ * @memberof ShiftExpressionContext
+ */
+void zen_ShiftExpressionContext_delete(zen_ShiftExpressionContext_t* context);
+
+// Children
+
+/**
+ * @memberof ShiftExpressionContext
+ */
+void zen_ShiftExpressionContext_getChildren(zen_ShiftExpressionContext_t* context, jtk_ArrayList_t* children);
+
+#endif /* COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_SHIFT_EXPRESSION_CONTEXT_H */

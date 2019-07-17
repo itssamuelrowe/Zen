@@ -3,6 +3,11 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_MAP_ENTRIES_CONTEXT_H
 #define COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_MAP_ENTRIES_CONTEXT_H
  
+#include <jtk/collection/list/ArrayList.h>
+
+#include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/compiler/ast/ASTNode.h>
+
 /*******************************************************************************
  * MapEntriesContext                                                           *
  *******************************************************************************/

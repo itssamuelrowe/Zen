@@ -3,6 +3,9 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_PRIMARY_EXPRESSION_CONTEXT_H
 #define COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_PRIMARY_EXPRESSION_CONTEXT_H
  
+#include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/compiler/ast/ASTNode.h>
+
 /*******************************************************************************
  * PrimaryExpressionContext                                                    *
  *******************************************************************************/

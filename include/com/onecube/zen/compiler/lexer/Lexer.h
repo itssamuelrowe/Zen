@@ -1,17 +1,18 @@
 // Wedensday, October 18, 2017
 
-#ifndef ZEN_LEXER_H
-#define ZEN_LEXER_H
+#ifndef COM_ONECUBE_ZEN_COMPILER_LEXER_LEXER_H
+#define COM_ONECUBE_ZEN_COMPILER_LEXER_LEXER_H
+
+#include <jtk/collection/list/ArrayList.h>
+#include <jtk/collection/queue/ArrayQueue.h>
+#include <jtk/collection/stack/ArrayStack.h>
+#include <jtk/core/StringBuilder.h>
+#include <jtk/io/InputStream.h>
 
 #include <com/onecube/zen/Configuration.h>
-#include <com/onecube/zen/InputStream.h>
-#include <com/onecube/zen/LexerError.h>
-#include <com/onecube/zen/Token.h>
-#include <com/onecube/zen/collection/ArrayList.h>
-#include <com/onecube/zen/StringBuilder.h>
-#include <com/onecube/zen/TokenChannel.h>
-#include <com/onecube/zen/collection/ArrayQueue.h>
-#include <com/onecube/zen/collection/ArrayStack.h>
+#include <com/onecube/zen/lexer/LexerError.h>
+#include <com/onecube/zen/lexer/Token.h>
+#include <com/onecube/zen/lexer/TokenChannel.h>
 
 #define ZEN_LEXER_DEFAULT_CHANNEL 0
 #define ZEN_LEXER_HIDDEN_CHANNEL 1
@@ -35,7 +36,7 @@ struct zen_Lexer_t {
     /**
      * The input stream of characters.
      */
-    zen_InputStream_t* m_inputStream;
+    jtk_InputStream_t* m_inputStream;
 
     /**
      * The character at LA(1), this field is always updated
@@ -100,7 +101,7 @@ struct zen_Lexer_t {
      * The text consumed so far to recognize the next
      * token.
      */
-    zen_StringBuilder_t* m_text;
+    jtk_StringBuilder_t* m_text;
 
     /**
      * The token type of the next recognized token.
@@ -114,12 +115,12 @@ struct zen_Lexer_t {
      * emission of multiple tokens. Therefore, the lexer
      * buffers up tokens.
      */
-    zen_ArrayQueue_t* m_tokens;
+    jtk_ArrayQueue_t* m_tokens;
 
     /**
      * A stack that stores indentation depths.
      */
-    zen_ArrayStack_t* m_indentations;
+    jtk_ArrayStack_t* m_indentations;
 
     /**
      * The number of opening square brackets, angle brackets,
@@ -139,14 +140,21 @@ struct zen_Lexer_t {
     jtk_ArrayList_t* m_errors;
 };
 
+/**
+ * @memberof Lexer
+ */
 typedef struct zen_Lexer_t zen_Lexer_t;
+
+// Constructor
 
 /**
  * Creates and returns a new lexer.
  *
  * @return A new lexer.
  */
-zen_Lexer_t* zen_Lexer_new(zen_InputStream_t* stream);
+zen_Lexer_t* zen_Lexer_new(jtk_InputStream_t* stream);
+
+// Destructor
 
 /**
  * Destroys the specified lexer.
@@ -155,6 +163,20 @@ zen_Lexer_t* zen_Lexer_new(zen_InputStream_t* stream);
  *        The lexer to destroy.
  */
 void zen_Lexer_delete(zen_Lexer_t* lexer);
+
+// Consume
+
+void zen_Lexer_consume(zen_Lexer_t* lexer);
+
+// Emit
+
+void zen_Lexer_emit(zen_Lexer_t* lexer, zen_Token_t* token);
+
+// Error
+
+zen_LexerError_t* zen_Lexer_createError(zen_Lexer_t* lexer, const char* message);
+
+// Token
 
 /**
  * Creates a token.
@@ -165,15 +187,14 @@ void zen_Lexer_delete(zen_Lexer_t* lexer);
  */
 zen_Token_t* zen_Lexer_createToken(zen_Lexer_t* lexer);
 
-void zen_Lexer_onNewline(zen_Lexer_t* lexer);
+// Newline
 
-zen_LexerError_t* zen_Lexer_createError(zen_Lexer_t* lexer, const char* message);
+void zen_Lexer_onNewline(zen_Lexer_t* lexer);
 
 bool zen_Lexer_isInputStart(zen_Lexer_t* lexer);
 
-void zen_Lexer_consume(zen_Lexer_t* lexer);
 
-void zen_Lexer_emit(zen_Lexer_t* lexer, zen_Token_t* token);
+
 
 /**
  * The primary interface for the Lexer class. It uses the lookahead
@@ -209,4 +230,4 @@ bool zen_Lexer_isHexadecimalDigitOrUnderscore(int32_t codePoint);
 bool zen_Lexer_isOctalDigit(int32_t codePoint);
 bool zen_Lexer_isOctalDigitOrUnderscore(int32_t codePoint);
 
-#endif /* ZEN_LEXER_H */
+#endif /* COM_ONECUBE_ZEN_COMPILER_LEXER_LEXER_H */
