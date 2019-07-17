@@ -1,12 +1,20 @@
 // Saturday, November 04, 2017
 
-#ifndef ZEN_TOKEN_TYPE_H
-#define ZEN_TOKEN_TYPE_H
+#ifndef COM_ONECUBE_ZEN_COMPILER_LEXER_TOKEN_TYPE_H
+#define COM_ONECUBE_ZEN_COMPILER_LEXER_TOKEN_TYPE_H
+
+#include <com/onecube/zen/Configuration.h>
 
 /*******************************************************************************
  * TokenType                                                                   *
  *******************************************************************************/
 
+/**
+ * @class TokenType
+ * @ingroup zen_compiler_lexer
+ * @author Samuel Rowe
+ * @since zen 1.0
+ */
 enum zen_TokenType_t {
     ZEN_TOKEN_UNKNOWN,
 
@@ -155,6 +163,9 @@ enum zen_TokenType_t {
     ZEN_TOKEN_FLOATING_POINT_LITERAL
 };
 
+/**
+ * @memberof TokenType
+ */
 typedef enum zen_TokenType_t zen_TokenType_t;
 
-#endif /* ZEN_TOKEN_TYPE_H */
+#endif /* COM_ONECUBE_ZEN_COMPILER_LEXER_TOKEN_TYPE_H */

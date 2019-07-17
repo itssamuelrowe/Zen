@@ -187,15 +187,6 @@ zen_LexerError_t* zen_Lexer_createError(zen_Lexer_t* lexer, const char* message)
  */
 zen_Token_t* zen_Lexer_createToken(zen_Lexer_t* lexer);
 
-// Newline
-
-void zen_Lexer_onNewline(zen_Lexer_t* lexer);
-
-bool zen_Lexer_isInputStart(zen_Lexer_t* lexer);
-
-
-
-
 /**
  * The primary interface for the Lexer class. It uses the lookahead
  * character (character under the input cursor) to route control
@@ -212,22 +203,94 @@ bool zen_Lexer_isInputStart(zen_Lexer_t* lexer);
  */
 zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer);
 
-void zen_Lexer_consume(zen_Lexer_t* lexer);
 
+// Newline
+
+/**
+ * @memberof Lexer
+ */
+void zen_Lexer_onNewline(zen_Lexer_t* lexer);
+
+// Misc.
+
+/**
+ * @memberof Lexer
+ */
+bool zen_Lexer_isInputStart(zen_Lexer_t* lexer);
+
+/**
+ * @memberof Lexer
+ */
 bool zen_Lexer_isBinaryPrefix(int32_t codePoint);
+
+/**
+ * @memberof Lexer
+ */
 bool zen_Lexer_isBinaryDigit(int32_t codePoint);
+
+/**
+ * @memberof Lexer
+ */
 bool zen_Lexer_isBinaryDigitOrUnderscore(int32_t codePoint);
+
+/**
+ * @memberof Lexer
+ */
 bool zen_Lexer_isBasicEscapeSequence(int32_t codePoint);
+
+/**
+ * @memberof Lexer
+ */
 bool zen_Lexer_isDecimalDigit(int32_t codePoint);
+
+/**
+ * @memberof Lexer
+ */
 bool zen_Lexer_isDecimalDigitOrUnderscore(int32_t codePoint);
+
+/**
+ * @memberof Lexer
+ */
 bool zen_Lexer_isIdentifierStart(int32_t codePoint);
+
+/**
+ * @memberof Lexer
+ */
 bool zen_Lexer_isIdentifierPart(int32_t codePoint);
+
+/**
+ * @memberof Lexer
+ */
 bool zen_Lexer_isLetter(int32_t codePoint);
+
+/**
+ * @memberof Lexer
+ */
 bool zen_Lexer_isLetterOrDigit(int32_t codePoint);
+
+/**
+ * @memberof Lexer
+ */
 bool zen_Lexer_isHexadecimalPrefix(int32_t codePoint);
+
+/**
+ * @memberof Lexer
+ */
 bool zen_Lexer_isHexadecimalDigit(int32_t codePoint);
+
+/**
+ * @memberof Lexer
+ */
 bool zen_Lexer_isHexadecimalDigitOrUnderscore(int32_t codePoint);
+
+/**
+ * @memberof Lexer
+ */
 bool zen_Lexer_isOctalDigit(int32_t codePoint);
+
+/**
+ * @memberof Lexer
+ */
 bool zen_Lexer_isOctalDigitOrUnderscore(int32_t codePoint);
 
 #endif /* COM_ONECUBE_ZEN_COMPILER_LEXER_LEXER_H */
