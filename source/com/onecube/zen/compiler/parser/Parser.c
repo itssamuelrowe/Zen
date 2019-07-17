@@ -271,41 +271,41 @@ void zen_Parser_compilationUnit(zen_Parser_t* parser, zen_ASTNode_t* node) {
 	 */
     /*
     while (true) {
-        zen_Pair_t* declarationPair = zen_Pair_new();
+        jtk_Pair_t* declarationPair = jtk_Pair_new();
         zen_ArrayList_add(context->m_declarations, declarationPair);
 
         if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_AT) {
 			zen_ASTNode_t* annotations = zen_ASTNode_new(node);
-            declarationPair->m_element1 = annotations;
+            declarationPair->m_leftElement = annotations;
             zen_Parser_annotations(parser, annotations);
         }
 
         switch (zen_TokenStream_la(parser->m_tokens, 1)) {
             case ZEN_TOKEN_KEYWORD_FUNCTION: {
 				zen_ASTNode_t* functionDeclaration = zen_ASTNode_new(node);
-                declarationPair->m_element2 = functionDeclaration;
+                declarationPair->m_rightElement = functionDeclaration;
 				zen_Parser_functionDeclaration(parser, functionDeclaration);
                 break;
             }
 
             case ZEN_TOKEN_KEYWORD_CLASS: {
 				zen_ASTNode_t* classDeclaration = zen_ASTNode_new(node);
-                declarationPair->m_element2 = classDeclaration;
+                declarationPair->m_rightElement = classDeclaration;
 				zen_Parser_classDeclaration(parser, classDeclaration);
                 break;
             }
 
             case ZEN_TOKEN_KEYWORD_ENUM: {
 				zen_ASTNode_t* enumerationDeclaration = zen_ASTNode_new(node);
-                declarationPair->m_element2 = enumerationDeclaration;
+                declarationPair->m_rightElement = enumerationDeclaration;
 				zen_Parser_enumerationDeclaration(parser, enumerationDeclaration);
                 break;
             }
 
             default: {
 				// Check if annotation(s) is not followed by a declaration.
-				if ((declarationPair->m_element1 != NULL) &&
-                    (declarationPair->m_element2 == NULL)) {
+				if ((declarationPair->m_leftElement != NULL) &&
+                    (declarationPair->m_rightElement == NULL)) {
                     // Syntax Error: Expected function, class, or enum declaration after annotation
                 }
                 goto breakPoint;
