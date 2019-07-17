@@ -5,7 +5,7 @@
 #include <com/onecube/zen/InputStream.h>
 #include <com/onecube/zen/Lexer.h>
 #include <com/onecube/zen/LexerError.h>
-#include <com/onecube/zen/collection/ArrayList.h>
+#include <jtk/collection/list/ArrayList.h>
 #include <com/onecube/zen/TokenStream.h>
 #include <com/onecube/zen/Parser.h>
 #include <com/onecube/zen/compiler/astNode.h>

@@ -2,7 +2,7 @@
 
 #include <com/onecube/zen/st/ClassScope.h>
 #include <com/onecube/zen/st/ClassSymbol.h>
-#include <com/onecube/zen/collection/ArrayList.h>
+#include <jtk/collection/list/ArrayList.h>
 #include <com/onecube/zen/collection/LinkedStack.h>
 #include <com/onecube/zen/core/StringObjectAdapter.h>
 #include <com/onecube/zen/Token.h>

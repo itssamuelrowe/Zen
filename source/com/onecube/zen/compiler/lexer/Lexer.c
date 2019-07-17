@@ -3,7 +3,7 @@
 #include <com/onecube/zen/TokenType.h>
 #include <com/onecube/zen/CString.h>
 #include <com/onecube/zen/StringBuilder.h>
-#include <com/onecube/zen/collection/ArrayList.h>
+#include <jtk/collection/list/ArrayList.h>
 #include <com/onecube/zen/collection/ArrayQueue.h>
 #include <com/onecube/zen/collection/ArrayStack.h>
 #include <com/onecube/zen/Logger.h>

@@ -4,7 +4,7 @@
 #define ZEN_TOKEN_STREAM_H
 
 #include <com/onecube/zen/Configuration.h>
-#include <com/onecube/zen/collection/ArrayList.h>
+#include <jtk/collection/list/ArrayList.h>
 #include <com/onecube/zen/Lexer.h>
 #include <com/onecube/zen/Token.h>
 #include <com/onecube/zen/TokenType.h>

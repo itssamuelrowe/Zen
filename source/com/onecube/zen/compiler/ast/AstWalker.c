@@ -1,5 +1,5 @@
 #include <com/onecube/zen/compiler/astWalker.h>
-#include <com/onecube/zen/collection/ArrayList.h>
+#include <jtk/collection/list/ArrayList.h>
 #include <com/onecube/zen/Parser.h>
 
 void zen_ASTWalker_walk(zen_ASTListener_t* listener, zen_ASTNode_t* node) {

@@ -1,7 +1,7 @@
 // Friday, March 09, 2018
 
 #include <com/onecube/zen/core/StringObjectAdapter.h>
-#include <com/onecube/zen/collection/HashMap.h>
+#include <jtk/collection/map/HashMap.h>
 #include <com/onecube/zen/st/Scope.h>
 #include <com/onecube/zen/st/EnumerationScope.h>
 #include <com/onecube/zen/st/Symbol.h>

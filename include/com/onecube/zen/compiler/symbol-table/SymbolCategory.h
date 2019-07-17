@@ -1,12 +1,18 @@
 // Saturday, November 25, 2017
 
-#ifndef ZEN_ST_SYMBOL_CATEGORY_H
-#define ZEN_ST_SYMBOL_CATEGORY_H
+#ifndef COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_SYMBOL_CATEGORY_H
+#define COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_SYMBOL_CATEGORY_H
 
 /*******************************************************************************
- * SymbolType                                                                  *
+ * SymbolCategory                                                              *
  *******************************************************************************/
 
+/**
+ * @class SymbolCategory
+ * @ingroup zen_compiler_symbolTable
+ * @author Samuel Rowe
+ * @since zen 1.0
+ */
 enum zen_SymbolCategory_t {
     ZEN_SYMBOL_CATEGORY_ANNOTATION,
     ZEN_SYMBOL_CATEGORY_CLASS,
@@ -19,6 +25,9 @@ enum zen_SymbolCategory_t {
     ZEN_SYMBOL_CATEGORY_LABEL
 };
 
+/**
+ * @memberof SymbolCategory
+ */
 typedef enum zen_SymbolCategory_t zen_SymbolCategory_t;
 
-#endif /* ZEN_ST_SYMBOL_CATEGORY_H */
+#endif /* COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_SYMBOL_CATEGORY_H */
