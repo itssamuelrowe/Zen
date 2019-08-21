@@ -1,6 +1,0 @@
-import zen.rhino.Parser
-
-class JsonParser : Parser
-
-    function new(inputStream)
-        super(inputStream)

@@ -1,8 +1,0 @@
-// Tuesday, January 22, 2019
-
-/**
- * @author Samuel Rowe
- * @since Zen 1.0
- */
-annotation FunctionAnnotation
-    ;
