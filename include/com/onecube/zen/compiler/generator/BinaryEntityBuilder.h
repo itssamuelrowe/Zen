@@ -78,12 +78,14 @@ void zen_BinaryEntityBuilder_writeMinorVersion(zen_BinaryEntityBuilder_t* builde
 /**
  * @memberof BinaryEntityBuilder
  */
-void zen_BinaryEntityBuilder_writeStreamSize(zen_BinaryEntityBuilder_t* builder);
+void zen_BinaryEntityBuilder_writeStreamSize(zen_BinaryEntityBuilder_t* builder,
+    uint32_t streamSize);
 
 /**
  * @memberof BinaryEntityBuilder
  */
-void zen_BinaryEntityBuilder_writeStreamFlags(zen_BinaryEntityBuilder_t* builder, )
+void zen_BinaryEntityBuilder_writeStreamFlags(zen_BinaryEntityBuilder_t* builder,
+    uint16_t streamFlags);
 
 // Constant Pool
 

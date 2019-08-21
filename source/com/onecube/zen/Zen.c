@@ -11,8 +11,8 @@
 #include <com/onecube/zen/compiler/astNode.h>
 #include <com/onecube/zen/compiler/astListener.h>
 #include <com/onecube/zen/compiler/astWalker.h>
-#include <com/onecube/zen/compiler/ast/AstAnnotations.h>
-#include <com/onecube/zen/compiler/ast/AstPrinter.h>
+#include <com/onecube/zen/compiler/ast/ASTAnnotations.h>
+#include <com/onecube/zen/compiler/ast/ASTPrinter.h>
 #include <com/onecube/zen/bcg/BinaryEntityBuilder.h>
 #include <com/onecube/zen/bcg/BinaryEntityGenerator.h>
 #include <com/onecube/zen/feb/Instruction.h>
@@ -121,22 +121,22 @@ int32_t main(int32_t length, char** arguments) {
                 zen_Parser_compilationUnit(parser, compilationUnit);
 
                 if (internalDumpNodes) {
-                    zen_AstPrinter_t* astPrinter = zen_AstPrinter_new();
-                    zen_ASTListener_t* astPrinterAstListener = zen_AstPrinter_getAstListener(astPrinter);
-                    zen_ASTWalker_walk(astPrinterAstListener, compilationUnit);
-                    zen_AstPrinter_delete(astPrinter);
+                    zen_ASTPrinter_t* astPrinter = zen_ASTPrinter_new();
+                    zen_ASTListener_t* astPrinterASTListener = zen_ASTPrinter_getASTListener(astPrinter);
+                    zen_ASTWalker_walk(astPrinterASTListener, compilationUnit);
+                    zen_ASTPrinter_delete(astPrinter);
                 }
 
                 zen_SymbolTable_t* symbolTable = zen_SymbolTable_new();
-                zen_AstAnnotations_t* scopes = zen_AstAnnotations_new();
+                zen_ASTAnnotations_t* scopes = zen_ASTAnnotations_new();
 
                 zen_SymbolDefinitionListener_t* symbolDefinitionListener = zen_SymbolDefinitionListener_new(symbolTable, scopes);
-                zen_ASTListener_t* symbolDefinitionAstListener = zen_SymbolDefinitionListener_getAstListener(symbolDefinitionListener);
-                zen_ASTWalker_walk(symbolDefinitionAstListener, compilationUnit);
+                zen_ASTListener_t* symbolDefinitionASTListener = zen_SymbolDefinitionListener_getASTListener(symbolDefinitionListener);
+                zen_ASTWalker_walk(symbolDefinitionASTListener, compilationUnit);
 
                 zen_SymbolResolutionListener_t* symbolResolutionListener = zen_SymbolResolutionListener_new(symbolTable, scopes);
-                zen_ASTListener_t* symbolResolutionAstListener = zen_SymbolResolutionListener_getAstListener(symbolResolutionListener);
-                zen_ASTWalker_walk(symbolResolutionAstListener, compilationUnit);
+                zen_ASTListener_t* symbolResolutionASTListener = zen_SymbolResolutionListener_getASTListener(symbolResolutionListener);
+                zen_ASTWalker_walk(symbolResolutionASTListener, compilationUnit);
 
 #warning "Who gets to destroy symbols and scopes?!"
 

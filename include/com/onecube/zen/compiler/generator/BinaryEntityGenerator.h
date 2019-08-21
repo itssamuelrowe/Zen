@@ -3,6 +3,9 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_GENERATOR_BINARY_ENTITY_GENERATOR_H
 #define COM_ONECUBE_ZEN_COMPILER_GENERATOR_BINARY_ENTITY_GENERATOR_H
 
+#include <jtk/collection/map/DualHashMap.h>
+#include <jtk/io/OutputStream.h>
+
 #include <com/onecube/zen/Configuration.h>
 
 #include <com/onecube/zen/compiler/ast/ASTListener.h>
@@ -26,6 +29,8 @@ struct zen_BinaryEntityGenerator_t {
     zen_BinaryEntityBuilder_t* m_builder;
     zen_SymbolTable_t* m_symbolTable;
     zen_ASTAnnotations_t* m_scopes;
+
+    jtk_DualHashMap_t* m_constantPool; /* <zen_ConstantPoolEntry_t*, int32_t> */
 };
 
 /**
@@ -39,7 +44,7 @@ typedef struct zen_BinaryEntityGenerator_t zen_BinaryEntityGenerator_t;
  * @memberof BinaryEntityGenerator
  */
 zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_new(zen_SymbolTable_t* symbolTable,
-    zen_AstAnnotations_t* scopes);
+    zen_ASTAnnotations_t* scopes);
 
 // Destructor
 
@@ -53,78 +58,785 @@ void zen_BinaryEntityGenerator_delete(zen_BinaryEntityGenerator_t* generator);
 /**
  * @memberof BinaryEntityGenerator
  */
-void zen_BinaryEntityGenerator_generate(zen_BinaryEntityGenerator_t* generator);
+void zen_BinaryEntityGenerator_generate(zen_BinaryEntityGenerator_t* generator,
+    zen_ASTNode_t* compilationUnit, jtk_OutputStream_t* outputStream);
+
+// Reset
+
+void zen_BinaryEntityGenerator_reset(zen_BinaryEntityGenerator_t* generator);
 
 // Event Handlers
 
-void zen_BinaryEntityGenerator_onEnterExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node);
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onVisitErrorNode(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
-void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
-void zen_BinaryEntityGenerator_onExitAssignmentExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onVisitTerminal(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterEveryRule(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitEveryRule(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onEnterCompilationUnit(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onExitCompilationUnit(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterImportDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitImportDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterAnnotatedComponentDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitAnnotatedComponentDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterAnnotations(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitAnnotations(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterAnnotation(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitAnnotation(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterAnnotationType(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitAnnotationType(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterAnnotationAttribute(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitAnnotationAttribute(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterComponentDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitComponentDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onExitFunctionDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterFunctionParameters(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitFunctionParameters(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterFunctionBody(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitFunctionBody(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onEnterStatementSuite(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onExitStatementSuite(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterSimpleStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitSimpleStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterEmptyStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitEmptyStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterVariableDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitVariableDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterVariableDeclarator(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitVariableDeclarator(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterConstantDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitConstantDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterConstantDeclarator(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitConstantDeclarator(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterAssertStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitAssertStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterBreakStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitBreakStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterContinueStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitContinueStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterReturnStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitReturnStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterThrowStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitThrowStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterCompoundStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitCompoundStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterIfStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterIfClause(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitIfClause(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterElseIfClause(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitElseIfClause(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterElseClause(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitElseClause(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterIterativeStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitIterativeStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterLabel(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitLabel(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterWhileStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitWhileStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterForStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterForParameters(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitForParameters(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterTryStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterTryClause(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitTryClause(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterCatchClause(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitCatchClause(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterCatchFilter(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitCatchFilter(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterFinallyClause(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitFinallyClause(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterSynchronizeStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterWithStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onExitClassDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterClassExtendsClause(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitClassExtendsClause(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterClassSuite(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitClassSuite(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterClassMember(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitClassMember(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+// void zen_BinaryEntityGenerator_onEnterConstructorDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+// void zen_BinaryEntityGenerator_onExitConstructorDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterEnumerationDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitEnumerationDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterEnumrationBaseClass(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitEnumerationBaseClause(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterEnumerationSuite(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitEnumerationSuite(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterEnumerate(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitEnumerate(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterExpressions(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitExpressions(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitAssignmentExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onEnterConditionalExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onExitConditionalExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onEnterLogicalOrExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onExitLogicalOrExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onEnterLogicalAndExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onExitLogicalAndExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onEnterInclusiveOrExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onExitInclusiveOrExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onEnterExclusiveOrExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onExitExclusiveOrExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onEnterAndExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onExitAndExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onEnterEqualityExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onExitEqualityExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onEnterRelationalExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onExitRelationalExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onEnterShiftExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onExitShiftExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onEnterAdditiveExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onExitAdditiveExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onEnterMultiplicativeExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onExitMultiplicativeExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onEnterUnaryExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onExitUnaryExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
-void zen_BinaryEntityGenerator_onEnterPostfixExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node);
-void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node);
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterPostfixExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterSubscript(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitSubscript(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterFunctionArguments(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitFunctionArguments(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterMemberAccess(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitMemberAccess(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterPostfixOperator(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitPostfixOperator(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 void zen_BinaryEntityGenerator_onEnterPrimaryExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
-void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node);
-void zen_BinaryEntityGenerator_onExitListExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node);
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitPrimaryExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
-void zen_BinaryEntityGenerator_onEnterMapExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node);
-void zen_BinaryEntityGenerator_onExitMapExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node);
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterMapExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
-void zen_BinaryEntityGenerator_onEnterMapEntries(zen_ASTListener_t* astListener, zen_ASTNode_t* node);
-void zen_BinaryEntityGenerator_onExitMapEntries(zen_ASTListener_t* astListener, zen_ASTNode_t* node);
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitMapExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
-void zen_BinaryEntityGenerator_onEnterMapEntry(zen_ASTListener_t* astListener, zen_ASTNode_t* node);
-void zen_BinaryEntityGenerator_onExitMapEntry(zen_ASTListener_t* astListener, zen_ASTNode_t* node);
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterMapEntries(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onExitMapEntries(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_BinaryEntityGenerator_onEnterMapEntry(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof BinaryEntityGenerator
+ */
+void zen_BinaryEntityGenerator_onExitMapEntry(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof BinaryEntityGenerator
+ */
+void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof BinaryEntityGenerator
+ */
+void zen_BinaryEntityGenerator_onExitListExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof BinaryEntityGenerator
+ */
+void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof BinaryEntityGenerator
+ */
+void zen_BinaryEntityGenerator_onExitNewExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
 #endif /* COM_ONECUBE_ZEN_COMPILER_GENERATOR_BINARY_ENTITY_GENERATOR_H */

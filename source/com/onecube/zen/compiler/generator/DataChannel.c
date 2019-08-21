@@ -6,7 +6,7 @@
  * DataChannel                                                                 *
  *******************************************************************************/
 
-#define ZEN_BYTE_CODE_CHANNEL_DEFAULT_CAPACITY 16
+#define ZEN_BYTE_CODE_CHANNEL_DEFAULT_CAPACITY 1024
 
 // Constructor
  

@@ -58,6 +58,41 @@ void zen_BinaryEntityBuilder_popChannel(zen_BinaryEntityBuilder_t* builder) {
     zen_DataChannel_delete(deadChannel);
 }
 
+// Emit
+
+void zen_BinaryEntityBuilder_emitByteCode(zen_BinaryEntityBuilder_t* builder,
+    zen_ByteCode_t byteCode, ...) {
+    jtk_Assert_assertObject(builder, "The specified binary entity builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
+
+    zen_Instruction_t* instruction = zen_Instruction_getInstance(byteCode);
+    uint8_t argumentCount = zen_Instruction_getArgumentCount(instruction);
+    if (argumentCount > 0) {
+        zen_DataChannel_requestCapacity(channel, argumentCount + 1);
+
+        jtk_VariableArguments_t variableArguments;
+        jtk_VariableArguments_start(variableArguments, byteCode);
+
+        channel->m_bytes[channel->m_index++] = (uint8_t)byteCode;
+        int32_t i;
+        for (i = 0; i < argumentCount; i++) {
+            channel->m_bytes[channel->m_index++] =
+                (uint8_t)jtk_VariableArguments_getArgument(variableArguments, int32_t);
+        }
+
+        jtk_VariableArguments_end(variableArguments);
+    }
+}
+
+// Print
+
+void zen_BinaryEntityBuilder_printChannel(zen_BinaryEntityBuilder_t* builder) {
+}
+
+void zen_BinaryEntityBuilder_printChannels(zen_BinaryEntityBuilder_t* builder) {
+}
+
 // Magic Number
 
 void zen_BinaryEntityBuilder_writeMagicNumber(zen_BinaryEntityBuilder_t* builder) {
@@ -92,26 +127,28 @@ void zen_BinaryEntityBuilder_writeMinorVersion(zen_BinaryEntityBuilder_t* builde
     channel->m_bytes[channel->m_index++] = 0x00;
 }
 
-void zen_BinaryEntityBuilder_writeStreamSize(zen_BinaryEntityBuilder_t* builder) {
+void zen_BinaryEntityBuilder_writeStreamSize(zen_BinaryEntityBuilder_t* builder,
+    uint32_t streamSize) {
     jtk_Assert_assertObject(builder, "The specified builder is null.");
 
     zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
     zen_DataChannel_requestCapacity(channel, 4);
 
-    channel->m_bytes[channel->m_index++] = 0x00;
-    channel->m_bytes[channel->m_index++] = 0x00;
-    channel->m_bytes[channel->m_index++] = 0x00;
-    channel->m_bytes[channel->m_index++] = 0xFF;
+    channel->m_bytes[channel->m_index++] = (streamSize & 0xFF000000) >> 24; // stream size
+    channel->m_bytes[channel->m_index++] = (streamSize & 0x00FF0000) >> 16;
+    channel->m_bytes[channel->m_index++] = (streamSize & 0x0000FF00) >> 8;
+    channel->m_bytes[channel->m_index++] = (streamSize & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_writeStreamFlags(zen_BinaryEntityBuilder_t* builder) {
+void zen_BinaryEntityBuilder_writeStreamFlags(zen_BinaryEntityBuilder_t* builder,
+    uint16_t streamFlags) {
     jtk_Assert_assertObject(builder, "The specified builder is null.");
 
     zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayStack_peek(builder->m_channels);
     zen_DataChannel_requestCapacity(channel, 2);
 
-    channel->m_bytes[channel->m_index++] = 0x00;
-    channel->m_bytes[channel->m_index++] = 0x00;
+    channel->m_bytes[channel->m_index++] = (streamFlags & 0x0000FF00) >> 8; // flags
+    channel->m_bytes[channel->m_index++] = (streamFlags & 0x000000FF);
 }
 
 void zen_BinaryEntityBuilder_writeConstantPoolHeader(zen_BinaryEntityBuilder_t* builder, int32_t entries) {

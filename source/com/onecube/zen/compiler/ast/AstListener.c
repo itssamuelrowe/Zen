@@ -264,11 +264,15 @@ void zen_ASTListener_onEnterEveryRule(zen_ASTListener_t* listener, zen_ASTNode_t
 void zen_ASTListener_onExitEveryRule(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// compilationUnit
+
 void zen_ASTListener_onEnterCompilationUnit(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitCompilationUnit(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// importDeclaration
 
 void zen_ASTListener_onEnterImportDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -276,11 +280,15 @@ void zen_ASTListener_onEnterImportDeclaration(zen_ASTListener_t* listener, zen_A
 void zen_ASTListener_onExitImportDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// annotatedComponentDeclaration
+
 void zen_ASTListener_onEnterAnnotatedComponentDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitAnnotatedComponentDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// annotations
 
 void zen_ASTListener_onEnterAnnotations(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -288,11 +296,15 @@ void zen_ASTListener_onEnterAnnotations(zen_ASTListener_t* listener, zen_ASTNode
 void zen_ASTListener_onExitAnnotations(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// annotation
+
 void zen_ASTListener_onEnterAnnotation(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitAnnotation(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// annotationType
 
 void zen_ASTListener_onEnterAnnotationType(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -300,11 +312,15 @@ void zen_ASTListener_onEnterAnnotationType(zen_ASTListener_t* listener, zen_ASTN
 void zen_ASTListener_onExitAnnotationType(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// annotationAttribute
+
 void zen_ASTListener_onEnterAnnotationAttribute(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitAnnotationAttribute(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// componentDeclaration
 
 void zen_ASTListener_onEnterComponentDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -312,11 +328,15 @@ void zen_ASTListener_onEnterComponentDeclaration(zen_ASTListener_t* listener, ze
 void zen_ASTListener_onExitComponentDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// functionDeclaration
+
 void zen_ASTListener_onEnterFunctionDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitFunctionDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// functionParameters
 
 void zen_ASTListener_onEnterFunctionParameters(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -324,11 +344,15 @@ void zen_ASTListener_onEnterFunctionParameters(zen_ASTListener_t* listener, zen_
 void zen_ASTListener_onExitFunctionParameters(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// functionBody
+
 void zen_ASTListener_onEnterFunctionBody(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitFunctionBody(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// statementSuite
 
 void zen_ASTListener_onEnterStatementSuite(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -336,11 +360,15 @@ void zen_ASTListener_onEnterStatementSuite(zen_ASTListener_t* listener, zen_ASTN
 void zen_ASTListener_onExitStatementSuite(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// simpleStatement
+
 void zen_ASTListener_onEnterSimpleStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitSimpleStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// statement
 
 void zen_ASTListener_onEnterStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -348,11 +376,15 @@ void zen_ASTListener_onEnterStatement(zen_ASTListener_t* listener, zen_ASTNode_t
 void zen_ASTListener_onExitStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// emptyStatement
+
 void zen_ASTListener_onEnterEmptyStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitEmptyStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// variableDeclaration
 
 void zen_ASTListener_onEnterVariableDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -360,11 +392,15 @@ void zen_ASTListener_onEnterVariableDeclaration(zen_ASTListener_t* listener, zen
 void zen_ASTListener_onExitVariableDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// variableDeclarator
+
 void zen_ASTListener_onEnterVariableDeclarator(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitVariableDeclarator(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// constantDeclaration
 
 void zen_ASTListener_onEnterConstantDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -372,11 +408,15 @@ void zen_ASTListener_onEnterConstantDeclaration(zen_ASTListener_t* listener, zen
 void zen_ASTListener_onExitConstantDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// constantDeclarator
+
 void zen_ASTListener_onEnterConstantDeclarator(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitConstantDeclarator(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// assertStatement
 
 void zen_ASTListener_onEnterAssertStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -384,11 +424,15 @@ void zen_ASTListener_onEnterAssertStatement(zen_ASTListener_t* listener, zen_AST
 void zen_ASTListener_onExitAssertStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// breakStatement
+
 void zen_ASTListener_onEnterBreakStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitBreakStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// continueStatement
 
 void zen_ASTListener_onEnterContinueStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -396,11 +440,15 @@ void zen_ASTListener_onEnterContinueStatement(zen_ASTListener_t* listener, zen_A
 void zen_ASTListener_onExitContinueStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// returnStatement
+
 void zen_ASTListener_onEnterReturnStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitReturnStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// throwStatement
 
 void zen_ASTListener_onEnterThrowStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -408,11 +456,15 @@ void zen_ASTListener_onEnterThrowStatement(zen_ASTListener_t* listener, zen_ASTN
 void zen_ASTListener_onExitThrowStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// compoundStatement
+
 void zen_ASTListener_onEnterCompoundStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitCompoundStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// ifStatement
 
 void zen_ASTListener_onEnterIfStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -420,11 +472,15 @@ void zen_ASTListener_onEnterIfStatement(zen_ASTListener_t* listener, zen_ASTNode
 void zen_ASTListener_onExitIfStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// ifClause
+
 void zen_ASTListener_onEnterIfClause(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitIfClause(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// elseIfClause
 
 void zen_ASTListener_onEnterElseIfClause(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -432,11 +488,15 @@ void zen_ASTListener_onEnterElseIfClause(zen_ASTListener_t* listener, zen_ASTNod
 void zen_ASTListener_onExitElseIfClause(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// elseClause
+
 void zen_ASTListener_onEnterElseClause(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitElseClause(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// iterativeStatement
 
 void zen_ASTListener_onEnterIterativeStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -444,11 +504,15 @@ void zen_ASTListener_onEnterIterativeStatement(zen_ASTListener_t* listener, zen_
 void zen_ASTListener_onExitIterativeStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// label
+
 void zen_ASTListener_onEnterLabel(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitLabel(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// whileStatement
 
 void zen_ASTListener_onEnterWhileStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -456,11 +520,15 @@ void zen_ASTListener_onEnterWhileStatement(zen_ASTListener_t* listener, zen_ASTN
 void zen_ASTListener_onExitWhileStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// forStatement
+
 void zen_ASTListener_onEnterForStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitForStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// forParameters
 
 void zen_ASTListener_onEnterForParameters(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -468,11 +536,15 @@ void zen_ASTListener_onEnterForParameters(zen_ASTListener_t* listener, zen_ASTNo
 void zen_ASTListener_onExitForParameters(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// tryStatement
+
 void zen_ASTListener_onEnterTryStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitTryStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// tryClause
 
 void zen_ASTListener_onEnterTryClause(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -480,11 +552,15 @@ void zen_ASTListener_onEnterTryClause(zen_ASTListener_t* listener, zen_ASTNode_t
 void zen_ASTListener_onExitTryClause(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// catchClause
+
 void zen_ASTListener_onEnterCatchClause(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitCatchClause(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// catchFilter
 
 void zen_ASTListener_onEnterCatchFilter(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -492,11 +568,15 @@ void zen_ASTListener_onEnterCatchFilter(zen_ASTListener_t* listener, zen_ASTNode
 void zen_ASTListener_onExitCatchFilter(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// finallyClause
+
 void zen_ASTListener_onEnterFinallyClause(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitFinallyClause(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// synchronizeStatement
 
 void zen_ASTListener_onEnterSynchronizeStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -504,11 +584,15 @@ void zen_ASTListener_onEnterSynchronizeStatement(zen_ASTListener_t* listener, ze
 void zen_ASTListener_onExitSynchronizeStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// withStatement
+
 void zen_ASTListener_onEnterWithStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitWithStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// classDeclaration
 
 void zen_ASTListener_onEnterClassDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -516,17 +600,23 @@ void zen_ASTListener_onEnterClassDeclaration(zen_ASTListener_t* listener, zen_AS
 void zen_ASTListener_onExitClassDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// classExtends
+
 void zen_ASTListener_onEnterClassExtendsClause(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitClassExtendsClause(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// classSuite
+
 void zen_ASTListener_onEnterClassSuite(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitClassSuite(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// classMember
 
 void zen_ASTListener_onEnterClassMember(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -540,27 +630,32 @@ void zen_ASTListener_onExitClassMember(zen_ASTListener_t* listener, zen_ASTNode_
 // void zen_ASTListener_onExitConstructorDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 // }
 
-    
+
+// enumerationDeclaration
+
 void zen_ASTListener_onEnterEnumerationDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitEnumerationDeclaration(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
-    
+// enumerationBaseClass
+
 void zen_ASTListener_onEnterEnumrationBaseClass(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitEnumerationBaseClause(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
-    
+// enumerationSuite
+
 void zen_ASTListener_onEnterEnumerationSuite(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitEnumerationSuite(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// enumerate
     
 void zen_ASTListener_onEnterEnumerate(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -568,6 +663,7 @@ void zen_ASTListener_onEnterEnumerate(zen_ASTListener_t* listener, zen_ASTNode_t
 void zen_ASTListener_onExitEnumerate(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// expressions
     
 void zen_ASTListener_onEnterExpressions(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -575,6 +671,7 @@ void zen_ASTListener_onEnterExpressions(zen_ASTListener_t* listener, zen_ASTNode
 void zen_ASTListener_onExitExpressions(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// expression
     
 void zen_ASTListener_onEnterExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -582,11 +679,15 @@ void zen_ASTListener_onEnterExpression(zen_ASTListener_t* listener, zen_ASTNode_
 void zen_ASTListener_onExitExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// assignmentExpression
+
 void zen_ASTListener_onEnterAssignmentExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitAssignmentExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// conditionalExpression
 
 void zen_ASTListener_onEnterConditionalExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -594,11 +695,15 @@ void zen_ASTListener_onEnterConditionalExpression(zen_ASTListener_t* listener, z
 void zen_ASTListener_onExitConditionalExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// logicalOrExpression
+
 void zen_ASTListener_onEnterLogicalOrExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitLogicalOrExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// logicalAndExpression
 
 void zen_ASTListener_onEnterLogicalAndExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -606,11 +711,15 @@ void zen_ASTListener_onEnterLogicalAndExpression(zen_ASTListener_t* listener, ze
 void zen_ASTListener_onExitLogicalAndExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// inclusiveOrExpression
+
 void zen_ASTListener_onEnterInclusiveOrExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitInclusiveOrExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// exclusiveOrExpression
 
 void zen_ASTListener_onEnterExclusiveOrExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -618,11 +727,15 @@ void zen_ASTListener_onEnterExclusiveOrExpression(zen_ASTListener_t* listener, z
 void zen_ASTListener_onExitExclusiveOrExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// andExpression
+
 void zen_ASTListener_onEnterAndExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitAndExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// equalityExpression
 
 void zen_ASTListener_onEnterEqualityExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -630,11 +743,15 @@ void zen_ASTListener_onEnterEqualityExpression(zen_ASTListener_t* listener, zen_
 void zen_ASTListener_onExitEqualityExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// relationalExpression
+
 void zen_ASTListener_onEnterRelationalExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitRelationalExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// shiftExpression
 
 void zen_ASTListener_onEnterShiftExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -642,11 +759,15 @@ void zen_ASTListener_onEnterShiftExpression(zen_ASTListener_t* listener, zen_AST
 void zen_ASTListener_onExitShiftExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// additiveExpression
+
 void zen_ASTListener_onEnterAdditiveExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitAdditiveExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// multiplicativeExpression
 
 void zen_ASTListener_onEnterMultiplicativeExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -654,11 +775,15 @@ void zen_ASTListener_onEnterMultiplicativeExpression(zen_ASTListener_t* listener
 void zen_ASTListener_onExitMultiplicativeExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// unaryExpression
+
 void zen_ASTListener_onEnterUnaryExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitUnaryExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// postfixExpression
 
 void zen_ASTListener_onEnterPostfixExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -666,11 +791,15 @@ void zen_ASTListener_onEnterPostfixExpression(zen_ASTListener_t* listener, zen_A
 void zen_ASTListener_onExitPostfixExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// subscript
+
 void zen_ASTListener_onEnterSubscript(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitSubscript(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// functionArguments
 
 void zen_ASTListener_onEnterFunctionArguments(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -678,11 +807,15 @@ void zen_ASTListener_onEnterFunctionArguments(zen_ASTListener_t* listener, zen_A
 void zen_ASTListener_onExitFunctionArguments(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// memberAccess
+
 void zen_ASTListener_onEnterMemberAccess(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitMemberAccess(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// postfixOperator
 
 void zen_ASTListener_onEnterPostfixOperator(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -690,11 +823,15 @@ void zen_ASTListener_onEnterPostfixOperator(zen_ASTListener_t* listener, zen_AST
 void zen_ASTListener_onExitPostfixOperator(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// primaryExpression
+
 void zen_ASTListener_onEnterPrimaryExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitPrimaryExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// mapExpression
 
 void zen_ASTListener_onEnterMapExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
@@ -702,17 +839,23 @@ void zen_ASTListener_onEnterMapExpression(zen_ASTListener_t* listener, zen_ASTNo
 void zen_ASTListener_onExitMapExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// mapEntries
+
 void zen_ASTListener_onEnterMapEntries(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitMapEntries(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
+// mapEntry
+
 void zen_ASTListener_onEnterMapEntry(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 void zen_ASTListener_onExitMapEntry(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
+
+// listExpression
 
 void zen_ASTListener_onEnterListExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }

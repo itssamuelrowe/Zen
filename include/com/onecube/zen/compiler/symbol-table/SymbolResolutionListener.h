@@ -5,7 +5,7 @@
 
 #include <com/onecube/zen/compiler/ast/Listener.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
-#include <com/onecube/zen/compiler/ast//AstAnnotations.h>
+#include <com/onecube/zen/compiler/ast//ASTAnnotations.h>
 
 /*******************************************************************************
  * SymbolResolutionListener                                                    *
@@ -20,7 +20,7 @@
 struct zen_SymbolResolutionListener_t {
     zen_ASTListener_t* m_astListener;
     zen_SymbolTable_t* m_symbolTable;
-    zen_AstAnnotations_t* m_scopes;
+    zen_ASTAnnotations_t* m_scopes;
 };
 
 /**
@@ -33,7 +33,7 @@ typedef struct zen_SymbolResolutionListener_t zen_SymbolResolutionListener_t;
 /**
  * @memberof SymbolResolutionListener
  */
-zen_SymbolResolutionListener_t* zen_SymbolResolutionListener_new(zen_SymbolTable_t* symbolTable, zen_AstAnnotations_t* scopes);
+zen_SymbolResolutionListener_t* zen_SymbolResolutionListener_new(zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes);
 
 // Destructor
 

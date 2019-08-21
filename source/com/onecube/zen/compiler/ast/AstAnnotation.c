@@ -1,26 +1,26 @@
 // Sunday, April 29, 2018
 
-#include <com/onecube/zen/compiler/ast/AstAnnotation.h>
+#include <com/onecube/zen/compiler/ast/ASTAnnotation.h>
 
 /*******************************************************************************
- * AstAnnotation                                                               *
+ * ASTAnnotation                                                               *
  *******************************************************************************/
 
-zen_AstAnnotation_t* zen_AstAnnotation_new(zen_AstAnnotationType_t type, void* bundle) {
-    zen_AstAnnotation_t* annotation = zen_Memory_allocate(zen_AstAnnotation_t, 1);
+zen_ASTAnnotation_t* zen_ASTAnnotation_new(zen_ASTAnnotationType_t type, void* bundle) {
+    zen_ASTAnnotation_t* annotation = zen_Memory_allocate(zen_ASTAnnotation_t, 1);
     annotation->m_type = type;
     annotation->m_bundle = bundle;
 
     return annotation;
 }
 
-void zen_AstAnnotation_delete(zen_AstAnnotation_t* annotation) {
+void zen_ASTAnnotation_delete(zen_ASTAnnotation_t* annotation) {
     jtk_Assert_assertObject(annotation, "The specified annotation is null.");
 
     zen_Memory_deallocate(annotation);
 }
 
-zen_AstAnnotationType_t zen_AstAnnotation_getType(zen_AstAnnotation_t* annotation) {
+zen_ASTAnnotationType_t zen_ASTAnnotation_getType(zen_ASTAnnotation_t* annotation) {
     jtk_Assert_assertObject(annotation, "The specified annotation is null.");
 
     return annotation->m_type;

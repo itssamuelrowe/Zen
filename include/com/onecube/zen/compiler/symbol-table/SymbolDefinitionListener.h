@@ -8,7 +8,7 @@
 #include <com/onecube/zen/compiler/symbol-table/Scope.h>
 #include <com/onecube/zen/compiler/symbol-table/ScopeType.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
-#include <com/onecube/zen/compiler/ast//AstAnnotations.h>
+#include <com/onecube/zen/compiler/ast//ASTAnnotations.h>
 
 /*******************************************************************************
  * SymbolDefinitionListener                                                    *
@@ -23,7 +23,7 @@
 struct zen_SymbolDefinitionListener_t {
     zen_ASTListener_t* m_astListener;
     zen_SymbolTable_t* m_symbolTable;
-    zen_AstAnnotations_t* m_scopes;
+    zen_ASTAnnotations_t* m_scopes;
 };
 
 /**
@@ -36,7 +36,7 @@ typedef struct zen_SymbolDefinitionListener_t zen_SymbolDefinitionListener_t;
 /**
  * @memberof SymbolDefinitionListener
  */
-zen_SymbolDefinitionListener_t* zen_SymbolDefinitionListener_new(zen_SymbolTable_t* symbolTable, zen_AstAnnotations_t* scopes);
+zen_SymbolDefinitionListener_t* zen_SymbolDefinitionListener_new(zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes);
 
 // Destructor
 

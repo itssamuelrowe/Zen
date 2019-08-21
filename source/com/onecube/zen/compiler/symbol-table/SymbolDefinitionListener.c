@@ -22,7 +22,7 @@ void zen_ErrorHandler_reportError(void* handler, const char* message, zen_Token_
     fflush(stdout);
 }
 
-zen_SymbolDefinitionListener_t* zen_SymbolDefinitionListener_new(zen_SymbolTable_t* symbolTable, zen_AstAnnotations_t* scopes) {
+zen_SymbolDefinitionListener_t* zen_SymbolDefinitionListener_new(zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes) {
     zen_SymbolDefinitionListener_t* listener = zen_Memory_allocate(zen_SymbolDefinitionListener_t, 1);
     listener->m_astListener = zen_ASTListener_newWithContext(listener);
     listener->m_symbolTable = symbolTable;
@@ -57,7 +57,7 @@ void zen_SymbolDefinitionListener_delete(zen_SymbolDefinitionListener_t* listene
     zen_Memory_deallocate(listener);
 }
 
-zen_ASTListener_t* zen_SymbolDefinitionListener_getAstListener(zen_SymbolDefinitionListener_t* listener) {
+zen_ASTListener_t* zen_SymbolDefinitionListener_getASTListener(zen_SymbolDefinitionListener_t* listener) {
     jtk_Assert_assertObject(listener, "The specified listener is null.");
     return listener->m_astListener;
 }
@@ -77,7 +77,7 @@ void zen_SymbolDefinitionListener_onEnterCompilationUnit(zen_ASTListener_t* astL
     zen_CompilationUnitScope_t* compilationUnitScope = zen_CompilationUnitScope_new();
     zen_Scope_t* scope = zen_CompilationUnitScope_getScope(compilationUnitScope);
     zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
-    zen_AstAnnotations_put(listener->m_scopes, node, scope);
+    zen_ASTAnnotations_put(listener->m_scopes, node, scope);
 }
 
 void zen_SymbolDefinitionListener_onExitCompilationUnit(zen_ASTListener_t* astListener,
@@ -170,7 +170,7 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
     zen_FunctionScope_t* functionScope = zen_FunctionScope_new(symbolTable->m_currentScope);
     zen_Scope_t* scope = zen_FunctionScope_getScope(functionScope);
     zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
-    zen_AstAnnotations_put(listener->m_scopes, node, scope);
+    zen_ASTAnnotations_put(listener->m_scopes, node, scope);
 
     int32_t i;
     for (i = 0; i < fixedParameterCount; i++) {
@@ -350,7 +350,7 @@ void zen_SymbolDefinitionListener_onEnterStatementSuite(
     zen_LocalScope_t* localScope = zen_LocalScope_new(listener->m_symbolTable->m_currentScope);
     zen_Scope_t* scope = zen_LocalScope_getScope(localScope);
     zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
-    zen_AstAnnotations_put(listener->m_scopes, node, scope);
+    zen_ASTAnnotations_put(listener->m_scopes, node, scope);
 }
 
 void zen_SymbolDefinitionListener_onExitStatementSuite(
@@ -505,7 +505,7 @@ void zen_SymbolDefinitionListener_onEnterClassDeclaration(
         zen_Scope_t* scope = zen_ClassScope_getScope(classScope);
 
         zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
-        zen_AstAnnotations_put(listener->m_scopes, node, scope);
+        zen_ASTAnnotations_put(listener->m_scopes, node, scope);
     }
 }
 
@@ -546,7 +546,7 @@ void zen_SymbolDefinitionListener_onEnterEnumerationDeclaration(
         zen_Scope_t* scope = zen_EnumerationScope_getScope(enumerationScope);
 
         zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
-        zen_AstAnnotations_put(listener->m_scopes, node, scope);
+        zen_ASTAnnotations_put(listener->m_scopes, node, scope);
     }
 }
 

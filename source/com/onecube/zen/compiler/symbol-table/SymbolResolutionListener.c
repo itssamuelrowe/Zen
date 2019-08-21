@@ -7,7 +7,7 @@
 #include <com/onecube/zen/st/FunctionSymbol.h>
 #include <com/onecube/zen/st/ClassSymbol.h>
 
-zen_SymbolResolutionListener_t* zen_SymbolResolutionListener_new(zen_SymbolTable_t* symbolTable, zen_AstAnnotations_t* scopes) {
+zen_SymbolResolutionListener_t* zen_SymbolResolutionListener_new(zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes) {
     zen_SymbolResolutionListener_t* listener = zen_Memory_allocate(zen_SymbolResolutionListener_t, 1);
     listener->m_astListener = zen_ASTListener_newWithContext(listener);
     listener->m_symbolTable = symbolTable;
@@ -34,7 +34,7 @@ void zen_SymbolResolutionListener_delete(zen_SymbolResolutionListener_t* listene
     zen_Memory_deallocate(listener);
 }
 
-zen_ASTListener_t* zen_SymbolResolutionListener_getAstListener(zen_SymbolResolutionListener_t* listener) {
+zen_ASTListener_t* zen_SymbolResolutionListener_getASTListener(zen_SymbolResolutionListener_t* listener) {
     jtk_Assert_assertObject(listener, "The specified listener is null.");
     return listener->m_astListener;
 }
@@ -47,7 +47,7 @@ void zen_SymbolResolutionListener_onEnterCompilationUnit(zen_ASTListener_t* astL
     jtk_Assert_assertObject(node, "The specified AST node is null.");
 
     zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
-    zen_Scope_t* scope = zen_AstAnnotations_get(listener->m_scopes, node);
+    zen_Scope_t* scope = zen_ASTAnnotations_get(listener->m_scopes, node);
     zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
 }
 
@@ -68,7 +68,7 @@ void zen_SymbolResolutionListener_onEnterFunctionDeclaration(
     zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
     zen_FunctionDeclarationContext_t* context = (zen_FunctionDeclarationContext_t*)node->m_context;
 
-    zen_Scope_t* scope = zen_AstAnnotations_get(listener->m_scopes, node);
+    zen_Scope_t* scope = zen_ASTAnnotations_get(listener->m_scopes, node);
     zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
     zen_Scope_t* enclosingScope = zen_Scope_getEnclosingScope(scope);
 
@@ -202,7 +202,7 @@ void zen_SymbolResolutionListener_onEnterStatementSuite(
 
     zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
 
-    zen_Scope_t* scope = zen_AstAnnotations_get(listener->m_scopes, node);
+    zen_Scope_t* scope = zen_ASTAnnotations_get(listener->m_scopes, node);
     zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
 }
 
