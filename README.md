@@ -13,7 +13,7 @@ To contribute, please contact the original author Samuel Rowe (<samuelrowe1999@g
 
 ## License
 
-Copyright 2019 Samuel Rowe
+Copyright 2017-2019 Samuel Rowe
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
