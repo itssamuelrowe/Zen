@@ -30,7 +30,7 @@ zen_DataChannel_t* zen_DataChannel_new(int32_t identifier) {
     zen_DataChannel_t* channel = zen_Memory_allocate(zen_DataChannel_t, 1);
     channel->m_bytes = zen_Memory_allocate(uint8_t, ZEN_BYTE_CODE_CHANNEL_DEFAULT_CAPACITY);
     channel->m_capacity = ZEN_BYTE_CODE_CHANNEL_DEFAULT_CAPACITY;
-    channel->m_size = 0;
+    channel->m_index = 0;
     channel->m_identifier = identifier;
 
     return channel;
@@ -51,20 +51,20 @@ void zen_DataChannel_appendChannel(zen_DataChannel_t* channel,
     zen_DataChannel_t* other) {
     jtk_Assert_assertObject(channel, "The specified byte code channel is null.");
 
-    zen_DataChannel_requestCapacity(channel, channel->m_size + other->m_size);
+    zen_DataChannel_requestCapacity(channel, channel->m_index + other->m_index);
     int32_t i;
-    for (i = 0; i < other->m_size; i++) {
-        channel->m_bytes[channel->m_size + i] = other->m_bytes[i];
+    for (i = 0; i < other->m_index; i++) {
+        channel->m_bytes[channel->m_index + i] = other->m_bytes[i];
     }
-    channel->m_size += other->m_size;
+    channel->m_index += other->m_index;
 }
 
 void zen_DataChannel_appendByte(zen_DataChannel_t* channel, uint8_t byte) {
     jtk_Assert_assertObject(channel, "The specified byte code channel is null.");
 
-    zen_DataChannel_requestCapacity(channel, channel->m_size + 1);
-    channel->m_bytes[channel->m_size] = byte;
-    channel->m_size++;
+    zen_DataChannel_requestCapacity(channel, channel->m_index + 1);
+    channel->m_bytes[channel->m_index] = byte;
+    channel->m_index++;
 }
 
 void zen_DataChannel_appendBytes(zen_DataChannel_t* channel,
@@ -80,13 +80,13 @@ void zen_DataChannel_appendBytesRange(zen_DataChannel_t* channel,
     // jtk_Assert_assertTrue(...);
 
     int32_t byteCount = stopIndex - startIndex;
-    zen_DataChannel_requestCapacity(channel, channel->m_size + byteCount);
+    zen_DataChannel_requestCapacity(channel, channel->m_index + byteCount);
     int32_t i;
     int32_t j;
-    for (i = channel->m_size, j = startIndex; j < stopIndex; i++, j++) {
+    for (i = channel->m_index, j = startIndex; j < stopIndex; i++, j++) {
         channel->m_bytes[i] = bytes[j];
     }
-    channel->m_size += byteCount;
+    channel->m_index += byteCount;
 }
 
 // Capacity
@@ -107,7 +107,7 @@ void zen_DataChannel_requestCapacity(zen_DataChannel_t* channel, int32_t capacit
             uint8_t* temporary = channel->m_bytes;
             channel->m_bytes = zen_Memory_allocate(uint8_t, newCapacity);
             int32_t i;
-            for (i = 0; i < channel->m_size; i++) {
+            for (i = 0; i < channel->m_index; i++) {
                 channel->m_bytes[i] = temporary[i];
             }
             zen_Memory_deallocate(temporary);
@@ -120,5 +120,5 @@ void zen_DataChannel_requestCapacity(zen_DataChannel_t* channel, int32_t capacit
 
 int32_t zen_DataChannel_getSize(zen_DataChannel_t* channel) {
     jtk_Assert_assertObject(channel, "The specified byte code channel is null.");
-    return channel->m_size;
+    return channel->m_index;
 }

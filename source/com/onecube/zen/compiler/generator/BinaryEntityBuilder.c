@@ -16,8 +16,16 @@
 
 // Tuesday, July 16, 2019
 
+#include <jtk/core/Double.h>
+#include <jtk/core/Float.h>
+#include <jtk/core/VariableArguments.h>
 #include <jtk/collection/stack/ArrayStack.h>
+
 #include <com/onecube/zen/compiler/generator/BinaryEntityBuilder.h>
+#include <com/onecube/zen/virtual-machine/feb/ByteCode.h>
+#include <com/onecube/zen/virtual-machine/feb/EntityType.h>
+#include <com/onecube/zen/virtual-machine/feb/Instruction.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolTag.h>
 
 /*******************************************************************************
  * BinaryEntityBuilder                                                         *
@@ -94,7 +102,8 @@ void zen_BinaryEntityBuilder_emitByteCode(zen_BinaryEntityBuilder_t* builder,
         int32_t i;
         for (i = 0; i < argumentCount; i++) {
             channel->m_bytes[channel->m_index++] =
-                (uint8_t)jtk_VariableArguments_getArgument(variableArguments, int32_t);
+                // (uint8_t)jtk_VariableArguments_argument(variableArguments, int32_t);
+                (uint8_t)va_arg(variableArguments, int32_t);
         }
 
         jtk_VariableArguments_end(variableArguments);
@@ -260,10 +269,10 @@ uint16_t zen_BinaryEntityBuilder_writeConstantPoolUtf8(zen_BinaryEntityBuilder_t
     channel->m_bytes[channel->m_index++] = (length & 0x000000FF);
     int32_t j = 0;
     while (j < length) {
-        channel->m_bytes[i + j] = value[j];
+        channel->m_bytes[channel->m_index + j] = value[j];
         j++;
     }
-    i += length;
+    channel->m_index += length;
 
     return builder->m_constantPoolIndex++;
 }
@@ -340,8 +349,8 @@ void zen_BinaryEntityBuilder_writeEntityHeader(zen_BinaryEntityBuilder_t* builde
     channel->m_bytes[channel->m_index++] = type; // type
     channel->m_bytes[channel->m_index++] = (flags & 0x0000FF00) >> 8; // flags
     channel->m_bytes[channel->m_index++] = (flags & 0x000000FF);
-    channel->m_bytes[channel->m_index++] = ((reference & 0x0000FF00) >> 8; // reference
-    channel->m_bytes[channel->m_index++] = ((reference & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (reference & 0x0000FF00) >> 8; // reference
+    channel->m_bytes[channel->m_index++] = (reference & 0x000000FF);
 }
 
 void zen_BinaryEntityBuilder_writeClass(zen_BinaryEntityBuilder_t* builder, uint16_t flags, uint16_t reference,
@@ -354,15 +363,15 @@ void zen_BinaryEntityBuilder_writeClass(zen_BinaryEntityBuilder_t* builder, uint
     channel->m_bytes[channel->m_index++] = ZEN_ENTITY_TYPE_CLASS; // type
     channel->m_bytes[channel->m_index++] = (flags & 0x0000FF00) >> 8; // flags
     channel->m_bytes[channel->m_index++] = (flags & 0x000000FF);
-    channel->m_bytes[channel->m_index++] = ((reference & 0x0000FF00) >> 8; // reference
-    channel->m_bytes[channel->m_index++] = ((reference & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (reference & 0x0000FF00) >> 8; // reference
+    channel->m_bytes[channel->m_index++] = (reference & 0x000000FF);
     channel->m_bytes[channel->m_index++] = (superclassCount & 0x0000FF00) >> 8; // superclass count
     channel->m_bytes[channel->m_index++] = (superclassCount & 0x000000FF);
     int32_t j;
     for (j = 0; j < superclassCount; j++) {
         uint16_t superclassIndex = superclassIndexes[j];
-        channel->m_bytes[channel->m_index++] = (zen_BinaryEntityBuilder_t* builder, superclassIndex & 0x0000FF00) >> 8; // superclass index
-        channel->m_bytes[channel->m_index++] = (zen_BinaryEntityBuilder_t* builder, superclassIndex & 0x000000FF);
+        channel->m_bytes[channel->m_index++] = (superclassIndex & 0x0000FF00) >> 8; // superclass index
+        channel->m_bytes[channel->m_index++] = (superclassIndex & 0x000000FF);
     }
 }
 

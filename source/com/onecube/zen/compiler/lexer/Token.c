@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include <com/onecube/zen/Token.h>
-#include <com/onecube/zen/CString.h>
+#include <jtk/core/CString.h>
+#include <com/onecube/zen/compiler/lexer/Token.h>
 
 zen_Token_t* zen_Token_new(
     zen_TokenChannel_t channel,
@@ -31,7 +31,7 @@ zen_Token_t* zen_Token_new(
     zen_Token_t* token = zen_Memory_allocate(zen_Token_t, 1);
     token->m_channel = channel;
     token->m_type = type;
-    token->m_text = zen_String_newWithSize(text, length);
+    token->m_text = jtk_CString_newWithSize(text, length);
     token->m_length = length; // This is the length of the text representation!
     token->m_startIndex = startIndex;
     token->m_stopIndex = stopIndex;
@@ -45,7 +45,7 @@ zen_Token_t* zen_Token_new(
 
 void zen_Token_delete(zen_Token_t* token) {
     jtk_Assert_assertObject(token, "The specified token is null.");
-    zen_String_delete(token->m_text);
+    jtk_CString_delete(token->m_text);
     zen_Memory_deallocate(token);
 }
 
@@ -74,8 +74,8 @@ void zen_Token_setText(zen_Token_t* token, const uint8_t* text, int32_t length) 
     jtk_Assert_assertObject(token, "The specified token is null.");
 
     /* The text should not be null. */
-    zen_String_delete(token->m_text);
-    token->m_text = zen_String_newWithSize(text, length);
+    jtk_CString_delete(token->m_text);
+    token->m_text = jtk_CString_newWithSize(text, length);
     token->m_length = length;
 }
 

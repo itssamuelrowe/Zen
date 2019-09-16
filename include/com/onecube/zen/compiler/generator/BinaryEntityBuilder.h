@@ -19,6 +19,10 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_GENERATOR_BINARY_ENTITY_BUILDER_H
 #define COM_ONECUBE_ZEN_COMPILER_GENERATOR_BINARY_ENTITY_BUILDER_H
 
+#include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/compiler/generator/DataChannel.h>
+
+
 /*******************************************************************************
  * BinaryEntityBuilder                                                         *
  *******************************************************************************/

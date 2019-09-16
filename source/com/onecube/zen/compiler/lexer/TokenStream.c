@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include <com/onecube/zen/TokenStream.h>
-#include <com/onecube/zen/collection/Arrays.h>
+#include <jtk/collection/array/Arrays.h>
+#include <com/onecube/zen/compiler/lexer/TokenStream.h>
 
 zen_TokenStream_t* zen_TokenStream_new(zen_Lexer_t* lexer, zen_TokenChannel_t channel) {
     jtk_Assert_assertObject(lexer, "The specified lexer is null.");
@@ -135,7 +135,7 @@ jtk_ArrayList_t* zen_TokenStream_getTokens(zen_TokenStream_t* stream,
     jtk_Assert_assertObject(stream, "The specified token source is null.");
 
     int32_t size = zen_ArrayList_getSize(stream->m_tokens);
-    zen_Arrays_checkRange(size, startIndex, stopIndex);
+    jtk_Arrays_checkRange(size, startIndex, stopIndex);
 
     zen_TokenStream_initialize(stream);
     jtk_ArrayList_t* result = zen_ArrayList_new();
