@@ -36,7 +36,7 @@
  */
 struct zen_CompilationUnitScope_t {
     zen_Scope_t* m_scope;
-    zen_HashMap_t* m_symbols;
+    jtk_HashMap_t* m_symbols;
 };
 
 /**

@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-#include <com/onecube/zen/Context.h>
-#include <com/onecube/zen/Pair.h>
-#include <com/onecube/zen/Parser.h>
-#include <com/onecube/zen/TokenStream.h>
-#include <com/onecube/zen/StackTrace.h>
+// #include <jtk/collection/Pair.h>
+
+#include <com/onecube/zen/compiler/ast/context/Context.h>
+#include <com/onecube/zen/compiler/parser/Parser.h>
+#include <com/onecube/zen/compiler/lexer/TokenStream.h>
+#include <com/onecube/zen/compiler/support/StackTrace.h>
 
 /*******************************************************************************
  * Parser                                                                      *
@@ -139,7 +140,7 @@ void zen_Parser_reportSyntaxError(zen_Parser_t* parser, zen_Token_t* token, cons
 
 zen_ASTNode_t* zen_Parser_newTerminalNode(zen_ASTNode_t* node, zen_Token_t* token) {
     zen_ASTNode_t* terminalNode = zen_ASTNode_new(node);
-    terminalNode->m_type = ZEN_AST_NODE_TERMINAL;
+    terminalNode->m_type = ZEN_AST_NODE_TYPE_TERMINAL;
     terminalNode->m_context = token;
     terminalNode->m_contextDestructor = NULL;
     terminalNode->m_enumerateContextChildren = NULL;
@@ -228,7 +229,7 @@ zen_Token_t* zen_Parser_matchAndYield(zen_Parser_t* parser, zen_TokenType_t type
  *
  */
 void zen_Parser_compilationUnit(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
 	/* Create and attach the context of this rule to the given node. */
 	zen_CompilationUnitContext_t* context = zen_CompilationUnitContext_new(node);
@@ -340,7 +341,7 @@ void zen_Parser_compilationUnit(zen_Parser_t* parser, zen_ASTNode_t* node) {
 	/* We are expecting an 'end of stream' here. */
     zen_Parser_match(parser, ZEN_TOKEN_END_OF_STREAM);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -358,7 +359,7 @@ void zen_Parser_compilationUnit(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * taken to avoid redundant nodes in the AST.
  */
 void zen_Parser_importDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
 	zen_ImportDeclarationContext_t* context = zen_ImportDeclarationContext_new(node);
 
@@ -417,7 +418,7 @@ void zen_Parser_importDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
 	 */
     zen_Parser_match(parser, ZEN_TOKEN_NEWLINE);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 bool zen_Parser_isAnnotatedComponentDeclarationFollow(zen_TokenType_t token) {
@@ -433,7 +434,7 @@ bool zen_Parser_isAnnotatedComponentDeclarationFollow(zen_TokenType_t token) {
  * ;
  */
 void zen_Parser_annotatedComponentDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_AnnotatedComponentDeclarationContext_t* context = zen_AnnotatedComponentDeclarationContext_new(node);
 
@@ -447,7 +448,7 @@ void zen_Parser_annotatedComponentDeclaration(zen_Parser_t* parser, zen_ASTNode_
     context->m_componentDeclaration = componentDeclaration;
     zen_Parser_componentDeclaration(parser, componentDeclaration);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -456,7 +457,7 @@ void zen_Parser_annotatedComponentDeclaration(zen_Parser_t* parser, zen_ASTNode_
  * ;
  */
 void zen_Parser_annotations(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
 	zen_AnnotationsContext_t* context = zen_AnnotationsContext_new(node);
 
@@ -471,7 +472,7 @@ void zen_Parser_annotations(zen_Parser_t* parser, zen_ASTNode_t* node) {
     }
     while (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_AT);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -480,7 +481,7 @@ void zen_Parser_annotations(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_annotation(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
 	zen_AnnotationContext_t* context = zen_AnnotationContext_new(node);
 
@@ -506,7 +507,7 @@ void zen_Parser_annotation(zen_Parser_t* parser, zen_ASTNode_t* node) {
 	 */
     zen_Parser_match(parser, ZEN_TOKEN_NEWLINE);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -515,7 +516,7 @@ void zen_Parser_annotation(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_annotationType(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_AnnotationTypeContext_t* context = zen_AnnotationTypeContext_new(node);
 
@@ -537,7 +538,7 @@ void zen_Parser_annotationType(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_ArrayList_add(context->m_identifiers, identifier);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -546,7 +547,7 @@ void zen_Parser_annotationType(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_annotationAttribute(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
 	zen_AnnotationAttributeContext_t* context = zen_AnnotationAttributeContext_new(node);
 
@@ -574,7 +575,7 @@ void zen_Parser_annotationAttribute(zen_Parser_t* parser, zen_ASTNode_t* node) {
         // Syntax error: Expected literal
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -585,7 +586,7 @@ void zen_Parser_annotationAttribute(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_componentDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_ComponentDeclarationContext_t* context = zen_ComponentDeclarationContext_new(node);
 
@@ -617,7 +618,7 @@ void zen_Parser_componentDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) 
         }
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -632,7 +633,7 @@ void zen_Parser_componentDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) 
  * ;
  */
 void zen_Parser_functionDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
 	zen_FunctionDeclarationContext_t* context = zen_FunctionDeclarationContext_new(node);
 
@@ -669,7 +670,7 @@ void zen_Parser_functionDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
 	context->m_functionBody = functionBody;
 	zen_Parser_functionBody(parser, functionBody);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -686,7 +687,7 @@ void zen_Parser_functionDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * taken to avoid redundant nodes in the AST.
  */
 void zen_Parser_functionParameters(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
 	zen_FunctionParametersContext_t* context = zen_FunctionParametersContext_new(node);
 
@@ -745,7 +746,7 @@ void zen_Parser_functionParameters(zen_Parser_t* parser, zen_ASTNode_t* node) {
     /* Match and discard the ')' token. */
     zen_Parser_match(parser, ZEN_TOKEN_RIGHT_PARENTHESIS);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -754,7 +755,7 @@ void zen_Parser_functionParameters(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_functionBody(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
 	zen_FunctionBodyContext_t* context = zen_FunctionBodyContext_new(node);
 
@@ -762,7 +763,7 @@ void zen_Parser_functionBody(zen_Parser_t* parser, zen_ASTNode_t* node) {
 	context->m_statementSuite = statementSuite;
     zen_Parser_statementSuite(parser, statementSuite);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /* In order to help the users read code easily, the simple statements were
@@ -776,7 +777,7 @@ void zen_Parser_functionBody(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_statementSuite(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
 	zen_StatementSuiteContext_t* context = zen_StatementSuiteContext_new(node);
 
@@ -805,7 +806,7 @@ void zen_Parser_statementSuite(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_Parser_match(parser, ZEN_TOKEN_DEDENTATION);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 bool zen_Parser_isSimpleStatementFollow(zen_TokenType_t type) {
@@ -858,7 +859,7 @@ bool zen_Parser_isSimpleStatementFollow(zen_TokenType_t type) {
  * taken to avoid redundant nodes in the AST.
  */
 void zen_Parser_simpleStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
 	zen_SimpleStatementContext_t* context = zen_SimpleStatementContext_new(node);
 
@@ -931,7 +932,7 @@ void zen_Parser_simpleStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
     /* Match and discard the newline token. */
 	zen_Parser_match(parser, ZEN_TOKEN_NEWLINE);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -941,7 +942,7 @@ void zen_Parser_simpleStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_statement(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_StatementContext_t* context = zen_StatementContext_new(node);
 
@@ -960,7 +961,7 @@ void zen_Parser_statement(zen_Parser_t* parser, zen_ASTNode_t* node) {
         // Syntax error: Expected simple or compound statement
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 bool zen_Parser_isStatementFollow(zen_TokenType_t type) {
@@ -973,7 +974,7 @@ bool zen_Parser_isStatementFollow(zen_TokenType_t type) {
  * ;
  */
 void zen_Parser_emptyStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     /* zen_EmptyStatementContext_t* context = */ zen_EmptyStatementContext_new(node);
 
@@ -981,7 +982,7 @@ void zen_Parser_emptyStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
     /* Match and discard the ';' token. */
 	zen_Parser_match(parser, ZEN_TOKEN_SEMICOLON);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -990,7 +991,7 @@ void zen_Parser_emptyStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_variableDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
 	zen_VariableDeclarationContext_t* context = zen_VariableDeclarationContext_new(node);
 
@@ -1010,7 +1011,7 @@ void zen_Parser_variableDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
 		zen_Parser_variableDeclarator(parser, variableDeclarator);
 	}
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1019,7 +1020,7 @@ void zen_Parser_variableDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_variableDeclarator(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
 	zen_VariableDeclaratorContext_t* context = zen_VariableDeclaratorContext_new(node);
 
@@ -1035,7 +1036,7 @@ void zen_Parser_variableDeclarator(zen_Parser_t* parser, zen_ASTNode_t* node) {
 		zen_Parser_expression(parser, expression);
 	}
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /* TODO: I have accidentally forwarded the node that we receive in the rule
@@ -1047,7 +1048,7 @@ void zen_Parser_variableDeclarator(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_constantDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_ConstantDeclarationContext_t* context = zen_ConstantDeclarationContext_new(node);
 
@@ -1067,7 +1068,7 @@ void zen_Parser_constantDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
 		zen_Parser_constantDeclarator(parser, constantDeclarator);
 	}
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /* TODO: Please check if all the rules have contexts.
@@ -1078,7 +1079,7 @@ void zen_Parser_constantDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_constantDeclarator(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_ConstantDeclaratorContext_t* context = zen_ConstantDeclaratorContext_new(node);
 
@@ -1092,7 +1093,7 @@ void zen_Parser_constantDeclarator(zen_Parser_t* parser, zen_ASTNode_t* node) {
     context->m_expression = expression;
 	zen_Parser_expression(parser, expression);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1101,7 +1102,7 @@ void zen_Parser_constantDeclarator(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_assertStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_AssertStatementContext_t* context = zen_AssertStatementContext_new(node);
 
@@ -1112,7 +1113,7 @@ void zen_Parser_assertStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
     context->m_expression = expression;
     zen_Parser_expression(parser, expression);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1121,7 +1122,7 @@ void zen_Parser_assertStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_breakStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_BreakStatementContext_t* context = zen_BreakStatementContext_new(node);
 
@@ -1134,7 +1135,7 @@ void zen_Parser_breakStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_TokenStream_consume(parser->m_tokens);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1143,7 +1144,7 @@ void zen_Parser_breakStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_continueStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_ContinueStatementContext_t* context = zen_ContinueStatementContext_new(node);
 
@@ -1156,7 +1157,7 @@ void zen_Parser_continueStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_TokenStream_consume(parser->m_tokens);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1165,7 +1166,7 @@ void zen_Parser_continueStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_returnStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_ReturnStatementContext_t* context = zen_ReturnStatementContext_new(node);
 
@@ -1178,7 +1179,7 @@ void zen_Parser_returnStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_Parser_expression(parser, expression);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1198,7 +1199,7 @@ void zen_Parser_throwStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_Parser_expression(parser, expression);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1213,7 +1214,7 @@ void zen_Parser_throwStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_compoundStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_CompoundStatementContext_t* context = zen_CompoundStatementContext_new(node);
 
@@ -1284,7 +1285,7 @@ void zen_Parser_compoundStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
 		}
 	}
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 bool zen_Parser_isCompoundStatementFollow(zen_TokenType_t type) {
@@ -1313,7 +1314,7 @@ bool zen_Parser_isCompoundStatementFollow(zen_TokenType_t type) {
  * ;
  */
 void zen_Parser_ifStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_IfStatementContext_t* context = zen_IfStatementContext_new(node);
 
@@ -1334,7 +1335,7 @@ void zen_Parser_ifStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_Parser_elseClause(parser, elseClause);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1343,7 +1344,7 @@ void zen_Parser_ifStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_ifClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_IfClauseContext_t* context = zen_IfClauseContext_new(node);
 
@@ -1358,7 +1359,7 @@ void zen_Parser_ifClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
     context->m_statementSuite = statementSuite;
 	zen_Parser_statementSuite(parser, statementSuite);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1367,7 +1368,7 @@ void zen_Parser_ifClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_elseIfClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_ElseIfClauseContext_t* context = zen_ElseIfClauseContext_new(node);
 
@@ -1383,7 +1384,7 @@ void zen_Parser_elseIfClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
     context->m_statementSuite = statementSuite;
 	zen_Parser_statementSuite(parser, statementSuite);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1392,7 +1393,7 @@ void zen_Parser_elseIfClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_elseClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_ElseClauseContext_t* context = zen_ElseClauseContext_new(node);
 
@@ -1403,7 +1404,7 @@ void zen_Parser_elseClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
     context->m_statementSuite = statementSuite;
 	zen_Parser_statementSuite(parser, statementSuite);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1412,7 +1413,7 @@ void zen_Parser_elseClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_iterativeStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_IterativeStatementContext_t* context = zen_IterativeStatementContext_new(node);
 
@@ -1438,7 +1439,7 @@ void zen_Parser_iterativeStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
 		}
 	}
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1447,7 +1448,7 @@ void zen_Parser_iterativeStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_labelClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_LabelClauseContext_t* context = zen_LabelClauseContext_new(node);
 
@@ -1457,7 +1458,7 @@ void zen_Parser_labelClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
 	zen_Token_t* identifier = zen_Parser_matchAndYield(parser, ZEN_TOKEN_IDENTIFIER);
     context->m_identifier = zen_Parser_newTerminalNode(node, identifier);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1466,7 +1467,7 @@ void zen_Parser_labelClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_whileStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_WhileStatementContext_t* context = zen_WhileStatementContext_new(node);
 
@@ -1487,7 +1488,7 @@ void zen_Parser_whileStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
 		zen_Parser_elseClause(parser, elseClause);
 	}
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 
@@ -1497,7 +1498,7 @@ void zen_Parser_whileStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_forParameters(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_ForParametersContext_t* context = zen_ForParametersContext_new(node);
 
@@ -1524,7 +1525,7 @@ void zen_Parser_forParameters(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_ArrayList_add(context->m_identifiers, identifier);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1533,7 +1534,7 @@ void zen_Parser_forParameters(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_forStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
 	zen_ForStatementContext_t* context = zen_ForStatementContext_new(node);
 
@@ -1561,7 +1562,7 @@ void zen_Parser_forStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
 		zen_Parser_elseClause(parser, elseClause);
 	}
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1570,7 +1571,7 @@ void zen_Parser_forStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_tryStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_TryStatementContext_t* context = zen_TryStatementContext_new(node);
 
@@ -1600,7 +1601,7 @@ void zen_Parser_tryStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
 		// Syntax Error: Try clause without catch or finally.
 	}
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1609,7 +1610,7 @@ void zen_Parser_tryStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_tryClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_TryClauseContext_t* context = zen_TryClauseContext_new(node);
 
@@ -1620,7 +1621,7 @@ void zen_Parser_tryClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
     context->m_statementSuite = statementSuite;
 	zen_Parser_statementSuite(parser, statementSuite);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /* I am in a dilemma. Which one of the following constructs is the best?!
@@ -1637,7 +1638,7 @@ void zen_Parser_tryClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_catchClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_CatchClauseContext_t* context = zen_CatchClauseContext_new(node);
 
@@ -1655,7 +1656,7 @@ void zen_Parser_catchClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
     context->m_statementSuite = statementSuite;
     zen_Parser_statementSuite(parser, statementSuite);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1664,7 +1665,7 @@ void zen_Parser_catchClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_catchFilter(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_CatchFilterContext_t* context = zen_CatchFilterContext_new(node);
 
@@ -1681,7 +1682,7 @@ void zen_Parser_catchFilter(zen_Parser_t* parser, zen_ASTNode_t* node) {
 		zen_Parser_typeName(parser, typeName);
 	}
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1690,7 +1691,7 @@ void zen_Parser_catchFilter(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_typeName(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_TypeNameContext_t* context = zen_TypeNameContext_new(node);
 
@@ -1707,7 +1708,7 @@ void zen_Parser_typeName(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_ArrayList_add(context->m_identifiers, identifier);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /* TODO: We are invoking consume() instead of match() at certain locations.
@@ -1719,7 +1720,7 @@ void zen_Parser_typeName(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_finallyClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_FinallyClauseContext_t* context = zen_FinallyClauseContext_new(node);
 
@@ -1730,7 +1731,7 @@ void zen_Parser_finallyClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
     context->m_statementSuite = statementSuite;
 	zen_Parser_statementSuite(parser, statementSuite);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1739,7 +1740,7 @@ void zen_Parser_finallyClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_synchronizeStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_SynchronizeStatementContext_t* context = zen_SynchronizeStatementContext_new(node);
 
@@ -1754,7 +1755,7 @@ void zen_Parser_synchronizeStatement(zen_Parser_t* parser, zen_ASTNode_t* node) 
     context->m_statementSuite = statementSuite;
     zen_Parser_statementSuite(parser, statementSuite);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1764,7 +1765,7 @@ void zen_Parser_synchronizeStatement(zen_Parser_t* parser, zen_ASTNode_t* node) 
  * ;
  */
 void zen_Parser_withStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_WithStatementContext_t* context = zen_WithStatementContext_new(node);
 
@@ -1779,7 +1780,7 @@ void zen_Parser_withStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
     context->m_statementSuite = statementSuite;
     zen_Parser_statementSuite(parser, statementSuite);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /* TODO: At many locations I have forgotten to consume and discard a token.
@@ -1791,7 +1792,7 @@ void zen_Parser_withStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_classDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_ClassDeclarationContext_t* context = zen_ClassDeclarationContext_new(node);
 
@@ -1811,7 +1812,7 @@ void zen_Parser_classDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
     context->m_classSuite = classSuite;
     zen_Parser_classSuite(parser, classSuite);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1820,7 +1821,7 @@ void zen_Parser_classDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_classExtendsClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_ClassExtendsClauseContext_t* context = zen_ClassExtendsClauseContext_new(node);
 
@@ -1840,7 +1841,7 @@ void zen_Parser_classExtendsClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_Parser_typeName(parser, typeName);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -1849,7 +1850,7 @@ void zen_Parser_classExtendsClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_classSuite(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_ClassSuiteContext_t* context = zen_ClassSuiteContext_new(node);
 
@@ -1867,7 +1868,7 @@ void zen_Parser_classSuite(zen_Parser_t* parser, zen_ASTNode_t* node) {
     /* Match and discard the dedent token. */
     zen_Parser_match(parser, ZEN_TOKEN_DEDENTATION);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 bool zen_Parser_isClassMemberFollow(zen_TokenType_t type) {
@@ -1898,7 +1899,7 @@ bool zen_Parser_isClassMemberFollow(zen_TokenType_t type) {
  * taken to avoid redundant nodes in the AST.
  */
 void zen_Parser_classMember(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_ClassMemberContext_t* context = zen_ClassMemberContext_new(node);
 
@@ -1970,7 +1971,7 @@ void zen_Parser_classMember(zen_Parser_t* parser, zen_ASTNode_t* node) {
         }
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 bool zen_Parser_isClassMemberModifier(zen_TokenType_t type) {
@@ -1987,7 +1988,7 @@ bool zen_Parser_isClassMemberModifier(zen_TokenType_t type) {
  *
  */
 // void zen_Parser_constructorDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
-//     jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+//     zen_StackTrace_enter();
 //
 //     zen_ConstructorDeclarationContext_t* context = zen_ConstructorDeclarationContext_new(node);
 //
@@ -2004,7 +2005,7 @@ bool zen_Parser_isClassMemberModifier(zen_TokenType_t type) {
 //     context->m_statementSuite = statementSuite;
 //     zen_Parser_statementSuite(parser, statementSuite);
 //
-//     jtk_StackTraceLogger_exit();
+//     zen_StackTrace_exit();
 // }
 
 /*
@@ -2013,7 +2014,7 @@ bool zen_Parser_isClassMemberModifier(zen_TokenType_t type) {
  * ;
  */
 void zen_Parser_enumerationDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_EnumerationDeclarationContext_t* context = zen_EnumerationDeclarationContext_new(node);
 
@@ -2033,7 +2034,7 @@ void zen_Parser_enumerationDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node
     context->m_enumerationSuite = enumerationSuite;
     zen_Parser_enumerationSuite(parser, enumerationSuite);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2042,7 +2043,7 @@ void zen_Parser_enumerationDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node
  * ;
  */
 void zen_Parser_enumerationBaseClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_EnumerationBaseClauseContext_t* context = zen_EnumerationBaseClauseContext_new(node);
 
@@ -2053,7 +2054,7 @@ void zen_Parser_enumerationBaseClause(zen_Parser_t* parser, zen_ASTNode_t* node)
     context->m_typeName = typeName;
     zen_Parser_typeName(parser, typeName);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2062,7 +2063,7 @@ void zen_Parser_enumerationBaseClause(zen_Parser_t* parser, zen_ASTNode_t* node)
  * ;
  */
 void zen_Parser_enumerationSuite(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_EnumerationSuiteContext_t* context = zen_EnumerationSuiteContext_new(node);
 
@@ -2081,7 +2082,7 @@ void zen_Parser_enumerationSuite(zen_Parser_t* parser, zen_ASTNode_t* node) {
     /* Match and discard the dedent token. */
     zen_Parser_match(parser, ZEN_TOKEN_DEDENTATION);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2090,7 +2091,7 @@ void zen_Parser_enumerationSuite(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_enumerate(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_EnumerateContext_t* context = zen_EnumerateContext_new(node);
 
@@ -2106,7 +2107,7 @@ void zen_Parser_enumerate(zen_Parser_t* parser, zen_ASTNode_t* node) {
     /* Match and discard the newline token. */
     zen_Parser_match(parser, ZEN_TOKEN_NEWLINE);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2115,7 +2116,7 @@ void zen_Parser_enumerate(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_expressions(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_ExpressionsContext_t* context = zen_ExpressionsContext_new(node);
 
@@ -2132,7 +2133,7 @@ void zen_Parser_expressions(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_Parser_expression(parser, expression);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2142,7 +2143,7 @@ void zen_Parser_expressions(zen_Parser_t* parser, zen_ASTNode_t* node) {
  *
  */
 void zen_Parser_expression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_ExpressionContext_t* context = zen_ExpressionContext_new(node);
 
@@ -2162,7 +2163,7 @@ bool zen_Parser_isExpressionFollow(zen_TokenType_t type) {
  *
  */
 void zen_Parser_assignmentExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_AssignmentExpressionContext_t* context = zen_AssignmentExpressionContext_new(node);
 
@@ -2181,7 +2182,7 @@ void zen_Parser_assignmentExpression(zen_Parser_t* parser, zen_ASTNode_t* node) 
         zen_Parser_assignmentExpression(parser, assignmentExpression);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2221,7 +2222,7 @@ bool zen_Parser_isAssignmentOperator(zen_TokenType_t type) {
  * ;
  */
 void zen_Parser_conditionalExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_ConditionalExpressionContext_t* context = zen_ConditionalExpressionContext_new(node);
 
@@ -2245,7 +2246,7 @@ void zen_Parser_conditionalExpression(zen_Parser_t* parser, zen_ASTNode_t* node)
         zen_Parser_conditionalExpression(parser, conditionalExpression);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2254,7 +2255,7 @@ void zen_Parser_conditionalExpression(zen_Parser_t* parser, zen_ASTNode_t* node)
  * ;
  */
 void zen_Parser_logicalOrExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_LogicalOrExpressionContext_t* context = zen_LogicalOrExpressionContext_new(node);
 
@@ -2271,7 +2272,7 @@ void zen_Parser_logicalOrExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_Parser_logicalOrExpression(parser, logicalOrExpression);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2280,7 +2281,7 @@ void zen_Parser_logicalOrExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_logicalAndExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_LogicalAndExpressionContext_t* context = zen_LogicalAndExpressionContext_new(node);
 
@@ -2299,7 +2300,7 @@ void zen_Parser_logicalAndExpression(zen_Parser_t* parser, zen_ASTNode_t* node) 
         zen_Parser_logicalAndExpression(parser, logicalAndExpression);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2308,7 +2309,7 @@ void zen_Parser_logicalAndExpression(zen_Parser_t* parser, zen_ASTNode_t* node) 
  * ;
  */
 void zen_Parser_inclusiveOrExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_InclusiveOrExpressionContext_t* context = zen_InclusiveOrExpressionContext_new(node);
 
@@ -2327,7 +2328,7 @@ void zen_Parser_inclusiveOrExpression(zen_Parser_t* parser, zen_ASTNode_t* node)
         zen_Parser_inclusiveOrExpression(parser, inclusiveOrExpression);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2336,7 +2337,7 @@ void zen_Parser_inclusiveOrExpression(zen_Parser_t* parser, zen_ASTNode_t* node)
  * ;
  */
 void zen_Parser_exclusiveOrExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_ExclusiveOrExpressionContext_t* context = zen_ExclusiveOrExpressionContext_new(node);
 
@@ -2355,7 +2356,7 @@ void zen_Parser_exclusiveOrExpression(zen_Parser_t* parser, zen_ASTNode_t* node)
         zen_Parser_exclusiveOrExpression(parser, exclusiveOrExpression);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2364,7 +2365,7 @@ void zen_Parser_exclusiveOrExpression(zen_Parser_t* parser, zen_ASTNode_t* node)
  * ;
  */
 void zen_Parser_andExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_AndExpressionContext_t* context = zen_AndExpressionContext_new(node);
 
@@ -2383,7 +2384,7 @@ void zen_Parser_andExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_Parser_andExpression(parser, andExpression);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2392,7 +2393,7 @@ void zen_Parser_andExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_equalityExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_EqualityExpressionContext_t* context = zen_EqualityExpressionContext_new(node);
 
@@ -2414,7 +2415,7 @@ void zen_Parser_equalityExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_Parser_equalityExpression(parser, equalityExpression);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2434,7 +2435,7 @@ bool zen_Parser_isEqualityOperator(zen_TokenType_t type) {
  * ;
  */
 void zen_Parser_relationalExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_RelationalExpressionContext_t* context = zen_RelationalExpressionContext_new(node);
 
@@ -2456,7 +2457,7 @@ void zen_Parser_relationalExpression(zen_Parser_t* parser, zen_ASTNode_t* node) 
         zen_Parser_relationalExpression(parser, relationalExpression);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2482,7 +2483,7 @@ bool zen_Parser_isRelationalOperator(zen_TokenType_t type) {
  * ;
  */
 void zen_Parser_shiftExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_ShiftExpressionContext_t* context = zen_ShiftExpressionContext_new(node);
 
@@ -2504,7 +2505,7 @@ void zen_Parser_shiftExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_Parser_shiftExpression(parser, shiftExpression);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2526,7 +2527,7 @@ bool zen_Parser_isShiftOperator(zen_TokenType_t type) {
  * ;
  */
 void zen_Parser_additiveExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_AdditiveExpressionContext_t* context = zen_AdditiveExpressionContext_new(node);
 
@@ -2548,7 +2549,7 @@ void zen_Parser_additiveExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_Parser_additiveExpression(parser, additiveExpression);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2568,7 +2569,7 @@ bool zen_Parser_isAdditiveOperator(zen_TokenType_t type) {
  * ;
  */
 void zen_Parser_multiplicativeExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_MultiplicativeExpressionContext_t* context = zen_MultiplicativeExpressionContext_new(node);
 
@@ -2590,7 +2591,7 @@ void zen_Parser_multiplicativeExpression(zen_Parser_t* parser, zen_ASTNode_t* no
         zen_Parser_multiplicativeExpression(parser, multiplicativeExpression);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2613,7 +2614,7 @@ bool zen_Parser_isMultiplicativeOperator(zen_TokenType_t type) {
  * ;
  */
 void zen_Parser_unaryExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_UnaryExpressionContext_t* context = zen_UnaryExpressionContext_new(node);
 
@@ -2638,7 +2639,7 @@ void zen_Parser_unaryExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
         // Syntax Error: Expected ...
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 bool zen_Parser_isUnaryExpressionFollow(zen_TokenType_t type) {
@@ -2680,7 +2681,7 @@ bool zen_Parser_isUnaryOperator(zen_TokenType_t type) {
  * taken to avoid redundant nodes in the AST.
  */
 void zen_Parser_postfixExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_PostfixExpressionContext_t* context = zen_PostfixExpressionContext_new(node);
 
@@ -2723,7 +2724,7 @@ void zen_Parser_postfixExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
         la1 = zen_TokenStream_la(parser->m_tokens, 1);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 bool zen_Parser_isPostfixExpressionFollow(zen_TokenType_t type) {
@@ -2744,7 +2745,7 @@ bool zen_Parser_isPostfixPartFollow(zen_TokenType_t type) {
  * ;
  */
 void zen_Parser_subscript(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_SubscriptContext_t* context = zen_SubscriptContext_new(node);
 
@@ -2758,7 +2759,7 @@ void zen_Parser_subscript(zen_Parser_t* parser, zen_ASTNode_t* node) {
     /* Match and discard the ']' token. */
     zen_Parser_match(parser, ZEN_TOKEN_RIGHT_SQUARE_BRACKET);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2767,7 +2768,7 @@ void zen_Parser_subscript(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_functionArguments(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_FunctionArgumentsContext_t* context = zen_FunctionArgumentsContext_new(node);
 
@@ -2783,7 +2784,7 @@ void zen_Parser_functionArguments(zen_Parser_t* parser, zen_ASTNode_t* node) {
     /* Match and discard the ')' token. */
     zen_Parser_match(parser, ZEN_TOKEN_RIGHT_PARENTHESIS);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2792,7 +2793,7 @@ void zen_Parser_functionArguments(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_memberAccess(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_MemberAccessContext_t* context = zen_MemberAccessContext_new(node);
 
@@ -2802,7 +2803,7 @@ void zen_Parser_memberAccess(zen_Parser_t* parser, zen_ASTNode_t* node) {
     zen_Token_t* identifier = zen_Parser_matchAndYield(parser, ZEN_TOKEN_IDENTIFIER);
     context->m_identifier = zen_Parser_newTerminalNode(node, identifier);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2812,7 +2813,7 @@ void zen_Parser_memberAccess(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_postfixOperator(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_PostfixOperatorContext_t* context = zen_PostfixOperatorContext_new(node);
 
@@ -2832,7 +2833,7 @@ void zen_Parser_postfixOperator(zen_Parser_t* parser, zen_ASTNode_t* node) {
         }
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -2859,7 +2860,7 @@ void zen_Parser_postfixOperator(zen_Parser_t* parser, zen_ASTNode_t* node) {
  *
  */
 void zen_Parser_primaryExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_PrimaryExpressionContext_t* context = zen_PrimaryExpressionContext_new(node);
     zen_TokenType_t la1 = zen_TokenStream_la(parser->m_tokens, 1);
@@ -2922,7 +2923,7 @@ void zen_Parser_primaryExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
         }
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 bool zen_Parser_isPrimaryExpressionFollow(zen_TokenType_t type) {
@@ -2977,7 +2978,7 @@ bool zen_Parser_isLiteralFollow(zen_TokenType_t type) {
  *		 Simply use the isExpressionFollow() function.
  */
 void zen_Parser_mapExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
 	zen_MapExpressionContext_t* context = zen_MapExpressionContext_new(node);
 
@@ -2993,7 +2994,7 @@ void zen_Parser_mapExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
     /* Match and discard the '}' token. */
     zen_Parser_match(parser, ZEN_TOKEN_RIGHT_BRACE);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -3002,7 +3003,7 @@ void zen_Parser_mapExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_mapEntries(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_MapEntriesContext_t* context = zen_MapEntriesContext_new(node);
 
@@ -3019,7 +3020,7 @@ void zen_Parser_mapEntries(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_Parser_mapEntry(parser, mapEntry);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -3028,7 +3029,7 @@ void zen_Parser_mapEntries(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_mapEntry(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_MapEntryContext_t* context = zen_MapEntryContext_new(node);
 
@@ -3043,7 +3044,7 @@ void zen_Parser_mapEntry(zen_Parser_t* parser, zen_ASTNode_t* node) {
     context->m_valueExpression = valueExpression;
     zen_Parser_expression(parser, valueExpression);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -3052,7 +3053,7 @@ void zen_Parser_mapEntry(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_listExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_ListExpressionContext_t* context = zen_ListExpressionContext_new(node);
 
@@ -3068,7 +3069,7 @@ void zen_Parser_listExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
     /* Match and discard the ']' token. */
     zen_Parser_match(parser, ZEN_TOKEN_RIGHT_SQUARE_BRACKET);
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 /*
@@ -3077,7 +3078,7 @@ void zen_Parser_listExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * ;
  */
 void zen_Parser_newExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    jtk_StackTraceLogger_enter(ZEN_PARSER_TAG);
+    zen_StackTrace_enter();
 
     zen_NewExpressionContext_t* context = zen_NewExpressionContext_new(node);
 
@@ -3094,7 +3095,7 @@ void zen_Parser_newExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_Parser_functionArguments(parser, functionArguments);
     }
 
-    jtk_StackTraceLogger_exit();
+    zen_StackTrace_exit();
 }
 
 // TODO: recover(IMPORT_DECLARATION_RECOVERY_SET);

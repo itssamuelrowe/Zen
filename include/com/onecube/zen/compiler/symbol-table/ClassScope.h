@@ -37,7 +37,7 @@ typedef struct zen_ClassSymbol_t zen_ClassSymbol_t;
  */
 struct zen_ClassScope_t {
     zen_Scope_t* m_scope;
-    zen_HashMap_t* m_symbols;
+    jtk_HashMap_t* m_symbols;
     zen_Symbol_t* m_classSymbol;
 };
 

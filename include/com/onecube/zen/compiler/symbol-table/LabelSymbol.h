@@ -20,7 +20,7 @@
 #define COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_LABEL_SYMBOL_H
 
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
-#include <com/onecube/zen/st/Symbol.h>
+#include <com/onecube/zen/compiler/symbol-table/Symbol.h>
 
 /*******************************************************************************
  * LabelSymbol                                                                 *

@@ -16,12 +16,13 @@
 
 // Sunday, March 11, 2018
 
-#include <com/onecube/zen/st/SymbolResolutionListener.h>
-#include <com/onecube/zen/Token.h>
-#include <com/onecube/zen/Context.h>
-#include <com/onecube/zen/collection/LinkedStack.h>
-#include <com/onecube/zen/st/FunctionSymbol.h>
-#include <com/onecube/zen/st/ClassSymbol.h>
+#include <jtk/collection/stack/LinkedStack.h>
+
+#include <com/onecube/zen/compiler/lexer/Token.h>
+#include <com/onecube/zen/compiler/ast/context/Context.h>
+#include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/SymbolResolutionListener.h>
 
 zen_SymbolResolutionListener_t* zen_SymbolResolutionListener_new(zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes) {
     zen_SymbolResolutionListener_t* listener = zen_Memory_allocate(zen_SymbolResolutionListener_t, 1);
@@ -288,7 +289,7 @@ void zen_SymbolResolutionListener_onEnterPrimaryExpression(zen_ASTListener_t* as
     zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
     zen_PrimaryExpressionContext_t* primaryExpressionContext = (zen_PrimaryExpressionContext_t*)node->m_context;
 
-    if (primaryExpressionContext->m_expression->m_type == ZEN_AST_NODE_TERMINAL) {
+    if (primaryExpressionContext->m_expression->m_type == ZEN_AST_NODE_TYPE_TERMINAL) {
         zen_Token_t* identifierToken = (zen_Token_t*)primaryExpressionContext->m_expression->m_context;
         if (zen_Token_getType(identifierToken) == ZEN_TOKEN_IDENTIFIER) {
             const uint8_t* identifierText = zen_Token_getText(identifierToken);

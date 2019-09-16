@@ -16,7 +16,7 @@
 
 // Saturday, February 24, 2018
 
-#include <com/onecube/zen/st/ClassSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
 
 /*******************************************************************************
  * ClassSymbol                                                                 *

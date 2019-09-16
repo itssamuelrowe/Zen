@@ -19,6 +19,7 @@
 #ifndef ZEN_SCOPE_H
 #define ZEN_SCOPE_H
 
+#include <jtk/core/String.h>
 #include <jtk/collection/map/HashMap.h>
 
 #include <com/onecube/zen/compiler/symbol-table/ScopeType.h>

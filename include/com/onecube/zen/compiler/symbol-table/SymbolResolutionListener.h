@@ -19,9 +19,9 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_SYMBOL_RESOLUTION_LISTENER_H
 #define COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_SYMBOL_RESOLUTION_LISTENER_H
 
-#include <com/onecube/zen/compiler/ast/Listener.h>
+#include <com/onecube/zen/compiler/ast/ASTAnnotations.h>
+#include <com/onecube/zen/compiler/ast/ASTListener.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
-#include <com/onecube/zen/compiler/ast//ASTAnnotations.h>
 
 /*******************************************************************************
  * SymbolResolutionListener                                                    *

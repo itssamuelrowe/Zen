@@ -16,12 +16,13 @@
 
 // Monday, January 08, 2018
 
-#include <com/onecube/zen/st/ClassScope.h>
-#include <com/onecube/zen/st/ClassSymbol.h>
 #include <jtk/collection/list/ArrayList.h>
-#include <com/onecube/zen/collection/LinkedStack.h>
-#include <com/onecube/zen/core/StringObjectAdapter.h>
-#include <com/onecube/zen/Token.h>
+#include <jtk/collection/stack/LinkedStack.h>
+#include <jtk/core/StringObjectAdapter.h>
+
+#include <com/onecube/zen/compiler/lexer/Token.h>
+#include <com/onecube/zen/compiler/symbol-table/ClassScope.h>
+#include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
 
 static const char* zen_ClassScope_name = "class";
 

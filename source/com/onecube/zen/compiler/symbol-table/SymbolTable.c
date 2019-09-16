@@ -16,17 +16,18 @@
 
 // Sunday, January 07, 2018
 
-#include <com/onecube/zen/collection/LinkedStack.h>
-#include <com/onecube/zen/st/SymbolTable.h>
-#include <com/onecube/zen/st/AnnotationSymbol.h>
-#include <com/onecube/zen/st/ClassSymbol.h>
-#include <com/onecube/zen/st/FunctionSymbol.h>
-#include <com/onecube/zen/st/EnumerationSymbol.h>
-#include <com/onecube/zen/st/MemberConstantSymbol.h>
-#include <com/onecube/zen/st/MemberClassSymbol.h>
-#include <com/onecube/zen/st/MemberEnumerationSymbol.h>
-#include <com/onecube/zen/st/FunctionSymbol.h>
-#include <com/onecube/zen/st/MemberVariableSymbol.h>
+#include <jtk/collection/stack/LinkedStack.h>
+
+#include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
+#include <com/onecube/zen/compiler/symbol-table/AnnotationSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/EnumerationSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/MemberConstantSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/MemberClassSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/MemberEnumerationSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/MemberVariableSymbol.h>
 
 zen_SymbolTable_t* zen_SymbolTable_new() {
     zen_SymbolTable_t* symbolTable = zen_Memory_allocate(zen_SymbolTable_t, 1);

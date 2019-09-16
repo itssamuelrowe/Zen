@@ -64,3 +64,5 @@ void zen_ClassDeclarationContext_delete(zen_ClassDeclarationContext_t* context);
  * @memberof ClassDeclarationContext
  */
 void zen_ClassDeclarationContext_getChildren(zen_ClassDeclarationContext_t* context, jtk_ArrayList_t* children);
+
+#endif /* COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_CLASS_DECLARATION_CONTEXT_H */

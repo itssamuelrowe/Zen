@@ -14,24 +14,25 @@
  * limitations under the License.
  */
 
-#include <com/onecube/zen/compiler/astNode.h>
-#include <com/onecube/zen/Token.h>
-#include <com/onecube/zen/collection/LinkedStack.h>
-#include <com/onecube/zen/st/ClassScope.h>
-#include <com/onecube/zen/st/FunctionSignature.h>
-#include <com/onecube/zen/st/FunctionSymbol.h>
-#include <com/onecube/zen/st/SymbolDefinitionListener.h>
-#include <com/onecube/zen/st/SymbolTable.h>
-#include <com/onecube/zen/st/FunctionScope.h>
-#include <com/onecube/zen/st/ConstantSymbol.h>
-#include <com/onecube/zen/st/LocalScope.h>
-#include <com/onecube/zen/st/VariableSymbol.h>
-#include <com/onecube/zen/st/LabelSymbol.h>
-#include <com/onecube/zen/st/ClassSymbol.h>
-#include <com/onecube/zen/st/EnumerationSymbol.h>
-#include <com/onecube/zen/st/EnumerationScope.h>
-#include <com/onecube/zen/st/CompilationUnitScope.h>
-#include <com/onecube/zen/st/EnumerateSymbol.h>
+#include <jtk/collection/stack/LinkedStack.h>
+
+#include <com/onecube/zen/compiler/ast/ASTNode.h>
+#include <com/onecube/zen/compiler/lexer/Token.h>
+#include <com/onecube/zen/compiler/symbol-table/ClassScope.h>
+#include <com/onecube/zen/compiler/symbol-table/FunctionSignature.h>
+#include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/SymbolDefinitionListener.h>
+#include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
+#include <com/onecube/zen/compiler/symbol-table/FunctionScope.h>
+#include <com/onecube/zen/compiler/symbol-table/ConstantSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/LocalScope.h>
+#include <com/onecube/zen/compiler/symbol-table/VariableSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/LabelSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/EnumerationSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/EnumerationScope.h>
+#include <com/onecube/zen/compiler/symbol-table/CompilationUnitScope.h>
+#include <com/onecube/zen/compiler/symbol-table/EnumerateSymbol.h>
 
 void zen_ErrorHandler_reportError(void* handler, const char* message, zen_Token_t* token) {
     fprintf(stderr, "[error] %d:%d-%d: %s\n", token->m_startLine, token->m_startColumn, token->m_stopColumn, message);

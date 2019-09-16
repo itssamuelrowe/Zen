@@ -65,4 +65,4 @@ void zen_EnumerationSuiteContext_delete(zen_EnumerationSuiteContext_t* context);
  */
 void zen_EnumerationSuiteContext_getChildren(zen_EnumerationSuiteContext_t* context, jtk_ArrayList_t* children);
 
-#endif /* COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_ENUMERATION_SUITE_CONTEXT_H *
+#endif /* COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_ENUMERATION_SUITE_CONTEXT_H */

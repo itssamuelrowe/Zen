@@ -50,6 +50,7 @@
 #include <com/onecube/zen/compiler/ast/context/ImportDeclarationContext.h>
 #include <com/onecube/zen/compiler/ast/context/AnnotatedComponentDeclarationContext.h>
 #include <com/onecube/zen/compiler/ast/context/AnnotationContext.h>
+#include <com/onecube/zen/compiler/ast/context/AnnotationsContext.h>
 #include <com/onecube/zen/compiler/ast/context/AnnotationTypeContext.h>
 #include <com/onecube/zen/compiler/ast/context/AnnotationAttributeContext.h>
 #include <com/onecube/zen/compiler/ast/context/ComponentDeclarationContext.h>
@@ -57,6 +58,7 @@
 #include <com/onecube/zen/compiler/ast/context/FunctionParametersContext.h>
 #include <com/onecube/zen/compiler/ast/context/FunctionBodyContext.h>
 #include <com/onecube/zen/compiler/ast/context/StatementSuiteContext.h>
+#include <com/onecube/zen/compiler/ast/context/StatementContext.h>
 #include <com/onecube/zen/compiler/ast/context/SimpleStatementContext.h>
 #include <com/onecube/zen/compiler/ast/context/EmptyStatementContext.h>
 #include <com/onecube/zen/compiler/ast/context/VariableDeclarationContext.h>
@@ -98,6 +100,7 @@
 #include <com/onecube/zen/compiler/ast/context/AssignmentExpressionContext.h>
 #include <com/onecube/zen/compiler/ast/context/ConditionalExpressionContext.h>
 #include <com/onecube/zen/compiler/ast/context/LogicalAndExpressionContext.h>
+#include <com/onecube/zen/compiler/ast/context/LogicalOrExpressionContext.h>
 #include <com/onecube/zen/compiler/ast/context/InclusiveOrExpressionContext.h>
 #include <com/onecube/zen/compiler/ast/context/ExclusiveOrExpressionContext.h>
 #include <com/onecube/zen/compiler/ast/context/AndExpressionContext.h>
@@ -118,6 +121,7 @@
 #include <com/onecube/zen/compiler/ast/context/MapEntryContext.h>
 #include <com/onecube/zen/compiler/ast/context/ListExpressionContext.h>
 #include <com/onecube/zen/compiler/ast/context/NewExpressionContext.h>
+#include <com/onecube/zen/compiler/ast/context/TypeNameContext.h>
 
 #endif /* COM_ONECUBE_ZEN_COMPILER_COMPILER_AST_CONTEXT_CONTEXT_H */
 
