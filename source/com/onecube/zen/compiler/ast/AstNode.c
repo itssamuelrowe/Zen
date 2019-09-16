@@ -15,8 +15,8 @@
  */
 
 #include <stdio.h>
-#include <com/onecube/zen/compiler/astNode.h>
-#include <com/onecube/zen/Parser.h>
+#include <com/onecube/zen/compiler/ast/ASTNode.h>
+#include <com/onecube/zen/compiler/parser/Parser.h>
 
 /******************************************************************************
  * ASTNode																	  *
@@ -24,7 +24,7 @@
 
 zen_ASTNode_t* zen_ASTNode_new(zen_ASTNode_t* parent) {
     zen_ASTNode_t* node = zen_Memory_allocate(zen_ASTNode_t, 1);
-    node->m_type = ZEN_AST_NODE_UNKNOWN;
+    node->m_type = ZEN_AST_NODE_TYPE_UNKNOWN;
     node->m_context = NULL;
     node->m_parent = parent;
     node->m_children = NULL;
@@ -37,10 +37,10 @@ zen_ASTNode_t* zen_ASTNode_new(zen_ASTNode_t* parent) {
 void zen_ASTNode_delete(zen_ASTNode_t* node) {
     if (zen_ASTNode_isRule(node)) {
         jtk_ArrayList_t* children = zen_ASTNode_getChildren(node);
-        int32_t size = zen_ArrayList_getSize(children);
+        int32_t size = jtk_ArrayList_getSize(children);
         int32_t i;
         for (i = 0; i < size; i++) {
-            zen_ASTNode_t* child = (zen_ASTNode_t*)zen_ArrayList_get(children, i);
+            zen_ASTNode_t* child = (zen_ASTNode_t*)jtk_ArrayList_get(children, i);
             zen_ASTNode_delete(child);
         }
         node->m_contextDestructor(node->m_context);
@@ -73,12 +73,12 @@ bool zen_ASTNode_isErroneous(zen_ASTNode_t* node) {
 
 bool zen_ASTNode_isTerminal(zen_ASTNode_t* node) {
     jtk_Assert_assertObject(node, "The specified node is null.");
-    return node->m_type == ZEN_AST_NODE_TERMINAL;
+    return node->m_type == ZEN_AST_NODE_TYPE_TERMINAL;
 }
 
 bool zen_ASTNode_isRule(zen_ASTNode_t* node) {
     jtk_Assert_assertObject(node, "The specified node is null.");
-    return /* !node->m_erroneous && */ (node->m_type != ZEN_AST_NODE_TERMINAL);
+    return /* !node->m_erroneous && */ (node->m_type != ZEN_AST_NODE_TYPE_TERMINAL);
 }
 
 int32_t zen_ASTNode_getDepth(zen_ASTNode_t* node) {
@@ -98,7 +98,7 @@ jtk_ArrayList_t* zen_ASTNode_getChildren(zen_ASTNode_t* node) {
     jtk_Assert_assertObject(node, "The specified node is null.");
 
     if (node->m_children == NULL) {
-        node->m_children = zen_ArrayList_new();
+        node->m_children = jtk_ArrayList_new();
         node->m_enumerateContextChildren(node->m_context, node->m_children);
     }
     return node->m_children;

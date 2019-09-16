@@ -26,9 +26,9 @@
 #include <jtk/io/InputStream.h>
 
 #include <com/onecube/zen/Configuration.h>
-#include <com/onecube/zen/lexer/LexerError.h>
-#include <com/onecube/zen/lexer/Token.h>
-#include <com/onecube/zen/lexer/TokenChannel.h>
+#include <com/onecube/zen/compiler/lexer/LexerError.h>
+#include <com/onecube/zen/compiler/lexer/Token.h>
+#include <com/onecube/zen/compiler/lexer/TokenChannel.h>
 
 #define ZEN_LEXER_DEFAULT_CHANNEL 0
 #define ZEN_LEXER_HIDDEN_CHANNEL 1

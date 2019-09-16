@@ -17,7 +17,7 @@
 // Sunday, March 11, 2018
 
 #include <com/onecube/zen/compiler/ast/ASTPrinter.h>
-#include <com/onecube/zen/Parser.h>
+#include <com/onecube/zen/compiler/parser/Parser.h>
 
 zen_ASTPrinter_t* zen_ASTPrinter_new() {
     zen_ASTPrinter_t* listener = zen_Memory_allocate(zen_ASTPrinter_t, 1);

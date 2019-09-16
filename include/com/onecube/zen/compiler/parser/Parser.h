@@ -22,8 +22,8 @@
 #include <jtk/collection/list/ArrayList.h>
 
 #include <com/onecube/zen/Configuration.h>
-#include <com/onecube/zen/TokenStream.h>
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
+#include <com/onecube/zen/compiler/lexer/TokenStream.h>
 
 /*******************************************************************************
  * Parser                                                                      *

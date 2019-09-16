@@ -1,0 +1,18 @@
+function classify(input, samples, labels, k)
+    var distances = []
+    for var sample, label : samples, labels
+        var distance = DistanceMetric.findEuclideanDistance(input, sample)
+        distances.add({ 'distance' : distance, 'label' : label })
+    // Collections.sort(distances, @(value1, value2) -> value1.distance - value2.distance)
+    Collections.sort(distances, MapEntryComparator.naturalOrder().forKey('distance'))
+    var neighbours = {}
+    var max = null
+    for var record : records
+        neighbours[record.label] += record.distance
+        if max == null
+            max = record
+        else if max.distance < record.distance
+            max = record
+    
+    print(result.distance)
+

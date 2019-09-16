@@ -17,11 +17,11 @@
 // Wedensday, October 18, 2017
 
 #ifndef COM_ONECUBE_ZEN_COMPILER_LEXER_TOKEN_H
-#define COM_ONECUBE_ZEN_COMPILER_LEXER_ZEN_TOKEN_H
+#define COM_ONECUBE_ZEN_COMPILER_LEXER_TOKEN_H
 
 #include <com/onecube/zen/Configuration.h>
-#include <com/onecube/zen/TokenType.h>
-#include <com/onecube/zen/TokenChannel.h>
+#include <com/onecube/zen/compiler/lexer/TokenType.h>
+#include <com/onecube/zen/compiler/lexer/TokenChannel.h>
 
 /*******************************************************************************
  * Token                                                                       *
@@ -186,4 +186,4 @@ int32_t zen_Token_getIndex(zen_Token_t* token);
  */
 void zen_Token_setIndex(zen_Token_t* token, int32_t index);
 
-#endif /* COM_ONECUBE_ZEN_COMPILER_LEXER_ZEN_TOKEN_H */
+#endif /* COM_ONECUBE_ZEN_COMPILER_LEXER_TOKEN_H */

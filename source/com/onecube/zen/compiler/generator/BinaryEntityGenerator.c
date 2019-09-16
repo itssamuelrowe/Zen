@@ -365,7 +365,6 @@ void zen_BinaryEntityGenerator_onEnterCompilationUnit(zen_ASTListener_t* astList
     generator->m_secondaryChannel = zen_BinaryEntityBuilder_pushChannel(generator->m_builder);
 }
 
-
 // TODO: Delete constant pool entries in destructor!
 void zen_BinaryEntityGenerator_onExitCompilationUnit(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {

@@ -16,9 +16,10 @@
 
 // Saturday, April 28, 2018
 
-#include <com/onecube/zen/Token.h>
+#include <jtk/collection/stack/LinkedStack.h>
+
+#include <com/onecube/zen/compiler/lexer/Token.h>
 #include <com/onecube/zen/compiler/ast/ASTHelper.h>
-#include <com/onecube/zen/collection/LinkedStack.h>
 
 /*******************************************************************************
  * ASTHelper                                                                   *
@@ -77,11 +78,11 @@ void zen_ASTHelper_getFilteredTerminalNodes(zen_ASTNode_t* node, jtk_ArrayList_t
  
 void zen_ASTHelper_getNodes(zen_ASTNode_t* node, jtk_ArrayList_t* list,
     int32_t filter, bool captureTerminals, bool strip) {
-    zen_LinkedStack_t* stack = zen_LinkedStack_new();
-    zen_LinkedStack_push(stack, node);
+    jtk_LinkedStack_t* stack = jtk_LinkedStack_new();
+    jtk_LinkedStack_push(stack, node);
 
-    while (!zen_LinkedStack_isEmpty(stack)) {
-        zen_ASTNode_t* currentNode = (zen_ASTNode_t*)zen_LinkedStack_pop(stack);
+    while (!jtk_LinkedStack_isEmpty(stack)) {
+        zen_ASTNode_t* currentNode = (zen_ASTNode_t*)jtk_LinkedStack_pop(stack);
 
         if (zen_ASTNode_isTerminal(currentNode)) {
             if (captureTerminals) {
@@ -92,10 +93,10 @@ void zen_ASTHelper_getNodes(zen_ASTNode_t* node, jtk_ArrayList_t* list,
                 }
 
                 if (strip) {
-                    zen_ArrayList_add(list, token);
+                    jtk_ArrayList_add(list, token);
                 }
                 else {
-                    zen_ArrayList_add(list, currentNode);
+                    jtk_ArrayList_add(list, currentNode);
                 }
             }
         }
@@ -107,19 +108,19 @@ void zen_ASTHelper_getNodes(zen_ASTNode_t* node, jtk_ArrayList_t* list,
 
                 if (strip) {
                     void* context = currentNode->m_context;
-                    zen_ArrayList_add(list, context);
+                    jtk_ArrayList_add(list, context);
                 }
                 else {
-                    zen_ArrayList_add(list, currentNode);
+                    jtk_ArrayList_add(list, currentNode);
                 }
             }
 
             jtk_ArrayList_t* children = zen_ASTNode_getChildren(currentNode);
-            int32_t size = zen_ArrayList_getSize(children);
+            int32_t size = jtk_ArrayList_getSize(children);
             int32_t i;
             for (i = 0; i < size; i++) {
-                zen_ASTNode_t* child = (zen_ASTNode_t*)zen_ArrayList_get(children, i);
-                zen_LinkedStack_push(stack, child);
+                zen_ASTNode_t* child = (zen_ASTNode_t*)jtk_ArrayList_get(children, i);
+                jtk_LinkedStack_push(stack, child);
             }
         }
         // What happens to erroneous nodes?

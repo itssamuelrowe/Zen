@@ -1,0 +1,10 @@
+import zen.core.System.*
+import zen.fs.FileHelper.*
+
+function main(...arguments)
+    for var argument : arguments
+        try
+            for var line : readFile(argument).asLines()
+                print(line)
+        catch Exception exception
+            logError(exception)

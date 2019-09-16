@@ -19,11 +19,12 @@
 #ifndef ZEN_TOKEN_STREAM_H
 #define ZEN_TOKEN_STREAM_H
 
-#include <com/onecube/zen/Configuration.h>
 #include <jtk/collection/list/ArrayList.h>
-#include <com/onecube/zen/Lexer.h>
-#include <com/onecube/zen/Token.h>
-#include <com/onecube/zen/TokenType.h>
+
+#include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/compiler/lexer/Lexer.h>
+#include <com/onecube/zen/compiler/lexer/Token.h>
+#include <com/onecube/zen/compiler/lexer/TokenType.h>
 
 /*******************************************************************************
  * TokenStream                                                           *

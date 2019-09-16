@@ -16,7 +16,7 @@
 
 // Saturday, January 06, 2018
 
-#include <com/onecube/zen/compiler/astListener.h>
+#include <com/onecube/zen/compiler/ast/ASTListener.h>
 
 /*******************************************************************************
  * ASTListener                                                                 *
