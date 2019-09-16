@@ -16,10 +16,11 @@
 
 // Sunday, February 25, 2018
 
-#include <com/onecube/zen/st/CompilationUnitScope.h>
-#include <com/onecube/zen/core/StringObjectAdapter.h>
-#include <com/onecube/zen/CString.h>
-#include <com/onecube/zen/Token.h>
+#include <jtk/core/CString.h>
+#include <jtk/core/StringObjectAdapter.h>
+
+#include <com/onecube/zen/compiler/symbol-table/CompilationUnitScope.h>
+#include <com/onecube/zen/compiler/lexer/Token.h>
 
 /*******************************************************************************
  * CompilationUnitScope                                                        *
@@ -38,7 +39,7 @@ zen_CompilationUnitScope_t* zen_CompilationUnitScope_new() {
     /* The value adapter is null because the HashMap is not required to test
      * any values.
      */
-    compilationUnitScope->m_symbols = zen_HashMap_new(zen_StringObjectAdapter_getInstance(), NULL);
+    compilationUnitScope->m_symbols = jtk_HashMap_new(zen_StringObjectAdapter_getInstance(), NULL);
 
     return compilationUnitScope;
 }
@@ -47,7 +48,7 @@ void zen_CompilationUnitScope_delete(zen_CompilationUnitScope_t* scope) {
     jtk_Assert_assertObject(scope, "The specified scope is null.");
 
     zen_Scope_delete(scope->m_scope);
-    zen_HashMap_delete(scope->m_symbols);
+    jtk_HashMap_delete(scope->m_symbols);
     zen_Memory_deallocate(scope);
 }
 
@@ -70,5 +71,5 @@ void zen_CompilationUnitScope_define(zen_CompilationUnitScope_t* scope, zen_Symb
 zen_Symbol_t* zen_CompilationUnitScope_resolve(zen_CompilationUnitScope_t* scope, const uint8_t* identifier) {
     jtk_Assert_assertObject(scope, "The specified scope is null.");
 
-    return zen_HashMap_getValue(scope->m_symbols, (void*)identifier);
+    return jtk_HashMap_getValue(scope->m_symbols, (void*)identifier);
 }

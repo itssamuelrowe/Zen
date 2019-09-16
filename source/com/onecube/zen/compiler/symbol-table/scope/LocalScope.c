@@ -16,9 +16,10 @@
 
 // Tuesday, February 27, 2018
 
-#include <com/onecube/zen/core/StringObjectAdapter.h>
-#include <com/onecube/zen/st/LocalScope.h>
-#include <com/onecube/zen/Token.h>
+#include <jtk/core/StringObjectAdapter.h>
+
+#include <com/onecube/zen/compiler/lexer/Token.h>
+#include <com/onecube/zen/compiler/symbol-table/LocalScope.h>
 
 /*******************************************************************************
  * LocalScope                                                                  *

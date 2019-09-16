@@ -117,7 +117,7 @@ const uint8_t* zen_Scope_getName(zen_Scope_t* scope);
 /**
  * @memberof Scope
  */
-zen_Symbol_t* zen_Scope_resolve(zen_Scope_t* scope, jtk_String_t* identifier);
+zen_Symbol_t* zen_Scope_resolve(zen_Scope_t* scope, uint8_t* identifier);
 
 // Type
 

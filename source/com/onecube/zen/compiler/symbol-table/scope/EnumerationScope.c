@@ -16,12 +16,13 @@
 
 // Friday, March 09, 2018
 
-#include <com/onecube/zen/core/StringObjectAdapter.h>
 #include <jtk/collection/map/HashMap.h>
-#include <com/onecube/zen/st/Scope.h>
-#include <com/onecube/zen/st/EnumerationScope.h>
-#include <com/onecube/zen/st/Symbol.h>
-#include <com/onecube/zen/Token.h>
+#include <jtk/core/StringObjectAdapter.h>
+
+#include <com/onecube/zen/compiler/lexer/Token.h>
+#include <com/onecube/zen/compiler/symbol-table/Scope.h>
+#include <com/onecube/zen/compiler/symbol-table/EnumerationScope.h>
+#include <com/onecube/zen/compiler/symbol-table/Symbol.h>
 
 static const char* zen_EnumerationScope_name = "enumeration";
 

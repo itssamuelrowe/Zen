@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include <com/onecube/zen/CString.h>
-#include <com/onecube/zen/st/Scope.h>
+#include <jtk/core/CString.h>
+#include <com/onecube/zen/compiler/symbol-table/Scope.h>
 
 zen_Scope_t* zen_Scope_new(const uint8_t* name, zen_ScopeType_t type,
     zen_Scope_t* enclosingScope, void* context) {
@@ -63,7 +63,7 @@ void zen_Scope_define(zen_Scope_t* scope, zen_Symbol_t* symbol) {
     scope->m_defineSymbol(scope->m_context, symbol);
 }
 
-zen_Symbol_t* zen_Scope_resolve(zen_Scope_t* scope, const uint8_t* identifier) {
+zen_Symbol_t* zen_Scope_resolve(zen_Scope_t* scope, uint8_t* identifier) {
     return scope->m_resolveSymbol(scope->m_context, identifier);
 }
 

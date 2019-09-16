@@ -34,7 +34,7 @@ zen_ClassScope_t* zen_ClassScope_new(zen_Scope_t* enclosingScope) {
     scope->m_defineSymbol = (zen_Scope_DefineSymbolFunction_t)zen_ClassScope_define;
 
     classScope->m_scope = scope;
-    classScope->m_symbols = zen_HashMap_new(zen_StringObjectAdapter_getInstance(), NULL);
+    classScope->m_symbols = jtk_HashMap_new(zen_StringObjectAdapter_getInstance(), NULL);
     classScope->m_classSymbol = NULL;
 #warning "classScope->m_classSymbol must be set by the ClassSymbol class."
 
@@ -45,7 +45,7 @@ void zen_ClassScope_delete(zen_ClassScope_t* scope) {
     jtk_Assert_assertObject(scope, "The specified scope is null.");
 
     zen_Scope_delete(scope->m_scope);
-    zen_HashMap_delete(scope->m_symbols);
+    jtk_HashMap_delete(scope->m_symbols);
     zen_Memory_deallocate(scope);
 }
 
@@ -106,15 +106,15 @@ zen_Symbol_t* zen_ClassScope_resolve(zen_ClassScope_t* scope,
     zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)(zen_ClassScope_getClassSymbol(scope)->m_context);
     zen_Symbol_t* symbol = NULL;
 
-    zen_LinkedStack_t* stack = zen_LinkedStack_new();
+    jtk_LinkedStack_t* stack = jtk_LinkedStack_new();
     /* The things you have to do when you have no inheritance. (-__-) */
-    zen_LinkedStack_push(stack, classSymbol);
+    jtk_LinkedStack_push(stack, classSymbol);
 
-    while (!zen_LinkedStack_isEmpty(stack)) {
-        classSymbol = (zen_ClassSymbol_t*)zen_LinkedStack_pop(stack);
+    while (!jtk_LinkedStack_isEmpty(stack)) {
+        classSymbol = (zen_ClassSymbol_t*)jtk_LinkedStack_pop(stack);
         scope = (zen_ClassScope_t*)zen_ClassSymbol_getClassScope(classSymbol)->m_context;
 
-        symbol = (zen_Symbol_t*)zen_HashMap_getValue(scope->m_symbols, identifier);
+        symbol = (zen_Symbol_t*)jtk_HashMap_getValue(scope->m_symbols, identifier);
         if (symbol != NULL) {
             break;
         }
@@ -125,13 +125,13 @@ zen_Symbol_t* zen_ClassScope_resolve(zen_ClassScope_t* scope,
             for (i = 0; i < size; i++) {
                 zen_Symbol_t* rawSuperClassSymbol = zen_ArrayList_get(superClasses, i);
                 zen_ClassSymbol_t* superClassSymbol = (zen_ClassSymbol_t*)rawSuperClassSymbol->m_context;
-                zen_LinkedStack_push(stack, superClassSymbol);
+                jtk_LinkedStack_push(stack, superClassSymbol);
             }
         }
     }
 
     /* Destroy the stack; not required anymore. */
-    zen_LinkedStack_delete(stack);
+    jtk_LinkedStack_delete(stack);
 
     return symbol;
 }

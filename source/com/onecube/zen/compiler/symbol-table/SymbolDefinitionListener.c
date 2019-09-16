@@ -136,7 +136,7 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
         functionParametersContext = (zen_FunctionParametersContext_t*)functionDeclarationContext->m_functionParameters->m_context;
         fixedParameters = functionParametersContext->m_fixedParameters;
         variableParameter = functionParametersContext->m_variableParameter;
-        fixedParameterCount = zen_ArrayList_getSize(fixedParameters);
+        fixedParameterCount = jtk_ArrayList_getSize(fixedParameters);
     }
 
     /* Retrieve the symbol table associated with this listener. */
@@ -191,7 +191,7 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
 
     int32_t i;
     for (i = 0; i < fixedParameterCount; i++) {
-        zen_ASTNode_t* parameter = (zen_ASTNode_t*)zen_ArrayList_get(fixedParameters, i);
+        zen_ASTNode_t* parameter = (zen_ASTNode_t*)jtk_ArrayList_getValue(fixedParameters, i);
         const uint8_t* parameterText = zen_Token_getText((zen_Token_t*)(parameter->m_context));
         zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, parameterText);
         if (symbol != NULL) {
@@ -258,7 +258,7 @@ void zen_SymbolDefinitionListener_declareOverloadedFunction(zen_FunctionSymbol_t
     /* If currently there is no parameter threshold, try to update the
      * threshold.
      */
-    int32_t fixedParameterCount = (fixedParameters != NULL)? zen_ArrayList_getSize(fixedParameters) : 0;
+    int32_t fixedParameterCount = (fixedParameters != NULL)? jtk_ArrayList_getSize(fixedParameters) : 0;
     if (parameterThreshold < 0) {
         /* Update the threshold if the function being declared has a variable
          * parameter.
@@ -272,19 +272,19 @@ void zen_SymbolDefinitionListener_declareOverloadedFunction(zen_FunctionSymbol_t
     /* Retrieve the overloaded signatures of the function symbol. */
     jtk_ArrayList_t* signatures = zen_FunctionSymbol_getSignatures(functionSymbol);
     /* Determine the number of signatures. */
-    int32_t size = zen_ArrayList_getSize(signatures);
+    int32_t size = jtk_ArrayList_getSize(signatures);
     /* Iterate over the signatures to determine if the signature of the
      * function being declared to be unique, or not.
      */
     int32_t i;
     for (i = 0; i < size; i++) {
-        zen_FunctionSignature_t* signature = (zen_FunctionSignature_t*)zen_ArrayList_get(signatures, i);
+        zen_FunctionSignature_t* signature = (zen_FunctionSignature_t*)jtk_ArrayList_getValue(signatures, i);
         if ((signature->m_variableParameter != NULL) && (variableParameter != NULL)) {
             zen_ErrorHandler_reportError(NULL, "Multiple overloads with variable parameter", (zen_Token_t*)(variableParameter->m_context));
             error = true;
         }
         else {
-            int32_t fixedParameterCount0 = (signature->m_fixedParameters != NULL)? zen_ArrayList_getSize(signature->m_fixedParameters) : 0;
+            int32_t fixedParameterCount0 = (signature->m_fixedParameters != NULL)? jtk_ArrayList_getSize(signature->m_fixedParameters) : 0;
             /* Determine whether the function being declared was duplicately
              * overloaded, or not.
              */
@@ -342,7 +342,7 @@ void zen_SymbolDefinitionListener_declareFunction(zen_SymbolTable_t* symbolTable
     /* Create a member function symbol to store in the symbol table. */
     zen_FunctionSymbol_t* functionSymbol = zen_FunctionSymbol_new(identifier, symbolTable->m_currentScope);
     if (variableParameter != NULL) {
-        int32_t parameterThreshold = zen_ArrayList_getSize(fixedParameters);
+        int32_t parameterThreshold = jtk_ArrayList_getSize(fixedParameters);
         zen_FunctionSymbol_setParameterThreshold(functionSymbol, parameterThreshold);
     }
     /* In order to enable the symbol table to store overloaded functions,
@@ -387,10 +387,10 @@ void zen_SymbolDefinitionListener_onEnterVariableDeclaration(
     zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
     zen_VariableDeclarationContext_t* variableDeclarationContext = (zen_VariableDeclarationContext_t*)node->m_context;
 
-    int32_t size = zen_ArrayList_getSize(variableDeclarationContext->m_variableDeclarators);
+    int32_t size = jtk_ArrayList_getSize(variableDeclarationContext->m_variableDeclarators);
     int32_t i;
     for (i = 0; i < size; i++) {
-        zen_ASTNode_t* variableDeclarator = zen_ArrayList_get(variableDeclarationContext->m_variableDeclarators, i);
+        zen_ASTNode_t* variableDeclarator = jtk_ArrayList_getValue(variableDeclarationContext->m_variableDeclarators, i);
         zen_VariableDeclaratorContext_t* variableDeclaratorContext = (zen_VariableDeclaratorContext_t*)variableDeclarator->m_context;
 
         zen_ASTNode_t* identifier = variableDeclaratorContext->m_identifier;
@@ -416,10 +416,10 @@ void zen_SymbolDefinitionListener_onEnterConstantDeclaration(
     zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
     zen_ConstantDeclarationContext_t* constantDeclarationContext = (zen_ConstantDeclarationContext_t*)node->m_context;
 
-    int32_t size = zen_ArrayList_getSize(constantDeclarationContext->m_constantDeclarators);
+    int32_t size = jtk_ArrayList_getSize(constantDeclarationContext->m_constantDeclarators);
     int32_t i;
     for (i = 0; i < size; i++) {
-        zen_ASTNode_t* constantDeclarator = zen_ArrayList_get(constantDeclarationContext->m_constantDeclarators, i);
+        zen_ASTNode_t* constantDeclarator = jtk_ArrayList_getValue(constantDeclarationContext->m_constantDeclarators, i);
         zen_ConstantDeclaratorContext_t* constantDeclaratorContext = (zen_ConstantDeclaratorContext_t*)constantDeclarator->m_context;
 
         zen_ASTNode_t* identifier = constantDeclaratorContext->m_identifier;
@@ -470,10 +470,10 @@ void zen_SymbolDefinitionListener_onEnterForParameters(
     if (forParametersContext->m_declarator != NULL) {
         bool variable = zen_Token_getType((zen_Token_t*)forParametersContext->m_declarator->m_context) == ZEN_TOKEN_KEYWORD_VAR;
 
-        int32_t size = zen_ArrayList_getSize(forParametersContext->m_identifiers);
+        int32_t size = jtk_ArrayList_getSize(forParametersContext->m_identifiers);
         int32_t i;
         for (i = 0; i < size; i++) {
-            zen_ASTNode_t* identifier = (zen_ASTNode_t*)zen_ArrayList_get(forParametersContext->m_identifiers, i);
+            zen_ASTNode_t* identifier = (zen_ASTNode_t*)jtk_ArrayList_getValue(forParametersContext->m_identifiers, i);
             const uint8_t* identifierText = zen_Token_getText((zen_Token_t*)identifier->m_context);
 
             zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);

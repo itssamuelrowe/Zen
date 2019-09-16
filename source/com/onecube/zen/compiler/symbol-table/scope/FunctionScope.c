@@ -16,9 +16,10 @@
 
 // Tuesday, February 27, 2018
 
-#include <com/onecube/zen/st/FunctionScope.h>
-#include <com/onecube/zen/Token.h>
-#include <com/onecube/zen/CString.h>
+#include <jtk/core/CString.h>
+
+#include <com/onecube/zen/compiler/lexer/Token.h>
+#include <com/onecube/zen/compiler/symbol-table/FunctionScope.h>
 
 /*******************************************************************************
  * FunctionScope                                                               *
