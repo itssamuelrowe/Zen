@@ -5,8 +5,6 @@ Zen is a general purpose programming language designed to build simple, reliable
 ## Example
 
 ```python
-import zen.core.System.*
-
 function factorial(n)
     return n <= 1 then 1 else n * factorial(n - 1)
 
