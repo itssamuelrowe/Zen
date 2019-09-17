@@ -35,7 +35,7 @@ void zen_Scope_delete(zen_Scope_t* scope) {
     jtk_Assert_assertObject(scope, "The specified scope is null.");
 
     zen_String_delete(scope->m_name);
-    zen_Memory_deallocate(scope);
+    jtk_Memory_deallocate(scope);
 }
 
 bool zen_Scope_isEnumerationScope(zen_Scope_t* scope) {

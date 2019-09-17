@@ -46,7 +46,7 @@ void zen_ClassScope_delete(zen_ClassScope_t* scope) {
 
     zen_Scope_delete(scope->m_scope);
     jtk_HashMap_delete(scope->m_symbols);
-    zen_Memory_deallocate(scope);
+    jtk_Memory_deallocate(scope);
 }
 
 zen_Scope_t* zen_ClassScope_getScope(zen_ClassScope_t* scope) {

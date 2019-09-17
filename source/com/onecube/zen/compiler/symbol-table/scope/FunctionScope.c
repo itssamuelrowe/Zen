@@ -46,7 +46,7 @@ void zen_FunctionScope_delete(zen_FunctionScope_t* scope) {
 
     zen_Scope_delete(scope->m_scope);
     jtk_ArrayList_delete(scope->m_fixedParameters);
-    zen_Memory_deallocate(scope);
+    jtk_Memory_deallocate(scope);
 }
 
 zen_Scope_t* zen_FunctionScope_getScope(zen_FunctionScope_t* scope) {

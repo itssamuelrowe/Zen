@@ -35,7 +35,7 @@ void zen_InputStream_delete(zen_InputStream_t* stream) {
     jtk_Assert_assertObject(stream, "The specified input stream is null.");
     free(stream->m_path);
     fclose(stream->m_file);
-    zen_Memory_deallocate(stream);
+    jtk_Memory_deallocate(stream);
 }
 
 int32_t zen_InputStream_read(zen_InputStream_t* stream) {

@@ -29,5 +29,5 @@ zen_FunctionSignature_t* zen_FunctionSignature_new(jtk_ArrayList_t* fixedParamet
 
 void zen_FunctionSignature_delete(zen_FunctionSignature_t* signature) {
     jtk_Assert_assertObject(signature, "The specified signature is null.");
-    zen_Memory_deallocate(signature);
+    jtk_Memory_deallocate(signature);
 }

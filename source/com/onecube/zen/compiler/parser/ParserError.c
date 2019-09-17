@@ -32,5 +32,5 @@ void zen_ParserError_delete(zen_ParserError_t* error) {
         zen_String_delete(error->m_message);
     }
     
-    zen_Memory_deallocate(error);
+    jtk_Memory_deallocate(error);
 }

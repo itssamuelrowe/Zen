@@ -76,7 +76,7 @@ void zen_CompilationUnitContext_delete(zen_CompilationUnitContext_t* context) {
 
     jtk_ArrayList_delete(context->m_importDeclarations);
     jtk_ArrayList_delete(context->m_annotatedComponentDeclarations);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_CompilationUnitContext_getChildren(zen_CompilationUnitContext_t* context, jtk_ArrayList_t* children) {
@@ -108,7 +108,7 @@ void zen_ImportDeclarationContext_delete(zen_ImportDeclarationContext_t* context
     jtk_Assert_assertObject(context, "The specified context is null.");
 
     jtk_ArrayList_delete(context->m_identifiers);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ImportDeclarationContext_getChildren(zen_ImportDeclarationContext_t* context,
@@ -138,7 +138,7 @@ zen_AnnotatedComponentDeclarationContext_t* zen_AnnotatedComponentDeclarationCon
 
 void zen_AnnotatedComponentDeclarationContext_delete(zen_AnnotatedComponentDeclarationContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_AnnotatedComponentDeclarationContext_getChildren(zen_AnnotatedComponentDeclarationContext_t* context,
@@ -173,7 +173,7 @@ void zen_AnnotationsContext_delete(zen_AnnotationsContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
     jtk_ArrayList_delete(context->m_annotations);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_AnnotationsContext_getChildren(zen_AnnotationsContext_t* context,
@@ -205,7 +205,7 @@ void zen_AnnotationContext_delete(zen_AnnotationContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
     jtk_ArrayList_delete(context->m_annotationAttributes);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_AnnotationContext_getChildren(zen_AnnotationContext_t* context,
@@ -237,7 +237,7 @@ void zen_AnnotationTypeContext_delete(zen_AnnotationTypeContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
     jtk_ArrayList_delete(context->m_identifiers);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_AnnotationTypeContext_getChildren(zen_AnnotationTypeContext_t* context,
@@ -267,7 +267,7 @@ zen_AnnotationAttributeContext_t* zen_AnnotationAttributeContext_new(zen_ASTNode
 
 void zen_AnnotationAttributeContext_delete(zen_AnnotationAttributeContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_AnnotationAttributeContext_getChildren(zen_AnnotationAttributeContext_t* context,
@@ -297,7 +297,7 @@ zen_ComponentDeclarationContext_t* zen_ComponentDeclarationContext_new(zen_ASTNo
 
 void zen_ComponentDeclarationContext_delete(zen_ComponentDeclarationContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ComponentDeclarationContext_getChildren(zen_ComponentDeclarationContext_t* context,
@@ -328,7 +328,7 @@ zen_FunctionDeclarationContext_t* zen_FunctionDeclarationContext_new(zen_ASTNode
 
 void zen_FunctionDeclarationContext_delete(zen_FunctionDeclarationContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_FunctionDeclarationContext_getChildren(zen_FunctionDeclarationContext_t* context,
@@ -364,7 +364,7 @@ void zen_FunctionParametersContext_delete(zen_FunctionParametersContext_t* conte
     jtk_Assert_assertObject(context, "The specified object is null.");
 
     jtk_ArrayList_delete(context->m_fixedParameters);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_FunctionParametersContext_getChildren(zen_FunctionParametersContext_t* context,
@@ -396,7 +396,7 @@ zen_FunctionBodyContext_t* zen_FunctionBodyContext_new(zen_ASTNode_t* node) {
 
 void zen_FunctionBodyContext_delete(zen_FunctionBodyContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_FunctionBodyContext_getChildren(zen_FunctionBodyContext_t* context,
@@ -429,7 +429,7 @@ void zen_StatementSuiteContext_delete(zen_StatementSuiteContext_t* context) {
 
     jtk_ArrayList_delete(context->m_statements);
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_StatementSuiteContext_getChildren(zen_StatementSuiteContext_t* context,
@@ -463,7 +463,7 @@ zen_SimpleStatementContext_t* zen_SimpleStatementContext_new(zen_ASTNode_t* node
 
 void zen_SimpleStatementContext_delete(zen_SimpleStatementContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_SimpleStatementContext_getChildren(zen_SimpleStatementContext_t* context,
@@ -494,7 +494,7 @@ zen_StatementContext_t* zen_StatementContext_new(zen_ASTNode_t* node) {
 void zen_StatementContext_delete(zen_StatementContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_StatementContext_getChildren(zen_StatementContext_t* context,
@@ -527,7 +527,7 @@ zen_EmptyStatementContext_t* zen_EmptyStatementContext_new(zen_ASTNode_t* node) 
 
 void zen_EmptyStatementContext_delete(zen_EmptyStatementContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_EmptyStatementContext_getChildren(zen_EmptyStatementContext_t* context,
@@ -561,7 +561,7 @@ void zen_VariableDeclarationContext_delete(zen_VariableDeclarationContext_t* con
     jtk_Assert_assertObject(context, "The specified context is null.");
 
     jtk_ArrayList_delete(context->m_variableDeclarators);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 /*
@@ -599,7 +599,7 @@ zen_VariableDeclaratorContext_t* zen_VariableDeclaratorContext_new(zen_ASTNode_t
 void zen_VariableDeclaratorContext_delete(zen_VariableDeclaratorContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_VariableDeclaratorContext_getChildren(zen_VariableDeclaratorContext_t* context,
@@ -633,7 +633,7 @@ void zen_ConstantDeclarationContext_delete(zen_ConstantDeclarationContext_t* con
     jtk_Assert_assertObject(context, "The specified context is null.");
 
     jtk_ArrayList_delete(context->m_constantDeclarators);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ConstantDeclarationContext_getChildren(zen_ConstantDeclarationContext_t* context,
@@ -664,7 +664,7 @@ zen_ConstantDeclaratorContext_t* zen_ConstantDeclaratorContext_new(zen_ASTNode_t
 void zen_ConstantDeclaratorContext_delete(zen_ConstantDeclaratorContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ConstantDeclaratorContext_getChildren(zen_ConstantDeclaratorContext_t* context,
@@ -695,7 +695,7 @@ zen_AssertStatementContext_t* zen_AssertStatementContext_new(zen_ASTNode_t* node
 void zen_AssertStatementContext_delete(zen_AssertStatementContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_AssertStatementContext_getChildren(zen_AssertStatementContext_t* context,
@@ -724,7 +724,7 @@ zen_BreakStatementContext_t* zen_BreakStatementContext_new(zen_ASTNode_t* node) 
 
 void zen_BreakStatementContext_delete(zen_BreakStatementContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_BreakStatementContext_getChildren(zen_BreakStatementContext_t* context,
@@ -755,7 +755,7 @@ zen_ContinueStatementContext_t* zen_ContinueStatementContext_new(zen_ASTNode_t* 
 
 void zen_ContinueStatementContext_delete(zen_ContinueStatementContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ContinueStatementContext_getChildren(zen_ContinueStatementContext_t* context,
@@ -787,7 +787,7 @@ zen_ReturnStatementContext_t* zen_ReturnStatementContext_new(zen_ASTNode_t* node
 void zen_ReturnStatementContext_delete(zen_ReturnStatementContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ReturnStatementContext_getChildren(zen_ReturnStatementContext_t* context,
@@ -819,7 +819,7 @@ zen_ThrowStatementContext_t* zen_ThrowStatementContext_new(zen_ASTNode_t* node) 
 void zen_ThrowStatementContext_delete(zen_ThrowStatementContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ThrowStatementContext_getChildren(zen_ThrowStatementContext_t* context,
@@ -851,7 +851,7 @@ zen_CompoundStatementContext_t* zen_CompoundStatementContext_new(zen_ASTNode_t* 
 void zen_CompoundStatementContext_delete(zen_CompoundStatementContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_CompoundStatementContext_getChildren(zen_CompoundStatementContext_t* context,
@@ -888,7 +888,7 @@ void zen_IfStatementContext_delete(zen_IfStatementContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
     jtk_ArrayList_delete(context->m_elseIfClauses);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_IfStatementContext_getChildren(zen_IfStatementContext_t* context,
@@ -923,7 +923,7 @@ zen_IfClauseContext_t* zen_IfClauseContext_new(zen_ASTNode_t* node) {
 void zen_IfClauseContext_delete(zen_IfClauseContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_IfClauseContext_getChildren(zen_IfClauseContext_t* context,
@@ -955,7 +955,7 @@ zen_ElseIfClauseContext_t* zen_ElseIfClauseContext_new(zen_ASTNode_t* node) {
 void zen_ElseIfClauseContext_delete(zen_ElseIfClauseContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ElseIfClauseContext_getChildren(zen_ElseIfClauseContext_t* context,
@@ -986,7 +986,7 @@ zen_ElseClauseContext_t* zen_ElseClauseContext_new(zen_ASTNode_t* node) {
 void zen_ElseClauseContext_delete(zen_ElseClauseContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ElseClauseContext_getChildren(zen_ElseClauseContext_t* context,
@@ -1017,7 +1017,7 @@ zen_IterativeStatementContext_t* zen_IterativeStatementContext_new(zen_ASTNode_t
 void zen_IterativeStatementContext_delete(zen_IterativeStatementContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_IterativeStatementContext_getChildren(zen_IterativeStatementContext_t* context,
@@ -1049,7 +1049,7 @@ zen_LabelClauseContext_t* zen_LabelClauseContext_new(zen_ASTNode_t* node) {
 
 void zen_LabelClauseContext_delete(zen_LabelClauseContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_LabelClauseContext_getChildren(zen_LabelClauseContext_t* context,
@@ -1081,7 +1081,7 @@ zen_WhileStatementContext_t* zen_WhileStatementContext_new(zen_ASTNode_t* node) 
 void zen_WhileStatementContext_delete(zen_WhileStatementContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_WhileStatementContext_getChildren(zen_WhileStatementContext_t* context,
@@ -1118,7 +1118,7 @@ zen_ForStatementContext_t* zen_ForStatementContext_new(zen_ASTNode_t* node) {
 void zen_ForStatementContext_delete(zen_ForStatementContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ForStatementContext_getChildren(zen_ForStatementContext_t* context,
@@ -1155,7 +1155,7 @@ void zen_ForParametersContext_delete(zen_ForParametersContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
     jtk_ArrayList_delete(context->m_identifiers);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ForParametersContext_getChildren(zen_ForParametersContext_t* context,
@@ -1191,7 +1191,7 @@ void zen_TryStatementContext_delete(zen_TryStatementContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
     jtk_ArrayList_delete(context->m_catchClauses);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_TryStatementContext_getChildren(zen_TryStatementContext_t* context,
@@ -1225,7 +1225,7 @@ zen_TryClauseContext_t* zen_TryClauseContext_new(zen_ASTNode_t* node) {
 void zen_TryClauseContext_delete(zen_TryClauseContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_TryClauseContext_getChildren(zen_TryClauseContext_t* context,
@@ -1257,7 +1257,7 @@ zen_CatchClauseContext_t* zen_CatchClauseContext_new(zen_ASTNode_t* node) {
 void zen_CatchClauseContext_delete(zen_CatchClauseContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_CatchClauseContext_getChildren(zen_CatchClauseContext_t* context,
@@ -1290,7 +1290,7 @@ void zen_CatchFilterContext_delete(zen_CatchFilterContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
     jtk_ArrayList_delete(context->m_typeNames);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_CatchFilterContext_getChildren(zen_CatchFilterContext_t* context,
@@ -1321,7 +1321,7 @@ void zen_TypeNameContext_delete(zen_TypeNameContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
     jtk_ArrayList_delete(context->m_identifiers);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_TypeNameContext_getChildren(zen_TypeNameContext_t* context,
@@ -1351,7 +1351,7 @@ zen_FinallyClauseContext_t* zen_FinallyClauseContext_new(zen_ASTNode_t* node) {
 void zen_FinallyClauseContext_delete(zen_FinallyClauseContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_FinallyClauseContext_getChildren(zen_FinallyClauseContext_t* context,
@@ -1382,7 +1382,7 @@ zen_SynchronizeStatementContext_t* zen_SynchronizeStatementContext_new(zen_ASTNo
 void zen_SynchronizeStatementContext_delete(zen_SynchronizeStatementContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_SynchronizeStatementContext_getChildren(zen_SynchronizeStatementContext_t* context,
@@ -1414,7 +1414,7 @@ zen_WithStatementContext_t* zen_WithStatementContext_new(zen_ASTNode_t* node) {
 void zen_WithStatementContext_delete(zen_WithStatementContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_WithStatementContext_getChildren(zen_WithStatementContext_t* context,
@@ -1447,7 +1447,7 @@ zen_ClassDeclarationContext_t* zen_ClassDeclarationContext_new(zen_ASTNode_t* no
 void zen_ClassDeclarationContext_delete(zen_ClassDeclarationContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ClassDeclarationContext_getChildren(zen_ClassDeclarationContext_t* context,
@@ -1482,7 +1482,7 @@ void zen_ClassExtendsClauseContext_delete(zen_ClassExtendsClauseContext_t* conte
     jtk_Assert_assertObject(context, "The specified context is null.");
 
     jtk_ArrayList_delete(context->m_typeNames);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ClassExtendsClauseContext_getChildren(zen_ClassExtendsClauseContext_t* context,
@@ -1513,7 +1513,7 @@ void zen_ClassSuiteContext_delete(zen_ClassSuiteContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
     jtk_ArrayList_delete(context->m_classMembers);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ClassSuiteContext_getChildren(zen_ClassSuiteContext_t* context,
@@ -1545,7 +1545,7 @@ void zen_ClassMemberContext_delete(zen_ClassMemberContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
     jtk_ArrayList_delete(context->m_modifiers);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ClassMemberContext_getChildren(zen_ClassMemberContext_t* context,
@@ -1578,7 +1578,7 @@ void zen_ClassMemberContext_getChildren(zen_ClassMemberContext_t* context,
 // void zen_ConstructorDeclarationContext_delete(zen_ConstructorDeclarationContext_t* context) {
 //     jtk_Assert_assertObject(context, "The specified context is null.");
 
-//     zen_Memory_deallocate(context);
+//     jtk_Memory_deallocate(context);
 // }
 
 // void zen_ConstructorDeclarationContext_getChildren(zen_ConstructorDeclarationContext_t* context,
@@ -1615,7 +1615,7 @@ zen_EnumerationDeclarationContext_t* zen_EnumerationDeclarationContext_new(zen_A
 void zen_EnumerationDeclarationContext_delete(zen_EnumerationDeclarationContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_EnumerationDeclarationContext_getChildren(zen_EnumerationDeclarationContext_t* context,
@@ -1649,7 +1649,7 @@ zen_EnumerationBaseClauseContext_t* zen_EnumerationBaseClauseContext_new(zen_AST
 void zen_EnumerationBaseClauseContext_delete(zen_EnumerationBaseClauseContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_EnumerationBaseClauseContext_getChildren(zen_EnumerationBaseClauseContext_t* context,
@@ -1680,7 +1680,7 @@ void zen_EnumerationSuiteContext_delete(zen_EnumerationSuiteContext_t* context) 
     jtk_Assert_assertObject(context, "The specified context is null.");
 
     jtk_ArrayList_delete(context->m_enumerates);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_EnumerationSuiteContext_getChildren(zen_EnumerationSuiteContext_t* context,
@@ -1711,7 +1711,7 @@ zen_EnumerateContext_t* zen_EnumerateContext_new(zen_ASTNode_t* node) {
 void zen_EnumerateContext_delete(zen_EnumerateContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_EnumerateContext_getChildren(zen_EnumerateContext_t* context,
@@ -1745,7 +1745,7 @@ void zen_ExpressionsContext_delete(zen_ExpressionsContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
     jtk_ArrayList_delete(context->m_expressions);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ExpressionsContext_getChildren(zen_ExpressionsContext_t* context,
@@ -1775,7 +1775,7 @@ zen_ExpressionContext_t* zen_ExpressionContext_new(zen_ASTNode_t* node) {
 void zen_ExpressionContext_delete(zen_ExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ExpressionContext_getChildren(zen_ExpressionContext_t* context,
@@ -1807,7 +1807,7 @@ zen_AssignmentExpressionContext_t* zen_AssignmentExpressionContext_new(zen_ASTNo
 void zen_AssignmentExpressionContext_delete(zen_AssignmentExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_AssignmentExpressionContext_getChildren(zen_AssignmentExpressionContext_t* context,
@@ -1843,7 +1843,7 @@ zen_ConditionalExpressionContext_t* zen_ConditionalExpressionContext_new(zen_AST
 void zen_ConditionalExpressionContext_delete(zen_ConditionalExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ConditionalExpressionContext_getChildren(zen_ConditionalExpressionContext_t* context,
@@ -1878,7 +1878,7 @@ zen_LogicalOrExpressionContext_t* zen_LogicalOrExpressionContext_new(zen_ASTNode
 void zen_LogicalOrExpressionContext_delete(zen_LogicalOrExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_LogicalOrExpressionContext_getChildren(zen_LogicalOrExpressionContext_t* context,
@@ -1910,7 +1910,7 @@ zen_LogicalAndExpressionContext_t* zen_LogicalAndExpressionContext_new(zen_ASTNo
 void zen_LogicalAndExpressionContext_delete(zen_LogicalAndExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_LogicalAndExpressionContext_getChildren(zen_LogicalAndExpressionContext_t* context,
@@ -1942,7 +1942,7 @@ zen_InclusiveOrExpressionContext_t* zen_InclusiveOrExpressionContext_new(zen_AST
 void zen_InclusiveOrExpressionContext_delete(zen_InclusiveOrExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_InclusiveOrExpressionContext_getChildren(zen_InclusiveOrExpressionContext_t* context,
@@ -1974,7 +1974,7 @@ zen_ExclusiveOrExpressionContext_t* zen_ExclusiveOrExpressionContext_new(zen_AST
 void zen_ExclusiveOrExpressionContext_delete(zen_ExclusiveOrExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ExclusiveOrExpressionContext_getChildren(zen_ExclusiveOrExpressionContext_t* context,
@@ -2006,7 +2006,7 @@ zen_AndExpressionContext_t* zen_AndExpressionContext_new(zen_ASTNode_t* node) {
 void zen_AndExpressionContext_delete(zen_AndExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_AndExpressionContext_getChildren(zen_AndExpressionContext_t* context,
@@ -2039,7 +2039,7 @@ zen_EqualityExpressionContext_t* zen_EqualityExpressionContext_new(zen_ASTNode_t
 void zen_EqualityExpressionContext_delete(zen_EqualityExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_EqualityExpressionContext_getChildren(zen_EqualityExpressionContext_t* context,
@@ -2073,7 +2073,7 @@ zen_RelationalExpressionContext_t* zen_RelationalExpressionContext_new(zen_ASTNo
 void zen_RelationalExpressionContext_delete(zen_RelationalExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_RelationalExpressionContext_getChildren(zen_RelationalExpressionContext_t* context,
@@ -2107,7 +2107,7 @@ zen_ShiftExpressionContext_t* zen_ShiftExpressionContext_new(zen_ASTNode_t* node
 void zen_ShiftExpressionContext_delete(zen_ShiftExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ShiftExpressionContext_getChildren(zen_ShiftExpressionContext_t* context,
@@ -2141,7 +2141,7 @@ zen_AdditiveExpressionContext_t* zen_AdditiveExpressionContext_new(zen_ASTNode_t
 void zen_AdditiveExpressionContext_delete(zen_AdditiveExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_AdditiveExpressionContext_getChildren(zen_AdditiveExpressionContext_t* context,
@@ -2177,7 +2177,7 @@ zen_MultiplicativeExpressionContext_t* zen_MultiplicativeExpressionContext_new(z
 void zen_MultiplicativeExpressionContext_delete(zen_MultiplicativeExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_MultiplicativeExpressionContext_getChildren(zen_MultiplicativeExpressionContext_t* context,
@@ -2213,7 +2213,7 @@ zen_UnaryExpressionContext_t* zen_UnaryExpressionContext_new(zen_ASTNode_t* node
 void zen_UnaryExpressionContext_delete(zen_UnaryExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_UnaryExpressionContext_getChildren(zen_UnaryExpressionContext_t* context,
@@ -2251,7 +2251,7 @@ void zen_PostfixExpressionContext_delete(zen_PostfixExpressionContext_t* context
     jtk_Assert_assertObject(context, "The specified context is null.");
 
     jtk_ArrayList_delete(context->m_postfixParts);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_PostfixExpressionContext_getChildren(zen_PostfixExpressionContext_t* context,
@@ -2282,7 +2282,7 @@ zen_SubscriptContext_t* zen_SubscriptContext_new(zen_ASTNode_t* node) {
 void zen_SubscriptContext_delete(zen_SubscriptContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_SubscriptContext_getChildren(zen_SubscriptContext_t* context,
@@ -2312,7 +2312,7 @@ zen_FunctionArgumentsContext_t* zen_FunctionArgumentsContext_new(zen_ASTNode_t* 
 void zen_FunctionArgumentsContext_delete(zen_FunctionArgumentsContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_FunctionArgumentsContext_getChildren(zen_FunctionArgumentsContext_t* context,
@@ -2344,7 +2344,7 @@ zen_MemberAccessContext_t* zen_MemberAccessContext_new(zen_ASTNode_t* node) {
 void zen_MemberAccessContext_delete(zen_MemberAccessContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_MemberAccessContext_getChildren(zen_MemberAccessContext_t* context,
@@ -2373,7 +2373,7 @@ zen_PostfixOperatorContext_t* zen_PostfixOperatorContext_new(zen_ASTNode_t* node
 
 void zen_PostfixOperatorContext_delete(zen_PostfixOperatorContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_PostfixOperatorContext_getChildren(zen_PostfixOperatorContext_t* context,
@@ -2401,7 +2401,7 @@ zen_PrimaryExpressionContext_t* zen_PrimaryExpressionContext_new(zen_ASTNode_t* 
 
 void zen_PrimaryExpressionContext_delete(zen_PrimaryExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_PrimaryExpressionContext_getChildren(zen_PrimaryExpressionContext_t* context, jtk_ArrayList_t* children) {
@@ -2430,7 +2430,7 @@ zen_MapExpressionContext_t* zen_MapExpressionContext_new(zen_ASTNode_t* node) {
 void zen_MapExpressionContext_delete(zen_MapExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_MapExpressionContext_getChildren(zen_MapExpressionContext_t* context,
@@ -2461,7 +2461,7 @@ void zen_MapEntriesContext_delete(zen_MapEntriesContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
     jtk_ArrayList_delete(context->m_mapEntries);
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_MapEntriesContext_getChildren(zen_MapEntriesContext_t* context,
@@ -2492,7 +2492,7 @@ zen_MapEntryContext_t* zen_MapEntryContext_new(zen_ASTNode_t* node) {
 void zen_MapEntryContext_delete(zen_MapEntryContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_MapEntryContext_getChildren(zen_MapEntryContext_t* context,
@@ -2523,7 +2523,7 @@ zen_ListExpressionContext_t* zen_ListExpressionContext_new(zen_ASTNode_t* node) 
 void zen_ListExpressionContext_delete(zen_ListExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_ListExpressionContext_getChildren(zen_ListExpressionContext_t* context,
@@ -2554,7 +2554,7 @@ zen_NewExpressionContext_t* zen_NewExpressionContext_new(zen_ASTNode_t* node) {
 void zen_NewExpressionContext_delete(zen_NewExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    zen_Memory_deallocate(context);
+    jtk_Memory_deallocate(context);
 }
 
 void zen_NewExpressionContext_getChildren(zen_NewExpressionContext_t* context,

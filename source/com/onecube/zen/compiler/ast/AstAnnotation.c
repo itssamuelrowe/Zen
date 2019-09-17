@@ -33,7 +33,7 @@ zen_ASTAnnotation_t* zen_ASTAnnotation_new(zen_ASTAnnotationType_t type, void* b
 void zen_ASTAnnotation_delete(zen_ASTAnnotation_t* annotation) {
     jtk_Assert_assertObject(annotation, "The specified annotation is null.");
 
-    zen_Memory_deallocate(annotation);
+    jtk_Memory_deallocate(annotation);
 }
 
 zen_ASTAnnotationType_t zen_ASTAnnotation_getType(zen_ASTAnnotation_t* annotation) {

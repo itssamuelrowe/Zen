@@ -39,7 +39,7 @@ zen_SymbolTable_t* zen_SymbolTable_new() {
 void zen_SymbolTable_delete(zen_SymbolTable_t* symbolTable) {
     jtk_Assert_assertObject(symbolTable, "The specified symbol table is null.");
 
-    zen_Memory_deallocate(symbolTable);
+    jtk_Memory_deallocate(symbolTable);
 }
 
 void zen_SymbolTable_setCurrentScope(zen_SymbolTable_t* symbolTable, zen_Scope_t* currentScope) {

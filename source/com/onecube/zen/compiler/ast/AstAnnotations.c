@@ -33,7 +33,7 @@ void zen_ASTAnnotations_delete(zen_ASTAnnotations_t* annotations) {
     jtk_Assert_assertObject(annotations, "The specified annotations is null.");
 
     jtk_HashMap_delete(annotations->m_map);
-    zen_Memory_deallocate(annotations);
+    jtk_Memory_deallocate(annotations);
 }
 
 void* zen_ASTAnnotations_get(zen_ASTAnnotations_t* annotations, zen_ASTNode_t* node) {

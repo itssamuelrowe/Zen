@@ -46,7 +46,7 @@ void zen_TokenStream_delete(zen_TokenStream_t* stream) {
     }
     jtk_ArrayList_delete(stream->m_tokens);
 
-    zen_Memory_deallocate(stream);
+    jtk_Memory_deallocate(stream);
 }
 
 int32_t zen_TokenStream_getIndex(zen_TokenStream_t* stream) {

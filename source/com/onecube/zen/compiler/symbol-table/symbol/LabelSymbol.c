@@ -37,7 +37,7 @@ void zen_LabelSymbol_delete(zen_LabelSymbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
     zen_Symbol_delete(symbol->m_symbol);
-    zen_Memory_deallocate(symbol);
+    jtk_Memory_deallocate(symbol);
 }
 
 zen_Symbol_t* zen_LabelSymbol_getSymbol(zen_LabelSymbol_t* symbol) {

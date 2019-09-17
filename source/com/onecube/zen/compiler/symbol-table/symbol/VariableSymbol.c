@@ -40,7 +40,7 @@ void zen_VariableSymbol_delete(zen_VariableSymbol_t* symbol) {
 
     zen_Symbol_delete(symbol->m_symbol);
     jtk_ArrayList_delete(symbol->m_modifiers);
-    zen_Memory_deallocate(symbol);
+    jtk_Memory_deallocate(symbol);
 }
 
 zen_Symbol_t* zen_VariableSymbol_getSymbol(zen_VariableSymbol_t* symbol) {

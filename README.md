@@ -2,6 +2,27 @@
 
 Zen is a general purpose programming language designed to build simple, reliable and efficient programs.
 
+## Example
+
+```js
+import zen.core.System.*
+
+function factorial(n)
+    return n <= 1 then 1 else n * factorial(n - 1)
+
+function main(...arguments)
+    var n = promptInteger('Enter an integer: ')
+    var result = factorial(n)
+    printf('%d! = %d', n, result)
+```
+
+The above example generates the following output:
+
+```
+Enter an integer: 5
+5! = 120
+```
+
 ## Contributing
 
 We welcome all contributors.

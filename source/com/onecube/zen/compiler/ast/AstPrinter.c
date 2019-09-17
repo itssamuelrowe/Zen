@@ -38,7 +38,7 @@ void zen_ASTPrinter_delete(zen_ASTPrinter_t* listener) {
     jtk_Assert_assertObject(listener, "The specified listener is null.");
 
     zen_ASTListener_delete(listener->m_astListener);
-    zen_Memory_deallocate(listener);
+    jtk_Memory_deallocate(listener);
 }
 
 zen_ASTListener_t* zen_ASTPrinter_getASTListener(zen_ASTPrinter_t* listener) {

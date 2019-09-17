@@ -47,7 +47,7 @@ void zen_FunctionSymbol_delete(zen_FunctionSymbol_t* symbol) {
     }
     jtk_ArrayList_delete(symbol->m_signatures);
     jtk_ArrayList_delete(symbol->m_modifiers);
-    zen_Memory_deallocate(symbol);
+    jtk_Memory_deallocate(symbol);
 }
 
 jtk_ArrayList_t* zen_FunctionSymbol_getSignatures(zen_FunctionSymbol_t* symbol) {

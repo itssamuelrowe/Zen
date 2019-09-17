@@ -28,3 +28,11 @@ void* zen_Memory_allocate0(int32_t size) {
 int32_t zen_Memory_getFootprint() {
     return s_footprint;
 }
+
+void zen_StackTrace_enter0(const char* file, const char* function) {
+    fprintf(stdout, "[enter] %s(%s)\n", file, function);
+}
+
+void zen_StackTrace_exit0(const char* file, const char* function) {
+    fprintf(stdout, "[exit] %s(%s)\n", file, function);
+}

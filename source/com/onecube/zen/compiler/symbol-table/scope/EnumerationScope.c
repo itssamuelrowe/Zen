@@ -50,7 +50,7 @@ void zen_EnumerationScope_delete(zen_EnumerationScope_t* scope) {
 
     zen_Scope_delete(scope->m_scope);
     zen_HashMap_delete(scope->m_enumerates);
-    zen_Memory_deallocate(scope);
+    jtk_Memory_deallocate(scope);
 }
 
 zen_Scope_t* zen_EnumerationScope_getScope(zen_EnumerationScope_t* scope) {

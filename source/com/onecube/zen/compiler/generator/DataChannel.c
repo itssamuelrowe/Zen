@@ -41,8 +41,8 @@ zen_DataChannel_t* zen_DataChannel_new(int32_t identifier) {
 void zen_DataChannel_delete(zen_DataChannel_t* channel) {
     jtk_Assert_assertObject(channel, "The specified byte code channel is null.");
 
-    zen_Memory_deallocate(channel->m_bytes);
-    zen_Memory_deallocate(channel);
+    jtk_Memory_deallocate(channel->m_bytes);
+    jtk_Memory_deallocate(channel);
 }
 
 // Append
@@ -110,7 +110,7 @@ void zen_DataChannel_requestCapacity(zen_DataChannel_t* channel, int32_t capacit
             for (i = 0; i < channel->m_index; i++) {
                 channel->m_bytes[i] = temporary[i];
             }
-            zen_Memory_deallocate(temporary);
+            jtk_Memory_deallocate(temporary);
             channel->m_capacity = newCapacity;
         }
     }

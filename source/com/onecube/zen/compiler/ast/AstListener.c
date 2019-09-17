@@ -265,7 +265,7 @@ zen_ASTListener_t* zen_ASTListener_newWithContext(void* context) {
 
 void zen_ASTListener_delete(zen_ASTListener_t* listener) {
     jtk_Assert_assertObject(listener, "The specified listener is null.");
-    zen_Memory_deallocate(listener);
+    jtk_Memory_deallocate(listener);
 }
 
 void zen_ASTListener_onVisitErrorNode(zen_ASTListener_t* listener, zen_ASTNode_t* node) {

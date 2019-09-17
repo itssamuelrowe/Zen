@@ -45,7 +45,7 @@ void zen_ASTNode_delete(zen_ASTNode_t* node) {
         }
         node->m_contextDestructor(node->m_context);
     }
-    zen_Memory_deallocate(node);
+    jtk_Memory_deallocate(node);
 }
 
 zen_ASTNodeType_t zen_ASTNode_getType(zen_ASTNode_t* node) {

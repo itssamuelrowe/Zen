@@ -49,7 +49,7 @@ void zen_CompilationUnitScope_delete(zen_CompilationUnitScope_t* scope) {
 
     zen_Scope_delete(scope->m_scope);
     jtk_HashMap_delete(scope->m_symbols);
-    zen_Memory_deallocate(scope);
+    jtk_Memory_deallocate(scope);
 }
 
 zen_Scope_t* zen_CompilationUnitScope_getScope(zen_CompilationUnitScope_t* scope) {

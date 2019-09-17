@@ -35,8 +35,8 @@ zen_StringBuilder_t* zen_StringBuilder_newWithCapacity(int32_t capacity) {
 
 void zen_StringBuilder_delete(zen_StringBuilder_t* builder) {
     jtk_Assert_assertObject(builder, "The specified string builder is null.");
-    zen_Memory_deallocate(builder->m_value);
-    zen_Memory_deallocate(builder);
+    jtk_Memory_deallocate(builder->m_value);
+    jtk_Memory_deallocate(builder);
 }
 
 void zen_StringBuilder_appendCodePoint(zen_StringBuilder_t* builder, int32_t codePoint) {
@@ -74,7 +74,7 @@ void zen_StringBuilder_setCapacity(zen_StringBuilder_t* builder, int32_t capacit
             for (i = 0; i < builder->m_size; i++) {
                 builder->m_value[i] = temporary[i];
             }
-            zen_Memory_deallocate(temporary);
+            jtk_Memory_deallocate(temporary);
             builder->m_capacity = newCapacity;
         }
     }

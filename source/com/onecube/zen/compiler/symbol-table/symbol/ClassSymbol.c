@@ -43,7 +43,7 @@ void zen_ClassSymbol_delete(zen_ClassSymbol_t* symbol) {
     zen_Symbol_delete(symbol->m_symbol);
     jtk_ArrayList_delete(symbol->m_superClasses);
     jtk_ArrayList_delete(symbol->m_explicitModifiers);
-    zen_Memory_deallocate(symbol);
+    jtk_Memory_deallocate(symbol);
 }
 
 zen_Scope_t* zen_ClassSymbol_getClassScope(zen_ClassSymbol_t* symbol) {

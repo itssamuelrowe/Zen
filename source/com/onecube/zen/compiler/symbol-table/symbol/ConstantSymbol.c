@@ -40,7 +40,7 @@ void zen_ConstantSymbol_delete(zen_ConstantSymbol_t* symbol) {
 
     zen_Symbol_delete(symbol->m_symbol);
     jtk_ArrayList_delete(symbol->m_explicitModifiers);
-    zen_Memory_deallocate(symbol);
+    jtk_Memory_deallocate(symbol);
 }
 
 zen_Symbol_t* zen_ConstantSymbol_getSymbol(zen_ConstantSymbol_t* symbol) {

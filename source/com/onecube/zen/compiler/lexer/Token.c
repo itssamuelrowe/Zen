@@ -46,7 +46,7 @@ zen_Token_t* zen_Token_new(
 void zen_Token_delete(zen_Token_t* token) {
     jtk_Assert_assertObject(token, "The specified token is null.");
     jtk_CString_delete(token->m_text);
-    zen_Memory_deallocate(token);
+    jtk_Memory_deallocate(token);
 }
 
 zen_TokenChannel_t zen_Token_getChannel(zen_Token_t* token) {

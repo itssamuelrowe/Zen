@@ -50,7 +50,7 @@ void zen_RuleNode_delete(zen_RuleNode_t* ruleNode) {
      * their creation.
      */
     
-    zen_Memory_deallocate(ruleNode);
+    jtk_Memory_deallocate(ruleNode);
 }
 
 void zen_RuleNode_addRule(zen_RuleNode_t* ruleNode, zen_ASTNode_t* rule) {

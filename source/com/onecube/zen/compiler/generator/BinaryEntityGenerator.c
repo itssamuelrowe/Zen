@@ -300,7 +300,7 @@ void zen_BinaryEntityGenerator_delete(zen_BinaryEntityGenerator_t* generator) {
     jtk_DualHashMap_delete(generator->m_constantPool);
     zen_BinaryEntityBuilder_delete(generator->m_builder);
     zen_ASTListener_delete(generator->m_astListener);
-    zen_Memory_deallocate(generator);
+    jtk_Memory_deallocate(generator);
 }
 
 // Generate

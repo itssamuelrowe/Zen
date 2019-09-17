@@ -47,7 +47,7 @@ zen_BinaryEntityParser_t* zen_BinaryEntityParser_new(
 void zen_BinaryEntityParser_delete(zen_BinaryEntityParser_t* parser) {
     jtk_Assert_assertObject(parser, "The specified binary entity parser is null.");
 
-    zen_Memory_deallocate(parser);
+    jtk_Memory_deallocate(parser);
 }
 
 /* Parse */

@@ -33,7 +33,7 @@ uint8_t* zen_String_newWithSize(const uint8_t* string, int32_t size) {
 }
 
 void zen_String_delete(uint8_t* string) {
-    zen_Memory_deallocate(string);
+    jtk_Memory_deallocate(string);
 }
 
 bool zen_String_equals(const uint8_t* string1, int32_t size1, const uint8_t* string2, int32_t size2) {

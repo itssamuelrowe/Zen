@@ -322,7 +322,7 @@ void zen_AssemblyLexer_delete(zen_AssemblyLexer_t* lexer) {
     }
     jtk_ArrayList_delete(lexer->m_errors);
 
-    zen_Memory_deallocate(lexer);
+    jtk_Memory_deallocate(lexer);
 }
 
 /* Create Token */

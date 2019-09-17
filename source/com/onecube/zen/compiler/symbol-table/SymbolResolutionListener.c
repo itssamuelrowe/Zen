@@ -48,7 +48,7 @@ void zen_SymbolResolutionListener_delete(zen_SymbolResolutionListener_t* listene
     jtk_Assert_assertObject(listener, "The specified listener is null.");
 
     zen_ASTListener_delete(listener->m_astListener);
-    zen_Memory_deallocate(listener);
+    jtk_Memory_deallocate(listener);
 }
 
 zen_ASTListener_t* zen_SymbolResolutionListener_getASTListener(zen_SymbolResolutionListener_t* listener) {

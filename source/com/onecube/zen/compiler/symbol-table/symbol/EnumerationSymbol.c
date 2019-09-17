@@ -42,7 +42,7 @@ void zen_EnumerationSymbol_delete(zen_EnumerationSymbol_t* symbol) {
 
     zen_Symbol_delete(symbol->m_symbol);
     jtk_ArrayList_delete(symbol->m_explicitModifiers);
-    zen_Memory_deallocate(symbol);
+    jtk_Memory_deallocate(symbol);
 }
 
 zen_Scope_t* zen_EnumerationSymbol_getEnumerationScope(zen_EnumerationSymbol_t* symbol) {

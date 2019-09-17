@@ -61,7 +61,7 @@ void zen_VirtualMachine_delete(zen_VirtualMachine_t* virtualMachine) {
 
     zen_ClassLoader_delete(virtualMachine->m_classLoader);
     zen_EntityLoader_delete(virtualMachine->m_entityLoader);
-    zen_Memory_deallocate(virtualMachine);
+    jtk_Memory_deallocate(virtualMachine);
 }
 
 /* Context */

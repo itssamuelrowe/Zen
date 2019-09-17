@@ -121,7 +121,7 @@ zen_Parser_t* zen_Parser_new(zen_TokenStream_t* tokens) {
 
 void zen_Parser_delete(zen_Parser_t* parser) {
     jtk_Assert_assertObject(parser, "The specified parser is null.");
-    zen_Memory_deallocate(parser);
+    jtk_Memory_deallocate(parser);
 }
 
 /* Rule Name */

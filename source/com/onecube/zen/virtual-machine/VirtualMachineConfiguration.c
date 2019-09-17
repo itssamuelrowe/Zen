@@ -47,7 +47,7 @@ void zen_VirtualMachineConfiguration_delete(zen_VirtualMachineConfiguration_t* c
     jtk_ArrayList_delete(configuration->m_entityDirectories);
     
     jtk_HashMap_delete(configuration->m_variables);
-    zen_Memory_deallocate(configuration);
+    jtk_Memory_deallocate(configuration);
 }
 
 /* Entity Directory */

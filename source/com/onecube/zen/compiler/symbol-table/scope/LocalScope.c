@@ -48,7 +48,7 @@ void zen_LocalScope_delete(zen_LocalScope_t* scope) {
 
     zen_Scope_delete(scope->m_scope);
     zen_HashMap_delete(scope->m_symbols);
-    zen_Memory_deallocate(scope);
+    jtk_Memory_deallocate(scope);
 }
 
 zen_Scope_t* zen_LocalScope_getScope(zen_LocalScope_t* scope) {

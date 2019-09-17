@@ -36,7 +36,7 @@ zen_Symbol_t* zen_Symbol_new(zen_SymbolCategory_t category,
 void zen_Symbol_delete(zen_Symbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
-    zen_Memory_deallocate(symbol);
+    jtk_Memory_deallocate(symbol);
 }
 
 bool zen_Symbol_isEnumeration(zen_Symbol_t* symbol) {
