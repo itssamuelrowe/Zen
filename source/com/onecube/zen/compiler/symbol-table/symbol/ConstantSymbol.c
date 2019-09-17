@@ -16,7 +16,7 @@
 
 // Tuesday, February 27, 2018
 
-#include <com/onecube/zen/st/ConstantSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/ConstantSymbol.h>
 
 /*******************************************************************************
  * ConstantSymbol                                                              *
@@ -29,7 +29,7 @@ zen_ConstantSymbol_t* zen_ConstantSymbol_new(zen_ASTNode_t* identifier,
     zen_Symbol_t* symbol = zen_Symbol_new(ZEN_SYMBOL_CATEGORY_CONSTANT, identifier, enclosingScope, constantSymbol);
 
     constantSymbol->m_symbol = symbol;
-    constantSymbol->m_explicitModifiers = zen_ArrayList_new();
+    constantSymbol->m_explicitModifiers = jtk_ArrayList_new();
     constantSymbol->m_modifiers = 0;
 
     return constantSymbol;
@@ -39,7 +39,7 @@ void zen_ConstantSymbol_delete(zen_ConstantSymbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
     zen_Symbol_delete(symbol->m_symbol);
-    zen_ArrayList_delete(symbol->m_explicitModifiers);
+    jtk_ArrayList_delete(symbol->m_explicitModifiers);
     zen_Memory_deallocate(symbol);
 }
 
@@ -53,7 +53,7 @@ void zen_ConstantSymbol_addModifier(zen_ConstantSymbol_t* symbol, zen_Modifier_t
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
     
     if (node != NULL) {
-        zen_ArrayList_add(symbol->m_explicitModifiers, node);
+        jtk_ArrayList_add(symbol->m_explicitModifiers, node);
     }
     symbol->m_modifiers |= (int32_t)modifier;
 }

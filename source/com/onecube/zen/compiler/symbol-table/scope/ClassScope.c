@@ -120,10 +120,10 @@ zen_Symbol_t* zen_ClassScope_resolve(zen_ClassScope_t* scope,
         }
         else {
             jtk_ArrayList_t* superClasses = zen_ClassSymbol_getSuperClasses(classSymbol);
-            int32_t size = zen_ArrayList_getSize(superClasses);
+            int32_t size = jtk_ArrayList_getSize(superClasses);
             int32_t i;
             for (i = 0; i < size; i++) {
-                zen_Symbol_t* rawSuperClassSymbol = zen_ArrayList_get(superClasses, i);
+                zen_Symbol_t* rawSuperClassSymbol = jtk_ArrayList_getValue(superClasses, i);
                 zen_ClassSymbol_t* superClassSymbol = (zen_ClassSymbol_t*)rawSuperClassSymbol->m_context;
                 jtk_LinkedStack_push(stack, superClassSymbol);
             }

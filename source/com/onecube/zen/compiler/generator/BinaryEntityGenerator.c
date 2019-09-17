@@ -1118,14 +1118,14 @@ void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* as
      * side of the assignment operator evaluates to an identifier or
      * field access.
      */
-    // jtk_ArrayList_t* children = zen_ArrayList_new();
+    // jtk_ArrayList_t* children = jtk_ArrayList_new();
     // zen_ASTHelper_getFilteredTokens(context->m_conditionalExpression, children, ZEN_TOKEN_IDENTIFIER);
 
     /* The following line is valid when zen_ASTHelper_getFilteredTerminalNodes() function
      * is invoked instead of zen_ASTHelper_getFilteredTokens().
      */
-    // zen_ASTNode_t* identifier = (zen_ASTNode_t*)zen_ArrayList_get(children, 0);
-    // zen_Token_t* identifierToken = (zen_Token_t*)zen_ArrayList_get(children, 0);
+    // zen_ASTNode_t* identifier = (zen_ASTNode_t*)jtk_ArrayList_getValue(children, 0);
+    // zen_Token_t* identifierToken = (zen_Token_t*)jtk_ArrayList_getValue(children, 0);
     // const uint8_t* identifierText = zen_Token_getText(identifierToken);
 
     // zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, identifierText);
@@ -1138,7 +1138,7 @@ void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* as
            //  targetIndex = zen_BinaryEntityGenerator_findFieldDescriptorIndex(generator, children);
         // }
         // else {
-           /* int32_t size = zen_ArrayList_getSize(children);
+           /* int32_t size = jtk_ArrayList_getSize(children);
             if (size == 1) {
                 targetIndex = zen_BinaryEntityGenerator_findLocalVariableIndex(generator, identifierText);
                 localVariable = true;
@@ -1185,7 +1185,7 @@ void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* as
         // error: LHS is not variable
     }*/
 
-    // zen_ArrayList_delete(children);
+    // jtk_ArrayList_delete(children);
 }
 
 void zen_BinaryEntityGenerator_onExitAssignmentExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
@@ -1644,10 +1644,10 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_PostfixExpressionContext_t* context = (zen_PostfixExpressionContext_t*)node->m_context;
 
-    int32_t size = zen_ArrayList_getSize(context->m_postfixParts);
+    int32_t size = jtk_ArrayList_getSize(context->m_postfixParts);
     int32_t i;
     for (i = 0; i < size; i++) {
-        zen_ASTNode_t* postfixPart = (zen_ASTNode_t*)zen_ArrayList_get(context->m_postfixParts, i);
+        zen_ASTNode_t* postfixPart = (zen_ASTNode_t*)jtk_ArrayList_getValue(context->m_postfixParts, i);
         switch (zen_ASTNode_getType(postfixPart)) {
             /*
             case ZEN_AST_NODE_SUBSCRIPT: {
@@ -1834,7 +1834,7 @@ void zen_BinaryEntityGenerator_onEnterMapEntries(zen_ASTListener_t* astListener,
     /*
     int32_t i;
     for (i = 0; i < size; i++) {
-        zen_ASTNode_t* mapEntry = (zen_ASTNode_t*)zen_ArrayList_get(context->m_mapEntries, i);
+        zen_ASTNode_t* mapEntry = (zen_ASTNode_t*)jtk_ArrayList_getValue(context->m_mapEntries, i);
         zen_ASTAnnotation_t* mapEntryAnnotation = zen_ASTAnnotation_new(ZEN_AST_ANNOTATION_TYPE_ASYMETRICAL_CHANNEL_MANAGEMENT, NULL);
         zen_ASTAnnotations_put(generator->m_annotations, mapEntryAnnotation);
     }
@@ -1848,7 +1848,7 @@ void zen_BinaryEntityGenerator_onExitMapEntries(zen_ASTListener_t* astListener,
 
     /* TODO: Apparently, storing integers as void* is dangerous. Find an alternative. */
 
-    int32_t size = zen_ArrayList_getSize(context->m_mapEntries);
+    int32_t size = jtk_ArrayList_getSize(context->m_mapEntries);
     // TODO: Filter out map with 0 entries!
     /* Currently, a map entry channel is on top of the stack. Whatever,
      * byte codes are emitted will be placed on it. Therefore, we need to
@@ -2008,14 +2008,14 @@ void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListe
     zen_ListExpressionContext_t* context = (zen_ListExpressionContext_t*)node->m_context;
     zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)context->m_expressions->m_context;
 
-    int32_t size = zen_ArrayList_getSize(expressionsContext->m_expressions);
+    int32_t size = jtk_ArrayList_getSize(expressionsContext->m_expressions);
 
     zen_BinaryEntityGenerator_emitPushByte(generator, size);
     zen_BinaryEntityGenerator_emitNewReferenceArray(generator, 0);
 
     int32_t i;
     for (i = 0; i < size; i++) {
-        zen_ASTNode_t* expression = (zen_ASTNode_t*)zen_ArrayList_get(expressionsContext->m_expressions, i);
+        zen_ASTNode_t* expression = (zen_ASTNode_t*)jtk_ArrayList_getValue(expressionsContext->m_expressions, i);
         zen_ASTAnnotation_t* expressionAnnotation = zen_ASTAnnotation_new(ZEN_AST_ANNOTATION_TYPE_ASYMETRICAL_CHANNEL_MANAGEMENT, NULL);
         zen_ASTAnnotations_put(generator->m_annotations, expression, expressionAnnotation);
     }
@@ -2027,7 +2027,7 @@ void zen_BinaryEntityGenerator_onExitListExpression(zen_ASTListener_t* astListen
     zen_ListExpressionContext_t* context = (zen_ListExpressionContext_t*)node->m_context;
     zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)context->m_expressions->m_context;
 
-    int32_t size = zen_ArrayList_getSize(expressionsContext->m_expressions);
+    int32_t size = jtk_ArrayList_getSize(expressionsContext->m_expressions);
     /* Currently, an expression channel is on top of the stack. Whatever,
      * byte codes are emitted will be placed on it. Therefore, we need to
      * swap the expression channel with the local channel.
@@ -2057,7 +2057,7 @@ void zen_BinaryEntityGenerator_onExitListExpression(zen_ASTListener_t* astListen
 
         zen_BinaryEntityGenerator_emitStoreReferenceArray(generator);
 
-        zen_ASTNode_t* expression = (zen_ASTNode_t*)zen_ArrayList_get(expressionsContext->m_expressions, i);
+        zen_ASTNode_t* expression = (zen_ASTNode_t*)jtk_ArrayList_getValue(expressionsContext->m_expressions, i);
         zen_ASTAnnotation_t* expressionAnnotation = zen_ASTAnnotations_get(generator->m_annotations, expression);
         zen_ASTAnnotation_delete(expressionAnnotation);
     }

@@ -16,7 +16,7 @@
 
 // Monday, March 05, 2018
 
-#include <com/onecube/zen/st/LabelSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/LabelSymbol.h>
 
 /*******************************************************************************
  * LabelSymbol                                                                 *

@@ -16,7 +16,7 @@
 
 // Monday, January 08, 2018
 
-#include <com/onecube/zen/st/Symbol.h>
+#include <com/onecube/zen/compiler/symbol-table/Symbol.h>
 
 /*******************************************************************************
  * Symbol                                                                      *

@@ -16,7 +16,7 @@
 
 // Saturday, February 24, 2018
 
-#include <com/onecube/zen/st/MemberConstantSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/MemberConstantSymbol.h>
 
 zen_MemberConstantSymbol_t* zen_MemberConstantSymbol_new(zen_ASTNode_t* identifier,
     jtk_ArrayList_t* modifiers) {

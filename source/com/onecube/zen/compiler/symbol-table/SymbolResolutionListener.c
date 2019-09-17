@@ -121,10 +121,10 @@ void zen_SymbolResolutionListener_onEnterFunctionDeclaration(
 //        zen_LinkedStack_t* stack = zen_LinkedStack_new();
 //
 //        jtk_ArrayList_t* superClasses = zen_ClassSymbol_getSuperClasses(classSymbol);
-//        int32_t size = zen_ArrayList_getSize(superClasses);
+//        int32_t size = jtk_ArrayList_getSize(superClasses);
 //        int32_t i;
 //        for (i = 0; i < size; i++) {
-//            zen_Symbol_t* superClassSymbol = (zen_Symbol_t*)zen_ArrayList_get(superClasses, i);
+//            zen_Symbol_t* superClassSymbol = (zen_Symbol_t*)jtk_ArrayList_getValue(superClasses, i);
 //            zen_ClassSymbol_t* superClassSymbol_ = (zen_ClassSymbol_t*)superClassSymbol->m_context;
 //            zen_LinkedStack_push(stack, superClassSymbol_);
 //        }
@@ -165,11 +165,11 @@ void zen_SymbolResolutionListener_onEnterFunctionDeclaration(
 //                    else if ((currentScopeFunctionSymbol->m_parameterThreshold != -1) &&
 //                        (superScopeFunctionSymbol->m_parameterThreshold == -1)) {
 //                        jtk_ArrayList_t* superScopeSignatures = zen_FunctionSymbol_getSignatures(superScopeFunctionSymbol);
-//                        int32_t superScopeSignatureCount = zen_ArrayList_getSize(superScopeSignatures);
+//                        int32_t superScopeSignatureCount = jtk_ArrayList_getSize(superScopeSignatures);
 //                        int32_t j;
 //                        for (j = 0; j < superScopeSignatureCount; j++) {
-//                            zen_FunctionSignature_t* superScopeSignature = (zen_FunctionSignature_t*)zen_ArrayList_get(superScopeSignatures, j);
-//                            int32_t fixedParameterCount = zen_ArrayList_getSize(superScopeSignature->m_fixedParameters);
+//                            zen_FunctionSignature_t* superScopeSignature = (zen_FunctionSignature_t*)jtk_ArrayList_getValue(superScopeSignatures, j);
+//                            int32_t fixedParameterCount = jtk_ArrayList_getSize(superScopeSignature->m_fixedParameters);
 //                            if (fixedParameterCount >= currentScopeFunctionSymbol->m_parameterThreshold) {
 //                                zen_ErrorHandler_reportError(NULL, "Superclass function exceeds parameter threshold", (zen_Token_t*)superScopeSymbol->m_identifier->m_context);
 //                            }
@@ -178,11 +178,11 @@ void zen_SymbolResolutionListener_onEnterFunctionDeclaration(
 //                    else if ((currentScopeFunctionSymbol->m_parameterThreshold == -1) &&
 //                        (superScopeFunctionSymbol->m_parameterThreshold != -1)) {
 //                        jtk_ArrayList_t* currentScopeSignatures = zen_FunctionSymbol_getSignatures(currentScopeFunctionSymbol);
-//                        int32_t currentScopeSignatureCount = zen_ArrayList_getSize(currentScopeSignatures);
+//                        int32_t currentScopeSignatureCount = jtk_ArrayList_getSize(currentScopeSignatures);
 //                        int32_t j;
 //                        for (j = 0; j < currentScopeSignatureCount; j++) {
-//                            zen_FunctionSignature_t* currentScopeSignature = (zen_FunctionSignature_t*)zen_ArrayList_get(currentScopeSignatures, j);
-//                            int32_t fixedParameterCount = zen_ArrayList_getSize(currentScopeSignature->m_fixedParameters);
+//                            zen_FunctionSignature_t* currentScopeSignature = (zen_FunctionSignature_t*)jtk_ArrayList_getValue(currentScopeSignatures, j);
+//                            int32_t fixedParameterCount = jtk_ArrayList_getSize(currentScopeSignature->m_fixedParameters);
 //                            if (fixedParameterCount >= superScopeFunctionSymbol->m_parameterThreshold) {
 //                                zen_ErrorHandler_reportError(NULL, "Subclass function exceeds parameter threshold", (zen_Token_t*)currentScopeSymbol->m_identifier->m_context);
 //                            }
@@ -192,9 +192,9 @@ void zen_SymbolResolutionListener_onEnterFunctionDeclaration(
 //            }
 //            else {
 //                superClasses = zen_ClassSymbol_getSuperClasses(classSymbol);
-//                size = zen_ArrayList_getSize(superClasses);
+//                size = jtk_ArrayList_getSize(superClasses);
 //                for (i = 0; i < size; i++) {
-//                    zen_Symbol_t* rawSuperClassSymbol = zen_ArrayList_get(superClasses, i);
+//                    zen_Symbol_t* rawSuperClassSymbol = jtk_ArrayList_getValue(superClasses, i);
 //                    zen_ClassSymbol_t* superClassSymbol = (zen_ClassSymbol_t*)rawSuperClassSymbol->m_context;
 //                    zen_LinkedStack_push(stack, superClassSymbol);
 //                }
@@ -252,22 +252,22 @@ void zen_SymbolResolutionListener_onEnterClassDeclaration(zen_ASTListener_t* ast
         zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
         jtk_ArrayList_t* superClasses = zen_ClassSymbol_getSuperClasses(classSymbol);
 
-        int32_t superClassCount = zen_ArrayList_getSize(classExtendsClauseContext->m_typeNames);
+        int32_t superClassCount = jtk_ArrayList_getSize(classExtendsClauseContext->m_typeNames);
         int32_t i;
         for (i = 0; i < superClassCount; i++) {
-            zen_ASTNode_t* typeName = (zen_ASTNode_t*)zen_ArrayList_get(classExtendsClauseContext->m_typeNames, i);
+            zen_ASTNode_t* typeName = (zen_ASTNode_t*)jtk_ArrayList_getValue(classExtendsClauseContext->m_typeNames, i);
             // const uint8_t* qualifiedTypeName = zen_SymbolResolutionListener_getQualifiedTypeName(typeName);
             // TODO!!
             zen_TypeNameContext_t* typeNameContext = (zen_TypeNameContext_t*)(typeName->m_context);
             jtk_ArrayList_t* identifiers = typeNameContext->m_identifiers;
-            zen_Token_t* first = ((zen_ASTNode_t*)zen_ArrayList_get(identifiers, 0))->m_context;
+            zen_Token_t* first = ((zen_ASTNode_t*)jtk_ArrayList_getValue(identifiers, 0))->m_context;
             const uint8_t* firstText = zen_Token_getText(first);
             zen_Symbol_t* superClassSymbol = zen_SymbolTable_resolve(listener->m_symbolTable, firstText);
             if (superClassSymbol == NULL) {
                 fprintf(stderr, "[semantic error] Unknown class\n");
             }
             else {
-                zen_ArrayList_add(superClasses, superClassSymbol);
+                jtk_ArrayList_add(superClasses, superClassSymbol);
             }
         }
     }

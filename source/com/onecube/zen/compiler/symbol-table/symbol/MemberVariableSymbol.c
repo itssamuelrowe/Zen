@@ -16,7 +16,7 @@
 
 // Saturday, February 24, 2018
 
-#include <com/onecube/zen/st/MemberVariableSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/MemberVariableSymbol.h>
 
 zen_MemberVariableSymbol_t* zen_AttributeVariableSymbol_new(zen_ASTNode_t* identifier,
     jtk_ArrayList_t* m_modifiers) {

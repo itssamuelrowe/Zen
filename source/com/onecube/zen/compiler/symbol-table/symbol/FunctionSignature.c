@@ -16,7 +16,7 @@
 
 // Saturday, February 24, 2018
 
-#include <com/onecube/zen/st/FunctionSignature.h>
+#include <com/onecube/zen/compiler/symbol-table/FunctionSignature.h>
 
 zen_FunctionSignature_t* zen_FunctionSignature_new(jtk_ArrayList_t* fixedParameters,
     zen_ASTNode_t* variableParameter) {

@@ -16,7 +16,7 @@
 
 // Thursday, March 08, 2018
 
-#include <com/onecube/zen/st/EnumerationSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/EnumerationSymbol.h>
 
 /*******************************************************************************
  * EnumerationSymbol                                                                 *
@@ -30,7 +30,7 @@ zen_EnumerationSymbol_t* zen_EnumerationSymbol_new(zen_ASTNode_t* identifier,
 
     enumerationSymbol->m_symbol = symbol;
     enumerationSymbol->m_superclass = NULL;
-    enumerationSymbol->m_explicitModifiers = zen_ArrayList_new();
+    enumerationSymbol->m_explicitModifiers = jtk_ArrayList_new();
     enumerationSymbol->m_modifiers = 0;
     enumerationSymbol->m_enumerationScope = enumerationScope;
 
@@ -41,7 +41,7 @@ void zen_EnumerationSymbol_delete(zen_EnumerationSymbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
     zen_Symbol_delete(symbol->m_symbol);
-    zen_ArrayList_delete(symbol->m_explicitModifiers);
+    jtk_ArrayList_delete(symbol->m_explicitModifiers);
     zen_Memory_deallocate(symbol);
 }
 
@@ -68,7 +68,7 @@ void zen_EnumerationSymbol_addModifier(zen_EnumerationSymbol_t* symbol, zen_Modi
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
     if (node != NULL) {
-        zen_ArrayList_add(symbol->m_explicitModifiers, node);
+        jtk_ArrayList_add(symbol->m_explicitModifiers, node);
     }
     symbol->m_modifiers |= (int32_t)modifier;
 }

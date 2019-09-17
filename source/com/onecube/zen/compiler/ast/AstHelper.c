@@ -119,7 +119,7 @@ void zen_ASTHelper_getNodes(zen_ASTNode_t* node, jtk_ArrayList_t* list,
             int32_t size = jtk_ArrayList_getSize(children);
             int32_t i;
             for (i = 0; i < size; i++) {
-                zen_ASTNode_t* child = (zen_ASTNode_t*)jtk_ArrayList_get(children, i);
+                zen_ASTNode_t* child = (zen_ASTNode_t*)jtk_ArrayList_getValue(children, i);
                 jtk_LinkedStack_push(stack, child);
             }
         }

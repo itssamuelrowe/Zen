@@ -138,7 +138,7 @@ void zen_SymbolDefinitionListener_onEnterFunctionParameters(
                     /* If currently there is no parameter threshold, try to update the
                      * threshold.
                      */
-                    int32_t fixedParameterCount = zen_ArrayList_getSize(fixedParameters);
+                    int32_t fixedParameterCount = jtk_ArrayList_getSize(fixedParameters);
                     if (parameterThreshold < 0) {
                         /* Update the threshold if the function being declared has a variable
                          * parameter.
@@ -150,18 +150,18 @@ void zen_SymbolDefinitionListener_onEnterFunctionParameters(
                     }
                     
                     /* Determine the number of signatures. */
-                    int32_t size = zen_ArrayList_getSize(signatures);
+                    int32_t size = jtk_ArrayList_getSize(signatures);
                     /* Iterate over the signatures to determine if the signature of the
                      * function being declared to be unique, or not.
                      */
                     int32_t i;
                     for (i = 0; i < size; i++) {
-                        zen_FunctionSignature_t* signature = (zen_FunctionSignature_t*)zen_ArrayList_get(signatures, i);
+                        zen_FunctionSignature_t* signature = (zen_FunctionSignature_t*)jtk_ArrayList_getValue(signatures, i);
                         if ((signature->m_variableParameter != NULL) && (variableParameter != NULL)) {
                             // semantic error: Multiple overloads cannot have variable parameter.
                         }
                         else {
-                            int32_t fixedParameterCount0 = zen_ArrayList_getSize(signature->m_fixedParameters);
+                            int32_t fixedParameterCount0 = jtk_ArrayList_getSize(signature->m_fixedParameters);
                             /* Determine whether the function being declared was duplicately
                              * overloaded, or not.
                              */

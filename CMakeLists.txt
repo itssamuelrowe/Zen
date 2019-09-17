@@ -172,17 +172,25 @@ set (
 
 set(CMAKE_VERBOSE_MAKEFILE off)
 
+link_directories(${JTK_LIBRARY_DIRS})
+
+message(WARNING ${JTK_CFLAGS})
+
 add_executable (zen ${ZEN_PUBLIC_HEADERS} ${ZEN_COMMON_SOURCE} ${ZEN_COMPILER_SOURCE} ${ZEN_PRIVATE_HEADERS})
-target_compile_options(zen PUBLIC -Wall -Wswitch)
+target_link_libraries(zen ${JTK_LIBRARIES})
+target_include_directories(zen SYSTEM PUBLIC ${JTK_INCLUDE_DIRS})
+# target_compile_options(zen PUBLIC -Wall -Wswitch)
+target_compile_options(zen PUBLIC -g -w ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
+
+
 
 # add_executable (zsv ${ZEN_PUBLIC_HEADERS} ${ZEN_COMMON_SOURCE} ${ZEN_ZVM_SPECIFICATION_VIEWER} ${ZEN_PRIVATE_HEADERS})
 # target_compile_options(zsv PUBLIC -Wall -Wswitch)
 
-link_directories(${JTK_LIBRARY_DIRS})
 
-add_executable(zvm ${ZEN_COMMON_SOURCE} ${ZEN_VIRTUAL_MACHINE_SOURCE} ${ZEN_VIRTUAL_MACHINE_TOOL_SOURCE})
-target_link_libraries(zvm ${JTK_LIBRARIES})
-target_include_directories(zvm SYSTEM PUBLIC ${JTK_INCLUDE_DIRS})
-target_compile_options(zvm PUBLIC -g -w ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
+# add_executable(zvm ${ZEN_COMMON_SOURCE} ${ZEN_VIRTUAL_MACHINE_SOURCE} ${ZEN_VIRTUAL_MACHINE_TOOL_SOURCE})
+# target_link_libraries(zvm ${JTK_LIBRARIES})
+# target_include_directories(zvm SYSTEM PUBLIC ${JTK_INCLUDE_DIRS})
+# target_compile_options(zvm PUBLIC -g -w ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
 
 message (WARNING ${JTK_LIBRARY_DIRS})

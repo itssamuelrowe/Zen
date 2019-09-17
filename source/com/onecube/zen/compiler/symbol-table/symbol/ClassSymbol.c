@@ -29,8 +29,8 @@ zen_ClassSymbol_t* zen_ClassSymbol_new(zen_ASTNode_t* identifier,
     zen_Symbol_t* symbol = zen_Symbol_new(ZEN_SYMBOL_CATEGORY_CLASS, identifier, enclosingScope, classSymbol);
 
     classSymbol->m_symbol = symbol;
-    classSymbol->m_superClasses = zen_ArrayList_new();
-    classSymbol->m_explicitModifiers = zen_ArrayList_new();
+    classSymbol->m_superClasses = jtk_ArrayList_new();
+    classSymbol->m_explicitModifiers = jtk_ArrayList_new();
     classSymbol->m_modifiers = 0;
     classSymbol->m_classScope = classScope;
 
@@ -41,8 +41,8 @@ void zen_ClassSymbol_delete(zen_ClassSymbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
     zen_Symbol_delete(symbol->m_symbol);
-    zen_ArrayList_delete(symbol->m_superClasses);
-    zen_ArrayList_delete(symbol->m_explicitModifiers);
+    jtk_ArrayList_delete(symbol->m_superClasses);
+    jtk_ArrayList_delete(symbol->m_explicitModifiers);
     zen_Memory_deallocate(symbol);
 }
 
@@ -69,7 +69,7 @@ void zen_ClassSymbol_addModifier(zen_ClassSymbol_t* symbol, zen_Modifier_t modif
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
     
     if (node != NULL) {
-        zen_ArrayList_add(symbol->m_explicitModifiers, node);
+        jtk_ArrayList_add(symbol->m_explicitModifiers, node);
     }
     symbol->m_modifiers |= (int32_t)modifier;
 }

@@ -52,7 +52,7 @@ else if () {
          * function.
          */
         int32_t parameterThreshold = -1;
-        int32_t fixedParameterCount = zen_ArrayList_getSize(fixedParameters);
+        int32_t fixedParameterCount = jtk_ArrayList_getSize(fixedParameters);
 
         zen_ClassScope_t* classScope = (zen_ClassScope_t*)(currentScope->m_context);
         zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)(zen_ClassScope_getClassSymbol(classScope)->m_context);
@@ -64,7 +64,7 @@ else if () {
         zen_LinkedStack_t* stack = zen_LinkedStack_new();
         zen_LinkedStack_push(stack, classSymbol);
 
-        jtk_ArrayList_t* signatures = zen_ArrayList_new();
+        jtk_ArrayList_t* signatures = jtk_ArrayList_new();
         while (!zen_LinkedStack_isEmpty(stack)) {
             classSymbol = (zen_ClassSymbol_t*)zen_LinkedStack_pop(stack);
             classScope = (zen_ClassScope_t*)(zen_ClassSymbol_getClassScope(classSymbol)->m_context); // The context is unset
@@ -92,11 +92,11 @@ else if () {
                     }
                     
                     jtk_ArrayList_t* oldSignatures = zen_FunctionSymbol_getSignatures(oldFunctionSymbol);
-                    int32_t oldSignaturesSize = zen_ArrayList_getSize(oldSignatures);
+                    int32_t oldSignaturesSize = jtk_ArrayList_getSize(oldSignatures);
                     int32_t i;
                     for (i = 0; i < oldSignaturesSize; i++) {
-                        zen_FunctionSignature_t* oldSignature = (zen_FunctionSignature_t*)zen_ArrayList_get(oldSignatures, i);
-                        int32_t fixedParameterCount0 = zen_ArrayList_getSize(oldSignature->m_fixedParameters);
+                        zen_FunctionSignature_t* oldSignature = (zen_FunctionSignature_t*)jtk_ArrayList_getValue(oldSignatures, i);
+                        int32_t fixedParameterCount0 = jtk_ArrayList_getSize(oldSignature->m_fixedParameters);
                         
                         if ((oldSignature->m_variableParameter != NULL) && (variableParameter != NULL)) {
                             if ((oldSymbolEnclosingScope == currentScope) || (fixedParameterCount != fixedParameterCount0))
@@ -155,11 +155,11 @@ else if () {
             }
             else {
                 jtk_ArrayList_t* superClasses = zen_ClassSymbol_getSuperClasses(classSymbol);
-                int32_t size = zen_ArrayList_getSize(superClasses);
+                int32_t size = jtk_ArrayList_getSize(superClasses);
                 int32_t i;
                 for (i = 0; i < size; i++) {
                     // TODO: Check what getSuperclasses returns!! Symbol or ClassSymbol.
-                    zen_ClassSymbol_t* superClass = (zen_ClassSymbol_t*)zen_ArrayList_get(superClasses, i);
+                    zen_ClassSymbol_t* superClass = (zen_ClassSymbol_t*)jtk_ArrayList_getValue(superClasses, i);
                     zen_LinkedStack_push(stack, superClass);
                 }
             }

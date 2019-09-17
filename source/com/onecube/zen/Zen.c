@@ -43,11 +43,11 @@ void printToken(zen_Token_t* token) {
 }
 
 void printTokens(jtk_ArrayList_t* tokens) {
-    int32_t limit = zen_ArrayList_getSize(tokens);
+    int32_t limit = jtk_ArrayList_getSize(tokens);
     zen_Token_t* token;
     int32_t i;
     for (i = 0; i < limit; i++) {
-        token = (zen_Token_t*)zen_ArrayList_get(tokens, i);
+        token = (zen_Token_t*)jtk_ArrayList_getValue(tokens, i);
         printToken(token);
     }
     fflush(stdout);
@@ -83,7 +83,7 @@ int32_t xmain() {
 int32_t main(int32_t length, char** arguments) {
     jtk_Assert_assertTrue(zen_Instruction_verify(), "The instruction set is invalid.");
     
-    jtk_ArrayList_t* inputFiles = zen_ArrayList_new();
+    jtk_ArrayList_t* inputFiles = jtk_ArrayList_new();
     bool internalDumpTokens = false;
     bool internalDumpNodes = false;
     bool internalFootprint = false;
@@ -102,17 +102,17 @@ int32_t main(int32_t length, char** arguments) {
             }
         }
         else {
-            zen_ArrayList_add(inputFiles, arguments[i]);
+            jtk_ArrayList_add(inputFiles, arguments[i]);
         }
     }
 
-    int32_t size = zen_ArrayList_getSize(inputFiles);
+    int32_t size = jtk_ArrayList_getSize(inputFiles);
     if (size == 0) {
         fprintf(stderr, "error: no input files\n");
     }
     else {
         for (i = 0; i < size; i++) {
-            const char* path = (const char*)zen_ArrayList_get(inputFiles, i);
+            const char* path = (const char*)jtk_ArrayList_getValue(inputFiles, i);
             zen_InputStream_t* stream = zen_InputStream_new(path);
             if (stream->m_file == NULL) {
                 fprintf(stderr, "error: %s: No such file", path);
@@ -174,7 +174,7 @@ int32_t main(int32_t length, char** arguments) {
         }
     }
 
-    zen_ArrayList_delete(inputFiles);
+    jtk_ArrayList_delete(inputFiles);
 
     if (internalFootprint) {
         int32_t footprint = zen_Memory_getFootprint();

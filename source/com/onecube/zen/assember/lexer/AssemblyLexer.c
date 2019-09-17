@@ -287,7 +287,7 @@ zen_AssemblyLexer_t* zen_AssemblyLexer_new(zen_InputStream_t* inputStream) {
     lexer->m_tokens = zen_ArrayQueue_new();
     lexer->m_indentations = zen_ArrayStack_new();
     lexer->m_enclosures = 0;
-    lexer->m_errors = zen_ArrayList_new();
+    lexer->m_errors = jtk_ArrayList_new();
 
     zen_AssemblyLexer_consume(lexer);
 
@@ -305,22 +305,22 @@ void zen_AssemblyLexer_delete(zen_AssemblyLexer_t* lexer) {
      * This destructor is responsible for the destruction of
      * such tokens.
      */
-    int32_t size = zen_ArrayList_getSize(lexer->m_tokens->m_list);
+    int32_t size = jtk_ArrayList_getSize(lexer->m_tokens->m_list);
     int32_t i;
     for (i = 0; i < size; i++) {
-        zen_Token_t* token = (zen_Token_t*)zen_ArrayList_get(lexer->m_tokens->m_list, i);
+        zen_Token_t* token = (zen_Token_t*)jtk_ArrayList_getValue(lexer->m_tokens->m_list, i);
         zen_Token_delete(token);
     }
     zen_ArrayQueue_delete(lexer->m_tokens);
 
     zen_ArrayStack_delete(lexer->m_indentations);
 
-    size = zen_ArrayList_getSize(lexer->m_errors);
+    size = jtk_ArrayList_getSize(lexer->m_errors);
     for (i = 0; i < size; i++) {
-        zen_AssemblyLexerError_t* error = (zen_AssemblyLexerError_t*)zen_ArrayList_get(lexer->m_errors, i);
+        zen_AssemblyLexerError_t* error = (zen_AssemblyLexerError_t*)jtk_ArrayList_getValue(lexer->m_errors, i);
         zen_AssemblyLexerError_delete(error);
     }
-    zen_ArrayList_delete(lexer->m_errors);
+    jtk_ArrayList_delete(lexer->m_errors);
 
     zen_Memory_deallocate(lexer);
 }
@@ -734,7 +734,7 @@ zen_Token_t* zen_AssemblyLexer_nextToken(zen_AssemblyLexer_t* lexer) {
                             while (lexer->m_la1 != '*') {
                                 if (lexer->m_la1 == ZEN_END_OF_STREAM) {
                                     zen_AssemblyLexer_t* error = zen_AssemblyLexer_createError(lexer, "Unterminated multi-line comment");
-                                    zen_ArrayList_add(lexer->m_errors, error);
+                                    jtk_ArrayList_add(lexer->m_errors, error);
                                     break;
                                 }
 
@@ -815,12 +815,12 @@ zen_Token_t* zen_AssemblyLexer_nextToken(zen_AssemblyLexer_t* lexer) {
                     while (lexer->m_la1 != '"') {
                         if (lexer->m_la1 == ZEN_END_OF_STREAM) {
                             zen_AssemblyLexerError_t* error = zen_AssemblyLexer_createError(lexer, "Unexpected end of stream in string literal");
-                            zen_ArrayList_add(lexer->m_errors, error);
+                            jtk_ArrayList_add(lexer->m_errors, error);
                             break;
                         }
                         else if (lexer->m_la1 == '\n') {
                             zen_AssemblyLexerError_t* error = zen_AssemblyLexer_createError(lexer, "Unexpected end of line in string literal");
-                            zen_ArrayList_add(lexer->m_errors, error);
+                            jtk_ArrayList_add(lexer->m_errors, error);
                             break;
                         }
                         else if (lexer->m_la1 == '\\') {
@@ -845,14 +845,14 @@ zen_Token_t* zen_AssemblyLexer_nextToken(zen_AssemblyLexer_t* lexer) {
                                     }
                                     else {
                                         zen_AssemblyLexerError_t* error = zen_AssemblyLexer_createError(lexer, "Expected four hexadecimal digits");
-                                        zen_ArrayList_add(lexer->m_errors, error);
+                                        jtk_ArrayList_add(lexer->m_errors, error);
                                         break;
                                     }
                                 }
                             }
                             else {
                                 zen_AssemblyLexerError_t* error = zen_AssemblyLexer_createError(lexer, "Unknown escape sequence");
-                                zen_ArrayList_add(lexer->m_errors, error);
+                                jtk_ArrayList_add(lexer->m_errors, error);
 
                                 /* Consume and discard the unknown escape sequence. */
                                 zen_AssemblyLexer_consume(lexer);
@@ -1753,7 +1753,7 @@ zen_Token_t* zen_AssemblyLexer_nextToken(zen_AssemblyLexer_t* lexer) {
                     }
                     else {
                         zen_AssemblyLexerError_t* error = zen_AssemblyLexer_createError(lexer, "Unknown character");
-                        zen_ArrayList_add(lexer->m_errors, error);
+                        jtk_ArrayList_add(lexer->m_errors, error);
                         /* Consume and discard the unknown character. */
                         zen_AssemblyLexer_consume(lexer);
                         /* The lexer has encountered an unrecognized character. */

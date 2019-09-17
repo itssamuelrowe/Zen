@@ -35,7 +35,7 @@ zen_FunctionScope_t* zen_FunctionScope_new(zen_Scope_t* enclosingScope) {
     scope->m_defineSymbol = (zen_Scope_DefineSymbolFunction_t)zen_FunctionScope_define;
 
     functionScope->m_scope = scope;
-    functionScope->m_fixedParameters = zen_ArrayList_new();
+    functionScope->m_fixedParameters = jtk_ArrayList_new();
     functionScope->m_variableParameter = NULL;
 
     return functionScope;
@@ -45,7 +45,7 @@ void zen_FunctionScope_delete(zen_FunctionScope_t* scope) {
     jtk_Assert_assertObject(scope, "The specified scope is null.");
 
     zen_Scope_delete(scope->m_scope);
-    zen_ArrayList_delete(scope->m_fixedParameters);
+    jtk_ArrayList_delete(scope->m_fixedParameters);
     zen_Memory_deallocate(scope);
 }
 
@@ -68,7 +68,7 @@ void zen_FunctionScope_define(zen_FunctionScope_t* scope, zen_Symbol_t* symbol) 
         }
         else {
 #warning "TODO: Why aren't we checking for an internal error?"
-            zen_ArrayList_add(scope->m_fixedParameters, symbol);
+            jtk_ArrayList_add(scope->m_fixedParameters, symbol);
         }
     }
     else {
@@ -80,10 +80,10 @@ zen_Symbol_t* zen_FunctionScope_resolve(zen_FunctionScope_t* scope, const uint8_
     jtk_Assert_assertObject(scope, "The specified scope is null.");
 
     zen_Symbol_t* result = NULL;
-    int32_t size = zen_ArrayList_getSize(scope->m_fixedParameters);
+    int32_t size = jtk_ArrayList_getSize(scope->m_fixedParameters);
     int32_t i;
     for (i = 0; i < size; i++) {
-        zen_Symbol_t* symbol = (zen_Symbol_t*)zen_ArrayList_get(scope->m_fixedParameters, i);
+        zen_Symbol_t* symbol = (zen_Symbol_t*)jtk_ArrayList_getValue(scope->m_fixedParameters, i);
         const uint8_t* identifier0 = zen_Token_getText((zen_Token_t*)(symbol->m_identifier->m_context));
         if (zen_String_equals(identifier, zen_String_getLength(identifier), identifier0, zen_String_getLength(identifier0))) {
             result = symbol;

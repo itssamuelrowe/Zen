@@ -36,9 +36,9 @@ zen_ErrorHandler_t* zen_ErrorHandler_new(void* context) {
     handler->m_onSemanticError = NULL;
     handler->m_onLexicalError = NULL;
     handler->m_active = false;
-    handler->m_syntaxErrors = zen_ArrayList_newWithCapacity(ZEN_ERROR_HANDLER_PREFERED_LIST_CAPACITY);
-    handler->m_lexicalErrors = zen_ArrayList_newWithCapacity(ZEN_ERROR_HANDLER_PREFERED_LIST_CAPACITY);
-    handler->m_semanticErrors = zen_ArrayList_newWithCapacity(ZEN_ERROR_HANDLER_PREFERED_LIST_CAPACITY);
+    handler->m_syntaxErrors = jtk_ArrayList_newWithCapacity(ZEN_ERROR_HANDLER_PREFERED_LIST_CAPACITY);
+    handler->m_lexicalErrors = jtk_ArrayList_newWithCapacity(ZEN_ERROR_HANDLER_PREFERED_LIST_CAPACITY);
+    handler->m_semanticErrors = jtk_ArrayList_newWithCapacity(ZEN_ERROR_HANDLER_PREFERED_LIST_CAPACITY);
 
     return handler;
 }
