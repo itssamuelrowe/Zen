@@ -4,7 +4,7 @@ Zen is a general purpose programming language designed to build simple, reliable
 
 ## Example
 
-```js
+```python
 import zen.core.System.*
 
 function factorial(n)
