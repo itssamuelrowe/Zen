@@ -18,7 +18,7 @@
 
 #include <com/onecube/zen/CString.h>
 
-uint8_t* zen_String_new(const uint8_t* string) {
+uint8_t* jtk_String_new(const uint8_t* string) {
     return zen_String_newWithSize(string, zen_String_getLength(string));
 }
 

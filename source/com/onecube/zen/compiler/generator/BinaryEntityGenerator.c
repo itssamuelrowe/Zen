@@ -16,7 +16,6 @@
 
 // Friday, March 30, 2018
 
-
 #include <jtk/core/Integer.h>
 #include <jtk/core/VariableArguments.h>
 
@@ -347,8 +346,11 @@ void zen_BinaryEntityGenerator_onEnterCompilationUnit(zen_ASTListener_t* astList
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
     jtk_Assert_assertObject(node, "The specified AST node is null.");
 
+    /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    /* Retrieve the scope associated with the current AST node. */
     zen_Scope_t* scope = zen_ASTAnnotations_get(generator->m_scopes, node);
+    /* Activate the scope associated with the current AST node. */
     zen_SymbolTable_setCurrentScope(generator->m_symbolTable, scope);
 
     /* Push the primary channel onto the channel stack. */
@@ -371,7 +373,11 @@ void zen_BinaryEntityGenerator_onExitCompilationUnit(zen_ASTListener_t* astListe
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
     jtk_Assert_assertObject(node, "The specified AST node is null.");
 
+    /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    /* Invalidate the current scope, activated in the corresponding "enter" listener
+     * function.
+     */
     zen_SymbolTable_invalidateCurrentScope(generator->m_symbolTable);
 
     /* At this point, the data should be written on the second channel. */

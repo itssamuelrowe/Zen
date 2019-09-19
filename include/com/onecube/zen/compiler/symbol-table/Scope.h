@@ -47,7 +47,7 @@ typedef struct zen_Scope_t zen_Scope_t;
  * @since zen 1.0
  */
 struct zen_Scope_t {
-    uint8_t* m_name;
+    jtk_String_t* m_name;
     zen_ScopeType_t m_type;
     zen_Scope_t* m_enclosingScope;
     void* m_context;

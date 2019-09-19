@@ -49,7 +49,7 @@ void zen_EnumerationScope_delete(zen_EnumerationScope_t* scope) {
     jtk_Assert_assertObject(scope, "The specified scope is null.");
 
     zen_Scope_delete(scope->m_scope);
-    zen_HashMap_delete(scope->m_enumerates);
+    jtk_HashMap_delete(scope->m_enumerates);
     jtk_Memory_deallocate(scope);
 }
 
