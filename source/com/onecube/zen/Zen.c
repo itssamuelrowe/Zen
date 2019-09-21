@@ -174,14 +174,14 @@ int32_t main(int32_t length, char** arguments) {
 
 #warning "Who gets to destroy symbols and scopes?!"
 
-                zen_BinaryEntityBuilder_t* entityBuilder = zen_BinaryEntityBuilder_new(symbolTable, scopes);
-                zen_BinaryEntityBuilder_build(entityBuilder, compilationUnit);
+                // zen_BinaryEntityBuilder_t* entityBuilder = zen_BinaryEntityBuilder_new(symbolTable, scopes);
+                // zen_BinaryEntityBuilder_build(entityBuilder, compilationUnit);
 
                 /*zen_BinaryEntityGenerator_t* generator = zen_BinaryEntityGenerator_new();
                 zen_BinaryEntityGenerator_generate(generator);
 
-                zen_BinaryEntityGenerator_delete(generator);*/
-                zen_BinaryEntityBuilder_delete(entityBuilder);
+                zen_BinaryEntityGenerator_delete(generator);
+                zen_BinaryEntityBuilder_delete(entityBuilder);*/
                 zen_SymbolDefinitionListener_delete(symbolDefinitionListener);
                 zen_ASTNode_delete(compilationUnit);
                 zen_Parser_delete(parser);

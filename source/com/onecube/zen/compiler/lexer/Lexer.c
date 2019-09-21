@@ -295,13 +295,15 @@ void zen_Lexer_consume(zen_Lexer_t* lexer) {
 
     lexer->m_index++;
     lexer->m_column++;
-    /* NOTE: We could have used
-     * lexer->index >= "length of input stream"
-     * Unfortunately, the flexible design of both the
-     * lexer and input stream fails to provide a method
-     * to determine the stream length in advance.
+    /* NOTE: We could have used lexer->index >= "length of input stream"
+     * Unfortunately, the flexible design of both the lexer and input stream fails
+     * to provide a method to determine the stream length in advance.
+     *
+     * NOTE: The getAvailable() function is only temporarily used. However, the
+     * working of this function is not finalized. Therefore, the following expression
+     * may be subjected to changes.
      */
-    if (jtk_InputStream_isAvailable(lexer->m_inputStream) == 0) {
+    if (jtk_InputStream_getAvailable(lexer->m_inputStream) == 0) {
         lexer->m_la1 = ZEN_END_OF_STREAM;
     }
     else {
