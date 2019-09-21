@@ -153,6 +153,8 @@ set (
 set (
     ZEN_COMPILER_TOOL_SOURCE
 
+    # Instruction.c is from the virtual machine module. Remove references to it.
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/Instruction.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/Zen.c
 )
 
@@ -177,7 +179,7 @@ link_directories(${JTK_LIBRARY_DIRS})
 message(WARNING ${JTK_CFLAGS})
 
 add_executable (zen ${ZEN_PUBLIC_HEADERS} ${ZEN_COMMON_SOURCE} ${ZEN_COMPILER_SOURCE} ${ZEN_COMPILER_TOOL_SOURCE} ${ZEN_PRIVATE_HEADERS})
-target_link_libraries(zen ${JTK_LIBRARIES})
+target_link_libraries(zen ${JTK_LIBRARIES} m)
 target_include_directories(zen SYSTEM PUBLIC ${JTK_INCLUDE_DIRS})
 # target_compile_options(zen PUBLIC -Wall -Wswitch)
 target_compile_options(zen PUBLIC -g -w ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})

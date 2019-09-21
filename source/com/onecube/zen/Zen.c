@@ -46,6 +46,15 @@ void printToken(zen_Token_t* token) {
     printf("[%d-%d:%d-%d:%s:%s]\n", token->m_startLine + 1, token->m_stopLine + 1, token->m_startColumn + 1, token->m_stopColumn + 1, token->m_channel == ZEN_TOKEN_CHANNEL_DEFAULT? "default" : "hidden", zen_Lexer_getLiteralName(token->m_type));
 }
 
+
+bool jtk_Object_isNull(void* object) {
+    return object == NULL;
+}
+
+bool jtk_Object_isNotNull(void* object) {
+    return object != NULL;
+}
+
 void printTokens(jtk_ArrayList_t* tokens) {
     int32_t limit = jtk_ArrayList_getSize(tokens);
     zen_Token_t* token;

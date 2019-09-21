@@ -19,7 +19,7 @@
 #include <com/onecube/zen/CString.h>
 
 uint8_t* jtk_CString_new(const uint8_t* string) {
-    return jtk_CString_newWithSize(string, jtk_CString_getLength(string));
+    return jtk_CString_newWithSize(string, jtk_CString_getSize(string));
 }
 
 uint8_t* jtk_CString_newWithSize(const uint8_t* string, int32_t size) {
@@ -55,7 +55,7 @@ bool jtk_CString_equals(const uint8_t* string1, int32_t size1, const uint8_t* st
     return false;
 }
 
-int32_t jtk_CString_getLength(const uint8_t* string) {
+int32_t jtk_CString_getSize(const uint8_t* string) {
     int32_t i = 0;
     while (string[i++] != '\0');
     return i - 1;

@@ -33,7 +33,7 @@ int32_t main(int32_t size, char** arguments) {
         int32_t i;
         for (i = 1; i < size; i++) {
             const uint8_t* text = arguments[i];
-            int32_t length = jtk_CString_getLength(text);
+            int32_t length = jtk_CString_getSize(text);
             if (((length == 2) && jtk_CString_equals(text, length, "-i", 2)) ||
                 ((length == 13) && jtk_CString_equals(text, length, "--instruction", 13))) {
                 if (i + 1 < size) {

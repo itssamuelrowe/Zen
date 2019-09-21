@@ -24,6 +24,15 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
+
+#ifndef NULL
+    #define NULL 0
+#endif
+
+
+#include <jtk/Configuration.h>
+
 
 #define zen_Memory_allocate(type, units) (type*)zen_Memory_allocate0(sizeof (type) * (units))
 #define zen_Memory_deallocate(object) free(object)
