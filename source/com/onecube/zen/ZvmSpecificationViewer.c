@@ -33,9 +33,9 @@ int32_t main(int32_t size, char** arguments) {
         int32_t i;
         for (i = 1; i < size; i++) {
             const uint8_t* text = arguments[i];
-            int32_t length = zen_String_getLength(text);
-            if (((length == 2) && zen_String_equals(text, length, "-i", 2)) ||
-                ((length == 13) && zen_String_equals(text, length, "--instruction", 13))) {
+            int32_t length = jtk_CString_getLength(text);
+            if (((length == 2) && jtk_CString_equals(text, length, "-i", 2)) ||
+                ((length == 13) && jtk_CString_equals(text, length, "--instruction", 13))) {
                 if (i + 1 < size) {
                     const uint8_t* parameter = arguments[i + 1];
                     zen_ByteCode_t byteCode = (zen_ByteCode_t)zen_Integer_parse(parameter, 10);

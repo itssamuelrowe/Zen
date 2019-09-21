@@ -85,7 +85,7 @@ zen_Symbol_t* zen_FunctionScope_resolve(zen_FunctionScope_t* scope, const uint8_
     for (i = 0; i < size; i++) {
         zen_Symbol_t* symbol = (zen_Symbol_t*)jtk_ArrayList_getValue(scope->m_fixedParameters, i);
         const uint8_t* identifier0 = zen_Token_getText((zen_Token_t*)(symbol->m_identifier->m_context));
-        if (zen_String_equals(identifier, zen_String_getLength(identifier), identifier0, zen_String_getLength(identifier0))) {
+        if (jtk_CString_equals(identifier, jtk_CString_getLength(identifier), identifier0, jtk_CString_getLength(identifier0))) {
             result = symbol;
             break;
         }
@@ -93,7 +93,7 @@ zen_Symbol_t* zen_FunctionScope_resolve(zen_FunctionScope_t* scope, const uint8_
 
     if ((result == NULL) && (scope->m_variableParameter != NULL)) {
         const uint8_t* identifier0 = zen_Token_getText((zen_Token_t*)(scope->m_variableParameter->m_identifier->m_context));
-        if (zen_String_equals(identifier, zen_String_getLength(identifier), identifier0, zen_String_getLength(identifier0))) {
+        if (jtk_CString_equals(identifier, jtk_CString_getLength(identifier), identifier0, jtk_CString_getLength(identifier0))) {
             result = scope->m_variableParameter;
         }
     }

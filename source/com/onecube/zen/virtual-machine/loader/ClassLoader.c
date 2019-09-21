@@ -47,10 +47,10 @@ void zen_ClassLoader_delete(zen_ClassLoader_t* classLoader) {
     jtk_Iterator_t* entryIterator = jtk_HashMap_getEntryIterator(classLoader->m_classes);
     while (jtk_Iterator_hasNext(entryIterator)) {
         jtk_HashMapEntry_t* entry = (jtk_HashMapEntry_t*)jtk_Iterator_getNext(entryIterator);
-        jtk_String_t* descriptor = (jtk_String_t*)jtk_HashMapEntry_getKey(entry);
+        jtk_CString_t* descriptor = (jtk_CString_t*)jtk_HashMapEntry_getKey(entry);
         zen_Class_t* class0 = (zen_Class_t*)jtk_HashMapEntry_getValue(entry);
         
-        // TODO: jtk_String_delete(descriptor);
+        // TODO: jtk_CString_delete(descriptor);
         zen_Class_delete(class0);
     }
     jtk_Iterator_delete(entryIterator);
@@ -66,7 +66,7 @@ zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
     jtk_Assert_assertObject(classLoader, "The specified class loader is null.");
     
     bool destroyDescriptorString = true;
-    jtk_String_t* descriptorString = jtk_String_new(descriptor);
+    jtk_CString_t* descriptorString = jtk_CString_new(descriptor);
     zen_Class_t* class0 = (zen_Class_t*)jtk_HashMap_getValue(classLoader->m_classes,
         descriptorString);
 
@@ -86,7 +86,7 @@ zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
     }
     
     if (destroyDescriptorString) {
-        jtk_String_delete(descriptorString);
+        jtk_CString_delete(descriptorString);
     }
     
     return class0;
@@ -95,7 +95,7 @@ zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
 // Load
 
 zen_Class_t* zen_ClassLoader_loadFromEntityFile(zen_ClassLoader_t* classLoader,
-    jtk_String_t* descriptor, zen_EntityFile_t* entityFile) {
+    jtk_CString_t* descriptor, zen_EntityFile_t* entityFile) {
     jtk_Assert_assertObject(classLoader, "The specified class loader is null.");
     jtk_Assert_assertObject(descriptor, "The specified class descriptor is null.");
     jtk_Assert_assertObject(entityFile, "The specified entity file is null.");

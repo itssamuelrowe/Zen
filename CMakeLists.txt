@@ -176,7 +176,7 @@ link_directories(${JTK_LIBRARY_DIRS})
 
 message(WARNING ${JTK_CFLAGS})
 
-add_executable (zen ${ZEN_PUBLIC_HEADERS} ${ZEN_COMMON_SOURCE} ${ZEN_COMPILER_SOURCE} ${ZEN_PRIVATE_HEADERS})
+add_executable (zen ${ZEN_PUBLIC_HEADERS} ${ZEN_COMMON_SOURCE} ${ZEN_COMPILER_SOURCE} ${ZEN_COMPILER_TOOL_SOURCE} ${ZEN_PRIVATE_HEADERS})
 target_link_libraries(zen ${JTK_LIBRARIES})
 target_include_directories(zen SYSTEM PUBLIC ${JTK_INCLUDE_DIRS})
 # target_compile_options(zen PUBLIC -Wall -Wswitch)

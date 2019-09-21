@@ -18,11 +18,11 @@
 
 #include <com/onecube/zen/CString.h>
 
-uint8_t* jtk_String_new(const uint8_t* string) {
-    return zen_String_newWithSize(string, zen_String_getLength(string));
+uint8_t* jtk_CString_new(const uint8_t* string) {
+    return jtk_CString_newWithSize(string, jtk_CString_getLength(string));
 }
 
-uint8_t* zen_String_newWithSize(const uint8_t* string, int32_t size) {
+uint8_t* jtk_CString_newWithSize(const uint8_t* string, int32_t size) {
     uint8_t* result = zen_Memory_allocate(uint8_t, size + 1);
     int32_t i;
     for (i = 0; i < size; i++) {
@@ -32,11 +32,11 @@ uint8_t* zen_String_newWithSize(const uint8_t* string, int32_t size) {
     return result;
 }
 
-void zen_String_delete(uint8_t* string) {
+void jtk_CString_delete(uint8_t* string) {
     jtk_Memory_deallocate(string);
 }
 
-bool zen_String_equals(const uint8_t* string1, int32_t size1, const uint8_t* string2, int32_t size2) {
+bool jtk_CString_equals(const uint8_t* string1, int32_t size1, const uint8_t* string2, int32_t size2) {
     if (string1 == string2) {
         return 1;
     }
@@ -55,7 +55,7 @@ bool zen_String_equals(const uint8_t* string1, int32_t size1, const uint8_t* str
     return false;
 }
 
-int32_t zen_String_getLength(const uint8_t* string) {
+int32_t jtk_CString_getLength(const uint8_t* string) {
     int32_t i = 0;
     while (string[i++] != '\0');
     return i - 1;

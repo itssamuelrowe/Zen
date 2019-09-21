@@ -34,7 +34,7 @@ zen_ClassScope_t* zen_ClassScope_new(zen_Scope_t* enclosingScope) {
     scope->m_defineSymbol = (zen_Scope_DefineSymbolFunction_t)zen_ClassScope_define;
 
     classScope->m_scope = scope;
-    classScope->m_symbols = jtk_HashMap_new(zen_StringObjectAdapter_getInstance(), NULL);
+    classScope->m_symbols = jtk_HashMap_new(jtk_StringObjectAdapter_getInstance(), NULL);
     classScope->m_classSymbol = NULL;
 #warning "classScope->m_classSymbol must be set by the ClassSymbol class."
 

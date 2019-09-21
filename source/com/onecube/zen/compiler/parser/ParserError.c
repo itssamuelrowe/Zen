@@ -29,7 +29,7 @@ void zen_ParserError_delete(zen_ParserError_t* error) {
     jtk_Assert_assertObject(error, "The specified error is null.");
     
     if (error->m_message != NULL) {
-        zen_String_delete(error->m_message);
+        jtk_CString_delete(error->m_message);
     }
     
     jtk_Memory_deallocate(error);

@@ -38,7 +38,7 @@ zen_LocalScope_t* zen_LocalScope_new(zen_Scope_t* enclosingScope) {
     /* The value adapter is null because the HashMap is not required to test
      * any values.
      */
-    localScope->m_symbols = zen_HashMap_new(zen_StringObjectAdapter_getInstance(), NULL);
+    localScope->m_symbols = jtk_HashMap_new(jtk_StringObjectAdapter_getInstance(), NULL);
 
     return localScope;
 }
@@ -70,5 +70,5 @@ void zen_LocalScope_define(zen_LocalScope_t* scope, zen_Symbol_t* symbol) {
 zen_Symbol_t* zen_LocalScope_resolve(zen_LocalScope_t* scope, const uint8_t* identifier) {
     jtk_Assert_assertObject(scope, "The specified scope is null.");
 
-    return zen_HashMap_getValue(scope->m_symbols, (void*)identifier);
+    return jtk_HashMap_getValue(scope->m_symbols, (void*)identifier);
 }

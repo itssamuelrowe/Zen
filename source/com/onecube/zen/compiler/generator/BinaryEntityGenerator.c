@@ -283,7 +283,7 @@ zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_new(
 void zen_BinaryEntityGenerator_delete(zen_BinaryEntityGenerator_t* generator) {
     jtk_Assert_assertObject(generator, "The specified generator is null.");
 
-    jtk_Iterator_t* keyIterator = jtk_DualHashMap_getKeyIterator(generator->m_constantPool);
+    /*jtk_Iterator_t* keyIterator = jtk_DualHashMap_getKeyIterator(generator->m_constantPool);
     while (jtk_Iterator_hasNext(keyIterator)) {
         zen_ConstantPoolEntry_t* entry = (zen_ConstantPoolEntry_t*)jtk_Iterator_getNext(keyIterator);
 
@@ -296,7 +296,7 @@ void zen_BinaryEntityGenerator_delete(zen_BinaryEntityGenerator_t* generator) {
     }
     jtk_Iterator_delete(keyIterator);
 
-    jtk_DualHashMap_delete(generator->m_constantPool);
+    jtk_DualHashMap_delete(generator->m_constantPool);*/
     zen_BinaryEntityBuilder_delete(generator->m_builder);
     zen_ASTListener_delete(generator->m_astListener);
     jtk_Memory_deallocate(generator);
@@ -393,7 +393,7 @@ void zen_BinaryEntityGenerator_onExitCompilationUnit(zen_ASTListener_t* astListe
 
     /* Prepare the constants. */
 
-    uint16_t constantPoolCount = jtk_DualHashMap_getSize(generator->m_constantPool);
+    uint16_t constantPoolCount = 0; // jtk_DualHashMap_getSize(generator->m_constantPool);
 
     /* The constant pool should be written according the indexes of the entries.
      * Because the dual hash map does not store the order, an array is used to
@@ -403,7 +403,7 @@ void zen_BinaryEntityGenerator_onExitCompilationUnit(zen_ASTListener_t* astListe
      */
     jtk_Array_t* entries = jtk_Array_new(entryCount);
 
-    jtk_Iterator_t* iterator = jtk_DualHashMap_getEntryIterator(generator->m_constantPool);
+    /*jtk_Iterator_t* iterator = jtk_DualHashMap_getEntryIterator(generator->m_constantPool);
     while (jtk_Iterator_hasNext(iterator)) {
         jtk_HashMapEntry_t* entry = (jtk_HashMapEntry_t*)jtk_Iterator_getNext(iterator);
         zen_ConstantPoolEntry_t* constantPoolEntry = (zen_ConstantPoolEntry_t*)jtk_HashMapEntry_getKey(entry);
@@ -411,7 +411,7 @@ void zen_BinaryEntityGenerator_onExitCompilationUnit(zen_ASTListener_t* astListe
 
         jtk_Array_setValue(entries, index, constantPoolEntry);
     }
-    jtk_Iterator_delete(iterator);
+    jtk_Iterator_delete(iterator);*/
 
     /* Generate the constant pool and its entries. */
     zen_BinaryEntityBuilder_activateChannel(generator->m_builder, generator->m_constantPoolIdentifier);
@@ -574,7 +574,7 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
     zen_FunctionDeclarationContext_t* context = (zen_FunctionDeclarationContext_t*)node->m_context;
 
     jtk_Token_t* identifier = (zen_Token_t*)(context->m_identifier);
-    jtk_String_t* descriptor = zen_BinaryEntityGenerator_getDescriptor(generator, context->m_functionParameters);
+    jtk_CString_t* descriptor = zen_BinaryEntityGenerator_getDescriptor(generator, context->m_functionParameters);
 
     zen_Scope_t* scope = zen_ASTAnnotations_get(generator->m_scopes, node);
     zen_SymbolTable_setCurrentScope(generator->m_symbolTable, scope);
@@ -585,7 +585,7 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
         generator, descriptor);
     uint16_t flags = 0;
 
-    jtk_String_delete(descriptor);
+    jtk_CString_delete(descriptor);
 
     zen_ChannelManager_activate(generator->m_channels, generator->m_functionChannel);
     zen_BinaryEntityBuilder_writeFunction(generator->m_builder, nameIndex,
@@ -910,7 +910,7 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
         (zen_ClassDeclarationContext_t*)node->m_context;
 
     jtk_Token_t* identifier = (zen_Token_t*)(context->m_identifier);
-    jtk_String_t* reference = jtk_String_newFromJoinEx(generator->m_package->m_value,
+    jtk_CString_t* reference = jtk_CString_newFromJoinEx(generator->m_package->m_value,
         generator->m_package->m_size, identifier->m_text, identifier->m_length);
 
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
@@ -922,7 +922,7 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
     uint16_t* superclassIndexes = NULL;
     uint16_t superclassCount = 0;
 
-    jtk_String_delete(reference);
+    jtk_CString_delete(reference);
 
     if (node->m_extendsClause != NULL) {
         zen_ClassExtendsClauseContext_t* extendsClauseContext =
@@ -944,7 +944,7 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
                 currentScope, typeNameContext->m_identifiers);
             if (zen_Symbol_isClass(symbol)) {
                 zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
-                jtk_String_t* qualifiedName = zen_ClassSymbol_getQualifiedName(classSymbol);
+                jtk_CString_t* qualifiedName = zen_ClassSymbol_getQualifiedName(classSymbol);
 
                 uint16_t superclassIndex = zen_BinaryEntityBuilder_getConstantPoolClassIndex(
                     generator->m_builder, qualifiedName);
@@ -960,14 +960,14 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
          * the compiler generates the default extends clause which inherits
          * the zen.core.Object class.
          */
-        jtk_String_t* objectClassName = jtk_String_newEx("zen.core.Object", 15);
+        jtk_CString_t* objectClassName = jtk_CString_newEx("zen.core.Object", 15);
 
         superclassCount = 1;
         superclassIndexes = jtk_Memory_allocate(uint16_t, 1);
         superclassIndexes[0] = zen_BinaryEntityBuilder_getConstantPoolClassIndex(
             generator->m_builder, objectClassName);
 
-        jtk_String_delete(objectClassName);
+        jtk_CString_delete(objectClassName);
     }
 
     zen_BinaryEntityBuilder_writeClass(generator->m_builder, flags, referenceIndex,

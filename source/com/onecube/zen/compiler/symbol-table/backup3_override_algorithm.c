@@ -69,7 +69,7 @@ else if () {
             classSymbol = (zen_ClassSymbol_t*)zen_LinkedStack_pop(stack);
             classScope = (zen_ClassScope_t*)(zen_ClassSymbol_getClassScope(classSymbol)->m_context); // The context is unset
 
-            oldSymbol = (zen_Symbol_t*)zen_HashMap_getValue(classScope->m_symbols, identifierText);
+            oldSymbol = (zen_Symbol_t*)jtk_HashMap_getValue(classScope->m_symbols, identifierText);
             if (oldSymbol != NULL) {
                 if (zen_Symbol_isFunction(oldSymbol)) {
                     zen_Scope_t* oldSymbolEnclosingScope = zen_Symbol_getEnclosingScope(oldSymbol);
@@ -167,7 +167,7 @@ else if () {
 
         if (!error) {
             zen_ClassScope_t* classScope = (zen_ClassScope_t*)currentScope->m_context;
-            zen_Symbol_t* symbol = (zen_Symbol_t*)zen_HashMap_getValue(classScope->m_symbols, identifierText);
+            zen_Symbol_t* symbol = (zen_Symbol_t*)jtk_HashMap_getValue(classScope->m_symbols, identifierText);
             zen_FunctionSymbol_t* functionSymbol = NULL;
             if (symbol == NULL) {
                 functionSymbol = zen_FunctionSymbol_new(identifier, symbolTable->m_currentScope);

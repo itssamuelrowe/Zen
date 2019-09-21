@@ -22,7 +22,7 @@ zen_Scope_t* zen_Scope_new(const uint8_t* name, zen_ScopeType_t type,
     jtk_Assert_assertObject(name, "The specified name is null.");
 
     zen_Scope_t* scope = jtk_Memory_allocate(zen_Scope_t, 1);
-    scope->m_name = jtk_String_new(name); // Fix this.
+    scope->m_name = jtk_CString_new(name); // Fix this.
     scope->m_type = type;
     scope->m_enclosingScope = enclosingScope;
     scope->m_context = context;
@@ -34,7 +34,7 @@ zen_Scope_t* zen_Scope_new(const uint8_t* name, zen_ScopeType_t type,
 void zen_Scope_delete(zen_Scope_t* scope) {
     jtk_Assert_assertObject(scope, "The specified scope is null.");
 
-    zen_String_delete(scope->m_name);
+    jtk_CString_delete(scope->m_name);
     jtk_Memory_deallocate(scope);
 }
 

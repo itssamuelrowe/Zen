@@ -38,7 +38,7 @@ zen_EnumerationScope_t* zen_EnumerationScope_new(zen_Scope_t* enclosingScope) {
     scope->m_defineSymbol = (zen_Scope_DefineSymbolFunction_t)zen_EnumerationScope_define;
 
     enumerationScope->m_scope = scope;
-    enumerationScope->m_enumerates = zen_HashMap_new(zen_StringObjectAdapter_getInstance(), NULL);
+    enumerationScope->m_enumerates = jtk_HashMap_new(jtk_StringObjectAdapter_getInstance(), NULL);
     enumerationScope->m_enumerationSymbol = NULL;
 #warning "enumerationScope->m_enumerationSymbol must be set by the EnumerationSymbol class."
 
@@ -82,5 +82,5 @@ void zen_EnumerationScope_define(zen_EnumerationScope_t* scope, zen_Symbol_t* sy
 zen_Symbol_t* zen_EnumerationScope_resolve(zen_EnumerationScope_t* scope, const uint8_t* identifier) {
     jtk_Assert_assertObject(scope, "The specified scope is null.");
 
-    return zen_HashMap_getValue(scope->m_enumerates, (void*)identifier);
+    return jtk_HashMap_getValue(scope->m_enumerates, (void*)identifier);
 }

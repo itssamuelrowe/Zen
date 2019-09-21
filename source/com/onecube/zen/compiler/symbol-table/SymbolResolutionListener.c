@@ -133,14 +133,14 @@ void zen_SymbolResolutionListener_onEnterFunctionDeclaration(
 //         * Remember, the declaration phase takes care of this.
 //         */
 //
-//        zen_Symbol_t* currentScopeSymbol = (zen_Symbol_t*)zen_HashMap_getValue(classScope->m_symbols, identifierText);
+//        zen_Symbol_t* currentScopeSymbol = (zen_Symbol_t*)jtk_HashMap_getValue(classScope->m_symbols, identifierText);
 //
 //        while (!zen_LinkedStack_isEmpty(stack)) {
 //            zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)zen_LinkedStack_pop(stack);
 //            zen_Scope_t* ts = zen_ClassSymbol_getClassScope(classSymbol);
 //            classScope = (zen_ClassScope_t*)ts->m_context;
 //
-//            zen_Symbol_t* superScopeSymbol = (zen_Symbol_t*)zen_HashMap_getValue(classScope->m_symbols, identifierText);
+//            zen_Symbol_t* superScopeSymbol = (zen_Symbol_t*)jtk_HashMap_getValue(classScope->m_symbols, identifierText);
 //            if (superScopeSymbol != NULL) {
 //                if (zen_Symbol_isFunction(superScopeSymbol)) {
 //                    /* Thanks to the declaration phase, we can be sure that the current scope symbol

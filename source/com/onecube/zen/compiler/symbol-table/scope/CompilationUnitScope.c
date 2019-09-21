@@ -39,7 +39,7 @@ zen_CompilationUnitScope_t* zen_CompilationUnitScope_new() {
     /* The value adapter is null because the HashMap is not required to test
      * any values.
      */
-    compilationUnitScope->m_symbols = jtk_HashMap_new(zen_StringObjectAdapter_getInstance(), NULL);
+    compilationUnitScope->m_symbols = jtk_HashMap_new(jtk_StringObjectAdapter_getInstance(), NULL);
 
     return compilationUnitScope;
 }

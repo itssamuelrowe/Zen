@@ -53,8 +53,8 @@ void zen_AttributeParseRules_delete(zen_AttributeParseRules_t* rules) {
     // Delete keys!
     jtk_Iterator_t* keyIterator = jtk_HashMap_getKeyIterator(rules->m_map);
     while (jtk_Iterator_hasNext(keyIterator)) {
-        jtk_String_t* key = (jtk_String_t*)jtk_Iterator_getNext(keyIterator);
-        jtk_String_delete(key);
+        jtk_CString_t* key = (jtk_CString_t*)jtk_Iterator_getNext(keyIterator);
+        jtk_CString_delete(key);
     }
     jtk_Iterator_delete(keyIterator);
 
@@ -67,7 +67,7 @@ void zen_AttributeParseRules_delete(zen_AttributeParseRules_t* rules) {
 void zen_AttributeParseRules_initialize(zen_AttributeParseRules_t* rules) {
     jtk_Assert_assertObject(rules, "The specified attribute parse rules is null.");
     
-    jtk_String_t* instructionAttributeRuleKey = jtk_String_newEx(ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION, ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION_SIZE);
+    jtk_CString_t* instructionAttributeRuleKey = jtk_CString_newEx(ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION, ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION_SIZE);
     jtk_HashMap_put(rules->m_map, instructionAttributeRuleKey, zen_BinaryEntityParser_parseInstructionAttribute);
 }
 
@@ -77,9 +77,9 @@ zen_AttributeParseRuleFunction_t zen_AttributeParseRules_getRuleEx(
     zen_AttributeParseRules_t* rules, uint8_t* name, int32_t size) {
     jtk_Assert_assertObject(rules, "The specified attribute parse rules is null.");
 
-    jtk_String_t* key = jtk_String_newEx(name, size);
+    jtk_CString_t* key = jtk_CString_newEx(name, size);
     zen_AttributeParseRuleFunction_t result = jtk_HashMap_getValue(rules->m_map, key);
-    jtk_String_delete(key);
+    jtk_CString_delete(key);
 
     return result;
 }

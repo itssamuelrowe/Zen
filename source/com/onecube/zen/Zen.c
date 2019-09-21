@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,24 +17,28 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <com/onecube/zen/Configuration.h>
-#include <com/onecube/zen/InputStream.h>
-#include <com/onecube/zen/Lexer.h>
-#include <com/onecube/zen/LexerError.h>
 #include <jtk/collection/list/ArrayList.h>
-#include <com/onecube/zen/TokenStream.h>
-#include <com/onecube/zen/Parser.h>
-#include <com/onecube/zen/compiler/astNode.h>
-#include <com/onecube/zen/compiler/astListener.h>
-#include <com/onecube/zen/compiler/astWalker.h>
+#include <jtk/fs/FileInputStream.h>
+#include <jtk/io/BufferedInputStream.h>
+#include <jtk/io/InputStream.h>
+
+#include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/compiler/lexer/Lexer.h>
+#include <com/onecube/zen/compiler/lexer/LexerError.h>
+#include <com/onecube/zen/compiler/lexer/TokenStream.h>
+#include <com/onecube/zen/compiler/parser/Parser.h>
+#include <com/onecube/zen/compiler/ast/ASTNode.h>
+#include <com/onecube/zen/compiler/ast/ASTListener.h>
+#include <com/onecube/zen/compiler/ast/ASTWalker.h>
 #include <com/onecube/zen/compiler/ast/ASTAnnotations.h>
 #include <com/onecube/zen/compiler/ast/ASTPrinter.h>
-#include <com/onecube/zen/bcg/BinaryEntityBuilder.h>
-#include <com/onecube/zen/bcg/BinaryEntityGenerator.h>
-#include <com/onecube/zen/feb/Instruction.h>
-#include <com/onecube/zen/st/SymbolDefinitionListener.h>
-#include <com/onecube/zen/st/SymbolResolutionListener.h>
-#include <com/onecube/zen/st/SymbolTable.h>
+#include <com/onecube/zen/compiler/generator/BinaryEntityBuilder.h>
+#include <com/onecube/zen/compiler/generator/BinaryEntityGenerator.h>
+#include <com/onecube/zen/compiler/symbol-table/SymbolDefinitionListener.h>
+#include <com/onecube/zen/compiler/symbol-table/SymbolResolutionListener.h>
+#include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
+
+#include <com/onecube/zen/virtual-machine/feb/Instruction.h>
 
 /* lexer -> parser -> symbol table -> semantic errors -> byte code generator -> interpreter */
 
@@ -58,31 +62,36 @@ void zen_Interpreter_onLexerError(zen_LexerError_t* error) {
     fflush(stderr);
 }
 
-#include <com/onecube/zen/collection/DoublyLinkedList.h>
-int32_t xmain() {
-    zen_DoublyLinkedList_t* list = zen_DoublyLinkedList_new();
-    
-    int32_t size = 15;
-    
-    int32_t i;
-    for (i = 0; i < size; i++) {
-        zen_DoublyLinkedList_addFirst(list, (void*)i);
+bool jtk_PathHelper_exists(const uint8_t* path) {
+    return true;
+}
+
+#define JTK_FILE_OPEN_MODE_BUFFERED (1 << 0)
+
+jtk_InputStream_t* jtk_PathHelper_read(const uint8_t* path);
+jtk_InputStream_t* jtk_PathHelper_readEx(const uint8_t* path, uint32_t flags);
+
+jtk_InputStream_t* jtk_PathHelper_read(const uint8_t* path) {
+    return jtk_PathHelper_readEx(path, JTK_FILE_OPEN_MODE_BUFFERED);
+}
+
+jtk_InputStream_t* jtk_PathHelper_readEx(const uint8_t* path, uint32_t flags) {
+    jtk_InputStream_t* result = NULL;
+
+    jtk_FileInputStream_t* fileStream = jtk_FileInputStream_newFromString(path);
+    result = fileStream->m_inputStream;
+
+    if ((flags & JTK_FILE_OPEN_MODE_BUFFERED) != 0) {
+        jtk_BufferedInputStream_t* bufferedStream = jtk_BufferedInputStream_new(fileStream->m_inputStream);
+        result = bufferedStream->m_inputStream;
     }
-    
-    //while (!zen_DoublyLinkedList_isEmpty(list)) {
-      //  i = rand() % zen_DoublyLinkedList_getSize(list);
-        zen_DoublyLinkedList_removeIndex(list, 1);
-        zen_DoublyLinkedList_removeIndex(list, 0);
-        zen_DoublyLinkedList_removeIndex(list, 3);
-    //}
-    
-    zen_DoublyLinkedList_delete(list);
-    return 0;
+
+    return result;
 }
 
 int32_t main(int32_t length, char** arguments) {
     jtk_Assert_assertTrue(zen_Instruction_verify(), "The instruction set is invalid.");
-    
+
     jtk_ArrayList_t* inputFiles = jtk_ArrayList_new();
     bool internalDumpTokens = false;
     bool internalDumpNodes = false;
@@ -113,11 +122,11 @@ int32_t main(int32_t length, char** arguments) {
     else {
         for (i = 0; i < size; i++) {
             const char* path = (const char*)jtk_ArrayList_getValue(inputFiles, i);
-            zen_InputStream_t* stream = zen_InputStream_new(path);
-            if (stream->m_file == NULL) {
-                fprintf(stderr, "error: %s: No such file", path);
+            if (!jtk_PathHelper_exists(path)) {
+                fprintf(stderr, "[error] Path '%s' does not exist.", path);
             }
             else {
+                jtk_InputStream_t* stream = jtk_PathHelper_read(path);
                 zen_Lexer_t* lexer = zen_Lexer_new(stream);
                 zen_TokenStream_t* tokens = zen_TokenStream_new(lexer, ZEN_TOKEN_CHANNEL_DEFAULT);
 
@@ -159,18 +168,18 @@ int32_t main(int32_t length, char** arguments) {
                 zen_BinaryEntityBuilder_t* entityBuilder = zen_BinaryEntityBuilder_new(symbolTable, scopes);
                 zen_BinaryEntityBuilder_build(entityBuilder, compilationUnit);
 
-                zen_BinaryEntityGenerator_t* generator = zen_BinaryEntityGenerator_new();
+                /*zen_BinaryEntityGenerator_t* generator = zen_BinaryEntityGenerator_new();
                 zen_BinaryEntityGenerator_generate(generator);
 
-                zen_BinaryEntityGenerator_delete(generator);
+                zen_BinaryEntityGenerator_delete(generator);*/
                 zen_BinaryEntityBuilder_delete(entityBuilder);
                 zen_SymbolDefinitionListener_delete(symbolDefinitionListener);
                 zen_ASTNode_delete(compilationUnit);
                 zen_Parser_delete(parser);
                 zen_TokenStream_delete(tokens);
                 zen_Lexer_delete(lexer);
+                jtk_InputStream_delete(stream);
             }
-            zen_InputStream_delete(stream);
         }
     }
 

@@ -1545,14 +1545,14 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[functionEntry->m_nameIndex];
                 zen_ConstantPoolUtf8_t* descriptorEntry = constantPool->m_entries[functionEntry->m_descriptorIndex];
 
-                jtk_String_t* name = jtk_String_newEx(nameEntry->m_bytes, nameEntry->m_length);
-                jtk_String_t* descriptor = jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
+                jtk_CString_t* name = jtk_CString_newEx(nameEntry->m_bytes, nameEntry->m_length);
+                jtk_CString_t* descriptor = jtk_CString_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
 
                 zen_Function_t* function = zen_Class_getStaticFunction(currentStackFrame->m_class,
                     name, descriptor);
 
-                jtk_String_delete(name);
-                jtk_String_delete(descriptor);
+                jtk_CString_delete(name);
+                jtk_CString_delete(descriptor);
 
                 if (function != NULL) {
                     // zen_Interpreter_handleClassInitialization(interpreter, class0);
@@ -2098,7 +2098,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         zen_ConstantPoolString_t* constantPoolString = (zen_ConstantPoolString_t*)entry;
                         zen_ConstantPoolUtf8_t* constantPoolUtf8 =
                             (zen_ConstantPoolString_t*)constantPool->m_entries[constantPoolString->m_stringIndex];
-                        jtk_String_t* value = jtk_String_newEx(constantPoolUtf8->m_bytes, constantPoolUtf8->m_length);
+                        jtk_CString_t* value = jtk_CString_newEx(constantPoolUtf8->m_bytes, constantPoolUtf8->m_length);
                         zen_OperandStack_pushReference(currentStackFrame->m_operandStack, value);
 
                         break;

@@ -346,7 +346,7 @@ zen_Token_t* zen_AssemblyLexer_createToken(zen_AssemblyLexer_t* lexer) {
         );
 
     /* Destroy the text; not required anymore. */
-    zen_String_delete(text);
+    jtk_CString_delete(text);
 
     return token;
 }
@@ -922,646 +922,646 @@ zen_Token_t* zen_AssemblyLexer_nextToken(zen_AssemblyLexer_t* lexer) {
                         lexer->m_type = ZEN_TOKEN_IDENTIFIER;
                         switch (length) {
                             case 3 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEW], 3)) {
+                                if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEW], 3)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_NEW;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NOP], 3)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NOP], 3)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_NOP;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_POP], 3)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_POP], 3)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_POP;
                                 }
                                 break;
                             }
                             case 4 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP], 4)) {
+                                if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP], 4)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_OR_I], 4)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_OR_I], 4)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_OR_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_OR_L], 4)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_OR_L], 4)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_OR_L;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_POP2], 4)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_POP2], 4)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_POP2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RTTI], 4)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RTTI], 4)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_RTTI;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SWAP], 4)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SWAP], 4)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_SWAP;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_WIDE], 4)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_WIDE], 4)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_WIDE;
                                 }
                                 break;
                             }
                             case 5 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_ADD_F], 5)) {
+                                if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_ADD_F], 5)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_ADD_F;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_ADD_I], 5)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_ADD_I], 5)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_ADD_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_ADD_L], 5)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_ADD_L], 5)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_ADD_L;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_ADD_d], 5)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_ADD_d], 5)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_ADD_d;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_AND_I], 5)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_AND_I], 5)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_AND_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_AND_L], 5)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_AND_L], 5)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_AND_L;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_THROW], 5)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_THROW], 5)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_THROW;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_XOR_I], 5)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_XOR_I], 5)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_XOR_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_XOR_L], 5)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_XOR_L], 5)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_XOR_L;
                                 }
                                 break;
                             }
                             case 6 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_A], 6)) {
+                                if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_A], 6)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_A;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_D], 6)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_D], 6)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_D;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_F], 6)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_F], 6)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_F;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_I], 6)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_I], 6)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_L], 6)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_L], 6)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_L;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_B], 6)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_B], 6)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_B;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_S], 6)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_S], 6)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_S;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN], 6)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN], 6)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_RETURN;
                                 }
                                 break;
                             }
                             case 7 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_A0], 7)) {
+                                if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_A0], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_A0;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_A1], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_A1], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_A1;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_A2], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_A2], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_A2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_A3], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_A3], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_A3;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AA], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AA], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_AA;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AB], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AB], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_AB;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AC], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AC], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_AC;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AD], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AD], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_AD;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AF], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AF], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_AF;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AI], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AI], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_AI;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AL], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AL], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_AL;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AS], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_AS], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_AS;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_D0], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_D0], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_D0;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_D1], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_D1], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_D1;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_D2], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_D2], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_D2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_D3], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_D3], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_D3;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_F0], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_F0], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_F0;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_F1], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_F1], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_F1;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_F2], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_F2], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_F2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_F3], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_F3], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_F3;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_I0], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_I0], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_I0;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_I1], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_I1], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_I1;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_I2], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_I2], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_I2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_I3], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_I3], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_I3;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_L0], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_L0], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_L0;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_L1], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_L1], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_L1;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_L2], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_L2], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_L2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_L3], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_L3], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_L3;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_D0], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_D0], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_D0;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_D1], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_D1], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_D1;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_D2], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_D2], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_D2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_F0], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_F0], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_F0;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_F1], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_F1], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_F1;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_F2], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_F2], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_F2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_I0], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_I0], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_I0;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_I1], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_I1], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_I1;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_I2], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_I2], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_I2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_I3], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_I3], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_I3;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_I4], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_I4], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_I4;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_I5], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_I5], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_I5;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_L0], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_L0], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_L0;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_L1], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_L1], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_L1;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_L2], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_L2], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_L2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_A], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_A], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_A;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_D], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_D], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_D;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_F], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_F], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_F;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_I], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_I], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_L], 7)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_L], 7)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_L;
                                 }
                                 break;
                             }
                             case 8 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_DTF], 8)) {
+                                if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_DTF], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_DTF;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_DTI], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_DTI], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_DTI;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_DTL], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_DTL], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_DTL;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_FTD], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_FTD], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_FTD;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_FTI], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_FTI], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_FTI;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_FTL], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_FTL], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_FTL;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_ITB], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_ITB], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_ITB;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_ITC], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_ITC], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_ITC;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_ITD], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_ITD], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_ITD;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_ITF], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_ITF], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_ITF;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_ITL], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_ITL], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_ITL;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_ITS], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_ITS], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_ITS;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_LTD], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_LTD], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_LTD;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_LTF], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_LTF], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_LTF;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_LTI], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CAST_LTI], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_CAST_LTI;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DIVIDE_D], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DIVIDE_D], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_DIVIDE_D;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DIVIDE_F], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DIVIDE_F], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_DIVIDE_F;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DIVIDE_I], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DIVIDE_I], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_DIVIDE_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DIVIDE_L], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DIVIDE_L], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_DIVIDE_L;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_CPR], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_CPR], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_CPR;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MODULO_D], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MODULO_D], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_MODULO_D;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MODULO_F], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MODULO_F], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_MODULO_F;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MODULO_I], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MODULO_I], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_MODULO_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MODULO_L], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MODULO_L], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_MODULO_L;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEGATE_D], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEGATE_D], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_NEGATE_D;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEGATE_F], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEGATE_F], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_NEGATE_F;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEGATE_I], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEGATE_I], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_NEGATE_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEGATE_L], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEGATE_L], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_NEGATE_L;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_IN1], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_IN1], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_IN1;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN_A], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN_A], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_RETURN_A;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN_D], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN_D], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_RETURN_D;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN_F], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN_F], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_RETURN_F;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN_I], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN_I], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_RETURN_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN_L], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN_L], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_RETURN_L;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_A0], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_A0], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_A0;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_A1], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_A1], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_A1;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_A2], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_A2], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_A2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_A3], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_A3], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_A3;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AA], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AA], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_AA;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AB], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AB], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_AB;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AC], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AC], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_AC;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AD], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AD], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_AD;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AF], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AF], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_AF;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AI], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AI], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_AI;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AL], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AL], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_AL;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AS], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_AS], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_AS;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_D0], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_D0], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_D0;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_D1], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_D1], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_D1;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_D2], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_D2], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_D2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_D3], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_D3], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_D3;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_F0], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_F0], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_F0;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_F1], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_F1], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_F1;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_F2], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_F2], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_F2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_F3], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_F3], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_F3;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_I0], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_I0], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_I0;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_I1], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_I1], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_I1;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_I2], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_I2], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_I2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_I3], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_I3], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_I3;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_L0], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_L0], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_L0;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_L1], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_L1], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_L1;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_L2], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_L2], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_L2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_L3], 8)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_L3], 8)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_L3;
                                 }
                                 break;
                             }
                             case 9 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_COMPARE_L], 9)) {
+                                if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_COMPARE_L], 9)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_COMPARE_L;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DUPLICATE], 9)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DUPLICATE], 9)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_DUPLICATE;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_EQ_A], 9)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_EQ_A], 9)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_EQ_A;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_EQ_I], 9)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_EQ_I], 9)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_EQ_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_GE_I], 9)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_GE_I], 9)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_GE_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_GT_I], 9)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_GT_I], 9)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_GT_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_LE_I], 9)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_LE_I], 9)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_LE_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_LT_I], 9)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_LT_I], 9)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_LT_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_NE_A], 9)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_NE_A], 9)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_NE_A;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_NE_I], 9)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_NE_I], 9)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_NE_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEW_ARRAY], 9)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEW_ARRAY], 9)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_NEW_ARRAY;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_NULL], 9)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_PUSH_NULL], 9)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_PUSH_NULL;
                                 }
                                 break;
                             }
                             case 10 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CHECK_CAST], 10)) {
+                                if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_CHECK_CAST], 10)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_CHECK_CAST;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DUPLICATE2], 10)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DUPLICATE2], 10)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_DUPLICATE2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_EQ0_I], 10)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_EQ0_I], 10)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_EQ0_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_EQN_A], 10)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_EQN_A], 10)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_EQN_A;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_GE0_I], 10)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_GE0_I], 10)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_GE0_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_GT0_I], 10)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_GT0_I], 10)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_GT0_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_LE0_I], 10)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_LE0_I], 10)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_LE0_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_LT0_I], 10)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_LT0_I], 10)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_LT0_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_NE0_I], 10)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_NE0_I], 10)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_NE0_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_NEN_A], 10)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_JUMP_NEN_A], 10)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_JUMP_NEN_A;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MULTIPLY_D], 10)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MULTIPLY_D], 10)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_MULTIPLY_D;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MULTIPLY_F], 10)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MULTIPLY_F], 10)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_MULTIPLY_F;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MULTIPLY_I], 10)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MULTIPLY_I], 10)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_MULTIPLY_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MULTIPLY_L], 10)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_MULTIPLY_L], 10)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_MULTIPLY_L;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SUBTRACT_D], 10)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SUBTRACT_D], 10)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_SUBTRACT_D;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SUBTRACT_F], 10)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SUBTRACT_F], 10)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_SUBTRACT_F;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SUBTRACT_I], 10)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SUBTRACT_I], 10)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_SUBTRACT_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SUBTRACT_L], 10)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SUBTRACT_L], 10)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_SUBTRACT_L;
                                 }
                                 break;
                             }
                             case 11 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_INCREMENT_I], 11)) {
+                                if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_INCREMENT_I], 11)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_INCREMENT_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEW_ARRAY_A], 11)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEW_ARRAY_A], 11)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_NEW_ARRAY_A;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEW_ARRAY_N], 11)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_NEW_ARRAY_N], 11)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_NEW_ARRAY_N;
                                 }
                                 break;
                             }
                             case 12 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_COMPARE_GT_D], 12)) {
+                                if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_COMPARE_GT_D], 12)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_COMPARE_GT_D;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_COMPARE_GT_F], 12)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_COMPARE_GT_F], 12)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_COMPARE_GT_F;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_COMPARE_LT_D], 12)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_COMPARE_LT_D], 12)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_COMPARE_LT_D;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_COMPARE_LT_F], 12)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_COMPARE_LT_F], 12)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_COMPARE_LT_F;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DUPLICATE_X1], 12)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DUPLICATE_X1], 12)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_DUPLICATE_X1;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DUPLICATE_X2], 12)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DUPLICATE_X2], 12)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_DUPLICATE_X2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_LEFT_I], 12)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_LEFT_I], 12)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_SHIFT_LEFT_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_LEFT_I], 12)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_LEFT_I], 12)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_SHIFT_LEFT_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_LEFT_L], 12)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_LEFT_L], 12)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_SHIFT_LEFT_L;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SWITCH_TABLE], 12)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SWITCH_TABLE], 12)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_SWITCH_TABLE;
                                 }
                                 break;
                             }
                             case 13 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DUPLICATE2_X1], 13)) {
+                                if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DUPLICATE2_X1], 13)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_DUPLICATE2_X1;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DUPLICATE2_X2], 13)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_DUPLICATE2_X2], 13)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_DUPLICATE2_X2;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_INVOKE_STATIC], 13)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_INVOKE_STATIC], 13)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_INVOKE_STATIC;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_I], 13)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_I], 13)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_I;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_L], 13)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_L], 13)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_L;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SWITCH_SEARCH], 13)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SWITCH_SEARCH], 13)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_SWITCH_SEARCH;
                                 }
                                 break;
                             }
                             case 14 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_INVOKE_DYNAMIC], 14)) {
+                                if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_INVOKE_DYNAMIC], 14)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_INVOKE_DYNAMIC;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_INVOKE_SPECIAL], 14)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_INVOKE_SPECIAL], 14)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_INVOKE_SPECIAL;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_INVOKE_VIRTUAL], 14)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_INVOKE_VIRTUAL], 14)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_INVOKE_VIRTUAL;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_UI], 14)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_UI], 14)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_UI;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_UL], 14)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_UL], 14)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_SHIFT_RIGHT_UL;
                                 }
                                 break;
                             }
                             case 15 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_INVOKE_FRAGMENT], 15)) {
+                                if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_INVOKE_FRAGMENT], 15)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_INVOKE_FRAGMENT;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_ARRAY_SIZE], 15)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_ARRAY_SIZE], 15)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_ARRAY_SIZE;
                                 }
-                                else if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN_FRAGMENT], 15)) {
+                                else if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_RETURN_FRAGMENT], 15)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_RETURN_FRAGMENT;
                                 }
                                 break;
                             }
                             case 17 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_STATIC_FIELD], 17)) {
+                                if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_STATIC_FIELD], 17)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_STATIC_FIELD;
                                 }
                                 break;
                             }
                             case 18 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_STATIC_FIELD], 18)) {
+                                if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_STATIC_FIELD], 18)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_STATIC_FIELD;
                                 }
                                 break;
                             }
                             case 19 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_INSTANCE_FIELD], 19)) {
+                                if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_LOAD_INSTANCE_FIELD], 19)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_LOAD_INSTANCE_FIELD;
                                 }
                                 break;
                             }
                             case 20 : {
-                                if (zen_String_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_INSTANCE_FIELD], 20)) {
+                                if (jtk_CString_equals(text, length, zen_AssemblyLexer_literalNames[(int32_t)ZEN_TOKEN_INSTRUCTION_STORE_INSTANCE_FIELD], 20)) {
                                     lexer->m_type = ZEN_TOKEN_INSTRUCTION_STORE_INSTANCE_FIELD;
                                 }
                                 break;
@@ -1569,7 +1569,7 @@ zen_Token_t* zen_AssemblyLexer_nextToken(zen_AssemblyLexer_t* lexer) {
                         }
 
                         /* Destroy the text; not required anymore. */
-                        zen_String_delete(text);
+                        jtk_CString_delete(text);
                     }
                     else if (zen_AssemblyLexer_isDecimalDigit(lexer->m_la1)) {
                         if (lexer->m_la1 == '0') {

@@ -41,8 +41,8 @@ void zen_VirtualMachineConfiguration_delete(zen_VirtualMachineConfiguration_t* c
     int32_t size = jtk_ArrayList_getSize(configuration->m_entityDirectories);
     int32_t i;
     for (i = 0; i < size; i++) {
-        jtk_String_t* string = (jtk_String_t*)jtk_ArrayList_getValue(configuration->m_entityDirectories, i);
-        jtk_String_delete(string);
+        jtk_CString_t* string = (jtk_CString_t*)jtk_ArrayList_getValue(configuration->m_entityDirectories, i);
+        jtk_CString_delete(string);
     }
     jtk_ArrayList_delete(configuration->m_entityDirectories);
     
@@ -57,6 +57,6 @@ void zen_VirtualMachineConfiguration_addEntityDirectory(
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
     jtk_Assert_assertObject(directory, "The specified directory is null.");
     
-    jtk_String_t* directoryAsString = jtk_String_new(directory);
+    jtk_CString_t* directoryAsString = jtk_CString_new(directory);
     jtk_ArrayList_add(virtualMachine->m_entityDirectories, directoryAsString);
 }

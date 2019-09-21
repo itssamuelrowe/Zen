@@ -19,7 +19,7 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_GENERATOR_BINARY_ENTITY_GENERATOR_H
 #define COM_ONECUBE_ZEN_COMPILER_GENERATOR_BINARY_ENTITY_GENERATOR_H
 
-#include <jtk/collection/map/DualHashMap.h>
+// #include <jtk/collection/map/DualHashMap.h>
 #include <jtk/io/OutputStream.h>
 
 #include <com/onecube/zen/Configuration.h>
@@ -46,7 +46,7 @@ struct zen_BinaryEntityGenerator_t {
     zen_SymbolTable_t* m_symbolTable;
     zen_ASTAnnotations_t* m_scopes;
 
-    jtk_DualHashMap_t* m_constantPool; /* <zen_ConstantPoolEntry_t*, int32_t> */
+    // jtk_DualHashMap_t* m_constantPool; /* <zen_ConstantPoolEntry_t*, int32_t> */
 };
 
 /**
