@@ -56,6 +56,13 @@ zen_LocalScope_t* zen_LocalScope_new(zen_Scope_t* enclosingScope);
  */
 void zen_LocalScope_delete(zen_LocalScope_t* scope);
 
+// Children Symbols
+
+/**
+ * @memberof LocalScope
+ */
+void zen_LocalScope_getChildrenSymbols(zen_LocalScope_t* scope, jtk_ArrayList_t* childrenSymbols);
+
 // Define
 
 /**

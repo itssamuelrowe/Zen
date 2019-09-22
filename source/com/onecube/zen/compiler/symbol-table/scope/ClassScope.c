@@ -32,6 +32,7 @@ zen_ClassScope_t* zen_ClassScope_new(zen_Scope_t* enclosingScope) {
     zen_Scope_t* scope = zen_Scope_new(zen_ClassScope_name, ZEN_SCOPE_CLASS, enclosingScope, classScope);
     scope->m_resolveSymbol = (zen_Scope_ResolveSymbolFunction_t)zen_ClassScope_resolve;
     scope->m_defineSymbol = (zen_Scope_DefineSymbolFunction_t)zen_ClassScope_define;
+    scope->m_getChildrenSymbols = (zen_Scope_GetChildrenSymbolsFunction_t)zen_ClassScope_getChildrenSymbols;
 
     classScope->m_scope = scope;
     classScope->m_symbols = jtk_HashMap_new(jtk_StringObjectAdapter_getInstance(), NULL);
@@ -47,6 +48,17 @@ void zen_ClassScope_delete(zen_ClassScope_t* scope) {
     zen_Scope_delete(scope->m_scope);
     jtk_HashMap_delete(scope->m_symbols);
     jtk_Memory_deallocate(scope);
+}
+
+// Children Symbols
+
+void zen_ClassScope_getChildrenSymbols(zen_ClassScope_t* scope,
+    jtk_ArrayList_t* childrenSymbols) {
+    jtk_Assert_assertObject(scope, "The specified scope is null.");
+    
+    jtk_Iterator_t* iterator = jtk_HashMap_getValueIterator(scope->m_symbols);
+    jtk_ArrayList_addAllFromIterator(childrenSymbols, iterator);
+    jtk_Iterator_delete(iterator);
 }
 
 zen_Scope_t* zen_ClassScope_getScope(zen_ClassScope_t* scope) {

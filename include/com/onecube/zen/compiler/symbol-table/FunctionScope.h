@@ -38,7 +38,7 @@
 struct zen_FunctionScope_t {
     zen_Scope_t* m_scope;
 
-    /* TODO: Use an OrderedMap here. */
+    /* TODO: Use jtk_RBTreeMap_t here for improving performance. */
     jtk_ArrayList_t* m_fixedParameters; /* <zen_Symbol*> */
 
     zen_Symbol_t* m_variableParameter;
@@ -62,6 +62,13 @@ zen_FunctionScope_t* zen_FunctionScope_new(zen_Scope_t* enclosingScope);
  * @memberof FunctionScope
  */
 void zen_FunctionScope_delete(zen_FunctionScope_t* scope);
+
+// Children Symbols
+
+/**
+ * @memberof FunctionScope
+ */
+void zen_FunctionScope_getChildrenSymbols(zen_FunctionScope_t* scope, jtk_ArrayList_t* childrenSymbols);
 
 // Define
 

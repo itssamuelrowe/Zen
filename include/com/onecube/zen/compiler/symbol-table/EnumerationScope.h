@@ -63,6 +63,13 @@ zen_EnumerationScope_t* zen_EnumerationScope_new(zen_Scope_t* enclosingScope);
  */
 void zen_EnumerationScope_delete(zen_EnumerationScope_t* classScope);
 
+// Children Symbols
+
+/**
+ * @memberof EnumerationScope
+ */
+void zen_EnumerationScope_getChildrenSymbols(zen_EnumerationScope_t* scope, jtk_ArrayList_t* childrenSymbols);
+
 // Define
 
 /**

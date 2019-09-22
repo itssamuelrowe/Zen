@@ -22,6 +22,8 @@
  * EnumerateSymbol                                                             *
  *******************************************************************************/
 
+#warning "TODO: Add ordinal to this symbol."
+
 zen_EnumerateSymbol_t* zen_EnumerateSymbol_new(zen_ASTNode_t* identifier,
     zen_Scope_t* enclosingScope) {
     zen_EnumerateSymbol_t* enumerateSymbol = zen_Memory_allocate(zen_EnumerateSymbol_t, 1);

@@ -17,6 +17,7 @@
 // Tuesday, February 27, 2018
 
 #include <jtk/core/CString.h>
+#include <jtk/core/Object.h>
 
 #include <com/onecube/zen/compiler/lexer/Token.h>
 #include <com/onecube/zen/compiler/symbol-table/FunctionScope.h>
@@ -33,6 +34,7 @@ zen_FunctionScope_t* zen_FunctionScope_new(zen_Scope_t* enclosingScope) {
     zen_Scope_t* scope = zen_Scope_new(zen_FunctionScope_name, ZEN_SCOPE_FUNCTION, enclosingScope, functionScope);
     scope->m_resolveSymbol = (zen_Scope_ResolveSymbolFunction_t)zen_FunctionScope_resolve;
     scope->m_defineSymbol = (zen_Scope_DefineSymbolFunction_t)zen_FunctionScope_define;
+    scope->m_getChildrenSymbols = (zen_Scope_GetChildrenSymbolsFunction_t)zen_FunctionScope_getChildrenSymbols;
 
     functionScope->m_scope = scope;
     functionScope->m_fixedParameters = jtk_ArrayList_new();
@@ -53,6 +55,15 @@ zen_Scope_t* zen_FunctionScope_getScope(zen_FunctionScope_t* scope) {
     jtk_Assert_assertObject(scope, "The specified scope is null.");
 
     return scope->m_scope;
+}
+
+// Children Symbols
+
+void zen_FunctionScope_getChildrenSymbols(zen_FunctionScope_t* scope,
+    jtk_ArrayList_t* childrenSymbols) {
+    
+    jtk_ArrayList_addAll(childrenSymbols, JTK_COLLECTION_ARRAY_LIST, scope->m_fixedParameters);
+    jtk_ArrayList_addPredicatively(childrenSymbols, scope->m_variableParameter, jtk_Object_isNotNull);
 }
 
 void zen_FunctionScope_define(zen_FunctionScope_t* scope, zen_Symbol_t* symbol) {

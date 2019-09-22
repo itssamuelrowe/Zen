@@ -58,6 +58,13 @@ zen_CompilationUnitScope_t* zen_CompilationUnitScope_new();
  */
 void zen_CompilationUnitScope_delete(zen_CompilationUnitScope_t* scope);
 
+// Children Symbols
+
+/**
+ * @memberof CompilationUnitScope
+ */
+void zen_CompilationUnitScope_getChildrenSymbols(zen_CompilationUnitScope_t* scope, jtk_ArrayList_t* childrenSymbols);
+
 // Define
 
 /**

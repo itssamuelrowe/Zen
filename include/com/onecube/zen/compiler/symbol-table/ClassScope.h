@@ -67,6 +67,13 @@ void zen_ClassScope_delete(zen_ClassScope_t* classScope);
  */
 zen_Symbol_t* zen_ClassScope_getClassSymbol(zen_ClassScope_t* classScope);
 
+// Children Symbols
+
+/**
+ * @memberof ClassScope
+ */
+void zen_ClassScope_getChildrenSymbols(zen_ClassScope_t* scope, jtk_ArrayList_t* childrenSymbols);
+
 // Define
 
 /**

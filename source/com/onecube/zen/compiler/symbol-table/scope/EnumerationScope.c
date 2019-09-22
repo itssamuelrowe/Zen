@@ -36,6 +36,7 @@ zen_EnumerationScope_t* zen_EnumerationScope_new(zen_Scope_t* enclosingScope) {
     zen_Scope_t* scope = zen_Scope_new(zen_EnumerationScope_name, ZEN_SCOPE_ENUMERATION, enclosingScope, enumerationScope);
     scope->m_resolveSymbol = (zen_Scope_ResolveSymbolFunction_t)zen_EnumerationScope_resolve;
     scope->m_defineSymbol = (zen_Scope_DefineSymbolFunction_t)zen_EnumerationScope_define;
+    scope->m_getChildrenSymbols = (zen_Scope_GetChildrenSymbolsFunction_t)zen_EnumerationScope_getChildrenSymbols;
 
     enumerationScope->m_scope = scope;
     enumerationScope->m_enumerates = jtk_HashMap_new(jtk_StringObjectAdapter_getInstance(), NULL);
@@ -52,6 +53,23 @@ void zen_EnumerationScope_delete(zen_EnumerationScope_t* scope) {
     jtk_HashMap_delete(scope->m_enumerates);
     jtk_Memory_deallocate(scope);
 }
+
+// Children Symbols
+
+void zen_EnumerationScope_getChildrenSymbols(zen_EnumerationScope_t* scope,
+    jtk_ArrayList_t* childrenSymbols) {
+    jtk_Assert_assertObject(scope, "The specified scope is null.");
+    jtk_Assert_assertObject(childrenSymbols, "The specified list is null.");
+    
+    jtk_Iterator_t* iterator = jtk_HashMap_getValueIterator(childrenSymbols);
+    /*while (jtk_Iterator_hasNext(iterator)) {
+        zen_Symbol_t* symbol = (zen_Symbol_t*)jtk_Iterator_getNext(iterator);
+        jtk_ArrayList_add(childrenSymbols, symbol);
+    }*/
+    jtk_ArrayList_addAllFromIterator(childrenSymbols, iterator);
+    jtk_Iterator_delete(iterator);
+}
+
 
 zen_Scope_t* zen_EnumerationScope_getScope(zen_EnumerationScope_t* scope) {
     jtk_Assert_assertObject(scope, "The specified scope is null.");

@@ -20,6 +20,7 @@
 #define ZEN_SCOPE_H
 
 #include <jtk/core/String.h>
+#include <jtk/collection/list/ArrayList.h>
 #include <jtk/collection/map/HashMap.h>
 
 #include <com/onecube/zen/compiler/symbol-table/ScopeType.h>
@@ -30,6 +31,7 @@ typedef struct zen_Symbol_t zen_Symbol_t;
 
 typedef zen_Symbol_t* (*zen_Scope_ResolveSymbolFunction_t)(void* context, const uint8_t* identifier);
 typedef zen_Symbol_t* (*zen_Scope_DefineSymbolFunction_t)(void* context, zen_Symbol_t* symbol);
+typedef void (*zen_Scope_GetChildrenSymbolsFunction_t)(void* context, jtk_ArrayList_t* childrenSymbols);
 
 /*******************************************************************************
  * Scope                                                                       *
@@ -53,6 +55,7 @@ struct zen_Scope_t {
     void* m_context;
     zen_Scope_ResolveSymbolFunction_t m_resolveSymbol;
     zen_Scope_DefineSymbolFunction_t m_defineSymbol;
+    zen_Scope_GetChildrenSymbolsFunction_t m_getChildrenSymbols;
 };
 
 // Constructor

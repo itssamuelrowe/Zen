@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,6 +34,7 @@ zen_CompilationUnitScope_t* zen_CompilationUnitScope_new() {
     zen_Scope_t* scope = zen_Scope_new(zen_CompilationUnitScope_name, ZEN_SCOPE_COMPILATION_UNIT, NULL, compilationUnitScope);
     scope->m_resolveSymbol = (zen_Scope_ResolveSymbolFunction_t)zen_CompilationUnitScope_resolve;
     scope->m_defineSymbol = (zen_Scope_DefineSymbolFunction_t)zen_CompilationUnitScope_define;
+    scope->m_getChildrenSymbols = (zen_Scope_GetChildrenSymbolsFunction_t)zen_CompilationUnitScope_getChildrenSymbols;
 
     compilationUnitScope->m_scope = scope;
     /* The value adapter is null because the HashMap is not required to test
@@ -50,6 +51,18 @@ void zen_CompilationUnitScope_delete(zen_CompilationUnitScope_t* scope) {
     zen_Scope_delete(scope->m_scope);
     jtk_HashMap_delete(scope->m_symbols);
     jtk_Memory_deallocate(scope);
+}
+
+// Children Symbols
+
+void zen_CompilationUnitScope_getChildrenSymbols(zen_CompilationUnitScope_t* scope,
+    jtk_ArrayList_t* childrenSymbols) {
+    jtk_Assert_assertObject(scope, "The specified scope is null.");
+    jtk_Assert_assertObject(childrenSymbols, "The specified list is null.");
+
+    jtk_Iterator_t* iterator = jtk_HashMap_getValueIterator(scope->m_symbols);
+    jtk_ArrayList_addAllFromIterator(childrenSymbols, iterator);
+    jtk_Iterator_delete(iterator);
 }
 
 zen_Scope_t* zen_CompilationUnitScope_getScope(zen_CompilationUnitScope_t* scope) {
