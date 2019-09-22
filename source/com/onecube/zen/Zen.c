@@ -153,6 +153,8 @@ int32_t main(int32_t length, char** arguments) {
         fprintf(stderr, "[error] Please specify input files.\n");
     }
     else {
+        int32_t successful = 0;
+        int32_t failure = 0;
         for (i = 0; i < size; i++) {
             const char* path = (const char*)jtk_ArrayList_getValue(inputFiles, i);
             if (!jtk_PathHelper_exists(path)) {
@@ -196,12 +198,23 @@ int32_t main(int32_t length, char** arguments) {
                 // zen_BinaryEntityBuilder_t* entityBuilder = zen_BinaryEntityBuilder_new(symbolTable, scopes);
                 // zen_BinaryEntityBuilder_build(entityBuilder, compilationUnit);
 
-                /*zen_BinaryEntityGenerator_t* generator = zen_BinaryEntityGenerator_new();
-                zen_BinaryEntityGenerator_generate(generator);
+                // zen_BinaryEntityGenerator_t* generator = zen_BinaryEntityGenerator_new(symbolTable, scopes);
+                // zen_BinaryEntityGenerator_generate(generator);
+                // zen_BinaryEntityGenerator_delete(generator);
 
-                zen_BinaryEntityGenerator_delete(generator);
-                zen_BinaryEntityBuilder_delete(entityBuilder);*/
+                // zen_BinaryEntityBuilder_delete(entityBuilder);
                 zen_SymbolDefinitionListener_delete(symbolDefinitionListener);
+                
+                /* The ASTAnnotations that stores the scopes is not required anymore.
+                 * Therefore, destroy it and release the resources it holds.
+                 */
+                zen_ASTAnnotations_delete(scopes);
+                
+                /* The symbol table is not required anymore. Therefore, destroy it
+                 * and release the resources it holds.
+                 */
+                zen_SymbolTable_delete(symbolTable);
+                
                 zen_ASTNode_delete(compilationUnit);
                 zen_Parser_delete(parser);
                 zen_TokenStream_delete(tokens);

@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -70,8 +70,107 @@ zen_SymbolDefinitionListener_t* zen_SymbolDefinitionListener_new(zen_SymbolTable
 void zen_SymbolDefinitionListener_delete(zen_SymbolDefinitionListener_t* listener) {
     jtk_Assert_assertObject(listener, "The specified listener is null.");
 
+    zen_SymbolDefinitionListener_destroyScopes(listener->m_scopes);
+
     zen_ASTListener_delete(listener->m_astListener);
     jtk_Memory_deallocate(listener);
+}
+
+void zen_SymbolDefinitionListener_destroyScopes(zen_ASTAnnotations_t* annotations) {
+    jtk_Assert_assertObject(annotations, "The specified annotations is null.");
+
+    jtk_Iterator_t* iterator = jtk_HashMap_getEntryIterator(annotations->m_map);
+    while (jtk_Iterator_hasNext(iterator)) {
+        jtk_HashMapEntry_t* entry = (jtk_HashMapEntry_t*)jtk_Iterator_getNext(iterator);
+
+        /* The keys are instances of the ASTNode class, which are owned by the parser.
+         * Therefore, do not destroy them. However, the scopes are created during
+         * the definition phase of the symbol table. Hence, we destroy them here
+         * before destroying the jtk_SymbolDefinitionListener_t class instance itself.
+         */
+        zen_Scope_t* scope = (zen_Scope_t*)jtk_HashMapEntry_getValue(entry);
+
+        /* I could have designed the jtk_Scope_t and its "descendant" classes that
+         * implement specific scopes like the jtk_Iterator_t and its "descendant"
+         * classes such as jtk_ArrayListIterator_t. This would have helped
+         * us delete specific scopes by simply invoking the jtk_Scope_delete()
+         * function. However, to implement such a design would require me to
+         * modify a few files for which I can spare no time. Further, the likelihood
+         * of introducing new scope types is very rare. Therefore, I have chosen
+         * to manually cast the context of the scope before invoking a specific
+         * destructor.
+         *
+         * Since the jtk_HashMap_t class does not store the order in which the
+         * scopes were inserted, the scopes are deleted in "random" order. With
+         * the currently available scopes, this behavior should not really affect
+         * the program in unexpected ways.
+         *
+         * NOTE: If a new scope type is added and its instance is created during
+         * the definition phase to the symbol table, then please add a respective
+         * destructor call here.
+         */
+        zen_ScopeType_t type = zen_Scope_getType(scope);
+        switch (type) {
+            /*
+            case ZEN_SCOPE_ANNOTATION: {
+            }
+            */
+
+            //////////////////////////////////////////// TODO: Delete the symbols in the scope.
+
+            case ZEN_SCOPE_COMPILATION_UNIT: {
+                zen_CompilationUnitScope_t* compilationUnitScope =
+                    (zen_CompilationUnitScope_t*)scope->m_context;
+                zen_CompilationUnitScope_delete(compilationUnitScope);
+
+                printf("[debug] Compilation unit scope deleted.\n");
+
+                break;
+            }
+
+
+            case ZEN_SCOPE_ENUMERATION: {
+                zen_EnumerationScope_t* enumerationScope =
+                    (zen_EnumerationScope_t*)scope->m_context;
+                zen_EnumerationScope_delete(enumerationScope);
+                
+                printf("[debug] Enumeration scope deleted.\n");
+
+                break;
+            }
+
+            case ZEN_SCOPE_FUNCTION: {
+                zen_FunctionScope_t* functionScope =
+                    (zen_FunctionScope_t*)scope->m_context;
+                zen_FunctionScope_delete(functionScope);
+                
+                printf("[debug] Function scope deleted.\n");
+
+                break;
+            }
+
+            case ZEN_SCOPE_CLASS: {
+                zen_ClassScope_t* classScope =
+                    (zen_ClassScope_t*)scope->m_context;
+                zen_ClassScope_delete(classScope);
+                
+                printf("[debug] Class scope deleted.\n");
+
+                break;
+            }
+
+            case ZEN_SCOPE_LOCAL: {
+                zen_LocalScope_t* localScope =
+                    (zen_LocalScope_t*)scope->m_context;
+                zen_LocalScope_delete(localScope);
+                
+                printf("[debug] Local scope deleted.\n");
+
+                break;
+            }
+        }
+    }
+    jtk_Iterator_delete(iterator);
 }
 
 zen_ASTListener_t* zen_SymbolDefinitionListener_getASTListener(zen_SymbolDefinitionListener_t* listener) {
