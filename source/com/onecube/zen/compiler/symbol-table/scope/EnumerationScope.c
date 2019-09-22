@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,7 +32,7 @@ static const char* zen_EnumerationScope_name = "enumeration";
 
 zen_EnumerationScope_t* zen_EnumerationScope_new(zen_Scope_t* enclosingScope) {
     zen_EnumerationScope_t* enumerationScope = zen_Memory_allocate(zen_EnumerationScope_t, 1);
-    
+
     zen_Scope_t* scope = zen_Scope_new(zen_EnumerationScope_name, ZEN_SCOPE_ENUMERATION, enclosingScope, enumerationScope);
     scope->m_resolveSymbol = (zen_Scope_ResolveSymbolFunction_t)zen_EnumerationScope_resolve;
     scope->m_defineSymbol = (zen_Scope_DefineSymbolFunction_t)zen_EnumerationScope_define;
@@ -60,7 +60,7 @@ void zen_EnumerationScope_getChildrenSymbols(zen_EnumerationScope_t* scope,
     jtk_ArrayList_t* childrenSymbols) {
     jtk_Assert_assertObject(scope, "The specified scope is null.");
     jtk_Assert_assertObject(childrenSymbols, "The specified list is null.");
-        
+
     jtk_Iterator_t* iterator = jtk_HashMap_getValueIterator(scope->m_enumerates);
     /*while (jtk_Iterator_hasNext(iterator)) {
         zen_Symbol_t* symbol = (zen_Symbol_t*)jtk_Iterator_getNext(iterator);
