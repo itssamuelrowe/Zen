@@ -45,6 +45,11 @@ struct zen_BinaryEntityGenerator_t {
     zen_BinaryEntityBuilder_t* m_builder;
     zen_SymbolTable_t* m_symbolTable;
     zen_ASTAnnotations_t* m_scopes;
+    zen_ASTNode_t* m_compilationUnit;
+    jtk_OutputStream_t* m_outputStream;
+    
+    int32_t m_primaryChannel;
+    int32_t m_secondaryChannel;
 
     // jtk_DualHashMap_t* m_constantPool; /* <zen_ConstantPoolEntry_t*, int32_t> */
 };
@@ -59,8 +64,9 @@ typedef struct zen_BinaryEntityGenerator_t zen_BinaryEntityGenerator_t;
 /**
  * @memberof BinaryEntityGenerator
  */
-zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_new(zen_SymbolTable_t* symbolTable,
-    zen_ASTAnnotations_t* scopes);
+zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_newEx(zen_SymbolTable_t* symbolTable,
+    zen_ASTAnnotations_t* scopes, zen_ASTNode_t* compilationUnit,
+    jtk_OutputStream_t* outputStream);
 
 // Destructor
 
@@ -74,12 +80,13 @@ void zen_BinaryEntityGenerator_delete(zen_BinaryEntityGenerator_t* generator);
 /**
  * @memberof BinaryEntityGenerator
  */
-void zen_BinaryEntityGenerator_generate(zen_BinaryEntityGenerator_t* generator,
-    zen_ASTNode_t* compilationUnit, jtk_OutputStream_t* outputStream);
+void zen_BinaryEntityGenerator_generate(zen_BinaryEntityGenerator_t* generator);
 
 // Reset
 
-void zen_BinaryEntityGenerator_reset(zen_BinaryEntityGenerator_t* generator);
+void zen_BinaryEntityGenerator_reset(zen_BinaryEntityGenerator_t* generator,
+    zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes,
+    zen_ASTNode_t* compilationUnit, jtk_OutputStream_t* outputStream);
 
 // Event Handlers
 

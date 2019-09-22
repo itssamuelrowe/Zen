@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,9 +19,12 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_GENERATOR_BINARY_ENTITY_BUILDER_H
 #define COM_ONECUBE_ZEN_COMPILER_GENERATOR_BINARY_ENTITY_BUILDER_H
 
+#include <jtk/collection/stack/ArrayStack.h>
+
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/compiler/generator/DataChannel.h>
 
+#include <com/onecube/zen/virtual-machine/feb/ByteCode.h>
 
 /*******************************************************************************
  * BinaryEntityBuilder                                                         *
@@ -74,6 +77,23 @@ zen_BinaryEntityBuilder_t* zen_BinaryEntityBuilder_new();
  */
 void zen_BinaryEntityBuilder_delete(zen_BinaryEntityBuilder_t* builder);
 
+// Channel
+
+int32_t zen_BinaryEntityBuilder_pushChannel(zen_BinaryEntityBuilder_t* builder);
+
+void zen_BinaryEntityBuilder_popChannel(zen_BinaryEntityBuilder_t* builder);
+
+// Emit
+
+void zen_BinaryEntityBuilder_emitByteCode(zen_BinaryEntityBuilder_t* builder,
+    zen_ByteCode_t byteCode, ...);
+
+// Print
+
+void zen_BinaryEntityBuilder_printChannel(zen_BinaryEntityBuilder_t* builder);
+
+void zen_BinaryEntityBuilder_printChannels(zen_BinaryEntityBuilder_t* builder);
+
 // Magic Number
 
 /**
@@ -123,6 +143,12 @@ uint16_t zen_BinaryEntityBuilder_writeConstantPoolInteger(zen_BinaryEntityBuilde
  * @memberof BinaryEntityBuilder
  */
 uint16_t zen_BinaryEntityBuilder_writeConstantPoolLong(zen_BinaryEntityBuilder_t* builder, uint64_t value);
+
+/**
+ * @memberof BinaryEntityBuilder
+ */
+uint16_t zen_BinaryEntityBuilder_writeConstantPoolLongEx(zen_BinaryEntityBuilder_t* builder,
+    uint32_t highBytes, uint32_t lowBytes);
 
 /**
  * @memberof BinaryEntityBuilder
@@ -196,7 +222,7 @@ void zen_BinaryEntityBuilder_writeFieldCount(zen_BinaryEntityBuilder_t* builder,
  */
 void zen_BinaryEntityBuilder_writeField(zen_BinaryEntityBuilder_t* builder, uint16_t flags, uint16_t nameIndex,
     uint16_t descriptorIndex);
-    
+
 // Function
 
 /**
@@ -218,7 +244,7 @@ void zen_BinaryEntityBuilder_writeFunction(zen_BinaryEntityBuilder_t* builder, u
 void zen_BinaryEntityBuilder_writeInstructionAttributeHeader(zen_BinaryEntityBuilder_t* builder, uint16_t nameIndex,
     uint32_t length, uint16_t maxStackSize, uint16_t localVariableCount,
     uint32_t instructionCount);
-    
+
 void zen_BinaryEntityBuilder_writeExceptionTableHeader(zen_BinaryEntityBuilder_t* builder, uint16_t size);
 
 // Instructions

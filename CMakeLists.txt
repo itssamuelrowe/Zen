@@ -61,6 +61,7 @@ set (
 
     # Generator
 
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/generator/BinaryEntityGenerator.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/generator/BinaryEntityBuilder.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/generator/DataChannel.c
 

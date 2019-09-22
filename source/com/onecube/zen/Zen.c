@@ -45,12 +45,12 @@
 void printToken(zen_Token_t* token) {
     printf("[%d-%d:%d-%d:%s:%s]", token->m_startLine + 1, token->m_stopLine + 1, token->m_startColumn + 1, token->m_stopColumn + 1, token->m_channel == ZEN_TOKEN_CHANNEL_DEFAULT? "default" : "hidden", zen_Lexer_getLiteralName(token->m_type));
     zen_TokenType_t type = zen_Token_getType(token);
-    if ((type == ZEN_TOKEN_IDENTIFIER) || (type == ZEN_TOKEN_INTEGER_LITERAL)) {
+    if ((type == ZEN_TOKEN_IDENTIFIER) || (type == ZEN_TOKEN_INTEGER_LITERAL) ||
+        (type == ZEN_TOKEN_STRING_LITERAL)) {
         printf(" %.*s", token->m_length, token->m_text);
     }
     puts("");
 }
-
 
 bool jtk_Object_isNull(void* object) {
     return object == NULL;
@@ -198,9 +198,13 @@ int32_t main(int32_t length, char** arguments) {
                 // zen_BinaryEntityBuilder_t* entityBuilder = zen_BinaryEntityBuilder_new(symbolTable, scopes);
                 // zen_BinaryEntityBuilder_build(entityBuilder, compilationUnit);
 
-                // zen_BinaryEntityGenerator_t* generator = zen_BinaryEntityGenerator_new(symbolTable, scopes);
-                // zen_BinaryEntityGenerator_generate(generator);
-                // zen_BinaryEntityGenerator_delete(generator);
+                zen_BinaryEntityGenerator_t* generator = zen_BinaryEntityGenerator_newEx(symbolTable, scopes, compilationUnit, NULL);
+                zen_BinaryEntityGenerator_generate(generator);
+                
+                /* The binary entity generator is not required anymore. Therefore, destroy
+                 * it and release the resources it holds.
+                 */
+                zen_BinaryEntityGenerator_delete(generator);
 
                 // zen_BinaryEntityBuilder_delete(entityBuilder);
                 zen_SymbolDefinitionListener_delete(symbolDefinitionListener);
