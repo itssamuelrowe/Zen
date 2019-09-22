@@ -61,6 +61,10 @@ zen_Symbol_t* zen_Symbol_new(zen_SymbolCategory_t category,
  */
 void zen_Symbol_delete(zen_Symbol_t* symbol);
 
+// Category
+
+zen_SymbolCategory_t zen_Symbol_getCategory(zen_Symbol_t* symbol);
+
 // Function
 
 /**

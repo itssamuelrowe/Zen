@@ -60,8 +60,8 @@ void zen_EnumerationScope_getChildrenSymbols(zen_EnumerationScope_t* scope,
     jtk_ArrayList_t* childrenSymbols) {
     jtk_Assert_assertObject(scope, "The specified scope is null.");
     jtk_Assert_assertObject(childrenSymbols, "The specified list is null.");
-    
-    jtk_Iterator_t* iterator = jtk_HashMap_getValueIterator(childrenSymbols);
+        
+    jtk_Iterator_t* iterator = jtk_HashMap_getValueIterator(scope->m_enumerates);
     /*while (jtk_Iterator_hasNext(iterator)) {
         zen_Symbol_t* symbol = (zen_Symbol_t*)jtk_Iterator_getNext(iterator);
         jtk_ArrayList_add(childrenSymbols, symbol);

@@ -38,6 +38,15 @@ void zen_Scope_delete(zen_Scope_t* scope) {
     jtk_Memory_deallocate(scope);
 }
 
+// Children Symbols
+
+void zen_Scope_getChildrenSymbols(zen_Scope_t* scope, jtk_ArrayList_t* childrenSymbols) {
+    jtk_Assert_assertObject(scope, "The specified scope is null.");
+    jtk_Assert_assertObject(childrenSymbols, "The specified list is null.");
+    
+    scope->m_getChildrenSymbols(scope->m_context, childrenSymbols);
+}
+
 bool zen_Scope_isEnumerationScope(zen_Scope_t* scope) {
     return scope->m_type == ZEN_SCOPE_ENUMERATION;
 }
