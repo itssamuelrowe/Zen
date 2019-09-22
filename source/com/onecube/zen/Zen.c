@@ -43,7 +43,12 @@
 /* lexer -> parser -> symbol table -> semantic errors -> byte code generator -> interpreter */
 
 void printToken(zen_Token_t* token) {
-    printf("[%d-%d:%d-%d:%s:%s]\n", token->m_startLine + 1, token->m_stopLine + 1, token->m_startColumn + 1, token->m_stopColumn + 1, token->m_channel == ZEN_TOKEN_CHANNEL_DEFAULT? "default" : "hidden", zen_Lexer_getLiteralName(token->m_type));
+    printf("[%d-%d:%d-%d:%s:%s]", token->m_startLine + 1, token->m_stopLine + 1, token->m_startColumn + 1, token->m_stopColumn + 1, token->m_channel == ZEN_TOKEN_CHANNEL_DEFAULT? "default" : "hidden", zen_Lexer_getLiteralName(token->m_type));
+    zen_TokenType_t type = zen_Token_getType(token);
+    if ((type == ZEN_TOKEN_IDENTIFIER) || (type == ZEN_TOKEN_INTEGER_LITERAL)) {
+        printf(" %.*s", token->m_length, token->m_text);
+    }
+    puts("");
 }
 
 
@@ -55,15 +60,34 @@ bool jtk_Object_isNotNull(void* object) {
     return object != NULL;
 }
 
-void printTokens(jtk_ArrayList_t* tokens) {
+void printTokens(zen_TokenStream_t* stream) {
+    jtk_ArrayList_t* tokens = stream->m_tokens;
+    
+    int32_t defaultChannel = 0;
+    int32_t hiddenChannel = 0;
+    int32_t otherChannel = 0;
+    
     int32_t limit = jtk_ArrayList_getSize(tokens);
-    zen_Token_t* token;
     int32_t i;
     for (i = 0; i < limit; i++) {
-        token = (zen_Token_t*)jtk_ArrayList_getValue(tokens, i);
+        zen_Token_t* token = (zen_Token_t*)jtk_ArrayList_getValue(tokens, i);
+        zen_TokenChannel_t channel = zen_Token_getChannel(token);
+        if (channel == ZEN_TOKEN_CHANNEL_DEFAULT) {
+            defaultChannel++;
+        }
+        else if (channel == ZEN_TOKEN_CHANNEL_HIDDEN) {
+            hiddenChannel++;
+        }
+        else {
+            otherChannel++;
+        }
         printToken(token);
     }
     fflush(stdout);
+    fprintf(stdout, "[info] %d tokens were recognized on the default channel.\n", defaultChannel);
+    fprintf(stdout, "[info] %d tokens were recognized on the hidden channel.\n", hiddenChannel);
+    fprintf(stdout, "[info] %d tokens were recognized on other channels.%s\n", otherChannel, (otherChannel > 0)? " This is surprising to me." : "");
+    fprintf(stdout, "[info] %d tokens were recognized in total.\n", limit);
 }
 
 void zen_Interpreter_onLexerError(zen_LexerError_t* error) {
@@ -99,7 +123,7 @@ jtk_InputStream_t* jtk_PathHelper_readEx(const uint8_t* path, uint32_t flags) {
 }
 
 int32_t main(int32_t length, char** arguments) {
-    jtk_Assert_assertTrue(zen_Instruction_verify(), "The instruction set is invalid.");
+    // jtk_Assert_assertTrue(zen_Instruction_verify(), "The instruction set is invalid.");
 
     jtk_ArrayList_t* inputFiles = jtk_ArrayList_new();
     bool internalDumpTokens = false;
@@ -126,7 +150,7 @@ int32_t main(int32_t length, char** arguments) {
 
     int32_t size = jtk_ArrayList_getSize(inputFiles);
     if (size == 0) {
-        fprintf(stderr, "error: no input files\n");
+        fprintf(stderr, "[error] Please specify input files.\n");
     }
     else {
         for (i = 0; i < size; i++) {
@@ -141,12 +165,7 @@ int32_t main(int32_t length, char** arguments) {
 
                 if (internalDumpTokens) {
                     zen_TokenStream_fill(tokens);
-                    int32_t size = zen_TokenStream_getSize(tokens);
-                    int32_t i;
-                    for (i = 0; i < size; i++) {
-                        zen_Token_t* token = zen_TokenStream_getToken(tokens, i);
-                        printToken(token);
-                    }
+                    printTokens(tokens);
                 }
 
                 zen_Parser_t* parser = zen_Parser_new(tokens);

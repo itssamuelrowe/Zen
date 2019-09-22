@@ -253,7 +253,7 @@ void zen_Lexer_delete(zen_Lexer_t* lexer) {
 /* Create Token */
 
 zen_Token_t* zen_Lexer_createToken(zen_Lexer_t* lexer) {
-    int8_t* text = jtk_StringBuilder_toString(lexer->m_text);
+    int8_t* text = jtk_StringBuilder_toCString(lexer->m_text);
     int32_t length = jtk_StringBuilder_getSize(lexer->m_text);
 
     zen_Token_t* token =
@@ -292,7 +292,7 @@ bool zen_Lexer_isInputStart(zen_Lexer_t* lexer) {
 
 void zen_Lexer_consume(zen_Lexer_t* lexer) {
     jtk_StringBuilder_appendCodePoint(lexer->m_text, lexer->m_la1);
-
+    
     lexer->m_index++;
     lexer->m_column++;
     /* NOTE: We could have used lexer->index >= "length of input stream"
@@ -303,7 +303,7 @@ void zen_Lexer_consume(zen_Lexer_t* lexer) {
      * working of this function is not finalized. Therefore, the following expression
      * may be subjected to changes.
      */
-    if (jtk_InputStream_getAvailable(lexer->m_inputStream) == 0) {
+    if (!jtk_InputStream_isAvailable(lexer->m_inputStream)) {
         lexer->m_la1 = ZEN_END_OF_STREAM;
     }
     else {
@@ -1500,7 +1500,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                             zen_Lexer_consume(lexer);
                         }
 
-                        uint8_t* text = jtk_StringBuilder_toString(lexer->m_text);
+                        uint8_t* text = jtk_StringBuilder_toCString(lexer->m_text);
                         int32_t length = lexer->m_index - lexer->m_startIndex;
 
                         /* TODO: Find a better solution.

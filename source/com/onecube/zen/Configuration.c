@@ -30,9 +30,9 @@ int32_t zen_Memory_getFootprint() {
 }
 
 void zen_StackTrace_enter0(const char* file, const char* function) {
-    fprintf(stdout, "[enter] %s(%s)\n", file, function);
+    fprintf(stdout, "[enter] %s(%s)\n", function, file);
 }
 
 void zen_StackTrace_exit0(const char* file, const char* function) {
-    fprintf(stdout, "[exit] %s(%s)\n", file, function);
+    fprintf(stdout, "[exit] %s(%s)\n", function, file);
 }
