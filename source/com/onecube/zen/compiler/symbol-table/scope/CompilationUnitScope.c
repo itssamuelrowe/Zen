@@ -17,7 +17,7 @@
 // Sunday, February 25, 2018
 
 #include <jtk/core/CString.h>
-#include <jtk/core/StringObjectAdapter.h>
+#include <jtk/core/CStringObjectAdapter.h>
 
 #include <com/onecube/zen/compiler/symbol-table/CompilationUnitScope.h>
 #include <com/onecube/zen/compiler/lexer/Token.h>
@@ -39,7 +39,7 @@ zen_CompilationUnitScope_t* zen_CompilationUnitScope_new() {
     /* The value adapter is null because the HashMap is not required to test
      * any values.
      */
-    compilationUnitScope->m_symbols = jtk_HashMap_new(jtk_StringObjectAdapter_getInstance(), NULL);
+    compilationUnitScope->m_symbols = jtk_HashMap_new(jtk_CStringObjectAdapter_getInstance(), NULL);
 
     return compilationUnitScope;
 }
@@ -62,9 +62,11 @@ void zen_CompilationUnitScope_define(zen_CompilationUnitScope_t* scope, zen_Symb
     jtk_Assert_assertObject(scope, "The specified scope is null.");
 
     /* NOTE: The key string is owned by the ASTNode. */
-    const uint8_t* text = zen_Token_getText((zen_Token_t*)zen_ASTNode_getContext(zen_Symbol_getIdentifier(symbol)));
+    zen_ASTNode_t* identifier = zen_Symbol_getIdentifier(symbol);
+    zen_Token_t* identifierToken = (zen_Token_t*)zen_ASTNode_getContext(identifier);
+    const uint8_t* text = zen_Token_getText(identifierToken);
     if (!jtk_HashMap_putStrictly(scope->m_symbols, text, symbol)) {
-        fprintf(stderr, "[internal error] zen_CompilationUnitScope_define invoked to redefine a symbol.");
+        fprintf(stderr, "[internal error] zen_CompilationUnitScope_define() invoked to redefine a symbol.");
     }
 }
 
