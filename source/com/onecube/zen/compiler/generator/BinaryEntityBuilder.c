@@ -154,7 +154,7 @@ void zen_BinaryEntityBuilder_writeMinorVersion(zen_BinaryEntityBuilder_t* builde
     channel->m_bytes[channel->m_index++] = 0x00;
     channel->m_bytes[channel->m_index++] = 0x00;
 }
-
+/*
 void zen_BinaryEntityBuilder_writeStreamSize(zen_BinaryEntityBuilder_t* builder,
     uint32_t streamSize) {
     jtk_Assert_assertObject(builder, "The specified builder is null.");
@@ -167,6 +167,7 @@ void zen_BinaryEntityBuilder_writeStreamSize(zen_BinaryEntityBuilder_t* builder,
     channel->m_bytes[channel->m_index++] = (streamSize & 0x0000FF00) >> 8;
     channel->m_bytes[channel->m_index++] = (streamSize & 0x000000FF);
 }
+*/
 
 void zen_BinaryEntityBuilder_writeStreamFlags(zen_BinaryEntityBuilder_t* builder,
     uint16_t streamFlags) {
@@ -361,6 +362,117 @@ uint16_t zen_BinaryEntityBuilder_writeConstantPoolClass(zen_BinaryEntityBuilder_
     channel->m_bytes[channel->m_index++] = (nameIndex & 0x000000FF);
 
     return builder->m_constantPoolIndex++;
+}
+
+int32_t zen_BinaryEntityBuilder_writeConstantPoolEntry(zen_BinaryEntityBuilder_t* builder,
+    zen_ConstantPoolEntry_t* entry) {
+    int32_t result = -1;
+    switch (entry->m_tag) {
+        case ZEN_CONSTANT_POOL_TAG_INTEGER: {
+            /* Convert the constant pool entry to its specific type. */
+            zen_ConstantPoolInteger_t* constantPoolInteger =
+                (zen_ConstantPoolInteger_t*)entry;
+            /* Write the bytes of the constant pool entry to the data channel. */
+            result = zen_BinaryEntityBuilder_writeConstantPoolInteger(builder,
+                constantPoolInteger->m_bytes);
+
+            break;
+        }
+
+        case ZEN_CONSTANT_POOL_TAG_LONG: {
+            /* Convert the constant pool entry to its specific type. */
+            zen_ConstantPoolLong_t* constantPoolLong =
+                (zen_ConstantPoolLong_t*)entry;
+            /* Write the bytes of the constant pool entry to the data channel. */
+            result = zen_BinaryEntityBuilder_writeConstantPoolLongEx(builder,
+                constantPoolLong->m_highBytes, constantPoolLong->m_lowBytes);
+
+            break;
+        }
+
+        case ZEN_CONSTANT_POOL_TAG_FLOAT: {
+            /* Convert the constant pool entry to its specific type. */
+            zen_ConstantPoolFloat_t* constantPoolFloat =
+                (zen_ConstantPoolFloat_t*)entry;
+            /* Write the bytes of the constant pool entry to the data channel. */
+            result = zen_BinaryEntityBuilder_writeConstantPoolFloatEx(builder,
+                constantPoolFloat->m_bytes);
+
+            break;
+        }
+
+        case ZEN_CONSTANT_POOL_TAG_DOUBLE: {
+            /* Convert the constant pool entry to its specific type. */
+            zen_ConstantPoolDouble_t* constantPoolDouble =
+                (zen_ConstantPoolDouble_t*)entry;
+            /* Write the bytes of the constant pool entry to the data channel. */
+            result = zen_BinaryEntityBuilder_writeConstantPoolDoubleEx(builder,
+                constantPoolDouble->m_highBytes, constantPoolDouble->m_lowBytes);
+
+            break;
+        }
+
+        case ZEN_CONSTANT_POOL_TAG_UTF8: {
+            /* Convert the constant pool entry to its specific type. */
+            zen_ConstantPoolUtf8_t* constantPoolUtf8 =
+                (zen_ConstantPoolUtf8_t*)entry;
+            /* Write the bytes of the constant pool entry to the data channel. */
+            result = zen_BinaryEntityBuilder_writeConstantPoolUtf8(builder,
+                constantPoolUtf8->m_length, constantPoolUtf8->m_bytes);
+
+            break;
+        }
+
+        case ZEN_CONSTANT_POOL_TAG_STRING: {
+            /* Convert the constant pool entry to its specific type. */
+            zen_ConstantPoolString_t* constantPoolString =
+                (zen_ConstantPoolString_t*)entry;
+            /* Write the bytes of the constant pool entry to the data channel. */
+            result = zen_BinaryEntityBuilder_writeConstantPoolString(builder,
+                constantPoolString->m_stringIndex);
+
+            break;
+        }
+
+        case ZEN_CONSTANT_POOL_TAG_FUNCTION: {
+            /* Convert the constant pool entry to its specific type. */
+            zen_ConstantPoolFunction_t* constantPoolFunction =
+                (zen_ConstantPoolFunction_t*)entry;
+            /* Write the bytes of the constant pool entry to the data channel. */
+            result = zen_BinaryEntityBuilder_writeConstantPoolFunction(builder,
+                constantPoolFunction->m_classIndex,
+                constantPoolFunction->m_descriptorIndex,
+                constantPoolFunction->m_nameIndex);
+
+            break;
+        }
+
+        case ZEN_CONSTANT_POOL_TAG_FIELD: {
+            /* Convert the constant pool entry to its specific type. */
+            zen_ConstantPoolField_t* constantPoolField =
+                (zen_ConstantPoolField_t*)entry;
+            /* Write the bytes of the constant pool entry to the data channel. */
+            result = zen_BinaryEntityBuilder_writeConstantPoolField(builder,
+                constantPoolField->m_classIndex,
+                constantPoolField->m_descriptorIndex,
+                constantPoolField->m_nameIndex);
+
+            break;
+        }
+
+        case ZEN_CONSTANT_POOL_TAG_CLASS: {
+            /* Convert the constant pool entry to its specific type. */
+            result = zen_ConstantPoolClass_t* constantPoolClass =
+                (zen_ConstantPoolClass_t*)entry;
+
+            break;
+        }
+        
+        default: {
+            fprintf(stderr, "[internal error] Control should not reach here.\n");
+        }
+    }
+    return result;
 }
 
 void zen_BinaryEntityBuilder_writeEntityHeader(zen_BinaryEntityBuilder_t* builder, uint8_t type, uint16_t flags,

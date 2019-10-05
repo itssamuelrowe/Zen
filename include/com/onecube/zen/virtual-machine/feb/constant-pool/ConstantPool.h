@@ -67,7 +67,7 @@ struct zen_ConstantPool_t {
     /**
      * The tags of the constant pool entries.
      */
-    uint8_t* m_tags;
+    // uint8_t* m_tags;
 
     /**
      * The various entries stored in the constant pool table.

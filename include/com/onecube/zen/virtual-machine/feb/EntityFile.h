@@ -64,7 +64,7 @@ struct zen_EntityFile_t {
      * Further, writing an entity to a stream will simply require copying the bytes
      * of the buffer in a linear fashion.
      */
-    uint32_t m_size;
+    // uint32_t m_size;
 
     /**
      * A mask of flags which denote various properties of this entity file.

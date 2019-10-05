@@ -62,11 +62,11 @@ bool jtk_Object_isNotNull(void* object) {
 
 void printTokens(zen_TokenStream_t* stream) {
     jtk_ArrayList_t* tokens = stream->m_tokens;
-    
+
     int32_t defaultChannel = 0;
     int32_t hiddenChannel = 0;
     int32_t otherChannel = 0;
-    
+
     int32_t limit = jtk_ArrayList_getSize(tokens);
     int32_t i;
     for (i = 0; i < limit; i++) {
@@ -193,14 +193,12 @@ int32_t main(int32_t length, char** arguments) {
                 zen_ASTListener_t* symbolResolutionASTListener = zen_SymbolResolutionListener_getASTListener(symbolResolutionListener);
                 zen_ASTWalker_walk(symbolResolutionASTListener, compilationUnit);
 
-#warning "Who gets to destroy symbols and scopes?!"
-
                 // zen_BinaryEntityBuilder_t* entityBuilder = zen_BinaryEntityBuilder_new(symbolTable, scopes);
                 // zen_BinaryEntityBuilder_build(entityBuilder, compilationUnit);
 
                 zen_BinaryEntityGenerator_t* generator = zen_BinaryEntityGenerator_newEx(symbolTable, scopes, compilationUnit, NULL);
                 zen_BinaryEntityGenerator_generate(generator);
-                
+
                 /* The binary entity generator is not required anymore. Therefore, destroy
                  * it and release the resources it holds.
                  */
@@ -208,17 +206,17 @@ int32_t main(int32_t length, char** arguments) {
 
                 // zen_BinaryEntityBuilder_delete(entityBuilder);
                 zen_SymbolDefinitionListener_delete(symbolDefinitionListener);
-                
+
                 /* The ASTAnnotations that stores the scopes is not required anymore.
                  * Therefore, destroy it and release the resources it holds.
                  */
                 zen_ASTAnnotations_delete(scopes);
-                
+
                 /* The symbol table is not required anymore. Therefore, destroy it
                  * and release the resources it holds.
                  */
                 zen_SymbolTable_delete(symbolTable);
-                
+
                 zen_ASTNode_delete(compilationUnit);
                 zen_Parser_delete(parser);
                 zen_TokenStream_delete(tokens);
