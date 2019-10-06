@@ -30,6 +30,7 @@
 #include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
 
 #include <com/onecube/zen/virtual-machine/feb/ByteCode.h>
+#include <com/onecube/zen/virtual-machine/feb/EntityFile.h>
 
 /*******************************************************************************
  * BinaryEntityGenerator                                                       *
@@ -47,6 +48,8 @@ struct zen_BinaryEntityGenerator_t {
     zen_ASTAnnotations_t* m_scopes;
     zen_ASTNode_t* m_compilationUnit;
     jtk_OutputStream_t* m_outputStream;
+    
+    zen_EntityFile_t* m_entityFile;
     
     int32_t m_primaryChannel;
     int32_t m_secondaryChannel;
