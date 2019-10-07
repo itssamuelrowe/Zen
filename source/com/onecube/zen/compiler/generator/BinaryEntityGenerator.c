@@ -394,6 +394,8 @@ void zen_BinaryEntityGenerator_onExitCompilationUnit(zen_ASTListener_t* astListe
     zen_BinaryEntityBuilder_pushChannel(generator->m_builder);
 }
 
+#include <stdio.h>
+
 void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generator) {
     /* Write magic number, major version, and minor version on the main channel. */
     zen_BinaryEntityBuilder_writeMagicNumber(generator->m_builder);
@@ -503,6 +505,14 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
         /* Log the details of the function. */
         printf("[debug] A function was written with the features (flags = 0x%X, nameIndex = %d, descriptorIndex = %d).\n",
             functionEntity->m_flags, functionEntity->m_nameIndex, functionEntity->m_descriptorIndex);
+    }
+    
+    
+    FILE* fp = fopen("output.feb", "a+");
+    if (fp != NULL) {
+        zen_DataChannel_t* channel = jtk_ArrayList_getValue(generator->m_builder->m_channels, 0);
+        fwrite(channel->m_bytes, channel->m_index, 1, fp);
+        fclose(fp);
     }
 }
 
