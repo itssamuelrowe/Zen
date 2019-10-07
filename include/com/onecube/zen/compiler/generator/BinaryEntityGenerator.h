@@ -20,6 +20,7 @@
 #define COM_ONECUBE_ZEN_COMPILER_GENERATOR_BINARY_ENTITY_GENERATOR_H
 
 // #include <jtk/collection/map/DualHashMap.h>
+#include <jtk/core/String.h>
 #include <jtk/io/OutputStream.h>
 
 #include <com/onecube/zen/Configuration.h>
@@ -56,6 +57,7 @@ struct zen_BinaryEntityGenerator_t {
     
     zen_EntityFile_t* m_entityFile;
     zen_ConstantPoolBuilder_t* m_constantPoolBuilder;
+    jtk_String_t* m_package;
 };
 
 /**

@@ -67,4 +67,8 @@ int32_t zen_ConstantPoolBuilder_countEntries(zen_ConstantPoolBuilder_t* builder)
 zen_ConstantPoolEntry_t* zen_ConstantPoolBuilder_getEntry(zen_ConstantPoolBuilder_t* builder,
     int32_t index);
 
+// UTF-8 Entry Index
+zen_ConstantPoolBuilder_getUtf8EntryIndex(
+    zen_ConstantPoolBuilder_t* builder, jtk_String_t* string);
+
 #endif /* COM_ONECUBE_ZEN_COMPILER_GENERATOR_CONSTANT_POOL_BUILDER_H */

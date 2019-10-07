@@ -43,6 +43,7 @@ zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_newEx(
     generator->m_outputStream = outputStream;
     generator->m_entityFile = zen_Memory_allocate(zen_EntityFile_t, 1);
     generator->m_constantPoolBuilder = zen_ConstantPoolBuilder_new();
+    generator->m_package = NULL;
 
     zen_ASTListener_t* astListener = generator->m_astListener;
 
@@ -819,28 +820,45 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* listener, 
 
 // BUG: Looks like we are not setting the current scope in this function.
 void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {/*
+    zen_ASTNode_t* node) {
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
     jtk_Assert_assertObject(node, "The specified AST node is null.");
 
+    /* Retrieve the generator associated with the AST listener. */
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    
+    /* Retrieve the context of the AST node. */
     zen_ClassDeclarationContext_t* context =
         (zen_ClassDeclarationContext_t*)node->m_context;
 
-    zen_Token_t* identifier = (zen_Token_t*)(context->m_identifier);
-    jtk_String_t* reference = jtk_String_newFromJoinEx(generator->m_package->m_value,
-        generator->m_package->m_size, identifier->m_text, identifier->m_length);
+    /* Retrieve the scope associated with the class being declared. */
+    zen_Scope_t* scope = zen_ASTAnnotations_get(listener->m_scopes, node);
+    
+    /* Update the current scope in the symbol table. */
+    zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
 
-    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    generator->m_classChannel = zen_BinaryEntityBuilder_pushChannel(generator->m_builder);
+    zen_Token_t* identifier = (zen_Token_t*)(context->m_identifier);
+    jtk_String_t* reference = NULL;
+    if (generator->m_package != NULL) {
+        reference = jtk_String_newFromJoinEx(generator->m_package->m_value,
+            generator->m_package->m_size, identifier->m_text, identifier->m_length);
+    }
+    else {
+        reference = jtk_String_newEx(identifier->m_text, identifier->m_length);
+    }
 
     uint16_t flags = 0;
     uint16_t referenceIndex =
-        zen_BinaryEntityGenerator_getConstantPoolUtf8Index(generator, reference);
+        zen_ConstantPoolBuilder_getUtf8EntryIndex(generator->m_constantPoolBuilder, reference);
     uint16_t* superclassIndexes = NULL;
     uint16_t superclassCount = 0;
 
+    /* At this point, the reference is not required anymore. We have the index into
+     * the constant pool which represents it. Therefore, destroy it.
+     */
     jtk_String_delete(reference);
 
+    /*
     if (context->m_extendsClause != NULL) {
         zen_ClassExtendsClauseContext_t* extendsClauseContext =
             (zen_ClassExtendsClauseContext_t*)context->m_extendsClause->m_context;
@@ -892,24 +910,22 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
     */
 }
 
-// BUG
 void zen_BinaryEntityGenerator_onExitClassDeclaration(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {/*
+    zen_ASTNode_t* node) {
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
     jtk_Assert_assertObject(node, "The specified AST node is null.");
 
+    /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    
+    /* Retrieve the context of the AST node. */
     zen_ClassDeclarationContext_t* context =
         (zen_ClassDeclarationContext_t*)node->m_context;
 
-    /* At this point, the class channel should contain the class entity header.
-     * The field channel should contain all the field entities. Therefore, we
-     * need to merge the class and field channels together.
-     *
-     * The channels are separated by field count. Therefore, activate the
-     * class channel and write the field count before merging.
-     *
-    zen_ChannelManager_activate(generator->m_channels, generator->m_classChannel);
+    /* Invalidate the current scope in the symbol table. */
+    zen_SymbolTable_invalidateCurrentScope(generator->m_symbolTable);
+
+
 
     /* Write the number of fields in this class. *
     zen_BinaryEntityBuilder_writeFieldCount(generator->m_builder, generator->m_fieldCount);

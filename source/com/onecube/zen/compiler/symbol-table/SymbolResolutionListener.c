@@ -233,9 +233,6 @@ void zen_SymbolResolutionListener_onExitStatementSuite(
     zen_SymbolTable_invalidateCurrentScope(listener->m_symbolTable);
 }
 
-// BUG: Looks like we are not setting the current scope in this function.
-// Also, update the BinaryEntityBuilder.c file.
-// Further, the counter function of this function invalidates the current scope.
 void zen_SymbolResolutionListener_onEnterClassDeclaration(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
@@ -291,7 +288,6 @@ void zen_SymbolResolutionListener_onExitClassDeclaration(zen_ASTListener_t* astL
 
 void zen_SymbolResolutionListener_onEnterPrimaryExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
-
     zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
     zen_PrimaryExpressionContext_t* primaryExpressionContext = (zen_PrimaryExpressionContext_t*)node->m_context;
 
