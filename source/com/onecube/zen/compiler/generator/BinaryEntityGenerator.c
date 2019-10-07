@@ -453,10 +453,27 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
 
     // TODO: Write the attribute
 
+    /* Retrieve the field count. */
+    int32_t fieldCount = jtk_ArrayList_getSize(generator->m_fields);
     /* Write the field count. */
-    zen_BinaryEntityBuilder_writeFieldCount(generator->m_builder, entity->m_fieldCount);
+    zen_BinaryEntityBuilder_writeFieldCount(generator->m_builder, fieldCount);
     /* Log the field count. */
-    printf("[debug] Entity has %d fields.\n", entity->m_fieldCount);
+    printf("[debug] Entity has %d fields.\n", fieldCount);
+    
+    int32_t fieldIndex;
+    for (fieldIndex = 0; fieldIndex < fieldCount; fieldIndex++) {
+        /* Retrieve the next field to write. */
+        zen_FieldEntity_t* fieldEntity = (zen_FieldEntity_t*)jtk_ArrayList_getValue(
+            generator->m_fields, fieldIndex);
+        
+        /* Write the field to the data channel. */
+        zen_BinaryEntityBuilder_writeField(generator->m_builder, fieldEntity->m_flags,
+            fieldEntity->m_nameIndex, fieldEntity->m_descriptorIndex);
+        
+        /* Log the details of the field. */
+        printf("[debug] A field was written with the features (flags = 0x%X, nameIndex = %d, descriptorIndex = %d).\n",
+            fieldEntity->m_flags, fieldEntity->m_nameIndex, fieldEntity->m_descriptorIndex);
+    }
 
     /* Write the function count. */
     zen_BinaryEntityBuilder_writeFunctionCount(generator->m_builder, entity->m_functionCount);
