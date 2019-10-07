@@ -18,6 +18,18 @@
 
 #include <com/onecube/zen/compiler/generator/ConstantPoolBuilder.h>
 
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolClass.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolDouble.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolEntry.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolField.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFloat.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFunction.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolInteger.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolLong.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolString.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolTag.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolUtf8.h>
+
 /*******************************************************************************
  * ConstantPoolBuilder                                                         *
  *******************************************************************************/
@@ -53,7 +65,7 @@ void zen_ConstantPoolBuilder_delete(zen_ConstantPoolBuilder_t* builder) {
         }
         
         /* Destroy the entry. */
-        zen_Memory_deallocate(entry0);
+        zen_Memory_deallocate(entry);
     }
 
     jtk_ArrayList_delete(builder->m_entries);
@@ -75,7 +87,14 @@ zen_ConstantPoolEntry_t* zen_ConstantPoolBuilder_getEntry(zen_ConstantPoolBuilde
     return jtk_ArrayList_getValue(builder->m_entries, index);
 }
 
+// UTF-8 Entry
+
 zen_ConstantPoolUtf8_t* zen_ConstantPoolBuilder_getUtf8Entry(
+    zen_ConstantPoolBuilder_t* builder, int32_t index) {
+    jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
+    
+    return (zen_ConstantPoolUtf8_t*)jtk_ArrayList_getValue(builder->m_entries, index);
+}
 
 int32_t zen_ConstantPoolBuilder_getUtf8EntryIndex(
     zen_ConstantPoolBuilder_t* builder, jtk_String_t* string) {

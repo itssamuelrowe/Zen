@@ -832,10 +832,10 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
         (zen_ClassDeclarationContext_t*)node->m_context;
 
     /* Retrieve the scope associated with the class being declared. */
-    zen_Scope_t* scope = zen_ASTAnnotations_get(listener->m_scopes, node);
+    zen_Scope_t* scope = zen_ASTAnnotations_get(generator->m_scopes, node);
     
     /* Update the current scope in the symbol table. */
-    zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
+    zen_SymbolTable_setCurrentScope(generator->m_symbolTable, scope);
 
     zen_Token_t* identifier = (zen_Token_t*)(context->m_identifier);
     jtk_String_t* reference = NULL;

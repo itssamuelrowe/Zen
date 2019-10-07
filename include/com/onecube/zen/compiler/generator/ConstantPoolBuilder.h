@@ -20,8 +20,19 @@
 #define COM_ONECUBE_ZEN_COMPILER_GENERATOR_CONSTANT_POOL_BUILDER_H
 
 #include <jtk/collection/list/ArrayList.h>
+#include <jtk/core/String.h>
 
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolClass.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolDouble.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolEntry.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolField.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFloat.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFunction.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolInteger.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolLong.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolString.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolTag.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolUtf8.h>
 
 /*******************************************************************************
  * ConstantPoolBuilder                                                         *
@@ -67,7 +78,11 @@ int32_t zen_ConstantPoolBuilder_countEntries(zen_ConstantPoolBuilder_t* builder)
 zen_ConstantPoolEntry_t* zen_ConstantPoolBuilder_getEntry(zen_ConstantPoolBuilder_t* builder,
     int32_t index);
 
-// UTF-8 Entry Index
+// UTF-8 Entry
+
+zen_ConstantPoolUtf8_t* zen_ConstantPoolBuilder_getUtf8Entry(
+    zen_ConstantPoolBuilder_t* builder, int32_t index);
+
 zen_ConstantPoolBuilder_getUtf8EntryIndex(
     zen_ConstantPoolBuilder_t* builder, jtk_String_t* string);
 
