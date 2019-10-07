@@ -661,10 +661,12 @@ void zen_BinaryEntityGenerator_onExitVariableDeclarator(zen_ASTListener_t* astLi
         uint16_t flags = 0;
 
         /* Retrieve the constant pool index for the variable name. */
-        uint16_t nameIndex = zen_ConstantPoolBuilder_getUtf8EntryIndexEx(generator->m_builder,
+        uint16_t nameIndex = zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
+            generator->m_constantPoolBuilder,
             identifierToken->m_text, identifierToken->m_length);
 
-        uint16_t descriptorIndex = zen_ConstantPoolBuilder_getUtf8EntryIndexEx(generator->m_builder,
+        uint16_t descriptorIndex = zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
+            generator->m_constantPoolBuilder,
             "com/todo/Class", 14);
 
         /* Create an instance of the field entity that represents the variable
@@ -794,7 +796,7 @@ void zen_BinaryEntityGenerator_onExitLabel(zen_ASTListener_t* astListener, zen_A
 void zen_BinaryEntityGenerator_onEnterWhileStatement(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    zen_BinaryEntityBuilder_pushChannel(generator->m_builder);
+    // zen_BinaryEntityBuilder_pushChannel(generator->m_builder);
 }
 
 void zen_BinaryEntityGenerator_onExitWhileStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {/*

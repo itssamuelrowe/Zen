@@ -19,7 +19,7 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_GENERATOR_BINARY_ENTITY_BUILDER_H
 #define COM_ONECUBE_ZEN_COMPILER_GENERATOR_BINARY_ENTITY_BUILDER_H
 
-#include <jtk/collection/stack/ArrayStack.h>
+#include <jtk/collection/list/ArrayList.h>
 
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/compiler/generator/DataChannel.h>
@@ -54,7 +54,7 @@
  * @since zen 1.0
  */
 struct zen_BinaryEntityBuilder_t {
-    jtk_ArrayStack_t* m_channels;
+    jtk_ArrayList_t* m_channels;
     uint16_t m_constantPoolIndex;
     int32_t m_identifier;
 };
