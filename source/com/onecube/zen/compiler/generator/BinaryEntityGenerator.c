@@ -18,6 +18,7 @@
 
 #include <jtk/core/Integer.h>
 #include <jtk/core/VariableArguments.h>
+#include <jtk/core/StringBuilder.h>
 
 #include <com/onecube/zen/compiler/ast/ASTWalker.h>
 #include <com/onecube/zen/compiler/ast/context/Context.h>
@@ -292,21 +293,27 @@ zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_newEx(
 void zen_BinaryEntityGenerator_delete(zen_BinaryEntityGenerator_t* generator) {
     jtk_Assert_assertObject(generator, "The specified generator is null.");
 
-    /*jtk_Iterator_t* keyIterator = jtk_DualHashMap_getKeyIterator(generator->m_constantPool);
-    while (jtk_Iterator_hasNext(keyIterator)) {
-        zen_ConstantPoolEntry_t* entry = (zen_ConstantPoolEntry_t*)jtk_Iterator_getNext(keyIterator);
-
-        if (entry->m_tag == ZEN_CONSTANT_POOL_TAG_UTF8) {
-            zen_ConstantPoolUtf8_t* utf8Entry = (zen_ConstantPoolUtf8_t*)entry;
-            jtk_Memory_deallocate(utf8Entry->m_bytes);
-        }
-
-        jtk_Memory_deallocate(entry);
+    int32_t fieldCount = jtk_ArrayList_getSize(generator->m_fields);
+    int32_t fieldIndex;
+    for (fieldIndex = 0; fieldIndex < fieldCount; fieldIndex++) {
+        zen_FieldEntity_t* fieldEntity = (zen_FieldEntity_t*)jtk_ArrayList_getValue(
+            generator->m_fields, fieldIndex);
+        zen_FieldEntity_delete(fieldEntity);
     }
-    jtk_Iterator_delete(keyIterator);
+    jtk_ArrayList_delete(generator->m_fields);
 
-    jtk_DualHashMap_delete(generator->m_constantPool);*/
+    int32_t functionCount = jtk_ArrayList_getSize(generator->m_functions);
+    int32_t functionIndex;
+    for (functionIndex = 0; functionIndex < functionCount; functionIndex++) {
+        zen_FunctionEntity_t* functionEntity = (zen_FunctionEntity_t*)jtk_ArrayList_getValue(
+            generator->m_functions, functionIndex);
+        zen_FunctionEntity_delete(functionEntity);
+    }
+    jtk_ArrayList_delete(generator->m_functions);
 
+    /* Destroy the constant pool builder. It takes care of destroying the
+     * constant pool entries.
+     */
     zen_ConstantPoolBuilder_delete(generator->m_constantPoolBuilder);
     zen_Memory_deallocate(generator->m_entityFile);
 
@@ -475,10 +482,28 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
             fieldEntity->m_flags, fieldEntity->m_nameIndex, fieldEntity->m_descriptorIndex);
     }
 
+    /* Retrieve the function count. */
+    int32_t functionCount = jtk_ArrayList_getSize(generator->m_functions);
     /* Write the function count. */
-    zen_BinaryEntityBuilder_writeFunctionCount(generator->m_builder, entity->m_functionCount);
+    zen_BinaryEntityBuilder_writeFunctionCount(generator->m_builder, functionCount);
     /* Log the function count. */
-    printf("[debug] Entity has %d functions.\n", entity->m_functionCount);
+    printf("[debug] Entity has %d functions.\n", functionCount);
+
+    int32_t functionIndex;
+    for (functionIndex = 0; functionIndex < functionCount; functionIndex++) {
+        /* Retrieve the next function to write. */
+        zen_FunctionEntity_t* functionEntity = (zen_FunctionEntity_t*)jtk_ArrayList_getValue(
+            generator->m_functions, functionIndex);
+
+        /* Write the function to the data channel. */
+        zen_BinaryEntityBuilder_writeFunction(generator->m_builder,
+            functionEntity->m_nameIndex, functionEntity->m_descriptorIndex,
+            functionEntity->m_flags);
+
+        /* Log the details of the function. */
+        printf("[debug] A function was written with the features (flags = 0x%X, nameIndex = %d, descriptorIndex = %d).\n",
+            functionEntity->m_flags, functionEntity->m_nameIndex, functionEntity->m_descriptorIndex);
+    }
 }
 
 // importDeclaration
@@ -540,44 +565,119 @@ void zen_BinaryEntityGenerator_onExitComponentDeclaration(zen_ASTListener_t* ast
 // functionDeclaration
 
 void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
-    zen_ASTListener_t* astListener, zen_ASTNode_t* node) {/*
+    zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
     jtk_Assert_assertObject(node, "The specified AST node is null.");
 
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_FunctionDeclarationContext_t* context = (zen_FunctionDeclarationContext_t*)node->m_context;
 
-    zen_Token_t* identifier = (zen_Token_t*)(context->m_identifier);
-    jtk_String_t* descriptor = zen_BinaryEntityGenerator_getDescriptor(generator, context->m_functionParameters);
-
     zen_Scope_t* scope = zen_ASTAnnotations_get(generator->m_scopes, node);
     zen_SymbolTable_setCurrentScope(generator->m_symbolTable, scope);
+}
 
-    uint16_t nameIndex = zen_BinaryEntityGenerator_getConstantPoolUtf8IndexEx(
-        generator, identifier->m_text, identifier->m_length);
-    uint16_t descriptorIndex = zen_BinaryEntityGenerator_getConstantPoolUtf8Index(
-        generator, descriptor);
-    uint16_t flags = 0;
+/* The format of a function descriptor is shown below:
+ * descriptor
+ * :    returnType ':' parameters
+ * ;
+ *
+ * returnType
+ * :    type
+ * ;
+ *
+ * parameters
+ * :    type+
+ * ;
+ *
+ * type
+ * :    'v'
+ * |    properType
+ * ;
+ *
+ * properType
+ * :    'z'
+ * |    'b'
+ * |    's'
+ * |    'i'
+ * |    'l'
+ * |    'f'
+ * |    'd'
+ * |    className
+ * |    arrayType
+ * ;
+ *
+ * arrayType
+ * :    '@'+ properType
+ * ;
+ *
+ * className
+ * :    '(' IDENTIFIER ('/' IDENTIFIER)* ')'
+ * ;
+ *
+ * Here is an example function.
+ * function printf(format, ...arguments)
+ *
+ * The function descriptor for this function is shown below.
+ * (zen/core/Object):(zen/core/Object)@(zen/core/Object)
+ */
 
-    jtk_String_delete(descriptor);
+jtk_String_t* zen_BinaryEntityGenerator_getDescriptor(zen_BinaryEntityGenerator_t* generator,
+    zen_ASTNode_t* functionParameters) {
+    zen_FunctionParametersContext_t* functionParametersContext =
+        (zen_FunctionParametersContext_t*)functionParameters->m_context;
 
-    zen_ChannelManager_activate(generator->m_channels, generator->m_functionChannel);
-    zen_BinaryEntityBuilder_writeFunction(generator->m_builder, nameIndex,
-        descriptorIndex, flags);*/
+
+    jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+    jtk_StringBuilder_append_z(builder, "(zen/core/Object):");
+
+    int32_t fixedParameterCount = jtk_ArrayList_getSize(functionParametersContext->m_fixedParameters);
+    int32_t i;
+    for (i = 0; i < fixedParameterCount; i++) {
+        jtk_StringBuilder_append_z(builder, "(zen/core/Object)");
+    }
+
+    if (functionParametersContext->m_variableParameter != NULL) {
+        jtk_StringBuilder_append_z(builder, "@(zen/core/Object)");
+    }
+
+    if ((fixedParameterCount == 0) &&
+        (functionParametersContext->m_variableParameter == NULL)) {
+        jtk_StringBuilder_append_c(builder, 'v');
+    }
+
+    return jtk_StringBuilder_toString(builder);
 }
 
 void zen_BinaryEntityGenerator_onExitFunctionDeclaration(
-    zen_ASTListener_t* astListener, zen_ASTNode_t* node) {/*
+    zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
     jtk_Assert_assertObject(node, "The specified AST node is null.");
 
+    /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
 
-    zen_ChannelManager_commit(generator->m_channels, generator->m_codeChannel,
-        generator->m_functionChannel);
+    /* Retrieve the context associated with the AST node. */
+    zen_FunctionDeclarationContext_t* context = (zen_FunctionDeclarationContext_t*)node->m_context;
+
+    zen_ASTNode_t* identifier = context->m_identifier;
+    zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+
+    jtk_String_t* descriptor = zen_BinaryEntityGenerator_getDescriptor(generator, context->m_functionParameters);
+
+    uint16_t flags = 0;
+    uint16_t nameIndex = zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
+        generator->m_constantPoolBuilder, identifierToken->m_text,
+        identifierToken->m_length);
+    uint16_t descriptorIndex = zen_ConstantPoolBuilder_getUtf8EntryIndex(
+        generator->m_constantPoolBuilder, descriptor);
+
+    jtk_String_delete(descriptor);
+
+    zen_FunctionEntity_t* functionEntity = zen_FunctionEntity_new(flags,
+        nameIndex, descriptorIndex);
+    jtk_ArrayList_add(generator->m_functions, functionEntity);
 
     zen_SymbolTable_invalidateCurrentScope(generator->m_symbolTable);
-    */
 }
 
 // functionParameters

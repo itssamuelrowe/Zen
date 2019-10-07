@@ -54,6 +54,18 @@ struct zen_FunctionEntity_t {
     zen_AttributeTable_t m_attributeTable;
 };
 
+/**
+ * @memberof FunctionEntity
+ */
 typedef struct zen_FunctionEntity_t zen_FunctionEntity_t;
+
+// Constructor
+
+zen_FunctionEntity_t* zen_FunctionEntity_new(uint16_t flags, uint16_t nameIndex,
+    uint16_t descriptorIndex);
+
+// Destructor
+
+void zen_FunctionEntity_delete(zen_FunctionEntity_t* functionEntity);
 
 #endif /* ZEN_FEB_FUNCTION_ENTITY_H */

@@ -158,6 +158,7 @@ set (
     # Instruction.c is from the virtual machine module. Remove references to it.
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/Instruction.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/FieldEntity.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/FunctionEntity.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/Zen.c
 )
 

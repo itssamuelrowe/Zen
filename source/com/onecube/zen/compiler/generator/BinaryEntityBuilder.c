@@ -610,12 +610,12 @@ void zen_BinaryEntityBuilder_writeFunction(zen_BinaryEntityBuilder_t* builder, u
     zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(builder->m_channels, 0);
     zen_DataChannel_requestCapacity(channel, 6);
 
+    channel->m_bytes[channel->m_index++] = (flags & 0x0000FF00) >> 8; // flags
+    channel->m_bytes[channel->m_index++] = (flags & 0x000000FF);
     channel->m_bytes[channel->m_index++] = (nameIndex & 0x0000FF00) >> 8; // name index
     channel->m_bytes[channel->m_index++] = (nameIndex & 0x000000FF);
     channel->m_bytes[channel->m_index++] = (descriptorIndex & 0x0000FF00) >> 8; // descriptor index
     channel->m_bytes[channel->m_index++] = (descriptorIndex & 0x000000FF);
-    channel->m_bytes[channel->m_index++] = (flags & 0x0000FF00) >> 8; // flags
-    channel->m_bytes[channel->m_index++] = (flags & 0x000000FF);
 }
 
 /* The localVariableCount and maxStackSize are in terms of 4-m_bytes. Therefore,
