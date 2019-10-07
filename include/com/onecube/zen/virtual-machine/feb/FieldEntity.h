@@ -54,6 +54,24 @@ struct zen_FieldEntity_t {
     zen_AttributeTable_t m_attributeTable;
 };
 
+/**
+ * @memberof FieldEntity
+ */
 typedef struct zen_FieldEntity_t zen_FieldEntity_t;
+
+// Constructor
+
+/**
+ * @memberof FieldEntity
+ */
+zen_FieldEntity_t* zen_FieldEntity_new(uint16_t flags, uint16_t nameIndex,
+    uint16_t descriptorIndex);
+
+// Destructor
+
+/**
+ * @memberof FieldEntity
+ */
+void zen_FieldEntity_delete(zen_FieldEntity_t* entity);
 
 #endif /* ZEN_FEB_FIELD_ENTITY_H */

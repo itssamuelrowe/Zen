@@ -21,6 +21,7 @@
 
 // #include <jtk/collection/map/DualHashMap.h>
 #include <jtk/core/String.h>
+#include <jtk/collection/list/ArrayList.h>
 #include <jtk/io/OutputStream.h>
 
 #include <com/onecube/zen/Configuration.h>
@@ -58,6 +59,8 @@ struct zen_BinaryEntityGenerator_t {
     zen_EntityFile_t* m_entityFile;
     zen_ConstantPoolBuilder_t* m_constantPoolBuilder;
     jtk_String_t* m_package;
+    jtk_ArrayList_t* m_fields;
+    jtk_ArrayList_t* m_functions;
 };
 
 /**
