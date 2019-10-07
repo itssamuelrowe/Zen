@@ -27,6 +27,7 @@
 #include <com/onecube/zen/compiler/ast/ASTListener.h>
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
 #include <com/onecube/zen/compiler/ast/ASTAnnotations.h>
+#include <com/onecube/zen/compiler/generator/ConstantPoolBuilder.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
 
 #include <com/onecube/zen/virtual-machine/feb/ByteCode.h>
@@ -47,14 +48,14 @@ struct zen_BinaryEntityGenerator_t {
     zen_SymbolTable_t* m_symbolTable;
     zen_ASTAnnotations_t* m_scopes;
     zen_ASTNode_t* m_compilationUnit;
+    
+    /**
+     * The output stream where the generated binary entity will be written to.
+     */
     jtk_OutputStream_t* m_outputStream;
     
     zen_EntityFile_t* m_entityFile;
-    
-    int32_t m_primaryChannel;
-    int32_t m_secondaryChannel;
-
-    // jtk_DualHashMap_t* m_constantPool; /* <zen_ConstantPoolEntry_t*, int32_t> */
+    zen_ConstantPoolBuilder_t* m_constantPoolBuilder;
 };
 
 /**

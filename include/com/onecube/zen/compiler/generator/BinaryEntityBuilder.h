@@ -106,12 +106,14 @@ void zen_BinaryEntityBuilder_writeMagicNumber(zen_BinaryEntityBuilder_t* builder
 /**
  * @memberof BinaryEntityBuilder
  */
-void zen_BinaryEntityBuilder_writeMajorVersion(zen_BinaryEntityBuilder_t* builder);
+void zen_BinaryEntityBuilder_writeMajorVersion(zen_BinaryEntityBuilder_t* builder,
+    uint16_t majorVersion);
 
 /**
  * @memberof BinaryEntityBuilder
  */
-void zen_BinaryEntityBuilder_writeMinorVersion(zen_BinaryEntityBuilder_t* builder);
+void zen_BinaryEntityBuilder_writeMinorVersion(zen_BinaryEntityBuilder_t* builder,
+    uint16_t minorVersion);
 
 // Stream
 

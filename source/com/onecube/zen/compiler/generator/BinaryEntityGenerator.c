@@ -411,7 +411,7 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
      * can now be built.
      */
     int32_t entryCount = zen_ConstantPoolBuilder_countEntries(generator->m_constantPoolBuilder);
-    zen_BinaryEntityBuilder_writeConstantPoolHeader(entryCount);
+    zen_BinaryEntityBuilder_writeConstantPoolHeader(generator->m_builder, entryCount);
     int32_t i;
     for (i = 0; i < entryCount; i++) {
         zen_ConstantPoolEntry_t* entry = zen_ConstantPoolBuilder_getEntry(generator->m_constantPoolBuilder, i);
