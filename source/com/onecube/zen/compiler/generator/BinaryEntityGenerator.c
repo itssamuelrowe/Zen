@@ -29,19 +29,6 @@
 #include <com/onecube/zen/compiler/symbol-table/Symbol.h>
 #include <com/onecube/zen/compiler/generator/BinaryEntityGenerator.h>
 
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPool.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolClass.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolDouble.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolEntry.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolField.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFloat.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFunction.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolInteger.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolLong.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolString.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolTag.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolUtf8.h>
-
 // Constructor
 
 zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_newEx(
@@ -419,8 +406,8 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
     }
 
     /* Write the entity header. */
-    zen_BinaryEntityBuilder_writeEntityHeader(generator->m_builder, entity->m_type, entity->m_flags,
-        entity->m_reference);
+    // zen_BinaryEntityBuilder_writeEntityHeader(generator->m_builder, entity->m_type, entity->m_flags,
+    //    entity->m_reference);
 }
 
 // importDeclaration

@@ -63,6 +63,7 @@ set (
 
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/generator/BinaryEntityGenerator.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/generator/BinaryEntityBuilder.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/generator/ConstantPoolBuilder.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/generator/DataChannel.c
 
     # Lexer

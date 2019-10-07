@@ -24,7 +24,18 @@
 #include <com/onecube/zen/virtual-machine/feb/ByteCode.h>
 #include <com/onecube/zen/virtual-machine/feb/EntityType.h>
 #include <com/onecube/zen/virtual-machine/feb/Instruction.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPool.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolClass.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolDouble.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolEntry.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolField.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFloat.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFunction.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolInteger.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolLong.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolString.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolTag.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolUtf8.h>
 
 /*******************************************************************************
  * BinaryEntityBuilder                                                         *
@@ -247,7 +258,6 @@ uint16_t zen_BinaryEntityBuilder_writeConstantPoolLongEx(zen_BinaryEntityBuilder
     return builder->m_constantPoolIndex++;
 }
 
-
 uint16_t zen_BinaryEntityBuilder_writeConstantPoolFloat(zen_BinaryEntityBuilder_t* builder, float value) {
     jtk_Assert_assertObject(builder, "The specified builder is null.");
 
@@ -261,6 +271,22 @@ uint16_t zen_BinaryEntityBuilder_writeConstantPoolFloat(zen_BinaryEntityBuilder_
     channel->m_bytes[channel->m_index++] = (value0 & 0x00FF0000) >> 16;
     channel->m_bytes[channel->m_index++] = (value0 & 0x0000FF00) >> 8;
     channel->m_bytes[channel->m_index++] = (value0 & 0x000000FF);
+
+    return builder->m_constantPoolIndex++;
+}
+
+uint16_t zen_BinaryEntityBuilder_writeConstantPoolFloatEx(zen_BinaryEntityBuilder_t* builder,
+    uint32_t value) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(builder->m_channels, 0);
+    zen_DataChannel_requestCapacity(channel, 5);
+
+    channel->m_bytes[channel->m_index++] = ZEN_CONSTANT_POOL_TAG_FLOAT; // Tag
+    channel->m_bytes[channel->m_index++] = (value & 0xFF000000) >> 24; // Value
+    channel->m_bytes[channel->m_index++] = (value & 0x00FF0000) >> 16;
+    channel->m_bytes[channel->m_index++] = (value & 0x0000FF00) >> 8;
+    channel->m_bytes[channel->m_index++] = (value & 0x000000FF);
 
     return builder->m_constantPoolIndex++;
 }
@@ -282,6 +308,26 @@ uint16_t zen_BinaryEntityBuilder_writeConstantPoolDouble(zen_BinaryEntityBuilder
     channel->m_bytes[channel->m_index++] = (value0 & 0x0000000000FF0000L) >> 16;
     channel->m_bytes[channel->m_index++] = (value0 & 0x000000000000FF00L) >> 8;
     channel->m_bytes[channel->m_index++] = (value0 & 0x00000000000000FFL);
+
+    return builder->m_constantPoolIndex++;
+}
+
+uint16_t zen_BinaryEntityBuilder_writeConstantPoolDoubleEx(zen_BinaryEntityBuilder_t* builder,
+    uint32_t highBytes, uint32_t lowBytes) {
+    jtk_Assert_assertObject(builder, "The specified builder is null.");
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(builder->m_channels, 0);
+    zen_DataChannel_requestCapacity(channel, 5);
+
+    channel->m_bytes[channel->m_index++] = ZEN_CONSTANT_POOL_TAG_INTEGER; // Tag
+    channel->m_bytes[channel->m_index++] = (highBytes & 0xFF000000) >> 24;
+    channel->m_bytes[channel->m_index++] = (highBytes & 0x00FF0000) >> 16;
+    channel->m_bytes[channel->m_index++] = (highBytes & 0x0000FF00) >> 8;
+    channel->m_bytes[channel->m_index++] = (highBytes & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (lowBytes & 0xFF000000) >> 24;
+    channel->m_bytes[channel->m_index++] = (lowBytes & 0x00FF0000) >> 16;
+    channel->m_bytes[channel->m_index++] = (lowBytes & 0x0000FF00) >> 8;
+    channel->m_bytes[channel->m_index++] = (lowBytes & 0x000000FF);
 
     return builder->m_constantPoolIndex++;
 }
@@ -465,12 +511,15 @@ int32_t zen_BinaryEntityBuilder_writeConstantPoolEntry(zen_BinaryEntityBuilder_t
 
         case ZEN_CONSTANT_POOL_TAG_CLASS: {
             /* Convert the constant pool entry to its specific type. */
-            result = zen_ConstantPoolClass_t* constantPoolClass =
+            zen_ConstantPoolClass_t* constantPoolClass =
                 (zen_ConstantPoolClass_t*)entry;
+            /* Write the bytes of the constant pool entry to the data channel. */
+            result = zen_BinaryEntityBuilder_writeConstantPoolClass(builder,
+                constantPoolClass->m_nameIndex);
 
             break;
         }
-        
+
         default: {
             fprintf(stderr, "[internal error] Control should not reach here.\n");
         }
