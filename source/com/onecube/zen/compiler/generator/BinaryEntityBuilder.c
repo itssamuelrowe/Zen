@@ -541,18 +541,13 @@ void zen_BinaryEntityBuilder_writeEntityHeader(zen_BinaryEntityBuilder_t* builde
     channel->m_bytes[channel->m_index++] = (reference & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_writeClass(zen_BinaryEntityBuilder_t* builder, uint16_t flags, uint16_t reference,
+void zen_BinaryEntityBuilder_writeSuperclasses(zen_BinaryEntityBuilder_t* builder,
     uint16_t superclassCount, uint16_t* superclassIndexes) {
     jtk_Assert_assertObject(builder, "The specified builder is null.");
 
     zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(builder->m_channels, 0);
     zen_DataChannel_requestCapacity(channel, 7 + (superclassCount * 2));
 
-    channel->m_bytes[channel->m_index++] = ZEN_ENTITY_TYPE_CLASS; // type
-    channel->m_bytes[channel->m_index++] = (flags & 0x0000FF00) >> 8; // flags
-    channel->m_bytes[channel->m_index++] = (flags & 0x000000FF);
-    channel->m_bytes[channel->m_index++] = (reference & 0x0000FF00) >> 8; // reference
-    channel->m_bytes[channel->m_index++] = (reference & 0x000000FF);
     channel->m_bytes[channel->m_index++] = (superclassCount & 0x0000FF00) >> 8; // superclass count
     channel->m_bytes[channel->m_index++] = (superclassCount & 0x000000FF);
     int32_t j;

@@ -18,17 +18,6 @@
 
 #include <com/onecube/zen/compiler/generator/ConstantPoolBuilder.h>
 
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolClass.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolDouble.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolEntry.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolField.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFloat.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFunction.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolInteger.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolLong.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolString.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolTag.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolUtf8.h>
 
 /*******************************************************************************
  * ConstantPoolBuilder                                                         *

@@ -83,7 +83,7 @@ struct zen_EntityFile_t {
      * Every binary file contains the definition of a single entity: class,
      * interface, annotation, or enumeration. It is known as the primary entity.
      */
-    zen_Entity_t* m_entity;
+    zen_Entity_t m_entity;
 };
 
 /**

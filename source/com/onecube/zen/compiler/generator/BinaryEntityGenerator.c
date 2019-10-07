@@ -28,6 +28,7 @@
 #include <com/onecube/zen/compiler/generator/BinaryEntityBuilder.h>
 #include <com/onecube/zen/compiler/symbol-table/Symbol.h>
 #include <com/onecube/zen/compiler/generator/BinaryEntityGenerator.h>
+#include <com/onecube/zen/virtual-machine/feb/EntityType.h>
 
 // Constructor
 
@@ -427,9 +428,38 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
      */
     printf("[log] Constant pool size is %d.\n", entryCount);
 
+    /* Retrieve the entity to write. */
+    zen_Entity_t* entity = &generator->m_entityFile->m_entity;
+
     /* Write the entity header. */
-    // zen_BinaryEntityBuilder_writeEntityHeader(generator->m_builder, entity->m_type, entity->m_flags,
-    //    entity->m_reference);
+    zen_BinaryEntityBuilder_writeEntityHeader(generator->m_builder, entity->m_type,
+        entity->m_flags, entity->m_reference);
+    /* Log the entity header information written, including type, flags, and reference. */
+    printf("[debug] Entity header includes type %d, flags 0x%X, and reference = %d.\n",
+        entity->m_type, entity->m_flags, entity->m_reference);
+
+    /* Write the superclasses. */
+    zen_BinaryEntityBuilder_writeSuperclasses(generator->m_builder, entity->m_superclassCount,
+        entity->m_superclasses);
+    /* Log the superclass indexes that the entity inherits. */
+    printf("[debug] Entity inherits %d superclasses.\n", entity->m_superclassCount);
+
+    /* Write the attribute count. */
+    zen_BinaryEntityBuilder_writeAttributeCount(generator->m_builder, entity->m_attributeTable.m_size);
+    /* Log the attribute count. */
+    printf("[debug] Entity has %d attributes.\n", entity->m_attributeTable.m_size);
+
+    // TODO: Write the attribute
+
+    /* Write the field count. */
+    zen_BinaryEntityBuilder_writeFieldCount(generator->m_builder, entity->m_fieldCount);
+    /* Log the field count. */
+    printf("[debug] Entity has %d fields.\n", entity->m_fieldCount);
+
+    /* Write the function count. */
+    zen_BinaryEntityBuilder_writeFunctionCount(generator->m_builder, entity->m_functionCount);
+    /* Log the function count. */
+    printf("[debug] Entity has %d functions.\n", entity->m_functionCount);
 }
 
 // importDeclaration
@@ -826,14 +856,14 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
 
     /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    
+
     /* Retrieve the context of the AST node. */
     zen_ClassDeclarationContext_t* context =
         (zen_ClassDeclarationContext_t*)node->m_context;
 
     /* Retrieve the scope associated with the class being declared. */
     zen_Scope_t* scope = zen_ASTAnnotations_get(generator->m_scopes, node);
-    
+
     /* Update the current scope in the symbol table. */
     zen_SymbolTable_setCurrentScope(generator->m_symbolTable, scope);
 
@@ -858,6 +888,18 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
      * the constant pool which represents it. Therefore, destroy it.
      */
     jtk_String_delete(reference);
+
+    zen_Entity_t* entity = &generator->m_entityFile->m_entity;
+    entity->m_type = ZEN_ENTITY_TYPE_CLASS;
+    entity->m_flags = 0;
+    entity->m_reference = referenceIndex;
+    entity->m_superclassCount = superclassCount;
+    entity->m_superclasses = superclassIndexes;
+    entity->m_attributeTable.m_size = 0;
+    entity->m_fieldCount = 0;
+    entity->m_fields = NULL;
+    entity->m_functionCount = 0;
+    entity->m_functions = NULL;
 
     /*
     if (context->m_extendsClause != NULL) {
@@ -918,7 +960,7 @@ void zen_BinaryEntityGenerator_onExitClassDeclaration(zen_ASTListener_t* astList
 
     /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    
+
     /* Retrieve the context of the AST node. */
     zen_ClassDeclarationContext_t* context =
         (zen_ClassDeclarationContext_t*)node->m_context;

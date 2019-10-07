@@ -20,6 +20,8 @@
 #define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_FEB_ENTITY_H
 
 #include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/virtual-machine/feb/FieldEntity.h>
+#include <com/onecube/zen/virtual-machine/feb/FunctionEntity.h>
 #include <com/onecube/zen/virtual-machine/feb/attribute/AttributeTable.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPool.h>
 
@@ -45,14 +47,28 @@ struct zen_Entity_t {
      */
     uint16_t m_reference;
 
-    zen_AttributeTable_t m_attributeTable;
-
-    /**
-     * The body of this entity. Contingent on the tag byte, the length of the
-     * body may vary. Please refer to the documentation of various entities
+    /*
+     * The body of this entity is follows. Contingent on the tag byte, the treatement
+     * of the body may vary. Please refer to the documentation of various entities
      * for further information.
      */
-    // void* m_body;
+    
+    /**
+     * The number of super-classes.
+     */
+    uint16_t m_superclassCount;
+
+    uint16_t* m_superclasses;
+
+    zen_AttributeTable_t m_attributeTable;
+
+    uint16_t m_fieldCount;
+
+    zen_FieldEntity_t** m_fields;
+
+    uint16_t m_functionCount;
+
+    zen_FunctionEntity_t** m_functions;
 };
 
 typedef struct zen_Entity_t zen_Entity_t;
