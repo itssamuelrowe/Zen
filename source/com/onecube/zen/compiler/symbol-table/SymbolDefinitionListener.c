@@ -154,7 +154,7 @@ void zen_SymbolDefinitionListener_destroySymbol(zen_Symbol_t* symbol) {
             zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
             zen_ClassSymbol_delete(classSymbol);
 
-            printf("[debug] Destroyed a class symbol.\n");
+            // printf("[debug] Destroyed a class symbol.\n");
 
             break;
         }
@@ -163,7 +163,7 @@ void zen_SymbolDefinitionListener_destroySymbol(zen_Symbol_t* symbol) {
             zen_EnumerateSymbol_t* enumerateSymbol = (zen_EnumerateSymbol_t*)symbol->m_context;
             zen_EnumerateSymbol_delete(enumerateSymbol);
 
-            printf("[debug] Destroyed a enumerate symbol.\n");
+            // printf("[debug] Destroyed a enumerate symbol.\n");
 
             break;
         }
@@ -172,7 +172,7 @@ void zen_SymbolDefinitionListener_destroySymbol(zen_Symbol_t* symbol) {
             zen_EnumerationSymbol_t* enumerationSymbol = (zen_EnumerationSymbol_t*)symbol->m_context;
             zen_EnumerationSymbol_delete(enumerationSymbol);
 
-            printf("[debug] Destroyed a enumeration symbol.\n");
+            // printf("[debug] Destroyed a enumeration symbol.\n");
 
             break;
         }
@@ -181,7 +181,7 @@ void zen_SymbolDefinitionListener_destroySymbol(zen_Symbol_t* symbol) {
             zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)symbol->m_context;
             zen_FunctionSymbol_delete(functionSymbol);
 
-            printf("[debug] Destroyed a function symbol.\n");
+            // printf("[debug] Destroyed a function symbol.\n");
 
             break;
         }
@@ -190,7 +190,7 @@ void zen_SymbolDefinitionListener_destroySymbol(zen_Symbol_t* symbol) {
             zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
             zen_ConstantSymbol_delete(constantSymbol);
 
-            printf("[debug] Destroyed a constant symbol.\n");
+            // printf("[debug] Destroyed a constant symbol.\n");
 
             break;
         }
@@ -199,7 +199,7 @@ void zen_SymbolDefinitionListener_destroySymbol(zen_Symbol_t* symbol) {
             zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)symbol->m_context;
             zen_VariableSymbol_delete(variableSymbol);
 
-            printf("[debug] Destroyed a variable symbol.\n");
+            // printf("[debug] Destroyed a variable symbol.\n");
 
             break;
         }
@@ -208,7 +208,7 @@ void zen_SymbolDefinitionListener_destroySymbol(zen_Symbol_t* symbol) {
             zen_LabelSymbol_t* labelSymbol = (zen_LabelSymbol_t*)symbol->m_context;
             zen_LabelSymbol_delete(labelSymbol);
 
-            printf("[debug] Destroyed a label symbol.\n");
+            // printf("[debug] Destroyed a label symbol.\n");
 
             break;
         }
@@ -246,7 +246,7 @@ void zen_SymbolDefinitionListener_destroyScope(zen_Scope_t* scope) {
                 (zen_CompilationUnitScope_t*)scope->m_context;
             zen_CompilationUnitScope_delete(compilationUnitScope);
 
-            printf("[debug] Compilation unit scope deleted.\n");
+            // printf("[debug] Compilation unit scope deleted.\n");
 
             break;
         }
@@ -257,7 +257,7 @@ void zen_SymbolDefinitionListener_destroyScope(zen_Scope_t* scope) {
                 (zen_EnumerationScope_t*)scope->m_context;
             zen_EnumerationScope_delete(enumerationScope);
 
-            printf("[debug] Enumeration scope deleted.\n");
+            // printf("[debug] Enumeration scope deleted.\n");
 
             break;
         }
@@ -267,7 +267,7 @@ void zen_SymbolDefinitionListener_destroyScope(zen_Scope_t* scope) {
                 (zen_FunctionScope_t*)scope->m_context;
             zen_FunctionScope_delete(functionScope);
 
-            printf("[debug] Function scope deleted.\n");
+            // printf("[debug] Function scope deleted.\n");
 
             break;
         }
@@ -277,7 +277,7 @@ void zen_SymbolDefinitionListener_destroyScope(zen_Scope_t* scope) {
                 (zen_ClassScope_t*)scope->m_context;
             zen_ClassScope_delete(classScope);
 
-            printf("[debug] Class scope deleted.\n");
+            // printf("[debug] Class scope deleted.\n");
 
             break;
         }
@@ -287,7 +287,7 @@ void zen_SymbolDefinitionListener_destroyScope(zen_Scope_t* scope) {
                 (zen_LocalScope_t*)scope->m_context;
             zen_LocalScope_delete(localScope);
 
-            printf("[debug] Local scope deleted.\n");
+            // printf("[debug] Local scope deleted.\n");
 
             break;
         }

@@ -381,7 +381,6 @@ void zen_BinaryEntityGenerator_onExitCompilationUnit(zen_ASTListener_t* astListe
 
     /* Push a data channel, where the bytes generated will be written. */
     zen_BinaryEntityBuilder_pushChannel(generator->m_builder);
-
 }
 
 void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generator) {
