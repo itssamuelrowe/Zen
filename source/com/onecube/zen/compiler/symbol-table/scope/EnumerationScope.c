@@ -17,7 +17,7 @@
 // Friday, March 09, 2018
 
 #include <jtk/collection/map/HashMap.h>
-#include <jtk/core/StringObjectAdapter.h>
+#include <jtk/core/CStringObjectAdapter.h>
 
 #include <com/onecube/zen/compiler/lexer/Token.h>
 #include <com/onecube/zen/compiler/symbol-table/Scope.h>
@@ -39,7 +39,7 @@ zen_EnumerationScope_t* zen_EnumerationScope_new(zen_Scope_t* enclosingScope) {
     scope->m_getChildrenSymbols = (zen_Scope_GetChildrenSymbolsFunction_t)zen_EnumerationScope_getChildrenSymbols;
 
     enumerationScope->m_scope = scope;
-    enumerationScope->m_enumerates = jtk_HashMap_new(jtk_StringObjectAdapter_getInstance(), NULL);
+    enumerationScope->m_enumerates = jtk_HashMap_new(jtk_CStringObjectAdapter_getInstance(), NULL);
     enumerationScope->m_enumerationSymbol = NULL;
 #warning "enumerationScope->m_enumerationSymbol must be set by the EnumerationSymbol class."
 

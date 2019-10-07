@@ -459,17 +459,17 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
     zen_BinaryEntityBuilder_writeFieldCount(generator->m_builder, fieldCount);
     /* Log the field count. */
     printf("[debug] Entity has %d fields.\n", fieldCount);
-    
+
     int32_t fieldIndex;
     for (fieldIndex = 0; fieldIndex < fieldCount; fieldIndex++) {
         /* Retrieve the next field to write. */
         zen_FieldEntity_t* fieldEntity = (zen_FieldEntity_t*)jtk_ArrayList_getValue(
             generator->m_fields, fieldIndex);
-        
+
         /* Write the field to the data channel. */
         zen_BinaryEntityBuilder_writeField(generator->m_builder, fieldEntity->m_flags,
             fieldEntity->m_nameIndex, fieldEntity->m_descriptorIndex);
-        
+
         /* Log the details of the field. */
         printf("[debug] A field was written with the features (flags = 0x%X, nameIndex = %d, descriptorIndex = %d).\n",
             fieldEntity->m_flags, fieldEntity->m_nameIndex, fieldEntity->m_descriptorIndex);
@@ -690,7 +690,7 @@ void zen_BinaryEntityGenerator_onExitVariableDeclarator(zen_ASTListener_t* astLi
          * declared.
          */
         zen_FieldEntity_t* fieldEntity = zen_FieldEntity_new(flags, nameIndex, descriptorIndex);
-        
+
         /* Add the field entity to the list of fields. */
         jtk_ArrayList_add(generator->m_fields, fieldEntity);
     }

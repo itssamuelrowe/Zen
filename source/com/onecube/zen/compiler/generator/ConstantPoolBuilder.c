@@ -127,6 +127,7 @@ int32_t zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
      */
     if (result < 0) {
         zen_ConstantPoolUtf8_t* entry0 = zen_Memory_allocate(zen_ConstantPoolUtf8_t, 1);
+        entry0->m_tag = ZEN_CONSTANT_POOL_TAG_UTF8;
         entry0->m_length = bytesSize;
         entry0->m_bytes = jtk_Arrays_clone_b(bytes, bytesSize);
 

@@ -18,7 +18,7 @@
 
 #include <jtk/collection/list/ArrayList.h>
 #include <jtk/collection/stack/LinkedStack.h>
-#include <jtk/core/StringObjectAdapter.h>
+#include <jtk/core/CStringObjectAdapter.h>
 
 #include <com/onecube/zen/compiler/lexer/Token.h>
 #include <com/onecube/zen/compiler/symbol-table/ClassScope.h>
@@ -35,7 +35,7 @@ zen_ClassScope_t* zen_ClassScope_new(zen_Scope_t* enclosingScope) {
     scope->m_getChildrenSymbols = (zen_Scope_GetChildrenSymbolsFunction_t)zen_ClassScope_getChildrenSymbols;
 
     classScope->m_scope = scope;
-    classScope->m_symbols = jtk_HashMap_new(jtk_StringObjectAdapter_getInstance(), NULL);
+    classScope->m_symbols = jtk_HashMap_new(jtk_CStringObjectAdapter_getInstance(), NULL);
     classScope->m_classSymbol = NULL;
 #warning "classScope->m_classSymbol must be set by the ClassSymbol class."
 
