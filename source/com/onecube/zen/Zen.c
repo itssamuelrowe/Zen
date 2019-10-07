@@ -169,11 +169,13 @@ int32_t main(int32_t length, char** arguments) {
                     zen_TokenStream_fill(tokens);
                     printTokens(tokens);
                 }
+                printf("[debug] The lexical analysis phase is complete.\n");
 
                 zen_Parser_t* parser = zen_Parser_new(tokens);
 
                 zen_ASTNode_t* compilationUnit = zen_ASTNode_new(NULL);
                 zen_Parser_compilationUnit(parser, compilationUnit);
+                printf("[debug] The syntatical analysis phase is complete.\n");
 
                 if (internalDumpNodes) {
                     zen_ASTPrinter_t* astPrinter = zen_ASTPrinter_new();
@@ -188,16 +190,19 @@ int32_t main(int32_t length, char** arguments) {
                 zen_SymbolDefinitionListener_t* symbolDefinitionListener = zen_SymbolDefinitionListener_new(symbolTable, scopes);
                 zen_ASTListener_t* symbolDefinitionASTListener = zen_SymbolDefinitionListener_getASTListener(symbolDefinitionListener);
                 zen_ASTWalker_walk(symbolDefinitionASTListener, compilationUnit);
+                printf("[debug] The symbol definition phase is complete.\n");
 
                 zen_SymbolResolutionListener_t* symbolResolutionListener = zen_SymbolResolutionListener_new(symbolTable, scopes);
                 zen_ASTListener_t* symbolResolutionASTListener = zen_SymbolResolutionListener_getASTListener(symbolResolutionListener);
                 zen_ASTWalker_walk(symbolResolutionASTListener, compilationUnit);
+                printf("[debug] The symbol resolution phase is complete.\n");
 
                 // zen_BinaryEntityBuilder_t* entityBuilder = zen_BinaryEntityBuilder_new(symbolTable, scopes);
                 // zen_BinaryEntityBuilder_build(entityBuilder, compilationUnit);
 
                 zen_BinaryEntityGenerator_t* generator = zen_BinaryEntityGenerator_newEx(symbolTable, scopes, compilationUnit, NULL);
                 zen_BinaryEntityGenerator_generate(generator);
+                printf("[debug] The code generation phase is complete.\n");
 
                 /* The binary entity generator is not required anymore. Therefore, destroy
                  * it and release the resources it holds.

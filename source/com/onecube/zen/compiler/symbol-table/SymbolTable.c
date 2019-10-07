@@ -45,7 +45,7 @@ void zen_SymbolTable_delete(zen_SymbolTable_t* symbolTable) {
 void zen_SymbolTable_setCurrentScope(zen_SymbolTable_t* symbolTable, zen_Scope_t* currentScope) {
     jtk_Assert_assertObject(symbolTable, "The specified symbol table is null.");
 
-    // printf("<enter> %s\n", zen_Scope_getName(currentScope));
+    printf("<enter> %s\n", zen_Scope_getName(currentScope));
     symbolTable->m_currentScope = currentScope;
 }
 
@@ -57,7 +57,7 @@ zen_Scope_t* zen_SymbolTable_getCurrentScope(zen_SymbolTable_t* symbolTable) {
 void zen_SymbolTable_invalidateCurrentScope(zen_SymbolTable_t* symbolTable) {
     jtk_Assert_assertObject(symbolTable, "The specified symbol table is null.");
     
-    // printf("<exit> %s\n", zen_Scope_getName(symbolTable->m_currentScope));
+    printf("<exit> %s\n", zen_Scope_getName(symbolTable->m_currentScope));
     symbolTable->m_currentScope = zen_Scope_getEnclosingScope(symbolTable->m_currentScope);
 }
 

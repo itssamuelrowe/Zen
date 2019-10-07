@@ -396,16 +396,16 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
     /* Write the minor version of the binary entity file format the stream is encoded in. */
     zen_BinaryEntityBuilder_writeMinorVersion(generator->m_builder,
         generator->m_entityFile->m_version.m_minorVersion);
-    
+
     /* Log the version of the target binary entity file format. */
-    printf("[log] The target binary entity format is v%d.%d\n",
+    printf("[log] The target binary entity format version is v%d.%d\n",
         generator->m_entityFile->m_version.m_majorVersion,
         generator->m_entityFile->m_version.m_minorVersion);
 
     /* Write additional flags on how the binary entity file should be loaded. */
     zen_BinaryEntityBuilder_writeStreamFlags(generator->m_builder,
         generator->m_entityFile->m_flags);
-    
+
     /* Log the flags that determine how the binary entity should be treated. */
     printf("[log] Applying flags 0x%X\n", generator->m_entityFile->m_flags);
 
@@ -420,7 +420,7 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
         zen_ConstantPoolEntry_t* entry = zen_ConstantPoolBuilder_getEntry(generator->m_constantPoolBuilder, i);
         zen_BinaryEntityBuilder_writeConstantPoolEntry(generator->m_builder, entry);
     }
-    
+
     /* Log the constant pool details, including the number of entries and the trends
      * seen among the entries.
      */

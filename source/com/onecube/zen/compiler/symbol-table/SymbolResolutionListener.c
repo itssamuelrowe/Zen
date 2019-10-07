@@ -241,7 +241,13 @@ void zen_SymbolResolutionListener_onEnterClassDeclaration(zen_ASTListener_t* ast
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
     jtk_Assert_assertObject(node, "The specified AST node is null.");
 
+    /* Retrieve the instance of the symbol resolution listener. */
     zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    /* Retrieve the scope associated with the class being declared. */
+    zen_Scope_t* scope = zen_ASTAnnotations_get(listener->m_scopes, node);
+    /* Update the current scope in the symbol table. */
+    zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
+
     zen_ClassDeclarationContext_t* classDeclarationContext = (zen_ClassDeclarationContext_t*)node->m_context;
     if (classDeclarationContext->m_classExtendsClause != NULL) {
         zen_ClassExtendsClauseContext_t* classExtendsClauseContext = classExtendsClauseContext = (zen_ClassExtendsClauseContext_t*)classDeclarationContext->m_classExtendsClause->m_context;
