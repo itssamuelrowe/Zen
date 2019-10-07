@@ -16,6 +16,8 @@
 
 // Monday, October 07, 2019
 
+#include <com/onecube/zen/compiler/generator/ConstantPoolBuilder.h>
+
 /*******************************************************************************
  * ConstantPoolBuilder                                                         *
  *******************************************************************************/

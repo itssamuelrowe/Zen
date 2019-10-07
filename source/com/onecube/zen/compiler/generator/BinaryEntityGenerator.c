@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,6 +42,7 @@ zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_newEx(
     generator->m_compilationUnit = compilationUnit;
     generator->m_outputStream = outputStream;
     generator->m_entityFile = zen_Memory_allocate(zen_EntityFile_t, 1);
+    generator->m_constantPoolBuilder = zen_ConstantPoolBuilder_new();
 
     zen_ASTListener_t* astListener = generator->m_astListener;
 
@@ -301,9 +302,10 @@ void zen_BinaryEntityGenerator_delete(zen_BinaryEntityGenerator_t* generator) {
     jtk_Iterator_delete(keyIterator);
 
     jtk_DualHashMap_delete(generator->m_constantPool);*/
-    
+
+    zen_ConstantPoolBuilder_delete(generator->m_constantPoolBuilder);
     zen_Memory_deallocate(generator->m_entityFile);
-    
+
     zen_BinaryEntityBuilder_delete(generator->m_builder);
     zen_ASTListener_delete(generator->m_astListener);
     jtk_Memory_deallocate(generator);
@@ -368,7 +370,12 @@ void zen_BinaryEntityGenerator_onExitCompilationUnit(zen_ASTListener_t* astListe
     zen_ASTNode_t* node) {
     /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    
+
+    /* Set the major version of the target binary entity format. */
+    generator->m_entityFile->m_version.m_majorVersion = 0x0000;
+    /* Set the minor version of the target binary entity format. */
+    generator->m_entityFile->m_version.m_minorVersion = 0x0001;
+
     /* Activate the scope associated with the current AST node. */
     zen_SymbolTable_invalidateCurrentScope(generator->m_symbolTable);
 
@@ -377,21 +384,31 @@ void zen_BinaryEntityGenerator_onExitCompilationUnit(zen_ASTListener_t* astListe
 
 }
 
-void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generator) {    
+void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generator) {
     /* Write magic number, major version, and minor version on the main channel. */
     zen_BinaryEntityBuilder_writeMagicNumber(generator->m_builder);
-    
+    /* Log the magic number written. */
+    printf("[log] Encoding stream with magic number 0xFEB72000.\n");
+
     /* Write the major version of the binary entity file format the stream is encoded in. */
     zen_BinaryEntityBuilder_writeMajorVersion(generator->m_builder,
         generator->m_entityFile->m_version.m_majorVersion);
-    
+
     /* Write the minor version of the binary entity file format the stream is encoded in. */
     zen_BinaryEntityBuilder_writeMinorVersion(generator->m_builder,
         generator->m_entityFile->m_version.m_minorVersion);
     
+    /* Log the version of the target binary entity file format. */
+    printf("[log] The target binary entity format is v%d.%d\n",
+        generator->m_entityFile->m_version.m_majorVersion,
+        generator->m_entityFile->m_version.m_minorVersion);
+
     /* Write additional flags on how the binary entity file should be loaded. */
     zen_BinaryEntityBuilder_writeStreamFlags(generator->m_builder,
         generator->m_entityFile->m_flags);
+    
+    /* Log the flags that determine how the binary entity should be treated. */
+    printf("[log] Applying flags 0x%X\n", generator->m_entityFile->m_flags);
 
     /* At this point, all the constant pool entries required by the binary entity
      * file should be available to the constant pool builder. The constant pool
@@ -404,6 +421,11 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
         zen_ConstantPoolEntry_t* entry = zen_ConstantPoolBuilder_getEntry(generator->m_constantPoolBuilder, i);
         zen_BinaryEntityBuilder_writeConstantPoolEntry(generator->m_builder, entry);
     }
+    
+    /* Log the constant pool details, including the number of entries and the trends
+     * seen among the entries.
+     */
+    printf("[log] Constant pool size is %d.\n", entryCount);
 
     /* Write the entity header. */
     // zen_BinaryEntityBuilder_writeEntityHeader(generator->m_builder, entity->m_type, entity->m_flags,
@@ -1798,7 +1820,7 @@ void zen_BinaryEntityGenerator_onExitMapEntries(zen_ASTListener_t* astListener,
          * duplicate of its reference on the operand stack for calling the
          * {@code store_aa} instruction.
          *
-         
+
         /* Create a duplicate of the 2-d array. *
         zen_BinaryEntityGenerator_emitDuplicate(generator);
         zen_BinaryEntityGenerator_emitPushByte(generator, i);

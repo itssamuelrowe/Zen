@@ -21,6 +21,8 @@
 
 #include <jtk/collection/list/ArrayList.h>
 
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolEntry.h>
+
 /*******************************************************************************
  * ConstantPoolBuilder                                                         *
  *******************************************************************************/
