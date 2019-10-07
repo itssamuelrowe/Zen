@@ -837,14 +837,15 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
     /* Update the current scope in the symbol table. */
     zen_SymbolTable_setCurrentScope(generator->m_symbolTable, scope);
 
-    zen_Token_t* identifier = (zen_Token_t*)(context->m_identifier);
+    zen_ASTNode_t* identifier = context->m_identifier;
+    zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
     jtk_String_t* reference = NULL;
     if (generator->m_package != NULL) {
         reference = jtk_String_newFromJoinEx(generator->m_package->m_value,
-            generator->m_package->m_size, identifier->m_text, identifier->m_length);
+            generator->m_package->m_size, identifierToken->m_text, identifierToken->m_length);
     }
     else {
-        reference = jtk_String_newEx(identifier->m_text, identifier->m_length);
+        reference = jtk_String_newEx(identifierToken->m_text, identifierToken->m_length);
     }
 
     uint16_t flags = 0;
