@@ -87,3 +87,7 @@ zen_ScopeType_t zen_Scope_getType(zen_Scope_t* scope) {
 void* zen_Scope_getContext(zen_Scope_t* scope) {
     return scope->m_context;
 }
+
+zen_Scope_t* zen_Scope_resolveQualifiedSymbol(zen_Scope_t* scope, jtk_String_t* name) {
+    return NULL;
+}

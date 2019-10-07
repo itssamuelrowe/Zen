@@ -19,6 +19,8 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_SYMBOL_DEFINITION_LISTENER_H
 #define COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_SYMBOL_DEFINITION_LISTENER_H
 
+#include <jtk/core/String.h>
+
 #include <com/onecube/zen/compiler/ast/ASTListener.h>
 #include <com/onecube/zen/compiler/ast/context/Context.h>
 #include <com/onecube/zen/compiler/symbol-table/Scope.h>
@@ -40,6 +42,7 @@ struct zen_SymbolDefinitionListener_t {
     zen_ASTListener_t* m_astListener;
     zen_SymbolTable_t* m_symbolTable;
     zen_ASTAnnotations_t* m_scopes;
+    jtk_String_t* m_package;
 };
 
 /**

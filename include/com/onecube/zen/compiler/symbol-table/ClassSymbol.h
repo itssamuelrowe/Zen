@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_CLASS_SYMBOL_H
 #define COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_CLASS_SYMBOL_H
 
+#include <jtk/core/String.h>
 #include <jtk/collection/list/ArrayList.h>
 
 #include <com/onecube/zen/compiler/symbol-table/Symbol.h>
@@ -39,15 +40,17 @@ typedef struct zen_ClassScope_t zen_ClassScope_t;
  */
 struct zen_ClassSymbol_t {
     zen_Symbol_t* m_symbol;
-    
+
     /* The superclasses are added in the resolution phase. */
     jtk_ArrayList_t* m_superClasses; /* <zen_ClassSymbol_t*> */
-    
+
     jtk_ArrayList_t* m_explicitModifiers;
-    
+
     int32_t m_modifiers;
-    
+
     zen_Scope_t* m_classScope;
+
+    jtk_String_t* m_qualifiedName;
 };
 
 /**
@@ -61,7 +64,7 @@ typedef struct zen_ClassSymbol_t zen_ClassSymbol_t;
  * @memberof ClassSymbol
  */
 zen_ClassSymbol_t* zen_ClassSymbol_new(zen_ASTNode_t* identifier,
-    zen_Scope_t* enclosingScope, zen_Scope_t* m_classScope);
+    zen_Scope_t* enclosingScope, zen_Scope_t* m_classScope, jtk_String_t* qualifiedName);
 
 // Destructor
 
@@ -103,5 +106,12 @@ jtk_ArrayList_t* zen_ClassSymbol_getSuperclasses(zen_ClassSymbol_t* symbol);
  * @memberof ClassSymbol
  */
 zen_Symbol_t* zen_ClassSymbol_getSymbol(zen_ClassSymbol_t* symbol);
+
+// Qualified Name
+
+/**
+ * @memberof ClassSymbol
+ */
+jtk_String_t* zen_ClassSymbol_getQualifiedName(zen_ClassSymbol_t* symbol);
 
 #endif /* COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_CLASS_SYMBOL_H */

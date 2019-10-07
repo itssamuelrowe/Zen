@@ -44,6 +44,7 @@ zen_SymbolDefinitionListener_t* zen_SymbolDefinitionListener_new(zen_SymbolTable
     listener->m_astListener = zen_ASTListener_newWithContext(listener);
     listener->m_symbolTable = symbolTable;
     listener->m_scopes = scopes;
+    listener->m_package = NULL;
 
     zen_ASTListener_t* astListener = listener->m_astListener;
 
@@ -724,16 +725,28 @@ void zen_SymbolDefinitionListener_onEnterClassDeclaration(
     zen_ClassDeclarationContext_t* classDeclarationContext = (zen_ClassDeclarationContext_t*)node->m_context;
 
     zen_ASTNode_t* identifier = classDeclarationContext->m_identifier;
-    const uint8_t* identifierText = zen_Token_getText((zen_Token_t*)identifier->m_context);
+    zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+    const uint8_t* identifierText = zen_Token_getText(identifierToken);
 
     zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
     if (symbol != NULL) {
         zen_ErrorHandler_reportError(NULL, "Redeclaration of symbol as class", (zen_Token_t*)identifier->m_context);
     }
     else {
+        jtk_String_t* qualifiedName = NULL;
+        if (listener->m_package != NULL) {
+            qualifiedName = jtk_String_newFromJoinEx(listener->m_package->m_value,
+                listener->m_package->m_size, identifierToken->m_text, identifierToken->m_length);
+        }
+        else {
+            qualifiedName = jtk_String_newEx(identifierToken->m_text, identifierToken->m_length);
+        }
+        
         zen_ClassScope_t* classScope = zen_ClassScope_new(listener->m_symbolTable->m_currentScope);
 
-        zen_ClassSymbol_t* classSymbol = zen_ClassSymbol_new(identifier, listener->m_symbolTable->m_currentScope, zen_ClassScope_getScope(classScope));
+        zen_ClassSymbol_t* classSymbol = zen_ClassSymbol_new(identifier,
+            listener->m_symbolTable->m_currentScope, zen_ClassScope_getScope(classScope),
+            qualifiedName);
         symbol = zen_ClassSymbol_getSymbol(classSymbol);
         zen_SymbolTable_define(listener->m_symbolTable, symbol);
 

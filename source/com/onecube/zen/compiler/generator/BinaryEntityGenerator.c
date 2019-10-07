@@ -435,7 +435,7 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
     zen_BinaryEntityBuilder_writeEntityHeader(generator->m_builder, entity->m_type,
         entity->m_flags, entity->m_reference);
     /* Log the entity header information written, including type, flags, and reference. */
-    printf("[debug] Entity header includes type %d, flags 0x%X, and reference = %d.\n",
+    printf("[debug] Entity header includes type = %d, flags = 0x%X, and reference = %d.\n",
         entity->m_type, entity->m_flags, entity->m_reference);
 
     /* Write the superclasses. */
@@ -856,6 +856,11 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
 
     /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    
+    /* Retrieve the current scope from the symbol table. At this point, it is
+     * the enclosing scope.
+     */
+    zen_Scope_t* parentScope = zen_SymbolTable_getCurrentScope(generator->m_symbolTable);
 
     /* Retrieve the context of the AST node. */
     zen_ClassDeclarationContext_t* context =
@@ -889,6 +894,66 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
      */
     jtk_String_delete(reference);
 
+    if (context->m_classExtendsClause != NULL) {
+        /* Retrieve the extends clause context to extract information about the
+         * superclasses.
+         */
+        zen_ClassExtendsClauseContext_t* extendsClauseContext =
+            (zen_ClassExtendsClauseContext_t*)context->m_classExtendsClause->m_context;
+
+        /* Calculate the total number of superclasses. */
+        superclassCount = jtk_ArrayList_getSize(extendsClauseContext->m_typeNames);
+        /* Allocate an array to store the constant pool indexes to the superclass
+         * references.
+         */
+        superclassIndexes = jtk_Memory_allocate(uint16_t, superclassCount);
+
+        /* The entity generator does not ensure the validity of the identifiers.
+         * It is the responsibility of the resolution phase.
+         */
+        int32_t index;
+        for (index = 0; index < superclassCount; index++) {
+            zen_ASTNode_t* typeNameNode = (zen_ASTNode_t*)jtk_ArrayList_getValue(extendsClauseContext->m_typeNames, index);
+            zen_TypeNameContext_t* typeNameContext = (zen_TypeNameContext_t*)typeNameNode->m_context;
+            
+            // TODO: Prepare a qualified name from the type name context.
+            jtk_String_t* qualifiedName = NULL;
+
+            /* Retrieve the symbol for the current superclass. Do not begin the resolution
+             * from the current scope, which is this class. In the future, if Zen allows
+             * inner classes, this would allow inner classes to be inherited by their enclosing
+             * classes!
+             */
+            zen_Symbol_t* symbol = zen_Scope_resolveQualifiedSymbol(
+                parentScope, qualifiedName);
+            if (zen_Symbol_isClass(symbol)) {
+                zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
+                jtk_String_t* fullyQualifiedName = zen_ClassSymbol_getQualifiedName(classSymbol);
+
+                uint16_t superclassIndex = zen_ConstantPoolBuilder_getUtf8EntryIndex(
+                    generator->m_constantPoolBuilder, fullyQualifiedName);
+                superclassIndexes[index] = superclassIndex;
+            }
+            else {
+                printf("[error] Looks like the semantic anlysis failed.\n");
+            }
+        }
+    }
+    else {
+        /* The extends clause has not been explicitly written. Therefore,
+         * the compiler generates the default extends clause which inherits
+         * the zen.core.Object class.
+         */
+        jtk_String_t* objectClassName = jtk_String_newEx("zen.core.Object", 15);
+
+        superclassCount = 1;
+        superclassIndexes = jtk_Memory_allocate(uint16_t, 1);
+        superclassIndexes[0] = zen_ConstantPoolBuilder_getUtf8EntryIndex(
+            generator->m_constantPoolBuilder, objectClassName);
+
+        jtk_String_delete(objectClassName);
+    }
+
     zen_Entity_t* entity = &generator->m_entityFile->m_entity;
     entity->m_type = ZEN_ENTITY_TYPE_CLASS;
     entity->m_flags = 0;
@@ -900,57 +965,6 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
     entity->m_fields = NULL;
     entity->m_functionCount = 0;
     entity->m_functions = NULL;
-
-    /*
-    if (context->m_extendsClause != NULL) {
-        zen_ClassExtendsClauseContext_t* extendsClauseContext =
-            (zen_ClassExtendsClauseContext_t*)context->m_extendsClause->m_context;
-
-        superclassCount = jtk_ArrayList_getSize(extendsClauseContext->m_typeNames);
-        superclassIndexes = jtk_Memory_allocate(uint16_t, superclassCount);
-
-        /* The entity generator does not ensure that the validity of the
-         * identifiers.
-         *
-        int32_t index;
-        for (index = 0; index < superclassCount; index++) {
-            zen_ASTNode_t* typeNameNode = (zen_ASTNode_t*)jtk_ArrayList_getValue(extendsClauseContext->m_typeNames, index);
-            zen_TypeNameContext_t* typeNameContext = (zen_TypeNameContext_t*)typeNameNode->m_context;
-
-            zen_Symbol_t* symbol = zen_Scope_resolveQualifiedSymbol(
-                currentScope, typeNameContext->m_identifiers);
-            if (zen_Symbol_isClass(symbol)) {
-                zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
-                jtk_String_t* qualifiedName = zen_ClassSymbol_getQualifiedName(classSymbol);
-
-                uint16_t superclassIndex = zen_BinaryEntityBuilder_getConstantPoolClassIndex(
-                    generator->m_builder, qualifiedName);
-                superclassIndexes[index] = superclassIndex;
-            }
-            else {
-                // Error: Looks like the semantic anlysis failed.
-            }
-        }
-    }
-    else {
-        /* The extends clause has not been explicitly written. Therefore,
-         * the compiler generates the default extends clause which inherits
-         * the zen.core.Object class.
-         *
-        jtk_String_t* objectClassName = jtk_String_newEx("zen.core.Object", 15);
-
-        superclassCount = 1;
-        superclassIndexes = jtk_Memory_allocate(uint16_t, 1);
-        superclassIndexes[0] = zen_BinaryEntityBuilder_getConstantPoolClassIndex(
-            generator->m_builder, objectClassName);
-
-        jtk_String_delete(objectClassName);
-    }
-
-    zen_BinaryEntityBuilder_writeClass(generator->m_builder, flags, referenceIndex,
-        superclassCount, superclassIndexes);
-    zen_BinaryEntityBuilder_writeAttributeCount(generator->m_builder, 0);
-    */
 }
 
 void zen_BinaryEntityGenerator_onExitClassDeclaration(zen_ASTListener_t* astListener,
