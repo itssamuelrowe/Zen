@@ -78,6 +78,14 @@ int32_t zen_ConstantPoolBuilder_countEntries(zen_ConstantPoolBuilder_t* builder)
 zen_ConstantPoolEntry_t* zen_ConstantPoolBuilder_getEntry(zen_ConstantPoolBuilder_t* builder,
     int32_t index);
 
+// Integer Entry
+
+zen_ConstantPoolInteger_t* zen_ConstantPoolBuilder_getIntegerEntry(
+    zen_ConstantPoolBuilder_t* builder, int32_t index);
+
+int32_t zen_ConstantPoolBuilder_getIntegerEntryIndex(
+    zen_ConstantPoolBuilder_t* builder, int32_t value);
+
 // String Entry
 
 zen_ConstantPoolString_t* zen_ConstantPoolBuilder_getStringEntry(

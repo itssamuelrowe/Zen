@@ -76,6 +76,72 @@ zen_ConstantPoolEntry_t* zen_ConstantPoolBuilder_getEntry(zen_ConstantPoolBuilde
     return jtk_ArrayList_getValue(builder->m_entries, index);
 }
 
+// Integer Entry
+
+zen_ConstantPoolInteger_t* zen_ConstantPoolBuilder_getIntegerEntry(
+    zen_ConstantPoolBuilder_t* builder, int32_t index) {
+    jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
+
+    return (zen_ConstantPoolInteger_t*)jtk_ArrayList_getValue(builder->m_entries, index);
+}
+
+int32_t zen_ConstantPoolBuilder_getIntegerEntryIndex(
+    zen_ConstantPoolBuilder_t* builder, int32_t value) {
+    int32_t size = jtk_ArrayList_getSize(builder->m_entries);
+
+    /* Apply linear search to find the integer entry. In the future, please
+     * find a better data structure (probably a dual hash map) to store the
+     * entries.
+     */
+    int32_t i;
+    int32_t result = -1;
+    for (i = 0; i < size; i++) {
+        /* Retrieve the constant pool entry to test during this iteration. */
+        zen_ConstantPoolEntry_t* entry = (zen_ConstantPoolEntry_t*)jtk_ArrayList_getValue(
+            builder->m_entries, i);
+        /* Test the entry only if it is tagged with ZEN_CONSTANT_POOL_TAG_INTEGER. */
+        if (entry->m_tag == ZEN_CONSTANT_POOL_TAG_INTEGER) {
+            /* Convert the entry to zen_ConstantPoolInteger_t, to extract the bytes. */
+            zen_ConstantPoolInteger_t* constantPoolInteger = (zen_ConstantPoolInteger_t*)entry;
+            /* Compare the entry bytes to the bytes of the given integer value. */
+            if (constantPoolInteger->m_bytes == value) {
+                /* Looks like we found a match! Terminate the loop and return the
+                 * current index.
+                 */
+                result = i;
+                break;
+            }
+        }
+    }
+
+    /* If the result is still negative, the entry was not found. In which case,
+     * the entry should be appended to the end of the list.
+     */
+    if (result < 0) {
+        zen_ConstantPoolInteger_t* constantPoolInteger = zen_Memory_allocate(
+            zen_ConstantPoolInteger_t, 1);
+        constantPoolInteger->m_tag = ZEN_CONSTANT_POOL_TAG_INTEGER;
+        
+        // TODO: Am I doing it right here?!!!
+        union {
+            uint32_t x;
+            int32_t y;
+        } converter;
+        converter.y = value;
+        constantPoolInteger->m_bytes = converter.x;
+
+        /* The index of the newly inserted entry is equal to the current size of
+         * the entry list.
+         */
+        result = size;
+
+        /* Add the new constant pool integer entry to the list. */
+        jtk_ArrayList_add(builder->m_entries, constantPoolInteger);
+    }
+
+    return result;
+}
+
 // String Entry
 
 zen_ConstantPoolString_t* zen_ConstantPoolBuilder_getStringEntry(
