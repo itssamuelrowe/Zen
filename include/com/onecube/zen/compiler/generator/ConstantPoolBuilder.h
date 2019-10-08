@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -77,6 +77,17 @@ int32_t zen_ConstantPoolBuilder_countEntries(zen_ConstantPoolBuilder_t* builder)
  */
 zen_ConstantPoolEntry_t* zen_ConstantPoolBuilder_getEntry(zen_ConstantPoolBuilder_t* builder,
     int32_t index);
+
+// String Entry
+
+zen_ConstantPoolString_t* zen_ConstantPoolBuilder_getStringEntry(
+    zen_ConstantPoolBuilder_t* builder, int32_t index);
+
+int32_t zen_ConstantPoolBuilder_getStringEntryIndex(
+    zen_ConstantPoolBuilder_t* builder, jtk_String_t* string);
+
+int32_t zen_ConstantPoolBuilder_getStringEntryIndexEx(
+    zen_ConstantPoolBuilder_t* builder, uint8_t* bytes, int32_t bytesSize);
 
 // UTF-8 Entry
 

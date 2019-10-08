@@ -549,7 +549,7 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
                     instructionAttribute->m_localVariableCount,
                     instructionAttribute->m_instructionLength,
                     instructionAttribute->m_instructions);
-                
+
                 /* Log the details of the instruction attribute. */
                 printf("[debug] The function has an instruction attribute with the features "
                        "(nameIndex = %d, length = %d, maxStackSize = %d, localVariableCount = %d, "
@@ -641,9 +641,9 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
 
     zen_Scope_t* scope = zen_ASTAnnotations_get(generator->m_scopes, node);
     zen_SymbolTable_setCurrentScope(generator->m_symbolTable, scope);
-    
+
     zen_BinaryEntityBuilder_pushChannel(generator->m_instructions);
-    
+
     // TODO: Remove the following statement. Make sure that the instruction
     // length is never zero.
     zen_BinaryEntityBuilder_emitNop(generator->m_instructions);
@@ -722,7 +722,7 @@ jtk_String_t* zen_BinaryEntityGenerator_getDescriptor(zen_BinaryEntityGenerator_
 
     /* Destroy the string builder. */
     jtk_StringBuilder_delete(builder);
-    
+
     return result;
 }
 
@@ -768,7 +768,7 @@ zen_InstructionAttribute_t* zen_BinaryEntityGenerator_makeInstructionAttribute(
             2 + // stopIndex occupies two bytes.
             2 + // handlerIndex occupies two bytes.
             2); // exceptionClassIndex occupies two bytes.
-            
+
     zen_InstructionAttribute_t* instructionAttribute = zen_InstructionAttribute_new(
         attributeNameIndex,
         attributeLength,
@@ -2042,7 +2042,7 @@ void zen_BinaryEntityGenerator_onEnterPrimaryExpression(zen_ASTListener_t* astLi
     if (zen_ASTNode_isTerminal(context->m_expression)) {
         /* Retrieve the token that the primary expression represents. */
         zen_Token_t* token = (zen_Token_t*)context->m_expression->m_context;
-        
+
         switch (zen_Token_getType(token)) {
             /*
             case ZEN_TOKEN_IDENTIFIER: {
@@ -2084,38 +2084,56 @@ void zen_BinaryEntityGenerator_onEnterPrimaryExpression(zen_ASTListener_t* astLi
             case ZEN_TOKEN_KEYWORD_TRUE: {
                 /* Emit push_i1. In the operand stack, 1 represents true. */
                 zen_BinaryEntityBuilder_emitPushInteger1(generator->m_instructions);
-                
+
                 /* Log the emission of the instruction. */
                 printf("[debug] Emitted push_i1\n");
-                
+
                 break;
             }
 
             case ZEN_TOKEN_KEYWORD_FALSE: {
-                /* Emit push_i0. In the operand stack, 0 represents false. */
+                /* Emit push_i0 instruction. In the operand stack, 0 represents false. */
                 zen_BinaryEntityBuilder_emitPushInteger0(generator->m_instructions);
-                
+
                 /* Log the emission of the instruction. */
                 printf("[debug] Emitted push_i0\n");
-                
+
                 break;
             }
-/*
+
             case ZEN_TOKEN_STRING_LITERAL: {
-                zen_BinaryEntityGenerator_emitLoadCpr(generator, 0);
+                /* Retrieve a valid index into the constant pool. The entry at
+                 * this index is a constant pool string. The token text encloses
+                 * the content within double quotes. Therefore, the first quote
+                 * is skipped using pointer arithmetic and the last quote
+                 * is skipped by subtracting 1 from the length of the text.
+                 * Another 1 is subtracted from the text length because the first
+                 * quote was skipped.
+                 */
+                uint8_t stringIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
+                    generator->m_constantPoolBuilder, token->m_text + 1, token->m_length - 2);
+
+                /* Emit load_cpr instruction. */
+                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_instructions,
+                    stringIndex);
+
+                /* Log the emission of the instruction. */
+                printf("[debug] Emitted load_cpr %d\n", stringIndex);
+
                 break;
             }
 
             case ZEN_TOKEN_KEYWORD_NULL: {
-                zen_BinaryEntityGenerator_emitPushNull(generator);
+                /* Emit the push_null instruction. */
+                zen_BinaryEntityBuilder_emitPushNull(generator);
+                
+                /* Log the emission of the instruction. */
+                printf("[debug] Emitted push_null\n");
+                
                 break;
             }
 
-            case ZEN_TOKEN_KEYWORD_UNDEFINED: {
-                zen_BinaryEntityGenerator_emitPushUndefined(generator);
-                break;
-            }
-
+            /*
             default: {
                 /* [internal error] *
             }*/
