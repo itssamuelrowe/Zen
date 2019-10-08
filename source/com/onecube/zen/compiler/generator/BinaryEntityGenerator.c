@@ -2194,6 +2194,43 @@ void zen_BinaryEntityGenerator_onEnterPrimaryExpression(zen_ASTListener_t* astLi
 
                             break;
                         }
+
+                        default: {
+                            /* If the integer literal is less than or equal to 255, then it can be
+                             * pushed onto the operand stack with the push_b instruction.
+                             *
+                             * The range of a byte is [-128, 127]. As of now, the compiler generates
+                             * negative values with two instructions. One that pushes the value
+                             * on the operand stack. The other takes care of multiplying a value
+                             * of -1. This will be fixed in the future.
+                             */
+                            if ((value >= 6) && (value <= 127)) {
+                                /* Emit the push_b instruction. */
+                                zen_BinaryEntityBuilder_emitPushByte(generator->m_instructions,
+                                    value);
+
+                                /* Log the emission of the instruction. */
+                                printf("[debug] Emitted push_b %d\n", value);
+                            }
+                            else if (value <= 32767) {
+                                /* If the integer literal is less than or equal to 32767, then it
+                                 * can be pushed onto the operand stack with the push_s instruction.
+                                 *
+                                 * The range of a short is [-32768, 32767]. As of now, the compiler generates
+                                 * negative values with two instructions. One that pushes the value
+                                 * on the operand stack. The other instruction takes care of multiplying a
+                                 * value of -1. This will be fixed in the future.
+                                 */
+                                /* Emit the push_s instruction. */
+                                zen_BinaryEntityBuilder_emitPushShort(generator->m_instructions,
+                                    value);
+
+                                /* Log the emission of the instruction. */
+                                printf("[debug] Emitted push_s %d\n", value);
+                            }
+
+                            break;
+                        }
                     }
                 }
 

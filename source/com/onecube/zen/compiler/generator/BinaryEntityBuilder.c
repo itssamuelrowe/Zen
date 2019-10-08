@@ -2148,7 +2148,7 @@ void zen_BinaryEntityBuilder_emitPushByte(zen_BinaryEntityBuilder_t* builder, in
     zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(builder->m_channels, 0);
     zen_DataChannel_requestCapacity(channel, 2);
 
-    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_D2; // Byte Code
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_B; // Byte Code
     channel->m_bytes[channel->m_index++] = value;
 }
 
@@ -2158,7 +2158,7 @@ void zen_BinaryEntityBuilder_emitPushShort(zen_BinaryEntityBuilder_t* builder, i
     zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(builder->m_channels, 0);
     zen_DataChannel_requestCapacity(channel, 3);
 
-    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_D2; // Byte Code
+    channel->m_bytes[channel->m_index++] = ZEN_BYTE_CODE_PUSH_S; // Byte Code
     channel->m_bytes[channel->m_index++] = (value & 0x0000FF00) >> 8; // Value
     channel->m_bytes[channel->m_index++] = (value & 0x000000FF);
 }
