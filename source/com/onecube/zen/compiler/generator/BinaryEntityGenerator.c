@@ -527,14 +527,20 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
         for (attributeIndex = 0; attributeIndex < attributeTable->m_size; attributeIndex++) {
             zen_Attribute_t* attribute = attributeTable->m_attributes[attributeIndex];
 
+            /* Retrieve the name of the current attribute. */
             zen_ConstantPoolUtf8_t* name = zen_ConstantPoolBuilder_getUtf8Entry(
                 generator->m_constantPoolBuilder, attribute->m_nameIndex);
 
+            /* If the current attribute is an instruction attribute, extract
+             * the instruction attribute and write to the data channel.
+             */
             if (jtk_CString_equals(name->m_bytes, name->m_length,
                 ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION, ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION_SIZE)) {
+                /* Cast to zen_InstructionAttribute_t to extract further information. */
                 zen_InstructionAttribute_t* instructionAttribute =
                     (zen_InstructionAttribute_t*)attribute;
 
+                /* Write the instruction attribute for the current function. */
                 zen_BinaryEntityBuilder_writeInstructionAttribute(
                     generator->m_builder,
                     instructionAttribute->m_nameIndex,
@@ -543,7 +549,8 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
                     instructionAttribute->m_localVariableCount,
                     instructionAttribute->m_instructionLength,
                     instructionAttribute->m_instructions);
-
+                
+                /* Log the details of the instruction attribute. */
                 printf("[debug] The function has an instruction attribute with the features "
                        "(nameIndex = %d, length = %d, maxStackSize = %d, localVariableCount = %d, "
                        "instructionLength = %d)\n",
@@ -557,7 +564,6 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
             }
         }
     }
-
 
     FILE* fp = fopen("output.feb", "w+");
     if (fp != NULL) {
@@ -2026,13 +2032,19 @@ void zen_BinaryEntityGenerator_onExitPostfixOperator(zen_ASTListener_t* astListe
 
 // primaryExpression
 
-void zen_BinaryEntityGenerator_onEnterPrimaryExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {/*
+void zen_BinaryEntityGenerator_onEnterPrimaryExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_PrimaryExpressionContext_t* context = (zen_PrimaryExpressionContext_t*)node->m_context;
 
+    /* Emit a push instruction if the primary expression is a literal or an
+     * identifier.
+     */
     if (zen_ASTNode_isTerminal(context->m_expression)) {
+        /* Retrieve the token that the primary expression represents. */
         zen_Token_t* token = (zen_Token_t*)context->m_expression->m_context;
+        
         switch (zen_Token_getType(token)) {
+            /*
             case ZEN_TOKEN_IDENTIFIER: {
                 zen_ASTNode_t* assignmentExpression = zen_ASTHelper_getAncestor(context->m_expression, ZEN_AST_NODE_ASSIGNMENT_EXPRESSION);
                 zen_AssignmentExpressionContext_t* assignmentExpressionContext = (zen_AssignmentExpressionContext_t*)assignmentExpression->m_context;
@@ -2060,24 +2072,35 @@ void zen_BinaryEntityGenerator_onEnterPrimaryExpression(zen_ASTListener_t* astLi
                 }
                 break;
             }
-
+            */
+/*
             case ZEN_TOKEN_INTEGER_LITERAL: {
                 const uint8_t* integerText = zen_Token_getText(token);
                 zen_BinaryEntityGenerator_emitPushIntegerEx(generator, integerText);
                 zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
                 break;
             }
-
+*/
             case ZEN_TOKEN_KEYWORD_TRUE: {
-                zen_BinaryEntityGenerator_emitPushTrue(generator);
+                /* Emit push_i1. In the operand stack, 1 represents true. */
+                zen_BinaryEntityBuilder_emitPushInteger1(generator->m_instructions);
+                
+                /* Log the emission of the instruction. */
+                printf("[debug] Emitted push_i1\n");
+                
                 break;
             }
 
             case ZEN_TOKEN_KEYWORD_FALSE: {
-                zen_BinaryEntityGenerator_emitPushFalse(generator);
+                /* Emit push_i0. In the operand stack, 0 represents false. */
+                zen_BinaryEntityBuilder_emitPushInteger0(generator->m_instructions);
+                
+                /* Log the emission of the instruction. */
+                printf("[debug] Emitted push_i0\n");
+                
                 break;
             }
-
+/*
             case ZEN_TOKEN_STRING_LITERAL: {
                 zen_BinaryEntityGenerator_emitLoadCpr(generator, 0);
                 break;
@@ -2095,9 +2118,9 @@ void zen_BinaryEntityGenerator_onEnterPrimaryExpression(zen_ASTListener_t* astLi
 
             default: {
                 /* [internal error] *
-            }
+            }*/
         }
-    }*/
+    }
 }
 
 void zen_BinaryEntityGenerator_onExitPrimaryExpression(zen_ASTListener_t* astListener,
