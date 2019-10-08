@@ -2073,14 +2073,133 @@ void zen_BinaryEntityGenerator_onEnterPrimaryExpression(zen_ASTListener_t* astLi
                 break;
             }
             */
-/*
+
             case ZEN_TOKEN_INTEGER_LITERAL: {
-                const uint8_t* integerText = zen_Token_getText(token);
-                zen_BinaryEntityGenerator_emitPushIntegerEx(generator, integerText);
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
+                uint8_t* integerText = zen_Token_getText(token);
+                int32_t actualIntegerLength = zen_Token_getLength(token);
+                int32_t integerLength = actualIntegerLength;
+
+                int32_t radix = 10;
+                if (integerLength > 2) {
+                    if ((integerText[0] == '0') && ((integerText[0] == 'x') || (integerText[0] == 'X'))) {
+                        radix = 16;
+                        integerText += 2;
+                        integerLength -= 2;
+                    }
+                    else if ((integerText[0] == '0') && ((integerText[0] == 'b') || (integerText[0] == 'B'))) {
+                        radix = 2;
+                        integerText += 2;
+                        integerLength -= 2;
+                    }
+                    else if ((integerText[0] == '0') && ((integerText[0] == 'c') || (integerText[0] == 'C'))) {
+                        /* TODO: Octal integer literals begin with 0c or 0C according
+                         * to the logic written here. Therefore, please modify the
+                         * lexer accordingly.
+                         */
+
+                        radix = 8;
+                        integerText += 2;
+                        integerLength -= 2;
+                    }
+                }
+
+                bool longLiteral = (integerText[actualIntegerLength - 1] == 'L') ||
+                    (integerText[actualIntegerLength - 1] == 'l');
+
+                if (longLiteral) {
+                    integerLength--;
+                }
+
+                int64_t value = jtk_Long_parseEx(integerText, integerLength, radix);
+
+                if (longLiteral) {
+                    switch (value) {
+                        case 0: {
+                            zen_BinaryEntityBuilder_emitPushLong0(generator->m_instructions);
+
+                            break;
+                        }
+
+                        case 1: {
+                            zen_BinaryEntityBuilder_emitPushLong1(generator->m_instructions);
+
+                            break;
+                        }
+
+                        case 2: {
+                            zen_BinaryEntityBuilder_emitPushLong2(generator->m_instructions);
+
+                            break;
+                        }
+                    }
+                }
+                else {
+                    switch (value) {
+                        case 0: {
+                            /* Emit the push_i0 instruction. */
+                            zen_BinaryEntityBuilder_emitPushInteger0(generator->m_instructions);
+
+                            /* Log the emission of the instruction. */
+                            printf("[debug] Emitted push_i0\n");
+
+                            break;
+                        }
+
+                        case 1: {
+                            /* Emit the push_i1 instruction. */
+                            zen_BinaryEntityBuilder_emitPushInteger1(generator->m_instructions);
+
+                            /* Log the emission of the instruction. */
+                            printf("[debug] Emitted push_i1\n");
+
+                            break;
+                        }
+
+                        case 2: {
+                            /* Emit the push_i2 instruction. */
+                            zen_BinaryEntityBuilder_emitPushInteger2(generator->m_instructions);
+
+                            /* Log the emission of the instruction. */
+                            printf("[debug] Emitted push_i2\n");
+
+                            break;
+                        }
+
+                        case 3: {
+                            /* Emit the push_i3 instruction. */
+                            zen_BinaryEntityBuilder_emitPushInteger3(generator->m_instructions);
+
+                            /* Log the emission of the instruction. */
+                            printf("[debug] Emitted push_i3\n");
+
+                            break;
+                        }
+
+                        case 4: {
+                            /* Emit the push_i4 instruction. */
+                            zen_BinaryEntityBuilder_emitPushInteger4(generator->m_instructions);
+
+                            /* Log the emission of the instruction. */
+                            printf("[debug] Emitted push_i4\n");
+
+                            break;
+                        }
+
+                        case 5: {
+                            /* Emit the push_i5 instruction. */
+                            zen_BinaryEntityBuilder_emitPushInteger5(generator->m_instructions);
+
+                            /* Log the emission of the instruction. */
+                            printf("[debug] Emitted push_i5\n");
+
+                            break;
+                        }
+                    }
+                }
+
                 break;
             }
-*/
+
             case ZEN_TOKEN_KEYWORD_TRUE: {
                 /* Emit push_i1. In the operand stack, 1 represents true. */
                 zen_BinaryEntityBuilder_emitPushInteger1(generator->m_instructions);
@@ -2126,10 +2245,10 @@ void zen_BinaryEntityGenerator_onEnterPrimaryExpression(zen_ASTListener_t* astLi
             case ZEN_TOKEN_KEYWORD_NULL: {
                 /* Emit the push_null instruction. */
                 zen_BinaryEntityBuilder_emitPushNull(generator);
-                
+
                 /* Log the emission of the instruction. */
                 printf("[debug] Emitted push_null\n");
-                
+
                 break;
             }
 

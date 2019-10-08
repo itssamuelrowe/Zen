@@ -1755,6 +1755,9 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                 }
                             }
                             else {
+                                /* TODO: Octal integer literals begin with 0c or 0C. Therefore, please modify the
+                                 * lexer accordingly.
+                                 */
                                 if (zen_Lexer_isOctalDigitOrUnderscore(lexer->m_la1)) {
                                     /* Octal Integer Literal */
 
