@@ -159,6 +159,7 @@ set (
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/Instruction.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/FieldEntity.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/FunctionEntity.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/attribute/InstructionAttribute.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/Zen.c
 )
 

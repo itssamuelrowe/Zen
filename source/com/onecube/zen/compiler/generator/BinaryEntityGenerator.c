@@ -30,6 +30,8 @@
 #include <com/onecube/zen/compiler/symbol-table/Symbol.h>
 #include <com/onecube/zen/compiler/generator/BinaryEntityGenerator.h>
 #include <com/onecube/zen/virtual-machine/feb/EntityType.h>
+#include <com/onecube/zen/virtual-machine/feb/attribute/InstructionAttribute.h>
+#include <com/onecube/zen/virtual-machine/feb/attribute/PredefinedAttribute.h>
 
 // Constructor
 
@@ -48,6 +50,10 @@ zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_newEx(
     generator->m_package = NULL;
     generator->m_fields = jtk_ArrayList_new();
     generator->m_functions = jtk_ArrayList_new();
+
+    generator->m_instructions = zen_BinaryEntityBuilder_new();
+    generator->m_maxStackSize = 0;
+    generator->m_localVariableCount = 0;
 
     zen_ASTListener_t* astListener = generator->m_astListener;
 
@@ -293,6 +299,8 @@ zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_newEx(
 void zen_BinaryEntityGenerator_delete(zen_BinaryEntityGenerator_t* generator) {
     jtk_Assert_assertObject(generator, "The specified generator is null.");
 
+    zen_BinaryEntityBuilder_delete(generator->m_instructions);
+
     int32_t fieldCount = jtk_ArrayList_getSize(generator->m_fields);
     int32_t fieldIndex;
     for (fieldIndex = 0; fieldIndex < fieldCount; fieldIndex++) {
@@ -505,10 +513,53 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
         /* Log the details of the function. */
         printf("[debug] A function was written with the features (flags = 0x%X, nameIndex = %d, descriptorIndex = %d).\n",
             functionEntity->m_flags, functionEntity->m_nameIndex, functionEntity->m_descriptorIndex);
+
+        /* Retrieve the attribute table for the current function entity. */
+        zen_AttributeTable_t* attributeTable = &functionEntity->m_attributeTable;
+
+        /* Write the total number of attributes. */
+        zen_BinaryEntityBuilder_writeAttributeCount(generator->m_builder, attributeTable->m_size);
+
+        /* Log the total number of attributes declared in the attribute table. */
+        printf("[debug] The function has %d attributes.\n", attributeTable->m_size);
+
+        int32_t attributeIndex;
+        for (attributeIndex = 0; attributeIndex < attributeTable->m_size; attributeIndex++) {
+            zen_Attribute_t* attribute = attributeTable->m_attributes[attributeIndex];
+
+            zen_ConstantPoolUtf8_t* name = zen_ConstantPoolBuilder_getUtf8Entry(
+                generator->m_constantPoolBuilder, attribute->m_nameIndex);
+
+            if (jtk_CString_equals(name->m_bytes, name->m_length,
+                ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION, ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION_SIZE)) {
+                zen_InstructionAttribute_t* instructionAttribute =
+                    (zen_InstructionAttribute_t*)attribute;
+
+                zen_BinaryEntityBuilder_writeInstructionAttribute(
+                    generator->m_builder,
+                    instructionAttribute->m_nameIndex,
+                    instructionAttribute->m_length,
+                    instructionAttribute->m_maxStackSize,
+                    instructionAttribute->m_localVariableCount,
+                    instructionAttribute->m_instructionLength,
+                    instructionAttribute->m_instructions);
+
+                printf("[debug] The function has an instruction attribute with the features "
+                       "(nameIndex = %d, length = %d, maxStackSize = %d, localVariableCount = %d, "
+                       "instructionLength = %d)\n",
+                        instructionAttribute->m_nameIndex,
+                        instructionAttribute->m_length,
+                        instructionAttribute->m_maxStackSize,
+                        instructionAttribute->m_localVariableCount,
+                        instructionAttribute->m_instructionLength);
+
+                // TODO: Write the exception table.
+            }
+        }
     }
-    
-    
-    FILE* fp = fopen("output.feb", "a+");
+
+
+    FILE* fp = fopen("output.feb", "w+");
     if (fp != NULL) {
         zen_DataChannel_t* channel = jtk_ArrayList_getValue(generator->m_builder->m_channels, 0);
         fwrite(channel->m_bytes, channel->m_index, 1, fp);
@@ -584,6 +635,12 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
 
     zen_Scope_t* scope = zen_ASTAnnotations_get(generator->m_scopes, node);
     zen_SymbolTable_setCurrentScope(generator->m_symbolTable, scope);
+    
+    zen_BinaryEntityBuilder_pushChannel(generator->m_instructions);
+    
+    // TODO: Remove the following statement. Make sure that the instruction
+    // length is never zero.
+    zen_BinaryEntityBuilder_emitNop(generator->m_instructions);
 }
 
 /* The format of a function descriptor is shown below:
@@ -655,9 +712,68 @@ jtk_String_t* zen_BinaryEntityGenerator_getDescriptor(zen_BinaryEntityGenerator_
         jtk_StringBuilder_append_c(builder, 'v');
     }
 
-    return jtk_StringBuilder_toString(builder);
+    jtk_String_t* result = jtk_StringBuilder_toString(builder);
+
+    /* Destroy the string builder. */
+    jtk_StringBuilder_delete(builder);
+    
+    return result;
 }
 
+zen_InstructionAttribute_t* zen_BinaryEntityGenerator_makeInstructionAttribute(
+    zen_BinaryEntityGenerator_t* generator) {
+
+    /* Retrieve the data channel on which the instructions of the
+     * function/initializer were written.
+     */
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(
+        generator->m_instructions->m_channels, 0);
+    /* Retrieve the bytes that were written on the data channel. */
+    uint8_t* instructionBytes = zen_DataChannel_getBytes(channel);
+
+
+    /* Retrieve a valid index into the constant pool where an UTF-8 entry
+     * represents "vm/primary/Instruction".
+     */
+    uint16_t attributeNameIndex = zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
+        generator->m_constantPoolBuilder, ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION,
+        ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION_SIZE);
+    /* Load the maximum stack size. */
+    uint16_t maxStackSize = generator->m_maxStackSize;
+    /* Load the number of local variables. */
+    uint16_t localVariableCount = generator->m_localVariableCount;
+    /* Retrieve the length of the instructions. */
+    uint32_t instructionLength = zen_DataChannel_getSize(channel);
+    /* The instructions of the function. */
+    uint8_t* instructions = jtk_Arrays_clone_b(instructionBytes, instructionLength);
+    /* The total number of exception handler sistes within the function. */
+    uint16_t exceptionHandlerSiteCount = 0;
+    /* Calculate the length of the attribute immediately after the m_length
+     * field.
+     */
+    uint32_t attributeLength =
+        2 + // maxStackSize occupies two bytes.
+        2 + // localVariableCount occupies two bytes.
+        4 + // instructionLength occupies four bytes.
+        instructionLength + // The total number of bytes the instructions occupy.
+        2 + // m_exceptionTable.m_size occupies two bytes.
+        exceptionHandlerSiteCount * ( // Each exception handler site entry occupies the following width.
+            2 + // startIndex occupies two bytes.
+            2 + // stopIndex occupies two bytes.
+            2 + // handlerIndex occupies two bytes.
+            2); // exceptionClassIndex occupies two bytes.
+            
+    zen_InstructionAttribute_t* instructionAttribute = zen_InstructionAttribute_new(
+        attributeNameIndex,
+        attributeLength,
+        maxStackSize,
+        localVariableCount,
+        instructionLength,
+        instructions);
+    return instructionAttribute;
+}
+
+// TODO: Somebody has to destroy the instruction attribute that was allocated here.
 void zen_BinaryEntityGenerator_onExitFunctionDeclaration(
     zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
@@ -681,10 +797,23 @@ void zen_BinaryEntityGenerator_onExitFunctionDeclaration(
     uint16_t descriptorIndex = zen_ConstantPoolBuilder_getUtf8EntryIndex(
         generator->m_constantPoolBuilder, descriptor);
 
+    /* Destroy the descriptor. A constant pool reference to the descriptor was
+     * acquired.
+     */
     jtk_String_delete(descriptor);
+
+    zen_InstructionAttribute_t* instructionAttribute =
+        zen_BinaryEntityGenerator_makeInstructionAttribute(generator);
 
     zen_FunctionEntity_t* functionEntity = zen_FunctionEntity_new(flags,
         nameIndex, descriptorIndex);
+    zen_AttributeTable_t* attributeTable = &functionEntity->m_attributeTable;
+
+    attributeTable->m_size = 1;
+    attributeTable->m_attributes = zen_Memory_allocate(zen_Attribute_t*, 1);
+    attributeTable->m_attributes[0] = (zen_Attribute_t*)instructionAttribute;
+
+    /* Add the function entity to the list of functions. */
     jtk_ArrayList_add(generator->m_functions, functionEntity);
 
     zen_SymbolTable_invalidateCurrentScope(generator->m_symbolTable);

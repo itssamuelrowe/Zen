@@ -122,3 +122,10 @@ int32_t zen_DataChannel_getSize(zen_DataChannel_t* channel) {
     jtk_Assert_assertObject(channel, "The specified byte code channel is null.");
     return channel->m_index;
 }
+
+// Buffer
+
+uint8_t* zen_DataChannel_getBytes(zen_DataChannel_t* channel) {
+    jtk_Assert_assertObject(channel, "The specified byte code channel is null.");
+    return channel->m_bytes;
+}

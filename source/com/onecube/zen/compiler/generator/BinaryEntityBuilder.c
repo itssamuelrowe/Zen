@@ -621,7 +621,8 @@ void zen_BinaryEntityBuilder_writeFunction(zen_BinaryEntityBuilder_t* builder, u
 /* The localVariableCount and maxStackSize are in terms of 4-m_bytes. Therefore,
  * long, double and reference types each occupy a magnitude of 2.
  */
-void zen_BinaryEntityBuilder_writeInstructionAttributeHeader(zen_BinaryEntityBuilder_t* builder, uint16_t nameIndex,
+void zen_BinaryEntityBuilder_writeInstructionAttributeHeader(
+    zen_BinaryEntityBuilder_t* builder, uint16_t nameIndex,
     uint32_t length, uint16_t maxStackSize, uint16_t localVariableCount,
     uint32_t instructionCount) {
     jtk_Assert_assertObject(builder, "The specified builder is null.");
@@ -643,6 +644,21 @@ void zen_BinaryEntityBuilder_writeInstructionAttributeHeader(zen_BinaryEntityBui
     channel->m_bytes[channel->m_index++] = (instructionCount & 0x00FF0000) >> 16;
     channel->m_bytes[channel->m_index++] = (instructionCount & 0x0000FF00) >> 8;
     channel->m_bytes[channel->m_index++] = (instructionCount & 0x000000FF);
+}
+
+void zen_BinaryEntityBuilder_writeInstructionAttribute(
+    zen_BinaryEntityBuilder_t* builder, uint16_t nameIndex,
+    uint32_t length, uint16_t maxStackSize, uint16_t localVariableCount,
+    uint32_t instructionCount, uint8_t* instructions) {
+    zen_BinaryEntityBuilder_writeInstructionAttributeHeader(
+        builder, nameIndex, length, maxStackSize, localVariableCount,
+        instructionCount);
+    
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(builder->m_channels, 0);
+    zen_DataChannel_requestCapacity(channel, instructionCount);
+    
+    jtk_Arrays_copyEx_b(channel->m_bytes, channel->m_capacity, channel->m_index,
+        instructions, instructionCount, 0, instructionCount);
 }
 
 void zen_BinaryEntityBuilder_writeExceptionTableHeader(zen_BinaryEntityBuilder_t* builder, uint16_t size) {

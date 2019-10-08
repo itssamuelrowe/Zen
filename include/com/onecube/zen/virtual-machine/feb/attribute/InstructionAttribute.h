@@ -54,4 +54,23 @@ struct zen_InstructionAttribute_t {
  */
 typedef struct zen_InstructionAttribute_t zen_InstructionAttribute_t;
 
+// Constructor
+
+/**
+ * @memberof InstructionAttribute
+ */
+zen_InstructionAttribute_t* zen_InstructionAttribute_new(uint16_t nameIndex,
+    uint32_t length,
+    uint16_t maxStackSize,
+    uint16_t localVariableCount,
+    uint32_t instructionLength,
+    uint8_t* instructions);
+
+// Destructor
+
+/**
+ * @memberof InstructionAttribute
+ */
+void zen_InstructionAttribute_delete(zen_InstructionAttribute_t* attribute);
+
 #endif /* ZEN_FEB_INSTRUCTION_ATTRIBUTE_H */
