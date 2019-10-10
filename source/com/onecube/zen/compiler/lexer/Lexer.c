@@ -353,7 +353,7 @@ void zen_Lexer_emit(zen_Lexer_t* lexer, zen_Token_t* token) {
  *         'Isaac Newton',
  *         'Keanu Reeves'
  *     ]
- *     array.forEach(@(item, index) {
+ *     array.forEach(lambda (item, index) {
  *             if index.isEven()
  *                 print('[even] ' + index + '->' + item)
  *             else
@@ -1398,7 +1398,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                  *
                  * ESCAPE_SEQUENCE
                  * :    '\\' [btnfr"'\\]
-                 * |    '\\' HEXADECIMAL_DIGIT HEXADECIMAL_DIGIT HEXADECIMAL_DIGIT HEXADECIMAL_DIGIT
+                 * |    '\\' 'u' HEXADECIMAL_DIGIT HEXADECIMAL_DIGIT HEXADECIMAL_DIGIT HEXADECIMAL_DIGIT
                  * ;
                  *
                  * HEXADECIMAL_DIGIT
@@ -1682,6 +1682,122 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                         jtk_CString_delete(text);
                     }
                     else if (zen_Lexer_isDecimalDigit(lexer->m_la1)) {
+                        /* IntegerLiteral
+                         * : BinaryIntegerLiteral
+                         * | OctalIntegerLiteral
+                         * | HexadecimalIntegerLiteral
+                         * | DecimalIntegerLiteral
+                         * ;
+                         *
+                         * BinaryIntegerLiteral
+                         * :    '0' [bB] BinaryNumeral IntegerTypeSuffix?
+                         * ;
+                         *
+                         * DecimalIntegerLiteral
+                         * :    DecimalNumeral IntegerTypeSuffix?
+                         * ;
+                         *
+                         * 
+                         * OctalIntegerLiteral
+                         * :    '0' [cC] OctalNumeral IntegerTypeSuffix?
+                         * ;
+                         *
+                         * HexadecimalIntegerLiteral
+                         * :    '0' [xX] HexadecimalNumeral IntegerTypeSuffix?
+                         * ;
+                         *
+                         * IntegerTypeSuffix
+                         * :    [lL]
+                         * ;
+                         *
+                         * -----------------------------------------------------
+                         *
+                         * BinaryNumeral
+                         * :    BinaryDigit (BinaryDigitsAndUnderscores? BinaryDigit)?
+                         * ;
+                         *
+                         * BinaryDigit
+                         * :    [01]
+                         * ;
+                         *
+                         * BinaryDigitsAndUnderscores
+                         * :    BinaryDigitOrUnderscore+
+                         * ;
+                         *
+                         * BinaryDigitOrUnderscore
+                         * :    BinaryDigit
+                         * |    '_'
+                         * ;
+                         *
+                         * -----------------------------------------------------
+                         *
+                         * OctalNumeral
+                         * :    OctalDigit (OctalDigitsAndUnderscores? OctalDigit)?
+                         * ;
+                         *
+                         *
+                         * OctalDigit
+                         * :    [0-7]
+                         * ;
+                         *
+                         * OctalDigitsAndUnderscores
+                         * :    OctalDigitOrUnderscore+
+                         * ;
+                         *
+                         * OctalDigitOrUnderscore
+                         * :    OctalDigit
+                         * |    '_'
+                         * ;
+                         *
+                         * -----------------------------------------------------
+                         *
+                         * DecimalNumeral
+                         * :    '0'
+                         * |    DecimalNonZeroDigit (Digits? Undscores Digits)
+                         * ;
+                         *
+                         * DecimalDigits
+                         * :    Digit (DecimalDigitsAndUnderscores? DecimalDigit)?
+                         * ;
+                         *
+                         * DecimalDigit
+                         * :    '0'
+                         * |    NonZeroDigit
+                         * ;
+                         *
+                         * DecimalNonZeroDigit
+                         * :    [1-9]
+                         * ;
+                         *
+                         * DecimalDigitsAndUnderscores
+                         * :    DecimalDigitOrUnderscore+
+                         * ;
+                         *
+                         * DecimalDigitOrUnderscore
+                         * :    DecimalDigit
+                         * |    '_'
+                         * ;
+                         *
+                         * -----------------------------------------------------
+                         *
+                         * HexadecimalNumeral
+                         * :    HexadecimalDigit (HexadecimalDigitsAndUnderscores? HexadecimalDigit)?
+                         * ;
+                         *
+                         * HexadecimalDigit
+                         * :    [0-9a-f-A-F]
+                         * ;
+                         *
+                         * HexadecimalDigitsAndUnderscores
+                         * :    HexadecimalDigitOrUnderscore+
+                         * ;
+                         *
+                         * HexadecimalDigitOrUnderscore
+                         * :    HexadecimalDigit
+                         * |    '_'
+                         * ;
+                         *
+                         */
                         if (lexer->m_la1 == '0') {
                             /* Consume and discard the '0' character. */
                             zen_Lexer_consume(lexer);
@@ -1702,6 +1818,40 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                             previous = lexer->m_la1;
 
                                             /* Consume and discard a binary digit or an underscore
+                                             * character.
+                                             */
+                                            zen_Lexer_consume(lexer);
+                                        }
+
+                                        if (previous == '_') {
+                                            // error
+                                        }
+                                    }
+
+                                    if (zen_Lexer_isLetter(lexer->m_la1)) {
+                                        // Error: Invalid suffix
+                                    }
+                                }
+                                else {
+                                    // Error: Expected binary digit
+                                }
+                            }
+                            else if (zen_Lexer_isOctalPrefix(lexer->m_la1)) {
+                                /* Octal Integer Literal */
+                                
+                                /* Consume and discard the octal prefix character. */
+                                zen_Lexer_consume(lexer);
+                                
+                                if (zen_Lexer_isOctalDigit(lexer->m_la1)) {
+                                    /* Consume and discard the octal digit character. */
+                                    zen_Lexer_consume(lexer);
+
+                                    if (zen_Lexer_isOctalDigitOrUnderscore(lexer->m_la1)) {
+                                        uint8_t previous = '\0';
+                                        while (zen_Lexer_isOctalDigitOrUnderscore(lexer->m_la1)) {
+                                            previous = lexer->m_la1;
+
+                                            /* Consume and discard a octal digit or an underscore
                                              * character.
                                              */
                                             zen_Lexer_consume(lexer);
@@ -1755,53 +1905,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                 }
                             }
                             else {
-                                /* TODO: Octal integer literals begin with 0c or 0C. Therefore, please modify the
-                                 * lexer accordingly.
-                                 */
-                                if (zen_Lexer_isOctalDigitOrUnderscore(lexer->m_la1)) {
-                                    /* Octal Integer Literal */
-
-                                    if (lexer->m_la1 == '_') {
-                                        do {
-                                            /* Consume and discard the '_' character. */
-                                            zen_Lexer_consume(lexer);
-                                        }
-                                        while (lexer->m_la1 == '_');
-
-                                        if (zen_Lexer_isOctalDigit(lexer->m_la1)) {
-                                            /* Consume and discard the octal digit character. */
-                                            zen_Lexer_consume(lexer);
-
-                                            if (zen_Lexer_isOctalDigitOrUnderscore(lexer->m_la1)) {
-                                                uint8_t previous = '\0';
-                                                while (zen_Lexer_isOctalDigitOrUnderscore(lexer->m_la1)) {
-                                                    previous = lexer->m_la1;
-
-                                                    /* Consume and discard a binary digit or an underscore
-                                                     * character.
-                                                     */
-                                                    zen_Lexer_consume(lexer);
-                                                }
-
-                                                if (previous == '_') {
-                                                    // error
-                                                }
-                                            }
-
-                                            if (zen_Lexer_isLetter(lexer->m_la1)) {
-                                                // Error: Invalid suffix
-                                            }
-                                        }
-                                        else {
-                                            // Error: Expected octal digit
-                                        }
-                                    }
-                                }
-                                else {
-                                    if (zen_Lexer_isDecimalDigit(lexer->m_la1)) {
-                                        // error
-                                    }
-                                }
+                                // error
                             }
                         }
                         else {

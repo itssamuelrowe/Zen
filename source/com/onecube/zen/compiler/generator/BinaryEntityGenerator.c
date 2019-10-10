@@ -2241,14 +2241,14 @@ void zen_BinaryEntityGenerator_onEnterPrimaryExpression(zen_ASTListener_t* astLi
                                  * instruction takes care of multiplying a value of -1 to the previously
                                  * pushed integer. This will be fixed in the future.
                                  */
-                                
+
                                 uint8_t integerIndex = zen_ConstantPoolBuilder_getIntegerEntryIndex(
                                     generator->m_constantPoolBuilder, value);
-                                
+
                                 /* Emit the load_cpr instruction. */
                                 zen_BinaryEntityBuilder_emitLoadCPR(generator->m_instructions,
                                     integerIndex);
-                                
+
                                 /* Log the emission of the instruction. */
                                 printf("[debug] Emitted load_cpr %d\n", integerIndex);
                             }
