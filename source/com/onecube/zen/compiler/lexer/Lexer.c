@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -292,7 +292,7 @@ bool zen_Lexer_isInputStart(zen_Lexer_t* lexer) {
 
 void zen_Lexer_consume(zen_Lexer_t* lexer) {
     jtk_StringBuilder_appendCodePoint(lexer->m_text, lexer->m_la1);
-    
+
     lexer->m_index++;
     lexer->m_column++;
     /* NOTE: We could have used lexer->index >= "length of input stream"
@@ -344,7 +344,7 @@ void zen_Lexer_emit(zen_Lexer_t* lexer, zen_Token_t* token) {
  * indentation is pushed onto the stack. When the right brace is encountered, the
  * stack is popped. Thus, the compiler recognizes the following function
  * as valid.
- * 
+ *
  * function main()
  *     var array = [
  *         'Samuel Rowe',
@@ -1709,7 +1709,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                          * :    DecimalNumeral IntegerTypeSuffix?
                          * ;
                          *
-                         * 
+                         *
                          * OctalIntegerLiteral
                          * :    '0' [cC] OctalNumeral IntegerTypeSuffix?
                          * ;
@@ -1809,7 +1809,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                          * ;
                          *
                          */
-                         
+
                         /* Here is the simplified grammar which allows underscore characters at the
                          * end of the integer literal. This grammar has simplified the decimal integer
                          * literal rule, too. This type of integer literals are the last to be recognized,
@@ -1833,7 +1833,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                          * DecimalIntegerLiteral
                          * :    DecimalNumeral IntegerTypeSuffix?
                          * ;
-                         * 
+                         *
                          * OctalIntegerLiteral
                          * :    '0' [cC] OctalNumeral IntegerTypeSuffix?
                          * ;
@@ -1905,7 +1905,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                          * :    DecimalDigit
                          * |    '_'
                          * ;
-                         * 
+                         *
                          */
                         if (lexer->m_la1 == '0') {
                             /* Consume and discard the '0' character. */
@@ -1933,12 +1933,8 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                         }
 
                                         if (previous == '_') {
-                                            // error
+                                            printf("[error] Expected digit after underscore in integer literal\n");
                                         }
-                                    }
-
-                                    if (zen_Lexer_isLetter(lexer->m_la1)) {
-                                        // Error: Invalid suffix
                                     }
                                 }
                                 else {
@@ -1947,10 +1943,10 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                             }
                             else if (zen_Lexer_isOctalPrefix(lexer->m_la1)) {
                                 /* Octal Integer Literal */
-                                
+
                                 /* Consume and discard the octal prefix character. */
                                 zen_Lexer_consume(lexer);
-                                
+
                                 if (zen_Lexer_isOctalDigit(lexer->m_la1)) {
                                     /* Consume and discard the octal digit character. */
                                     zen_Lexer_consume(lexer);
@@ -1967,12 +1963,8 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                         }
 
                                         if (previous == '_') {
-                                            // error
+                                            printf("[error] Expected digit after underscore in integer literal\n");
                                         }
-                                    }
-
-                                    if (zen_Lexer_isLetter(lexer->m_la1)) {
-                                        // Error: Invalid suffix
                                     }
                                 }
                                 else {
@@ -2001,24 +1993,22 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                         }
 
                                         if (previous == '_') {
-                                            // error
+                                            printf("[error] Expected digit after underscore in integer literal\n");
                                         }
-                                    }
-
-                                    if (zen_Lexer_isLetter(lexer->m_la1)) {
-                                        // Error: Invalid suffix
                                     }
                                 }
                                 else {
-                                    // Error: Expected binary digit
+                                    // Error: Expected hexadecimal digit
                                 }
                             }
-                            else {
-                                // error
+                            else if (!jtk_CString_equals(lexer->m_text->m_value, lexer->m_text->m_size, "0", 1)) {
+                                // TODO: Implement jtk_StringBuilder_equals_z() function. */
+                                printf("[error] Invalid prefix in integer literal\n");
                             }
                         }
                         else {
                             /* Decimal Integer Literal */
+
                             /* Consume and discard the decimal digit character. */
                             zen_Lexer_consume(lexer);
 
@@ -2038,7 +2028,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                     }
 
                                     if (previous == '_') {
-                                        // error
+                                        printf("[error] Expected digit after underscore in integer literal\n");
                                     }
                                 }
                             }
@@ -2060,18 +2050,22 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                         zen_Lexer_consume(lexer);
                                     }
 
-                                    if (previous == '_') {
-                                        // Error: Expected digit after underscore
-                                    }
+                                        if (previous == '_') {
+                                            printf("[error] Expected digit after underscore in integer literal\n");
+                                        }
                                 }
                                 else {
                                     // Error: Expected digit
                                 }
                             }
+                        }
 
-                            if (zen_Lexer_isLetter(lexer->m_la1)) {
-                                // Error: Invalid suffix
-                            }
+                        /* Check for integer type suffix. */
+
+                        if (zen_Lexer_isIntegerSuffix(lexer->m_la1)) {
+                        }
+                        else if (zen_Lexer_isLetter(lexer->m_la1)) {
+                            printf("[error] Invalid integer type suffix\n");
                         }
 
                         /* The lexer has recognized an integer literal. */
