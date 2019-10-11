@@ -2067,7 +2067,10 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                             zen_Lexer_consume(lexer);
                         }
                         else if (zen_Lexer_isLetter(lexer->m_la1)) {
-                            printf("[error] Invalid integer type suffix\n");
+                            /* Consume and discard the invalid suffix. */
+                            zen_Lexer_consume(lexer);
+
+                            printf("[error] Invalid integer literal suffix\n");
                         }
 
                         /* The lexer has recognized an integer literal. */
