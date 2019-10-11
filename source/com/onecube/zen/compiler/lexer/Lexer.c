@@ -2063,6 +2063,8 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                         /* Check for integer type suffix. */
 
                         if (zen_Lexer_isIntegerSuffix(lexer->m_la1)) {
+                            /* Consume and discard the integer suffix character. */
+                            zen_Lexer_consume(lexer);
                         }
                         else if (zen_Lexer_isLetter(lexer->m_la1)) {
                             printf("[error] Invalid integer type suffix\n");
@@ -2165,6 +2167,14 @@ bool zen_Lexer_isOctalDigit(int32_t codePoint) {
     return (codePoint >= '0') && (codePoint <= '7');
 }
 
+bool zen_Lexer_isOctalPrefix(int32_t codePoint) {
+    return (codePoint == 'c') || (codePoint == 'C');
+}
+
 bool zen_Lexer_isOctalDigitOrUnderscore(int32_t codePoint) {
     return zen_Lexer_isOctalDigit(codePoint) || (codePoint == '_');
+}
+
+bool zen_Lexer_isIntegerSuffix(int32_t codePoint) {
+    return (codePoint == 'l') || (codePoint == 'L');
 }

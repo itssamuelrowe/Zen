@@ -307,6 +307,16 @@ bool zen_Lexer_isOctalDigit(int32_t codePoint);
 /**
  * @memberof Lexer
  */
+bool zen_Lexer_isOctalPrefix(int32_t codePoint);
+
+/**
+ * @memberof Lexer
+ */
 bool zen_Lexer_isOctalDigitOrUnderscore(int32_t codePoint);
+
+/**
+ * @memberof Lexer
+ */
+bool zen_Lexer_isIntegerSuffix(int32_t codePoint);
 
 #endif /* COM_ONECUBE_ZEN_COMPILER_LEXER_LEXER_H */
