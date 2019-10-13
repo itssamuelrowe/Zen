@@ -142,6 +142,75 @@ int32_t zen_ConstantPoolBuilder_getIntegerEntryIndex(
     return result;
 }
 
+// Long Entry
+
+zen_ConstantPoolLong_t* zen_ConstantPoolBuilder_getLongEntry(
+    zen_ConstantPoolBuilder_t* builder, int32_t index) {
+    jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
+
+    return (zen_ConstantPoolLong_t*)jtk_ArrayList_getValue(builder->m_entries, index);
+}
+
+int32_t zen_ConstantPoolBuilder_getLongEntryIndex(
+    zen_ConstantPoolBuilder_t* builder, int64_t value) {
+    int32_t size = jtk_ArrayList_getSize(builder->m_entries);
+    
+    // TODO: Am I doing it right here?!!!
+    union {
+        uint64_t x;
+        int64_t y;
+    } converter;
+    converter.y = value;
+
+    /* Apply linear search to find the long entry. In the future, please
+     * find a better data structure (probably a dual hash map) to store the
+     * entries.
+     */
+    int32_t i;
+    int32_t result = -1;
+    for (i = 0; i < size; i++) {
+        /* Retrieve the constant pool entry to test during this iteration. */
+        zen_ConstantPoolEntry_t* entry = (zen_ConstantPoolEntry_t*)jtk_ArrayList_getValue(
+            builder->m_entries, i);
+        /* Test the entry only if it is tagged with ZEN_CONSTANT_POOL_TAG_LONG. */
+        if (entry->m_tag == ZEN_CONSTANT_POOL_TAG_LONG) {
+            /* Convert the entry to zen_ConstantPoolLong_t, to extract the bytes. */
+            zen_ConstantPoolLong_t* constantPoolLong = (zen_ConstantPoolLong_t*)entry;
+            /* Compare the entry bytes to the bytes of the given integer value. */
+            if ((constantPoolLong->m_highBytes == ((converter.y & 0xFFFFFFFF00000000ULL) >> 32)) &&
+                (constantPoolLong->m_lowBytes == (converter.y & 0x00000000FFFFFFFFULL))) {
+                /* Looks like we found a match! Terminate the loop and return the
+                 * current index.
+                 */
+                result = i;
+                break;
+            }
+        }
+    }
+
+    /* If the result is still negative, the entry was not found. In which case,
+     * the entry should be appended to the end of the list.
+     */
+    if (result < 0) {
+        zen_ConstantPoolLong_t* constantPoolLong = zen_Memory_allocate(
+            zen_ConstantPoolLong_t, 1);
+        constantPoolLong->m_tag = ZEN_CONSTANT_POOL_TAG_LONG;
+        
+        constantPoolLong->m_highBytes = (converter.x & 0xFFFFFFFF00000000ULL) >> 32;
+        constantPoolLong->m_lowBytes = converter.x & 0x00000000FFFFFFFFULL;
+
+        /* The index of the newly inserted entry is equal to the current size of
+         * the entry list.
+         */
+        result = size;
+
+        /* Add the new constant pool integer entry to the list. */
+        jtk_ArrayList_add(builder->m_entries, constantPoolLong);
+    }
+
+    return result;
+}
+
 // String Entry
 
 zen_ConstantPoolString_t* zen_ConstantPoolBuilder_getStringEntry(

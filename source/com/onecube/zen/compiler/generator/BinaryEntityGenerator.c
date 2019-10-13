@@ -2173,21 +2173,112 @@ void zen_BinaryEntityGenerator_onEnterPrimaryExpression(zen_ASTListener_t* astLi
                 if (longLiteral) {
                     switch (value) {
                         case 0: {
+                            /* Emit the push_l0 instruction. */
                             zen_BinaryEntityBuilder_emitPushLong0(generator->m_instructions);
+
+                            /* Log the emission of the instruction. */
+                            printf("[debug] Emitted push_l0\n");
 
                             break;
                         }
 
                         case 1: {
+                            /* Emit the push_l1 instruction. */
                             zen_BinaryEntityBuilder_emitPushLong1(generator->m_instructions);
+
+                            /* Log the emission of the instruction. */
+                            printf("[debug] Emitted push_l1\n");
 
                             break;
                         }
 
                         case 2: {
+                            /* Emit the push_l2 instruction. */
                             zen_BinaryEntityBuilder_emitPushLong2(generator->m_instructions);
 
+                            /* Log the emission of the instruction. */
+                            printf("[debug] Emitted push_l2\n");
+
                             break;
+                        }
+
+                        default: {
+                            /* If the integer literal is less than or equal to 255, then it can be
+                             * pushed onto the operand stack with the push_b instruction. Another
+                             * instruction can pad the remaining 32 bits on the operand stack with
+                             * zeroes.
+                             *
+                             * The range of a byte is [-128, 127].
+                             *
+                             * As of now, the compiler generates negative values with two instructions.
+                             * One instruction pushes the value onto the operand stack. The other
+                             * instruction takes care of multiplying a value of -1 to the previously
+                             * pushed integer. This will be fixed in the future.
+                             */
+                            if ((value >= 6) && (value <= 127)) {
+                                /* Emit the push_i0 instruction in order to provide padding on the operand
+                                 * stack.
+                                 */
+                                zen_BinaryEntityBuilder_emitPushInteger0(generator->m_instructions);
+
+                                /* Log the emission of the instruction. */
+                                printf("[debug] Emitted push_i0\n");
+
+                                /* Emit the push_b instruction. */
+                                zen_BinaryEntityBuilder_emitPushByte(generator->m_instructions,
+                                    value);
+
+                                /* Log the emission of the instruction. */
+                                printf("[debug] Emitted push_b %d\n", value);
+                            }
+                            else if (value <= 32767) {
+                                /* Emit the push_i0 instruction in order to provide padding on the operand
+                                 * stack.
+                                 */
+                                zen_BinaryEntityBuilder_emitPushInteger0(generator->m_instructions);
+
+                                /* Log the emission of the instruction. */
+                                printf("[debug] Emitted push_i0\n");
+
+                                /* If the integer literal is less than or equal to 32767, then it
+                                 * can be pushed onto the operand stack with the push_s instruction.
+                                 *
+                                 * The range of a short is [-32768, 32767].
+                                 *
+                                 * As of now, the compiler generates negative values with two instructions.
+                                 * One instruction pushes the value onto the operand stack. The other
+                                 * instruction takes care of multiplying a value of -1 to the previously
+                                 * pushed integer. This will be fixed in the future.
+                                 */
+                                /* Emit the push_s instruction. */
+                                zen_BinaryEntityBuilder_emitPushShort(generator->m_instructions,
+                                    value);
+
+                                /* Log the emission of the instruction. */
+                                printf("[debug] Emitted push_s %d\n", value);
+                            }
+                            else {
+                                // TODO: Filter emission of values larger than the integer threshold.
+
+                                /* If the integer literal is larger than 32767, then it should be pushed
+                                 * the operand stack with the load_cpr instruction.
+                                 *
+                                 * As of now, the compiler generates negative values with two instructions.
+                                 * One instruction pushes the value onto the operand stack. The other
+                                 * instruction takes care of multiplying a value of -1 to the previously
+                                 * pushed integer. This will be fixed in the future.
+                                 */
+
+                                uint8_t longIndex = zen_ConstantPoolBuilder_getLongEntryIndex(
+                                    generator->m_constantPoolBuilder, value);
+
+                                /* Emit the load_cpr instruction. */
+                                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_instructions,
+                                    longIndex);
+
+                                /* Log the emission of the instruction. */
+                                printf("[debug] Emitted load_cpr %d\n", longIndex);
+                            }
                         }
                     }
                 }
@@ -2292,7 +2383,7 @@ void zen_BinaryEntityGenerator_onEnterPrimaryExpression(zen_ASTListener_t* astLi
                             }
                             else {
                                 // TODO: Filter emission of values larger than the integer threshold.
-                                
+
                                 /* If the integer literal is larger than 32767, then it should be pushed
                                  * the operand stack with the load_cpr instruction.
                                  *
