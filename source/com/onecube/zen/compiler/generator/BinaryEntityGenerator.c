@@ -17,6 +17,7 @@
 // Friday, March 30, 2018
 
 #include <jtk/core/Integer.h>
+#include <jtk/core/Long.h>
 #include <jtk/core/VariableArguments.h>
 #include <jtk/core/StringBuilder.h>
 
@@ -2032,6 +2033,63 @@ void zen_BinaryEntityGenerator_onExitPostfixOperator(zen_ASTListener_t* astListe
 
 // primaryExpression
 
+
+int64_t zen_Long_convert(const uint8_t* text, int32_t length, int32_t radix) {
+    jtk_Assert_assertObject(text, "The specified text is null.");
+
+    int64_t result = -1;
+    if ((length != 0) && (radix >= JTK_INTEGER_MIN_RADIX) &&
+        (radix <= JTK_INTEGER_MAX_RADIX)) {
+        bool negative = false;
+        int32_t i = 0;
+        int64_t limit = -JTK_LONG_MAX_VALUE;
+        uint8_t first = text[0];
+        result = 0;
+        if (!((first >= '0') && (first <= '9'))) {
+            if (first == '+') {
+                negative = false;
+            }
+            else if (first == '-') {
+                negative = true;
+                limit = JTK_LONG_MIN_VALUE;
+            }
+            else {
+                result = -1;
+            }
+
+            if (length == 1) {
+                result = -1;
+            }
+
+            i++;
+        }
+
+        if (result != -1) {
+            int64_t m = limit / radix;
+            while (i < length) {
+                uint8_t value = text[i++];
+                if (value != '_') {
+                    int32_t digit = jtk_Integer_digit(value, radix);
+                    if ((digit < 0) || (result < m)) {
+                        result = -1;
+                        break;
+                    }
+                    result *= radix;
+                    if (result < (limit + digit)) {
+                        result = -1;
+                        break;
+                    }
+                    result -= digit;
+                }
+            }
+            if (result != -1) {
+                result = negative? result : -result;
+            }
+        }
+    }
+    return result;
+}
+
 void zen_BinaryEntityGenerator_onEnterPrimaryExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_PrimaryExpressionContext_t* context = (zen_PrimaryExpressionContext_t*)node->m_context;
@@ -2110,7 +2168,7 @@ void zen_BinaryEntityGenerator_onEnterPrimaryExpression(zen_ASTListener_t* astLi
                     integerLength--;
                 }
 
-                int64_t value = jtk_Long_parseEx(integerText, integerLength, radix);
+                int64_t value = zen_Long_convert(integerText, integerLength, radix);
 
                 if (longLiteral) {
                     switch (value) {
@@ -2233,6 +2291,8 @@ void zen_BinaryEntityGenerator_onEnterPrimaryExpression(zen_ASTListener_t* astLi
                                 printf("[debug] Emitted push_s %d\n", value);
                             }
                             else {
+                                // TODO: Filter emission of values larger than the integer threshold.
+                                
                                 /* If the integer literal is larger than 32767, then it should be pushed
                                  * the operand stack with the load_cpr instruction.
                                  *
