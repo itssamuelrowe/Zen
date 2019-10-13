@@ -2090,7 +2090,8 @@ int64_t zen_Long_convert(const uint8_t* text, int32_t length, int32_t radix) {
     return result;
 }
 
-void zen_BinaryEntityGenerator_onEnterPrimaryExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterPrimaryExpression(
+    zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_PrimaryExpressionContext_t* context = (zen_PrimaryExpressionContext_t*)node->m_context;
 
@@ -2671,13 +2672,30 @@ store_aa
 
 // listExpression
 
+/*
+ * load_cpr size ; Push the size of the list onto the operand stack.
+ * new_array_a ; It is more efficient to create a temporary array before creating
+ *             ; the array list. Otherwise, the ArrayList#setValue() or ArrayList#add() functions
+ *             ; should be invoked n number of times, where n is the size of the array.
+ *
+ * duplicate ; Duplicate the reference to the temporary array.
+ * push_i0 ; Push the index at which the result of the expression will be stored.
+ * (expression) ; Evaluate the result of the expression.
+ * store_aa ; Store the result in the temporary array.
+ * ...
+ *
+ * invoke_special ArrayList ; Allocate an instance of the ArrayList class.
+ */
 void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
-    /*zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_ListExpressionContext_t* context = (zen_ListExpressionContext_t*)node->m_context;
     zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)context->m_expressions->m_context;
 
     int32_t size = jtk_ArrayList_getSize(expressionsContext->m_expressions);
+
+
+    // Emit instructions to create the array list.
 
     zen_BinaryEntityGenerator_emitPushByte(generator, size);
     zen_BinaryEntityGenerator_emitNewReferenceArray(generator, 0);
@@ -2688,7 +2706,6 @@ void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListe
         zen_ASTAnnotation_t* expressionAnnotation = zen_ASTAnnotation_new(ZEN_AST_ANNOTATION_TYPE_ASYMETRICAL_CHANNEL_MANAGEMENT, NULL);
         zen_ASTAnnotations_put(generator->m_annotations, expression, expressionAnnotation);
     }
-    */
 }
 
 void zen_BinaryEntityGenerator_onExitListExpression(zen_ASTListener_t* astListener,
