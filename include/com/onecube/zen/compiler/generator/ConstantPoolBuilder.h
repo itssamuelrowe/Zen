@@ -78,6 +78,17 @@ int32_t zen_ConstantPoolBuilder_countEntries(zen_ConstantPoolBuilder_t* builder)
 zen_ConstantPoolEntry_t* zen_ConstantPoolBuilder_getEntry(zen_ConstantPoolBuilder_t* builder,
     int32_t index);
 
+// Class Entry
+
+zen_ConstantPoolClass_t* zen_ConstantPoolBuilder_getClassEntry(
+    zen_ConstantPoolBuilder_t* builder, int32_t index);
+
+int32_t zen_ConstantPoolBuilder_getClassEntryIndex(
+    zen_ConstantPoolBuilder_t* builder, jtk_String_t* name);
+
+int32_t zen_ConstantPoolBuilder_getClassEntryIndexEx(
+    zen_ConstantPoolBuilder_t* builder, uint8_t* bytes, int32_t bytesSize);
+
 // Integer Entry
 
 zen_ConstantPoolInteger_t* zen_ConstantPoolBuilder_getIntegerEntry(

@@ -76,6 +76,97 @@ zen_ConstantPoolEntry_t* zen_ConstantPoolBuilder_getEntry(zen_ConstantPoolBuilde
     return jtk_ArrayList_getValue(builder->m_entries, index);
 }
 
+// Class Entry
+
+zen_ConstantPoolClass_t* zen_ConstantPoolBuilder_getClassEntry(
+    zen_ConstantPoolBuilder_t* builder, int32_t index) {
+    jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
+
+    return (zen_ConstantPoolClass_t*)jtk_ArrayList_getValue(builder->m_entries, index);
+}
+
+int32_t zen_ConstantPoolBuilder_getClassEntryIndex(
+    zen_ConstantPoolBuilder_t* builder, jtk_String_t* name) {
+    jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
+
+    return zen_ConstantPoolBuilder_getClassEntryIndexEx(builder, name->m_value,
+        name->m_size);
+}
+
+int32_t zen_ConstantPoolBuilder_getClassEntryIndexEx(
+    zen_ConstantPoolBuilder_t* builder, uint8_t* bytes, int32_t bytesSize) {
+    jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
+
+    /* 1. Find the UTF-8 entry with the given sequence of bytes.
+     * 2. If step 1 found no UTF-8 entry, insert an UTF-8 entry with the given
+     *    sequence of bytes.
+     * 3. Find the class entry with the index of the UTF-8 entry.
+     * 4. If step 3 found no class entry, insert a class entry with the index
+     *    pointing to the UTF-8 entry.
+     */
+
+    /* Make sure that the UTF-8 entry exists with the given sequence of bytes.
+     * Rretrieve the index of such an entry.
+     */
+    int32_t nameIndex = zen_ConstantPoolBuilder_getUtf8EntryIndexEx(builder, bytes,
+        bytesSize);
+
+    /* Retrieve the current size of the entry list. */
+    int32_t size = jtk_ArrayList_getSize(builder->m_entries);
+
+    /* Apply linear search to find the class entry.
+     * In the future, please find a better data structure (probably a dual hash map)
+     * to store the entries.
+     */
+    int32_t i;
+    int32_t result = -1;
+    for (i = 0; i < size; i++) {
+        /* Retrieve the constant pool entry to test during this iteration. */
+        zen_ConstantPoolEntry_t* entry = (zen_ConstantPoolEntry_t*)jtk_ArrayList_getValue(
+            builder->m_entries, i);
+        /* Test the entry only if it is tagged with ZEN_CONSTANT_POOL_TAG_STRING. */
+        if (entry->m_tag == ZEN_CONSTANT_POOL_TAG_CLASS) {
+            /* Convert the entry to zen_ConstantPoolClass_t, to extract the index
+             * of the UTF-8 entry.
+             */
+            zen_ConstantPoolClass_t* constantPoolClass = (zen_ConstantPoolClass_t*)entry;
+
+            /* Compare the entry bytes to the bytes of the given string. */
+            if (constantPoolClass->m_nameIndex == nameIndex) {
+                /* Looks like we found a match! Terminate the loop and return the
+                 * current index.
+                 */
+                result = i;
+                break;
+            }
+        }
+    }
+
+    /* If the result is still negative, the entry was not found. In which case,
+     * the entry should be appended to the end of the list.
+     */
+    if (result < 0) {
+        /* Create the constant pool class entry. */
+        zen_ConstantPoolClass_t* constantPoolClass = zen_Memory_allocate(zen_ConstantPoolClass_t, 1);
+        /* Mark the constant pool entry with ZEN_CONSTANT_POOL_TAG_CLASS. */
+        constantPoolClass->m_tag = ZEN_CONSTANT_POOL_TAG_CLASS;
+        /* Update the class index of the class entry to point to the UTF-8
+         * entry which holds its content.
+         */
+        constantPoolClass->m_nameIndex = nameIndex;
+
+        /* Add the new constant pool class entry to the list. */
+        jtk_ArrayList_add(builder->m_entries, constantPoolClass);
+
+        /* The index of the newly inserted entry is equal to the current size of
+         * the entry list.
+         */
+        result = size;
+    }
+
+    return result;
+}
+
 // Integer Entry
 
 zen_ConstantPoolInteger_t* zen_ConstantPoolBuilder_getIntegerEntry(

@@ -1943,7 +1943,8 @@ void zen_BinaryEntityBuilder_emitNewArray(zen_BinaryEntityBuilder_t* builder, ui
     channel->m_bytes[channel->m_index++] = (type & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_emitNewReferenceArray(zen_BinaryEntityBuilder_t* builder, uint16_t index) {
+void zen_BinaryEntityBuilder_emitNewReferenceArray(zen_BinaryEntityBuilder_t* builder,
+    uint16_t index) {
     jtk_Assert_assertObject(builder, "The specified builder is null.");
 
     zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(builder->m_channels, 0);
