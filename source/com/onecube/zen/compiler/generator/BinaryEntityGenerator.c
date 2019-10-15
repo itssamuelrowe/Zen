@@ -2719,7 +2719,10 @@ void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListe
      *
      * Emit the new_array_a instruction to create the temporary array.
      */
-    zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_builder, classIndex);
+    zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_instructions, classIndex);
+
+    /* Log the emission of the new_array_a instruction. */
+    printf("[debug] Emitted new_array_a %d\n", classIndex);
 
     // Emit instructions to create the array list.
 
