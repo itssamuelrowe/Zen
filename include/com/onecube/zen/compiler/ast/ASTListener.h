@@ -21,6 +21,7 @@
 
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
+#include <com/onecube/zen/compiler/ast/ASTWalkerState.h>
 
 /*******************************************************************************
  * ASTListener                                                                 *
@@ -1045,6 +1046,7 @@ struct zen_ASTListener_t {
     zen_OnEnterNewExpressionFunction_t m_onEnterNewExpression;
     zen_OnExitNewExpressionFunction_t m_onExitNewExpression;
 
+    zen_ASTWalkerState_t m_walkerState;
     void* m_context;
 };
 
@@ -1834,5 +1836,13 @@ void zen_ASTListener_onEnterNewExpression(zen_ASTListener_t* listener, zen_ASTNo
  * @memberof ASTListener
  */
 void zen_ASTListener_onExitNewExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+// Skip Children
+
+void zen_ASTListener_skipChildren(zen_ASTListener_t* listener);
+
+// Vist Children
+
+void zen_ASTListener_visitChildren(zen_ASTListener_t* listener);
 
 #endif /* COM_ONECUBE_ZEN_COMPILER_COMPILER_AST_LISTENER_H */

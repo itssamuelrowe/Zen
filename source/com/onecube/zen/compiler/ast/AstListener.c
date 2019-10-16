@@ -24,6 +24,8 @@
 
 zen_ASTListener_t* zen_ASTListener_newWithContext(void* context) {
     zen_ASTListener_t* listener = zen_Memory_allocate(zen_ASTListener_t, 1);
+    // listener->m_walkerState = ZEN_AST_WALKER_STATE_INVALID;
+    listener->m_walkerState = ZEN_AST_WALKER_STATE_VISIT_CHILDREN;
     listener->m_context = context;
     
     listener->m_onVisitErrorNode = zen_ASTListener_onVisitErrorNode;
@@ -883,4 +885,20 @@ void zen_ASTListener_onEnterNewExpression(zen_ASTListener_t* listener, zen_ASTNo
 }
 
 void zen_ASTListener_onExitNewExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
+}
+
+// Skip Children
+
+void zen_ASTListener_skipChildren(zen_ASTListener_t* listener) {
+    jtk_Assert_assertObject(listener, "The specified listener is null.");
+    
+    listener->m_walkerState = ZEN_AST_WALKER_STATE_SKIP_CHILDREN;
+}
+
+// Visit Children
+
+void zen_ASTListener_visitChildren(zen_ASTListener_t* listener) {
+    jtk_Assert_assertObject(listener, "The specified listener is null.");
+    
+    listener->m_walkerState = ZEN_AST_WALKER_STATE_VISIT_CHILDREN;
 }

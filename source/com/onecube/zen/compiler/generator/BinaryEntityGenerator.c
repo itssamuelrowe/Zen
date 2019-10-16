@@ -2707,12 +2707,12 @@ void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListe
 
     /* Push the size of the list onto the operand stack. */
     zen_BinaryEntityGenerator_loadInteger(generator, size);
-    
+
     const uint8_t* objectClassName = "zen.core.Object";
     int32_t objectClassNameSize = 15;
     uint16_t classIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
         generator->m_constantPoolBuilder, objectClassName, objectClassNameSize);
-    
+
     /* It is more efficient to create a temporary array before creating
      * the array list. Otherwise, the ArrayList#setValue() or ArrayList#add() functions
      * should be invoked n number of times, where n is the size of the array.
@@ -2724,18 +2724,37 @@ void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListe
     /* Log the emission of the new_array_a instruction. */
     printf("[debug] Emitted new_array_a %d\n", classIndex);
 
-    // Emit instructions to create the array list.
-
-    // zen_BinaryEntityGenerator_emitPushByte(generator, size);
-    // zen_BinaryEntityGenerator_emitNewReferenceArray(generator, 0);
-    /*
     int32_t i;
     for (i = 0; i < size; i++) {
+        /* Retrieve the expression for the current element. */
         zen_ASTNode_t* expression = (zen_ASTNode_t*)jtk_ArrayList_getValue(expressionsContext->m_expressions, i);
-        zen_ASTAnnotation_t* expressionAnnotation = zen_ASTAnnotation_new(ZEN_AST_ANNOTATION_TYPE_ASYMETRICAL_CHANNEL_MANAGEMENT, NULL);
-        zen_ASTAnnotations_put(generator->m_annotations, expression, expressionAnnotation);
+
+        /* Duplicate the reference to the temporary array. */
+        zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+
+        /* Log the emission of the duplicate instruction. */
+        printf("[debug] Emitted duplicate\n");
+
+        /* Push the index at which the result of the expression will be stored. */
+        zen_BinaryEntityGenerator_loadInteger(generator, i);
+
+        /* Visit the expression node and generate the relevant instructions. */
+        zen_ASTWalker_walk(astListener, expression);
+        
+        /* Store the result in the temporary array. */
+        zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_instructions);
+        
+        /* Log the emission of the store_aa instruction. */
+        printf("[debug] Emitted store_aa\n");
     }
-    */
+
+    /* The normal behaviour of the AST walker causes the generator to emit instructions
+     * in an undesirable fashion. Therefore, we partially switch from the listener
+     * to visitor design pattern. The AST walker can be guided to switch to this
+     * mode via zen_ASTWalker_ignoreChildren() function which causes the AST walker
+     * to skip iterating over the children nodes.
+     */
+    zen_ASTListener_skipChildren(astListener);
 }
 
 void zen_BinaryEntityGenerator_onExitListExpression(zen_ASTListener_t* astListener,
