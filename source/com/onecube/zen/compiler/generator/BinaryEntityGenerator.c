@@ -2694,7 +2694,9 @@ store_aa
  * store_aa ; Store the result in the temporary array.
  * ...
  *
- * invoke_special ArrayList ; Allocate an instance of the ArrayList class.
+ * new classIndex ; Create an instance of the ArrayList class.
+ * duplicate ; Duplicate the reference of the newly created list.
+ * invoke_special functionIndex ; Invoke the constructor to initialize the new list instance.
  */
 void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
@@ -2710,7 +2712,7 @@ void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListe
 
     const uint8_t* objectClassName = "zen.core.Object";
     int32_t objectClassNameSize = 15;
-    uint16_t classIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
+    uint16_t objectClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
         generator->m_constantPoolBuilder, objectClassName, objectClassNameSize);
 
     /* It is more efficient to create a temporary array before creating
@@ -2719,10 +2721,11 @@ void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListe
      *
      * Emit the new_array_a instruction to create the temporary array.
      */
-    zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_instructions, classIndex);
+    zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_instructions,
+        objectClassIndex);
 
     /* Log the emission of the new_array_a instruction. */
-    printf("[debug] Emitted new_array_a %d\n", classIndex);
+    printf("[debug] Emitted new_array_a %d\n", objectClassIndex);
 
     int32_t i;
     for (i = 0; i < size; i++) {
@@ -2740,13 +2743,46 @@ void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListe
 
         /* Visit the expression node and generate the relevant instructions. */
         zen_ASTWalker_walk(astListener, expression);
-        
+
         /* Store the result in the temporary array. */
         zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_instructions);
-        
+
         /* Log the emission of the store_aa instruction. */
         printf("[debug] Emitted store_aa\n");
     }
+
+    const uint8_t* arrayListClassName = "zen.collection.list.ArrayList";
+    int32_t arrayListClassNameSize = 29;
+    uint16_t arrayListClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
+        generator->m_constantPoolBuilder, arrayListClassName, arrayListClassNameSize);
+
+    /* Create an instance of the ArrayList class. */
+    zen_BinaryEntityBuilder_emitNew(generator->m_instructions, arrayListClassIndex);
+
+    /* Log the emission of the new instruction. */
+    printf("[debug] Emitted new %d\n", arrayListClassIndex);
+
+    /* Duplicate the reference of the newly created list. */
+    zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+
+    /* Log the emission of the duplicate instruction. */
+    printf("[debug] Emitted duplicate\n");
+
+    const uint8_t* constructorDescriptor = "v:@(zen/core/Object)";
+    int32_t constructorDescriptorSize = 20;
+    const uint8_t* constructorName = "<constructor>";
+    int32_t constructorNameSize = 13;
+    uint16_t arrayListConstructorIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, arrayListClassName, arrayListClassNameSize,
+        constructorDescriptor, constructorDescriptorSize, constructorName,
+        constructorNameSize);
+
+    /* Invoke the constructor to initialize the new list instance. */
+    zen_BinaryEntityBuilder_emitInvokeSpecial(generator->m_instructions,
+        arrayListConstructorIndex);
+
+    /* Log the emission of the invoke_special instruction. */
+    printf("[debug] Emitted invoke_special %d\n", arrayListConstructorIndex);
 
     /* The normal behaviour of the AST walker causes the generator to emit instructions
      * in an undesirable fashion. Therefore, we partially switch from the listener
