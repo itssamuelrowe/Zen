@@ -2489,13 +2489,176 @@ void zen_BinaryEntityGenerator_onExitPrimaryExpression(zen_ASTListener_t* astLis
 
 // mapExpression
 
+/**
+ * load_cpr size ; Push the size of the key array onto the operand stack.
+ * new_array_a ; It is more efficient to create a temporary array before creating
+ *             ; the hash map. Otherwise, the HashMap#putValue() should be invoked
+ *             ; n number of times, where n is the number of the entries.
+ *             ; The temporary array created by this instruction will store keys.
+ * duplicate ; Duplicate the reference to the temporary key array.
+ * load_cpr keyIndex ; Push the index at which the result of the key expression will be stored.
+ * (expression) ; Evaluate the result of the key expression.
+ * store_aa ; Store the result of the key expression in the temporary key array.
+ *
+ * load_cpr size ; Push the size of the value array onto the operand stack.
+ * new_array_a ; It is more efficient to create a temporary array before creating
+ *             ; the hash map. Otherwise, the HashMap#putValue() should be invoked
+ *             ; n number of times, where n is the number of the entries.
+ *             ; The temporary array created by this instruction will store values.
+ * duplicate ; Duplicate the reference to the temporary value array.
+ * load_cpr valueIndex ; Push the index at which the result of the value expression will be stored.
+ * (expression) ; Evaluate the result of the value expression.
+ * store_aa ; Store the result of the value expression in the temporary value array.
+ *
+ * new classIndex ; Create an instance of the HashMap class.
+ * duplicate ; Duplicate the reference of the newly created map.
+ * invoke_special functionIndex ; Invoke the constructor to initialize the new map instance.
+ */
 void zen_BinaryEntityGenerator_onEnterMapExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {/*
+    zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_MapExpressionContext_t* context = (zen_MapExpressionContext_t*)node->m_context;
+    zen_MapEntriesContext_t* entriesContext = (zen_MapEntriesContext_t*)context->m_mapEntries->m_context;
 
-    zen_BinaryEntityGenerator_emitPushByte(generator, 0); // TODO: With proper size
-    zen_BinaryEntityGenerator_emitNewReferenceArray(generator, 0); // TODO: new_array_n*/
+    /* Retrieve the size of the map. */
+    int32_t size = jtk_ArrayList_getSize(entriesContext->m_mapEntries);
+
+    /* Push the size of the map onto the operand stack. The map size here indicates
+     * the size of the temporary key array.
+     */
+    zen_BinaryEntityGenerator_loadInteger(generator, size);
+    
+    const uint8_t* objectClassName = "zen.core.Object";
+    int32_t objectClassNameSize = 15;
+    uint16_t objectClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
+        generator->m_constantPoolBuilder, objectClassName, objectClassNameSize);
+
+    /* It is more efficient to create a temporary array before creating
+     * the hash map. Otherwise, the HashMap#putValue() function
+     * should be invoked n number of times, where n is the size of the array.
+     *
+     * Emit the new_array_a instruction to create the temporary key array.
+     */
+    zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_instructions,
+        objectClassIndex);
+
+    /* Log the emission of the new_array_a instruction. */
+    printf("[debug] Emitted new_array_a %d\n", objectClassIndex);
+
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        /* Retrieve the map entry for the current iteration. */
+        zen_ASTNode_t* mapEntry = (zen_ASTNode_t*)jtk_ArrayList_getValue(entriesContext->m_mapEntries, i);
+        
+        /* Retrieve the context for the current map entry. */
+        zen_MapEntryContext_t* mapEntryContext = (zen_MapEntryContext_t*)mapEntry->m_context;
+        
+        /* Duplicate the reference to the temporary key array. */
+        zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+
+        /* Log the emission of the duplicate instruction. */
+        printf("[debug] Emitted duplicate\n");
+
+        /* Push the index at which the result of the key expression will be stored. */
+        zen_BinaryEntityGenerator_loadInteger(generator, i);
+        
+        
+        /* Visit the key expression node and generate the relevant instructions. */
+        zen_ASTWalker_walk(astListener, mapEntryContext->m_keyExpression);
+        
+        /* Store the result in the temporary key array. */
+        zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_instructions);
+
+        /* Log the emission of the store_aa instruction. */
+        printf("[debug] Emitted store_aa\n");
+    }
+    
+    /* Push the size of the map onto the operand stack. The map size here indicates
+     * the size of the temporary value array.
+     */
+    zen_BinaryEntityGenerator_loadInteger(generator, size);
+    
+    /* It is more efficient to create a temporary array before creating
+     * the hash map. Otherwise, the HashMap#putValue() function
+     * should be invoked n number of times, where n is the size of the value
+     * array.
+     *
+     * Emit the new_array_a instruction to create the temporary array.
+     */
+    zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_instructions,
+        objectClassIndex);
+
+    /* Log the emission of the new_array_a instruction. */
+    printf("[debug] Emitted new_array_a %d\n", objectClassIndex);
+
+    int32_t j;
+    for (j = 0; j < size; j++) {
+        /* Retrieve the map entry for the current iteration. */
+        zen_ASTNode_t* mapEntry = (zen_ASTNode_t*)jtk_ArrayList_getValue(entriesContext->m_mapEntries, j);
+                
+        /* Retrieve the context for the current map entry. */
+        zen_MapEntryContext_t* mapEntryContext = (zen_MapEntryContext_t*)mapEntry->m_context;
+
+        /* Duplicate the reference to the temporary value array. */
+        zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+
+        /* Log the emission of the duplicate instruction. */
+        printf("[debug] Emitted duplicate\n");
+
+        /* Push the index at which the result of the value expression will be stored. */
+        zen_BinaryEntityGenerator_loadInteger(generator, j);
+        
+        
+        /* Visit the value expression node and generate the relevant instructions. */
+        zen_ASTWalker_walk(astListener, mapEntryContext->m_valueExpression);
+        
+        /* Store the result in the temporary value array. */
+        zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_instructions);
+
+        /* Log the emission of the store_aa instruction. */
+        printf("[debug] Emitted store_aa\n");
+    }
+    
+    const uint8_t* hashMapClassName = "zen.collection.map.HashMap";
+    int32_t hashMapClassNameSize = 26;
+    uint16_t hashMapClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
+        generator->m_constantPoolBuilder, hashMapClassName, hashMapClassNameSize);
+
+    /* Create an instance of the HashMap class. */
+    zen_BinaryEntityBuilder_emitNew(generator->m_instructions, hashMapClassIndex);
+
+    /* Log the emission of the new instruction. */
+    printf("[debug] Emitted new %d\n", hashMapClassIndex);
+
+    /* Duplicate the reference of the newly created map. */
+    zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+
+    /* Log the emission of the duplicate instruction. */
+    printf("[debug] Emitted duplicate\n");
+
+    const uint8_t* constructorDescriptor = "v:@(zen/core/Object)@(zen/core/Object)";
+    int32_t constructorDescriptorSize = 38;
+    const uint8_t* constructorName = "<constructor>";
+    int32_t constructorNameSize = 13;
+    uint16_t hashMapConstructorIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, hashMapClassName, hashMapClassNameSize,
+        constructorDescriptor, constructorDescriptorSize, constructorName,
+        constructorNameSize);
+
+    /* Invoke the constructor to initialize the new map instance. */
+    zen_BinaryEntityBuilder_emitInvokeSpecial(generator->m_instructions,
+        hashMapConstructorIndex);
+
+    /* Log the emission of the invoke_special instruction. */
+    printf("[debug] Emitted invoke_special %d\n", hashMapConstructorIndex);
+
+    /* The normal behaviour of the AST walker causes the generator to emit instructions
+     * in an undesirable fashion. Therefore, we partially switch from the listener
+     * to visitor design pattern. The AST walker can be guided to switch to this
+     * mode via zen_ASTWalker_ignoreChildren() function which causes the AST walker
+     * to skip iterating over the children nodes.
+     */
+    zen_ASTListener_skipChildren(astListener);
 }
 
 void zen_BinaryEntityGenerator_onExitMapExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
@@ -2689,7 +2852,7 @@ store_aa
  *             ; should be invoked n number of times, where n is the size of the array.
  *
  * duplicate ; Duplicate the reference to the temporary array.
- * push_i0 ; Push the index at which the result of the expression will be stored.
+ * load_cpr index ; Push the index at which the result of the expression will be stored.
  * (expression) ; Evaluate the result of the expression.
  * store_aa ; Store the result in the temporary array.
  * ...
