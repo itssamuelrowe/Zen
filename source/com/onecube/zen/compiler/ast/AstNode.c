@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
  */
 
 #include <stdio.h>
+#include <jtk/core/StringBuilder.h>
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
 #include <com/onecube/zen/compiler/parser/Parser.h>
 
@@ -102,4 +103,70 @@ jtk_ArrayList_t* zen_ASTNode_getChildren(zen_ASTNode_t* node) {
         node->m_enumerateContextChildren(node->m_context, node->m_children);
     }
     return node->m_children;
+}
+
+void zen_ASTNode_toString0(zen_ASTNode_t* node, jtk_StringBuilder_t* builder) {
+    jtk_Assert_assertObject(node, "The specified node is null.");
+
+    jtk_ArrayList_t* nodes = zen_ASTNode_getChildren(node);
+    int32_t size = jtk_ArrayList_getSize(nodes);
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        zen_ASTNode_t* node = jtk_ArrayList_getValue(nodes, i);
+        if (node->m_type == ZEN_AST_NODE_TYPE_TERMINAL) {
+            zen_Token_t* token = (zen_Token_t*)identifier->m_context;
+            jtk_StringBuilder_appendEx_z(builder, token->m_text, token->m_length);
+        }
+        else if (node->m_type == ZEN_AST_NODE_TYPE_UNKNOWN) {
+            jtk_StringBuilder_appendEx_z(builder, "<unknown>", 9);
+        }
+        else {
+            // TODO: I am not sure what happens when the node is erroneous.
+            zen_ASTNode_toString0(node, builder);
+        }
+    }
+}
+
+jtk_String_t* zen_ASTNode_toString(zen_ASTNode_t* node) {
+    jtk_Assert_assertObject(node, "The specified node is null.");
+
+    /* Create a string builder to create the string equivalent of the given
+     * node.
+     */
+    jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+    
+    /* Recursively construct the string equivalent of the given node. */
+    zen_ASTNode_toString0(node, builder);
+    
+    /* Build and retrieve the string. */
+    jtk_String_t* result = jtk_StringBuilder_toString(builder);
+
+    /* Destroy the string builder. */
+    jtk_StringBuilder_delete(result);
+
+    return result;
+}
+
+uint8_t* zen_ASTNode_toCString(zen_ASTNode_t* node, int32_t* size) {
+    jtk_Assert_assertObject(node, "The specified node is null.");
+
+    /* Create a string builder to create the string equivalent of the given
+     * node.
+     */
+    jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+    
+    /* Recursively construct the string equivalent of the given node. */
+    zen_ASTNode_toString0(node, builder);
+    
+    /* Build and retrieve the string. */
+    uint8_t* result = jtk_StringBuilder_toCString(builder);
+    /* Return the size of the string. */
+    if (size != NULL) {
+        *size = jtk_StringBuilder_getSize(result);
+    }
+
+    /* Destroy the string builder. */
+    jtk_StringBuilder_delete(result);
+
+    return result;
 }

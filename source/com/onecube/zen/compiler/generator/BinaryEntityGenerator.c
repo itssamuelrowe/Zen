@@ -3000,8 +3000,139 @@ void zen_BinaryEntityGenerator_onExitListExpression(zen_ASTListener_t* astListen
 
 // New Expression
 
+/*
+ * new classIndex ; Create an instance of the specified class.
+ * duplicate ; Duplicate the reference to the newly created instance.
+ * invoke_special functionIndex ; Invoke the constructor to initialize the instance.
+ */
 void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+    // TODO: Debug this function when superclasses are implemented!
+    
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    zen_NewExpressionContext_t* context = (zen_NewExpressionContext_t*)node->m_context;
+    
+    /* Retrieve the scope within which the new expression appears. */
+    // zen_Scope_t* scope = zen_SymbolTable_getCurrentScope(generator->m_symbolTable);
+    
+    /* Retrieve the string equivalent of the type name node. */
+    int32_t typeNameSize;
+    uint8_t* typeNameText = zen_ASTNode_toCString(context->m_typeName, &typeNameSize);
+    
+    /* Resolve the class symbol for the type name. */
+    zen_ClassSymbol_t* classSymbol = zen_SymbolTable_resolve(symbolTable, typeNameText);
+    /* Retrieve the scope corresponding to the class symbol. */
+    zen_ClassScope_t* classScope = zen_ClassSymbol_getClassScope(classSymbol);
+    /* Retrieve the constructor declared in this class. */
+    zen_Symbol_t* constructorSymbol = zen_ClassScope_resolve(classScope, "new");
+    
+    if (zen_Symbol_getEnclosingScope(constructorSymbol) != classSymbol) {
+        printf("[error] No constructor defined in class %s, neither explicitly nor implicity.\n", typeNameText);
+        printf("[warning] Looks like a resolution phase failure was detected.\n");
+    }
+    
+    if (!zen_Symbol_isFunction(constructorSymbol)) {
+        printf("[error] 'new' declared as non-constructor symbol in class %s.\n", typeNameText);
+        printf("[warning] Looks like the syntatical phase or the resolution phase failed.\n");
+    }
+    
+    /* The binary entity format requires the identifiers of a class to be separated
+     * using the forward slash character.
+     */
+    int32_t i;
+    for (i = 0; i < typeNameSize; i++) {
+        if (typeNameText[i] == '.') {
+            typeNameText[i] = '/';
+        }
+    }
+    /* Retrieve the class entry index for the type name. */
+    uint16_t typeNameIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
+        generator->m_constantPoolBuilder, typeNameText, typeNameSize);
+    /* Delete the type name text. */
+    jtk_CString_delete(typeNameText);
+    
+    /* Create an instance of the specified class. */
+    zen_BinaryEntityBuilder_emitNew(generator->m_instructions, typeNameIndex);
+    
+    /* Log the emission of the new instruction. */
+    printf("[debug] Emitted new %d\n", typeNameIndex);
+
+    /* Duplicate the reference of the newly created instance. */
+    zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+
+    /* Log the emission of the duplicate instruction. */
+    printf("[debug] Emitted duplicate\n");
+
+    zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)constructorSymbol->m_context;
+    
+    zen_ASTNode_t* functionArguments = context->m_functionArguments;
+    zen_FunctionArgumentsContext_t* functionArgumentsContext
+        = (zen_FunctionArgumentsContext_t)functionArguments->m_context;
+    
+    uint8_t* constructorName = "<constructor>";
+    int32_t constructorNameSize = 13;
+    jtk_String_t* constructorDescriptor0 = NULL;
+    const uint8_t* constructorDescriptor = "v:v";
+    int32_t constructorDescriptorSize = 3;
+    if (functionArgumentsContext->m_expressions != NULL) {
+        zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
+        zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
+        int32_t numberOfArguments = jtk_ArrayList_getSize(expressionsContext->m_expressions);
+        int32_t parameterThreshold = zen_FunctionSymbol_getParameterThreshold(functionSymbol);
+        
+        /* NOTE: This function assumes that the previous phases were successful.
+         * Therefore, it blindly generates the descriptor of the constructor.
+         */
+        jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+        jtk_StringBuilder_appendEx_z(builder, "v:", 2);
+        
+        int32_t j;
+        int32_t numberOfFixedArguments = jtk_Math_min(numberOfArguments, parameterThreshold);
+        int32_t numberOfVariableArguments = jtk_Math_max(0, numberOfArguments - parameterThreshold);
+        
+        for (j = 0; j < numberOfFixedArguments; j++) {
+            jtk_StringBuilder_appendEx_z(builder, "(zen.core.Object)");
+        }
+        
+        /* When one of the versions of a function has a variable parameter,
+         * then the function has a parameter threshold.
+         */
+        if (numberOfArguments >= parameterThreshold) {
+            // Generate the array for the variable argument.
+            jtk_StringBuilder_appendEx_z(builder, "@(zen.core.Object)");
+        }
+        
+        constructorDescriptor0 = jtk_StringBuilder_toString(builder);
+        constructorDescriptor = constructorDescriptor0->m_value;
+        constructorDescriptorSize = jtk_String_getSize(constructorDescriptor0);
+        jtk_StringBuilder_delete(builder);
+    }
+    
+    uint16_t constructorIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, typeNameText, typeNameSize,
+        constructorDescriptor, constructorDescriptorSize, constructorName,
+        constructorNameSize);
+
+    /* Invoke the constructor to initialize the new instance. */
+    zen_BinaryEntityBuilder_emitInvokeSpecial(generator->m_instructions,
+        constructorIndex);
+
+    /* Log the emission of the invoke_special instruction. */
+    printf("[debug] Emitted invoke_special %d\n", constructorIndex);
+    
+    if (constructorDescriptor0 != NULL) {
+        jtk_String_delete(constructorDescriptor0);
+    }
+    
+    // TODO: Generate arrays when variable parameters are encountered!
+    
+    /* The normal behaviour of the AST walker causes the generator to emit instructions
+     * in an undesirable fashion. Therefore, we partially switch from the listener
+     * to visitor design pattern. The AST walker can be guided to switch to this
+     * mode via zen_ASTWalker_ignoreChildren() function which causes the AST walker
+     * to skip iterating over the children nodes.
+     */
+    zen_ASTListener_skipChildren(astListener);
 }
 
 void zen_BinaryEntityGenerator_onExitNewExpression(zen_ASTListener_t* astListener,
