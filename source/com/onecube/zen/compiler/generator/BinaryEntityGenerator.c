@@ -29,6 +29,7 @@
 #include <com/onecube/zen/compiler/lexer/TokenType.h>
 #include <com/onecube/zen/compiler/generator/BinaryEntityBuilder.h>
 #include <com/onecube/zen/compiler/symbol-table/Symbol.h>
+#include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
 #include <com/onecube/zen/compiler/generator/BinaryEntityGenerator.h>
 #include <com/onecube/zen/virtual-machine/feb/EntityType.h>
 #include <com/onecube/zen/virtual-machine/feb/attribute/InstructionAttribute.h>
@@ -3020,9 +3021,27 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
     uint8_t* typeNameText = zen_ASTNode_toCString(context->m_typeName, &typeNameSize);
     
     /* Resolve the class symbol for the type name. */
-    zen_ClassSymbol_t* classSymbol = zen_SymbolTable_resolve(symbolTable, typeNameText);
+    zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, typeNameText);
+    
+    if (symbol == NULL) {
+        printf("[error] Undeclared class %s\n", typeNameText);
+        printf("[warning] Looks like a resolution phase failure was detected.\n");
+    }
+    
+    if (!zen_Symbol_isClass(symbol)) {
+        printf("[error] %s is a non-class symbol\n", typeNameText);
+        printf("[warning] Looks like the syntatical phase or the resolution phase failed.\n");
+    }
+    
+    zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
     /* Retrieve the scope corresponding to the class symbol. */
-    zen_ClassScope_t* classScope = zen_ClassSymbol_getClassScope(classSymbol);
+    zen_Scope_t* scope = zen_ClassSymbol_getClassScope(classSymbol);
+    if (!zen_Scope_isClassScope(scope)) {
+        printf("[error] %s is a non-class scope\n", typeNameText);
+        printf("[warning] Looks like the syntatical phase or the resolution phase failed.\n");
+    }
+    
+    zen_ClassScope_t* classScope = (zen_ClassScope_t*)scope->m_context;
     /* Retrieve the constructor declared in this class. */
     zen_Symbol_t* constructorSymbol = zen_ClassScope_resolve(classScope, "new");
     
@@ -3065,47 +3084,50 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
 
     zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)constructorSymbol->m_context;
     
-    zen_ASTNode_t* functionArguments = context->m_functionArguments;
-    zen_FunctionArgumentsContext_t* functionArgumentsContext
-        = (zen_FunctionArgumentsContext_t)functionArguments->m_context;
-    
     uint8_t* constructorName = "<constructor>";
     int32_t constructorNameSize = 13;
     jtk_String_t* constructorDescriptor0 = NULL;
     const uint8_t* constructorDescriptor = "v:v";
     int32_t constructorDescriptorSize = 3;
-    if (functionArgumentsContext->m_expressions != NULL) {
-        zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
-        zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
-        int32_t numberOfArguments = jtk_ArrayList_getSize(expressionsContext->m_expressions);
-        int32_t parameterThreshold = zen_FunctionSymbol_getParameterThreshold(functionSymbol);
+    
+    zen_ASTNode_t* functionArguments = context->m_functionArguments;
+    if (functionArguments != NULL) {
+        zen_FunctionArgumentsContext_t* functionArgumentsContext
+            = (zen_FunctionArgumentsContext_t*)functionArguments->m_context;
         
-        /* NOTE: This function assumes that the previous phases were successful.
-         * Therefore, it blindly generates the descriptor of the constructor.
-         */
-        jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
-        jtk_StringBuilder_appendEx_z(builder, "v:", 2);
-        
-        int32_t j;
-        int32_t numberOfFixedArguments = jtk_Math_min(numberOfArguments, parameterThreshold);
-        int32_t numberOfVariableArguments = jtk_Math_max(0, numberOfArguments - parameterThreshold);
-        
-        for (j = 0; j < numberOfFixedArguments; j++) {
-            jtk_StringBuilder_appendEx_z(builder, "(zen.core.Object)");
+        if (functionArgumentsContext->m_expressions != NULL) {
+            zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
+            zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
+            int32_t numberOfArguments = jtk_ArrayList_getSize(expressionsContext->m_expressions);
+            int32_t parameterThreshold = zen_FunctionSymbol_getParameterThreshold(functionSymbol);
+            
+            /* NOTE: This function assumes that the previous phases were successful.
+             * Therefore, it blindly generates the descriptor of the constructor.
+             */
+            jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+            jtk_StringBuilder_appendEx_z(builder, "v:", 2);
+            
+            int32_t j;
+            int32_t numberOfFixedArguments = jtk_Integer_min(numberOfArguments, parameterThreshold);
+            int32_t numberOfVariableArguments = jtk_Integer_max(0, numberOfArguments - parameterThreshold);
+            
+            for (j = 0; j < numberOfFixedArguments; j++) {
+                jtk_StringBuilder_appendEx_z(builder, "(zen.core.Object)");
+            }
+            
+            /* When one of the versions of a function has a variable parameter,
+             * then the function has a parameter threshold.
+             */
+            if (numberOfArguments >= parameterThreshold) {
+                // Generate the array for the variable argument.
+                jtk_StringBuilder_appendEx_z(builder, "@(zen.core.Object)");
+            }
+            
+            constructorDescriptor0 = jtk_StringBuilder_toString(builder);
+            constructorDescriptor = constructorDescriptor0->m_value;
+            constructorDescriptorSize = jtk_String_getSize(constructorDescriptor0);
+            jtk_StringBuilder_delete(builder);
         }
-        
-        /* When one of the versions of a function has a variable parameter,
-         * then the function has a parameter threshold.
-         */
-        if (numberOfArguments >= parameterThreshold) {
-            // Generate the array for the variable argument.
-            jtk_StringBuilder_appendEx_z(builder, "@(zen.core.Object)");
-        }
-        
-        constructorDescriptor0 = jtk_StringBuilder_toString(builder);
-        constructorDescriptor = constructorDescriptor0->m_value;
-        constructorDescriptorSize = jtk_String_getSize(constructorDescriptor0);
-        jtk_StringBuilder_delete(builder);
     }
     
     uint16_t constructorIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(

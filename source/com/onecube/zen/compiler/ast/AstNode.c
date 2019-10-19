@@ -114,7 +114,7 @@ void zen_ASTNode_toString0(zen_ASTNode_t* node, jtk_StringBuilder_t* builder) {
     for (i = 0; i < size; i++) {
         zen_ASTNode_t* node = jtk_ArrayList_getValue(nodes, i);
         if (node->m_type == ZEN_AST_NODE_TYPE_TERMINAL) {
-            zen_Token_t* token = (zen_Token_t*)identifier->m_context;
+            zen_Token_t* token = (zen_Token_t*)node->m_context;
             jtk_StringBuilder_appendEx_z(builder, token->m_text, token->m_length);
         }
         else if (node->m_type == ZEN_AST_NODE_TYPE_UNKNOWN) {
@@ -162,11 +162,11 @@ uint8_t* zen_ASTNode_toCString(zen_ASTNode_t* node, int32_t* size) {
     uint8_t* result = jtk_StringBuilder_toCString(builder);
     /* Return the size of the string. */
     if (size != NULL) {
-        *size = jtk_StringBuilder_getSize(result);
+        *size = jtk_StringBuilder_getSize(builder);
     }
 
     /* Destroy the string builder. */
-    jtk_StringBuilder_delete(result);
+    jtk_StringBuilder_delete(builder);
 
     return result;
 }
