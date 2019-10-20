@@ -1,0 +1,143 @@
+class University
+
+    function new(students)
+        ;
+
+    function main(...arguments)
+        var university = new University({
+            '20171CSE0430' : {
+                'name' : 'Samuel Rowe',
+                'gender' : 'Male',
+                'age' : 20,
+                'phoneNumber' : '97315XXXXX',
+                'emailAddress' : 'samuelrowe1999@gmail.com'
+            },
+            '20171CSE420' : {
+                'name' : 'Joel E. Rego',
+                'gender' : 'Male',
+                'age' : '20',
+                'phoneNumber' : '74060XXXXX',
+                'emailAddress' : 'joelerego@gmail.com'
+            }
+        })
+        
+        /* The above function is equivalent to the following instruction sequence.
+            [debug] Emitted new 5
+            [debug] Emitted duplicate
+            [debug] Emitted push_i2
+            [debug] Emitted new_array_a 6
+            [debug] Emitted duplicate
+            [debug] Emitted push_i0
+            [debug] Emitted load_cpr 8
+            [debug] Emitted store_aa
+            [debug] Emitted duplicate
+            [debug] Emitted push_i1
+            [debug] Emitted load_cpr 10
+            [debug] Emitted store_aa
+            [debug] Emitted push_i2
+            [debug] Emitted new_array_a 6
+            [debug] Emitted duplicate
+            [debug] Emitted push_i0
+            [debug] Emitted push_i5
+            [debug] Emitted new_array_a 6
+            [debug] Emitted duplicate
+            [debug] Emitted push_i0
+            [debug] Emitted load_cpr 12
+            [debug] Emitted store_aa
+            [debug] Emitted duplicate
+            [debug] Emitted push_i1
+            [debug] Emitted load_cpr 14
+            [debug] Emitted store_aa
+            [debug] Emitted duplicate
+            [debug] Emitted push_i2
+            [debug] Emitted load_cpr 16
+            [debug] Emitted store_aa
+            [debug] Emitted duplicate
+            [debug] Emitted push_i3
+            [debug] Emitted load_cpr 18
+            [debug] Emitted store_aa
+            [debug] Emitted duplicate
+            [debug] Emitted push_i4
+            [debug] Emitted load_cpr 20
+            [debug] Emitted store_aa
+            [debug] Emitted push_i5
+            [debug] Emitted new_array_a 6
+            [debug] Emitted duplicate
+            [debug] Emitted push_i0
+            [debug] Emitted load_cpr 22
+            [debug] Emitted store_aa
+            [debug] Emitted duplicate
+            [debug] Emitted push_i1
+            [debug] Emitted load_cpr 24
+            [debug] Emitted store_aa
+            [debug] Emitted duplicate
+            [debug] Emitted push_i2
+            [debug] Emitted push_b 20
+            [debug] Emitted store_aa
+            [debug] Emitted duplicate
+            [debug] Emitted push_i3
+            [debug] Emitted load_cpr 26
+            [debug] Emitted store_aa
+            [debug] Emitted duplicate
+            [debug] Emitted push_i4
+            [debug] Emitted load_cpr 28
+            [debug] Emitted store_aa
+            [debug] Emitted new 30
+            [debug] Emitted duplicate
+            [debug] Emitted invoke_special 32
+            [debug] Emitted store_aa
+            [debug] Emitted duplicate
+            [debug] Emitted push_i1
+            [debug] Emitted push_i5
+            [debug] Emitted new_array_a 6
+            [debug] Emitted duplicate
+            [debug] Emitted push_i0
+            [debug] Emitted load_cpr 12
+            [debug] Emitted store_aa
+            [debug] Emitted duplicate
+            [debug] Emitted push_i1
+            [debug] Emitted load_cpr 14
+            [debug] Emitted store_aa
+            [debug] Emitted duplicate
+            [debug] Emitted push_i2
+            [debug] Emitted load_cpr 16
+            [debug] Emitted store_aa
+            [debug] Emitted duplicate
+            [debug] Emitted push_i3
+            [debug] Emitted load_cpr 18
+            [debug] Emitted store_aa
+            [debug] Emitted duplicate
+            [debug] Emitted push_i4
+            [debug] Emitted load_cpr 20
+            [debug] Emitted store_aa
+            [debug] Emitted push_i5
+            [debug] Emitted new_array_a 6
+            [debug] Emitted duplicate
+            [debug] Emitted push_i0
+            [debug] Emitted load_cpr 34
+            [debug] Emitted store_aa
+            [debug] Emitted duplicate
+            [debug] Emitted push_i1
+            [debug] Emitted load_cpr 24
+            [debug] Emitted store_aa
+            [debug] Emitted duplicate
+            [debug] Emitted push_i2
+            [debug] Emitted load_cpr 36
+            [debug] Emitted store_aa
+            [debug] Emitted duplicate
+            [debug] Emitted push_i3
+            [debug] Emitted load_cpr 38
+            [debug] Emitted store_aa
+            [debug] Emitted duplicate
+            [debug] Emitted push_i4
+            [debug] Emitted load_cpr 40
+            [debug] Emitted store_aa
+            [debug] Emitted new 30
+            [debug] Emitted duplicate
+            [debug] Emitted invoke_special 32
+            [debug] Emitted store_aa
+            [debug] Emitted new 30
+            [debug] Emitted duplicate
+            [debug] Emitted invoke_special 32
+            [debug] Emitted invoke_special 44
+        */

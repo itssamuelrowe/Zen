@@ -2677,10 +2677,6 @@ void zen_BinaryEntityGenerator_onEnterMapExpression(zen_ASTListener_t* astListen
 }
 
 void zen_BinaryEntityGenerator_onExitMapExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-    /*zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    zen_MapExpressionContext_t* context = (zen_MapExpressionContext_t*)node->m_context;
-
-    zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0); // TODO*/
 }
 
 // mapEntries
@@ -2688,175 +2684,19 @@ void zen_BinaryEntityGenerator_onExitMapExpression(zen_ASTListener_t* astListene
 void zen_BinaryEntityGenerator_onEnterMapEntries(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_MapEntriesContext_t* context = (zen_MapEntriesContext_t*)node->m_context;
-
-    /*
-    int32_t i;
-    for (i = 0; i < size; i++) {
-        zen_ASTNode_t* mapEntry = (zen_ASTNode_t*)jtk_ArrayList_getValue(context->m_mapEntries, i);
-        zen_ASTAnnotation_t* mapEntryAnnotation = zen_ASTAnnotation_new(ZEN_AST_ANNOTATION_TYPE_ASYMETRICAL_CHANNEL_MANAGEMENT, NULL);
-        zen_ASTAnnotations_put(generator->m_annotations, mapEntryAnnotation);
-    }
-    */
 }
 
 void zen_BinaryEntityGenerator_onExitMapEntries(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {/*
-    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    zen_MapEntriesContext_t* context = (zen_MapEntriesContext_t*)node->m_context;
-
-    /* TODO: Apparently, storing integers as void* is dangerous. Find an alternative. *
-
-    int32_t size = jtk_ArrayList_getSize(context->m_mapEntries);
-    // TODO: Filter out map with 0 entries!
-    /* Currently, a map entry channel is on top of the stack. Whatever,
-     * byte codes are emitted will be placed on it. Therefore, we need to
-     * swap the map entry channel with the local channel.
-     *
-    zen_ChannelManager_swap(generator->m_channelManager, 0, size);
-
-    int32_t i;
-    for (i = 0; i < size; i++) {
-        /* The instructions which insert the second dimension array into the
-         * first dimension array.
-         *
-         * The instructions are generated in the reverse order because the
-         * channels are stored in a special stack, with an exception of the last
-         * element. The last element was previously swapped with the local
-         * channel which was previously on the bottom of the stack. Thus, the
-         * last element is swapped from top to bottom of the stack. Moreover,
-         * the execution order may remain the same for constant entries, but
-         * changes for variable entries when the stack ordered in followed.
-         *
-
-        /* A textual representation of the channels for a map with four
-         * entries.
-         *
-         * [0] local channel
-         * [1] entry_channel_3
-         * [2] entry_channel_2
-         * [3] entry_channel_1
-         * [4] entry_channel_4
-         * ...
-         *
-
-        /* A new array was previously created for the map entries. Create a
-         * duplicate of its reference on the operand stack for calling the
-         * {@code store_aa} instruction.
-         *
-
-        /* Create a duplicate of the 2-d array. *
-        zen_BinaryEntityGenerator_emitDuplicate(generator);
-        zen_BinaryEntityGenerator_emitPushByte(generator, i);
-
-        int32_t entryChannelIndex = ((i + 1) == size)? 1 : (size - i - 1);
-        zen_ChannelManager_append(generator->m_channelManager, entryChannelIndex, 0);
-        zen_ChannelManager_remove(generator->m_channelManager, entryChannelIndex);
-
-        zen_BinaryEntityGenerator_emitStoreReferenceArray(generator);
-    }*/
+    zen_ASTNode_t* node) {
 }
 
 // mapEntry
 
-void zen_BinaryEntityGenerator_onEnterMapEntry(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {/*
-    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    zen_MapEntryContext_t* context = (zen_MapEntryContext_t*)node->m_context;
-
-    /* The byte codes generated for every map entry is redirected on a new
-     * channel. Thus, an oppurtunity to insert some arbitrary instructions
-     * between the map entries is provided.
-     *
-    zen_BinaryEntityBuilder_pushChannel(generator->m_builder);
-
-    zen_BinaryEntityGenerator_emitPushByte(generator, 2);
-    zen_BinaryEntityGenerator_emitNewReferenceArray(generator, 0);
-
-    zen_ASTAnnotation_t* keyExpressionAnnotation = zen_ASTAnnotation_new(ZEN_AST_ANNOTATION_TYPE_ASYMETRICAL_CHANNEL_MANAGEMENT, NULL);
-    zen_ASTAnnotations_put(generator->m_annotations, context->m_keyExpression, keyExpressionAnnotation);
-
-    zen_ASTAnnotation_t* valueExpressionAnnotation = zen_ASTAnnotation_new(ZEN_AST_ANNOTATION_TYPE_ASYMETRICAL_CHANNEL_MANAGEMENT, NULL);
-    zen_ASTAnnotations_put(generator->m_annotations, context->m_valueExpression, valueExpressionAnnotation);*/
+void zen_BinaryEntityGenerator_onEnterMapEntry(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
 }
 
 void zen_BinaryEntityGenerator_onExitMapEntry(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-    /*zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    zen_MapEntryContext_t* context = (zen_MapEntryContext_t*)node->m_context;
-
-    /* Before swapping:
-     *
-     *   value_expression_channel
-     *   key_expression_channel
-     *   map_entry_channel
-     *   ...
-     *
-
-    /* Currently, the value expression channel is on top of the stack. Whatever,
-     * byte codes are emitted will be placed on it. Therefore, we need to swap
-     * the value expression channel with the local channel.
-     *
-    zen_ChannelManager_swap(generator->m_channelManager, 0, 2);
-
-    /* After swapping:
-     *
-     *   [0] map_entry_channel
-     *   [1] key_expression_channel
-     *   [2] value_expression_channel
-     *   ...
-     *
-
-    /* The following section generates instructions which insert the key into
-     * the array in second dimension.
-     */
-    /* A new array was previously created for this map entry. Create a duplicate
-     * of its reference on the operand stack for calling the {@code store_aa}
-     * instruction.
-     *
-    zen_BinaryEntityGenerator_emitDuplicate(generator);
-    zen_BinaryEntityGenerator_emitPushByte(generator, 0); // TODO: push_i0
-    zen_ChannelManager_append(generator->m_channelManager, 1, 0);
-    zen_ChannelManager_remove(generator->m_channelManager, 1);
-    zen_BinaryEntityGenerator_emitStoreReferenceArray(generator);
-
-    /* The following section generates instructions which insert the value into
-     * the array in second dimension.
-     *
-    /* A new array was previously created for this map entry. Create a duplicate
-     * of its reference on the operand stack for calling the {@code store_aa}
-     * instruction.
-     *
-    zen_BinaryEntityGenerator_emitDuplicate(generator);
-    zen_BinaryEntityGenerator_emitPushByte(generator, 1);
-    zen_ChannelManager_append(generator->m_channelManager, 1, 0);
-    zen_ChannelManager_remove(generator->m_channelManager, 1);
-    zen_BinaryEntityGenerator_emitStoreReferenceArray(generator);
-
-    zen_ASTAnnotation_t* keyExpressionAnnotation = zen_ASTAnnotations_get(generator->m_annotations, context->m_keyExpression);
-    zen_ASTAnnotation_t* valueExpressionAnnotation = zen_ASTAnnotations_get(generator->m_annotations, context->m_valueExpression);
-
-    zen_ASTAnnotation_delete(keyExpressionAnnotation);
-    zen_ASTAnnotation_delete(valueExpressionAnnotation);*/
 }
-
-/*
-new_array_a #1
-push_i 0
-... -> key
-... -> value
-store_aa
-
-
-new_array_a #1
-
-duplicate
-push_i 0
-... -> key
-store_aa
-
-duplicate
-push_i 1
-... -> value
-store_aa
-*/
 
 // listExpression
 
@@ -2973,44 +2813,6 @@ void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListe
 
 void zen_BinaryEntityGenerator_onExitListExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
-    // zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    // zen_ListExpressionContext_t* context = (zen_ListExpressionContext_t*)node->m_context;
-    // zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)context->m_expressions->m_context;
-
-    // int32_t size = jtk_ArrayList_getSize(expressionsContext->m_expressions);
-    /* Currently, an expression channel is on top of the stack. Whatever,
-     * byte codes are emitted will be placed on it. Therefore, we need to
-     * swap the expression channel with the local channel.
-     */
-    // zen_BinaryEntityBuilder_swapChannels(generator->m_channels, 0, size);
-
-    // int32_t i;
-    // for (i = 0; i < size; i++) {
-        /* A textual representation of the channels for an array with four
-         * elements.
-         *
-         * [0] local channel
-         * [1] expression_channel_3
-         * [2] expression_channel_2
-         * [3] expression_channel_1
-         * [4] expression_channel_4
-         * ...
-         */
-
-        /* Create a duplicate of the array. */
-        // zen_BinaryEntityGenerator_emitDuplicate(generator);
-        // zen_BinaryEntityGenerator_emitPushByte(generator, i);
-
-        // int32_t expressionChannelIndex = ((i + 1) == size)? 1 : (size - i - 1);
-        // zen_ChannelManager_append(generator->m_channelManager, expressionChannelIndex, 0);
-        // zen_ChannelManager_remove(generator->m_channelManager, expressionChannelIndex);
-
-        // zen_BinaryEntityGenerator_emitStoreReferenceArray(generator);
-
-        // zen_ASTNode_t* expression = (zen_ASTNode_t*)jtk_ArrayList_getValue(expressionsContext->m_expressions, i);
-        // zen_ASTAnnotation_t* expressionAnnotation = zen_ASTAnnotations_get(generator->m_annotations, expression);
-        // zen_ASTAnnotation_delete(expressionAnnotation);
-    // }
 }
 
 // New Expression
