@@ -3108,19 +3108,76 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
             jtk_StringBuilder_appendEx_z(builder, "v:", 2);
             
             int32_t j;
-            int32_t numberOfFixedArguments = jtk_Integer_min(numberOfArguments, parameterThreshold);
-            int32_t numberOfVariableArguments = jtk_Integer_max(0, numberOfArguments - parameterThreshold);
+            int32_t numberOfFixedArguments = numberOfArguments;
+            int32_t numberOfVariableArguments = 0;
+            
+            if (parameterThreshold != -1) {
+                numberOfFixedArguments = jtk_Integer_min(numberOfArguments, parameterThreshold);
+                numberOfVariableArguments = jtk_Integer_max(0, numberOfArguments - parameterThreshold);
+            }
             
             for (j = 0; j < numberOfFixedArguments; j++) {
                 jtk_StringBuilder_appendEx_z(builder, "(zen.core.Object)");
+                
+                zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+                    expressionsContext->m_expressions, j);
+                zen_ASTWalker_walk(astListener, argument);
             }
             
             /* When one of the versions of a function has a variable parameter,
              * then the function has a parameter threshold.
              */
-            if (numberOfArguments >= parameterThreshold) {
+            if ((parameterThreshold != -1) && (numberOfArguments >= parameterThreshold)) {
                 // Generate the array for the variable argument.
                 jtk_StringBuilder_appendEx_z(builder, "@(zen.core.Object)");
+                
+                /* Evaluate the number of the variable arguments. */
+                int32_t size = numberOfArguments - parameterThreshold;
+
+                /* Push the size of the list onto the operand stack. */
+                zen_BinaryEntityGenerator_loadInteger(generator, size);
+
+                const uint8_t* objectClassName = "zen.core.Object";
+                int32_t objectClassNameSize = 15;
+                uint16_t objectClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
+                    generator->m_constantPoolBuilder, objectClassName, objectClassNameSize);
+
+                /* Emit the new_array_a instruction to create an array to
+                 * represent the variable arguments.
+                 */
+                zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_instructions,
+                    objectClassIndex);
+
+                /* Log the emission of the new_array_a instruction. */
+                printf("[debug] Emitted new_array_a %d\n", objectClassIndex);
+                
+                while (j < numberOfArguments) {
+                    /* Retrieve the expression for the current argument. */
+                    zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+                        expressionsContext->m_expressions, j);
+                    
+                    /* Duplicate the reference to the variable argument array. */
+                    zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+
+                    /* Log the emission of the duplicate instruction. */
+                    printf("[debug] Emitted duplicate\n");
+
+                    /* Push the index at which the result of the expression will be stored. */
+                    zen_BinaryEntityGenerator_loadInteger(generator, j - parameterThreshold);
+
+                    /* Visit the argument expression node and generate the relevant
+                     * instructions.
+                     */
+                    zen_ASTWalker_walk(astListener, argument);
+
+                    /* Store the result in the variable argument array. */
+                    zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_instructions);
+
+                    /* Log the emission of the store_aa instruction. */
+                    printf("[debug] Emitted store_aa\n");
+
+                    j++;
+                }
             }
             
             constructorDescriptor0 = jtk_StringBuilder_toString(builder);
