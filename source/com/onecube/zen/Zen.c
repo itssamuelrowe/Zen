@@ -123,6 +123,8 @@ jtk_InputStream_t* jtk_PathHelper_readEx(const uint8_t* path, uint32_t flags) {
 }
 
 int32_t main(int32_t length, char** arguments) {
+    printf("%d\n", jtk_Integer_parseEx("1", 1, 10));
+    
     // jtk_Assert_assertTrue(zen_Instruction_verify(), "The instruction set is invalid.");
 
     jtk_ArrayList_t* inputFiles = jtk_ArrayList_new();
