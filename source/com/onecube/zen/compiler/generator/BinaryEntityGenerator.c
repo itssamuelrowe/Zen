@@ -442,6 +442,104 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
     for (i = 0; i < entryCount; i++) {
         zen_ConstantPoolEntry_t* entry = zen_ConstantPoolBuilder_getEntry(generator->m_constantPoolBuilder, i);
         zen_BinaryEntityBuilder_writeConstantPoolEntry(generator->m_builder, entry);
+
+        switch (entry->m_tag) {
+            case ZEN_CONSTANT_POOL_TAG_INTEGER: {
+                zen_ConstantPoolInteger_t* constantPoolInteger =
+                    (zen_ConstantPoolInteger_t*)entry;
+
+                printf("[debug] #%d Integer (value* = %d)\n", i,
+                    constantPoolInteger->m_bytes);
+
+                break;
+            }
+
+            case ZEN_CONSTANT_POOL_TAG_LONG: {
+                zen_ConstantPoolLong_t* constantPoolLong =
+                    (zen_ConstantPoolLong_t*)entry;
+
+                printf("[debug] #%d Long (value* = %d)\n", i,
+                    (constantPoolLong->m_highBytes << 32) | constantPoolLong->m_lowBytes);
+
+                break;
+            }
+
+            case ZEN_CONSTANT_POOL_TAG_FLOAT: {
+                zen_ConstantPoolFloat_t* constantPoolFloat =
+                    (zen_ConstantPoolFloat_t*)entry;
+
+                printf("[debug] #%d Float (value* = %f)\n", i,
+                    jtk_Float_pack(constantPoolFloat->m_bytes));
+
+                break;
+            }
+
+            case ZEN_CONSTANT_POOL_TAG_DOUBLE: {
+                zen_ConstantPoolDouble_t* constantPoolDouble =
+                    (zen_ConstantPoolDouble_t*)entry;
+
+                printf("[debug] #%d Double (value* = %f)\n", i,
+                    jtk_Double_pack((constantPoolDouble->m_highBytes << 32) |
+                        constantPoolDouble->m_lowBytes));
+
+                break;
+            }
+
+            case ZEN_CONSTANT_POOL_TAG_UTF8: {
+                zen_ConstantPoolUtf8_t* constantPoolUtf8 =
+                    (zen_ConstantPoolUtf8_t*)entry;
+
+                printf("[debug] #%d UTF-8 (length = %d, bytes = \"%.*s\")\n", i,
+                    constantPoolUtf8->m_length, constantPoolUtf8->m_length,
+                    constantPoolUtf8->m_bytes);
+
+                break;
+            }
+
+            case ZEN_CONSTANT_POOL_TAG_STRING: {
+                zen_ConstantPoolString_t* constantPoolString =
+                    (zen_ConstantPoolString_t*)entry;
+
+                printf("[debug] #%d String (string = %d)\n", i, constantPoolString->m_stringIndex);
+
+                break;
+            }
+
+            case ZEN_CONSTANT_POOL_TAG_FUNCTION: {
+                zen_ConstantPoolFunction_t* constantPoolFunction =
+                    (zen_ConstantPoolFunction_t*)entry;
+
+                printf("[debug] #%d Function (class = %d, descriptor = %d, name = %d)\n",
+                    i, constantPoolFunction->m_classIndex, constantPoolFunction->m_descriptorIndex,
+                    constantPoolFunction->m_nameIndex);
+
+                break;
+            }
+
+            case ZEN_CONSTANT_POOL_TAG_FIELD: {
+                zen_ConstantPoolField_t* constantPoolField =
+                    (zen_ConstantPoolField_t*)entry;
+
+                printf("[debug] #%d Field (class = %d, descriptor = %d, name = %d)\n",
+                    i, constantPoolField->m_classIndex, constantPoolField->m_descriptorIndex,
+                    constantPoolField->m_nameIndex);
+
+                break;
+            }
+
+            case ZEN_CONSTANT_POOL_TAG_CLASS: {
+                zen_ConstantPoolClass_t* constantPoolClass =
+                    (zen_ConstantPoolClass_t*)entry;
+
+                printf("[debug] #%d Class (name = %d)\n", i, constantPoolClass->m_nameIndex);
+
+                break;
+            }
+
+            default: {
+                printf("[error] Unknown constant pool tag %d\n", entry->m_tag);
+            }
+        }
     }
 
     /* Log the constant pool details, including the number of entries and the trends
@@ -1950,8 +2048,113 @@ void zen_BinaryEntityGenerator_onExitUnaryExpression(zen_ASTListener_t* astListe
 
 // postfixExpression
 
+void zen_BinaryEntityGenerator_invokeEvaluate(zen_BinaryEntityGenerator_t* generator,
+    uint8_t* symbol, int32_t symbolSize) {
+
+    // ZenKernel.evaluate(Object operand, String symbol)
+    // ZenKernel.evaluate(Object operand1, Object operand2, String symbol)
+
+    uint16_t symbolIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
+        generator->m_constantPoolBuilder, symbol, symbolSize);
+    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_instructions, symbolIndex);
+    printf("[debug] Emitted load_cpr %d\n", symbolIndex);
+
+    const uint8_t* kernelClass = "zen/core/ZenKernel";
+    int32_t kernelClassSize = 18;
+    const uint8_t* evaluateDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/String)";
+    int32_t evaluateDescriptorSize = 52;
+    const uint8_t* evaluateName = "evaluate";
+    int32_t evaluateNameSize = 8;
+    uint16_t evaluateIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, kernelClass, kernelClassSize,
+        evaluateDescriptor, evaluateDescriptorSize, evaluateName,
+        evaluateNameSize);
+
+    /* Invoke the static function to evaluate the expression. */
+    zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_instructions,
+        evaluateIndex);
+
+    /* Log the emission of the invoke_static instruction. */
+    printf("[debug] Emitted invoke_static %d\n", evaluateIndex);
+
+}
+
 void zen_BinaryEntityGenerator_onEnterPostfixExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    zen_PostfixExpressionContext_t* context = (zen_PostfixExpressionContext_t*)node->m_context;
+
+    int32_t size = jtk_ArrayList_getSize(context->m_postfixParts);
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        zen_ASTNode_t* postfixPart = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+            context->m_postfixParts, i);
+        zen_ASTNodeType_t type = zen_ASTNode_getType(postfixPart);
+
+        /* When code written in a statically typed ZVM language is in integrated
+         * with code written in dynamically typed ZVM language such as Zen,
+         * special care should be taken. The operand stack is vulnerable to
+         * pollution. For example, assume the following function written in a
+         * hypothetical ZVM language that is statically typed.
+         *
+         * int getIndex()
+         *     ...
+         *
+         * Now, consider the following code written in Zen.
+         *
+         * function main(...arguments)
+         *     var index = getIndex()
+         *     index++
+         *
+         * When getIndex() function is invoked from Zen, the primitive value
+         * is passed around the code. The postfix increment operator causes
+         * the invocation of ZenEnvironment.invokeOperator(...) against a primitive
+         * value, given the operand stack does not store the type of its entries.
+         * Therefore, the compiler of the dynamically typed language should take
+         * care of wrapping and unwrapping primitive values to their corresponding
+         * wrapper class objects.
+         */
+        switch (type) {
+            case ZEN_AST_NODE_TYPE_SUBSCRIPT: {
+                zen_SubscriptContext_t* subscriptContext = (zen_SubscriptContext_t*)postfixPart->m_context;
+
+                /* Visit the index expression node and generate the relevant
+                 * instructions.
+                 */
+                zen_ASTWalker_walk(astListener, subscriptContext->m_expression);
+
+                zen_BinaryEntityGenerator_invokeEvaluate(generator, "[]", 2);
+
+                /* The normal behaviour of the AST walker causes the generator to
+                 * emit instructions in an undesirable fashion. Therefore, we partially
+                 * switch from the listener to visitor design pattern. The AST walker
+                 * can be guided to switch to this mode via zen_ASTWalker_ignoreChildren()
+                 * function which causes the AST walker to skip iterating over the children
+                 * nodes.
+                 */
+                zen_ASTListener_skipChildren(astListener);
+
+                break;
+            }
+
+            case ZEN_AST_NODE_TYPE_FUNCTION_ARGUMENTS: {
+                break;
+            }
+
+            case ZEN_AST_NODE_TYPE_MEMBER_ACCESS: {
+                break;
+            }
+
+            case ZEN_AST_NODE_TYPE_POSTFIX_OPERATOR: {
+
+                break;
+            }
+
+            default: {
+                printf("[error] Invalid AST node type %d encountered.\n", type);
+            }
+        }
+    }
 }
 
 void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astListener,
@@ -2622,7 +2825,6 @@ void zen_BinaryEntityGenerator_onEnterMapExpression(zen_ASTListener_t* astListen
 
         /* Push the index at which the result of the value expression will be stored. */
         zen_BinaryEntityGenerator_loadInteger(generator, j);
-
 
         /* Visit the value expression node and generate the relevant instructions. */
         zen_ASTWalker_walk(astListener, mapEntryContext->m_valueExpression);
