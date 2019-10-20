@@ -3045,7 +3045,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
     /* Retrieve the constructor declared in this class. */
     zen_Symbol_t* constructorSymbol = zen_ClassScope_resolve(classScope, "new");
     
-    if (zen_Symbol_getEnclosingScope(constructorSymbol) != classSymbol) {
+    if (zen_Symbol_getEnclosingScope(constructorSymbol) != scope) {
         printf("[error] No constructor defined in class %s, neither explicitly nor implicity.\n", typeNameText);
         printf("[warning] Looks like a resolution phase failure was detected.\n");
     }
