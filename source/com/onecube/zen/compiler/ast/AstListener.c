@@ -887,7 +887,7 @@ void zen_ASTListener_onEnterNewExpression(zen_ASTListener_t* listener, zen_ASTNo
 void zen_ASTListener_onExitNewExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
-// Skip Children
+// Children
 
 void zen_ASTListener_skipChildren(zen_ASTListener_t* listener) {
     jtk_Assert_assertObject(listener, "The specified listener is null.");
@@ -895,10 +895,16 @@ void zen_ASTListener_skipChildren(zen_ASTListener_t* listener) {
     listener->m_walkerState = ZEN_AST_WALKER_STATE_SKIP_CHILDREN;
 }
 
-// Visit Children
-
 void zen_ASTListener_visitChildren(zen_ASTListener_t* listener) {
     jtk_Assert_assertObject(listener, "The specified listener is null.");
     
     listener->m_walkerState = ZEN_AST_WALKER_STATE_VISIT_CHILDREN;
+}
+
+// First Child
+
+void zen_ASTListener_visitFirstChild(zen_ASTListener_t* listener) {
+    jtk_Assert_assertObject(listener, "The specified listener is null.");
+    
+    listener->m_walkerState = ZEN_AST_WALKER_STATE_VISIT_FIRST_CHILD;
 }

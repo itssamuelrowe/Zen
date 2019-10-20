@@ -2061,8 +2061,8 @@ void zen_BinaryEntityGenerator_invokeEvaluate(zen_BinaryEntityGenerator_t* gener
 
     const uint8_t* kernelClass = "zen/core/ZenKernel";
     int32_t kernelClassSize = 18;
-    const uint8_t* evaluateDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/String)";
-    int32_t evaluateDescriptorSize = 52;
+    const uint8_t* evaluateDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/String)";
+    int32_t evaluateDescriptorSize = 69;
     const uint8_t* evaluateName = "evaluate";
     int32_t evaluateNameSize = 8;
     uint16_t evaluateIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
@@ -2079,7 +2079,7 @@ void zen_BinaryEntityGenerator_invokeEvaluate(zen_BinaryEntityGenerator_t* gener
 
 }
 
-void zen_BinaryEntityGenerator_onEnterPostfixExpression(zen_ASTListener_t* astListener,
+void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_PostfixExpressionContext_t* context = (zen_PostfixExpressionContext_t*)node->m_context;
@@ -2157,8 +2157,18 @@ void zen_BinaryEntityGenerator_onEnterPostfixExpression(zen_ASTListener_t* astLi
     }
 }
 
-void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {/*
+void zen_BinaryEntityGenerator_onEnterPostfixExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+    /* The normal behaviour of the AST walker causes the generator to
+     * emit instructions in an undesirable fashion. Therefore, we partially
+     * switch from the listener to visitor design pattern. The AST walker
+     * can be guided to switch to this mode via zen_ASTWalker_ignoreChildren()
+     * function which causes the AST walker to skip iterating over the children
+     * nodes.
+     */
+    zen_ASTListener_visitFirstChild(astListener);
+    
+        /*
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_PostfixExpressionContext_t* context = (zen_PostfixExpressionContext_t*)node->m_context;
 
