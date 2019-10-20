@@ -3131,7 +3131,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
             }
 
             for (j = 0; j < numberOfFixedArguments; j++) {
-                jtk_StringBuilder_appendEx_z(builder, "(zen.core.Object)");
+                jtk_StringBuilder_appendEx_z(builder, "(zen.core.Object)", 17);
 
                 zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
                     expressionsContext->m_expressions, j);
@@ -3143,7 +3143,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
              */
             if ((parameterThreshold != -1) && (numberOfArguments >= parameterThreshold)) {
                 // Generate the array for the variable argument.
-                jtk_StringBuilder_appendEx_z(builder, "@(zen.core.Object)");
+                jtk_StringBuilder_appendEx_z(builder, "@(zen.core.Object)", 18);
 
                 /* Evaluate the number of the variable arguments. */
                 int32_t size = numberOfArguments - parameterThreshold;
