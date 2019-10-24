@@ -992,10 +992,20 @@ void zen_BinaryEntityGenerator_onExitStatement(zen_ASTListener_t* astListener, z
 
 // emptyStatement
 
-void zen_BinaryEntityGenerator_onEnterEmptyStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterEmptyStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+    zen_BinaryEntityGenerator_t* generator =
+        (zen_BinaryEntityGenerator_t*)astListener->m_context;
+
+    /* Emit the nop instruction. */
+    zen_BinaryEntityBuilder_emitNop(generator->m_instructions);
+
+    /* Log the emission of the nop instruction. */
+    printf("[debug] Emitted nop\n");
 }
 
-void zen_BinaryEntityGenerator_onExitEmptyStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitEmptyStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // variableDeclaration
@@ -1965,12 +1975,6 @@ void zen_BinaryEntityGenerator_onEnterUnaryExpression(zen_ASTListener_t* astList
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_UnaryExpressionContext_t* context = (zen_UnaryExpressionContext_t*)node->m_context;
-}
-
-void zen_BinaryEntityGenerator_onExitUnaryExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {/*
-    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    zen_UnaryExpressionContext_t* context = (zen_UnaryExpressionContext_t*)node->m_context;
 
     zen_ASTNode_t* unaryOperator = context->m_unaryOperator;
     if (unaryOperator != NULL) {
@@ -1981,8 +1985,8 @@ void zen_BinaryEntityGenerator_onExitUnaryExpression(zen_ASTListener_t* astListe
                 /* The UnaryPlusOperator.applyUnaryPlus() function is invoked against the object
                  * whose "positive" internal state is required. It returns an object with its
                  * internal state "positive".
-                 *
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
+                 */
+                // zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
                 break;
             }
 
@@ -1990,8 +1994,8 @@ void zen_BinaryEntityGenerator_onExitUnaryExpression(zen_ASTListener_t* astListe
                 /* The UnaryPlusOperator.applyUnaryPlus() function is invoked against the object
                  * whose "negative" internal state is required. It returns an object with its
                  * internal state "negative".
-                 *
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
+                 */
+                // zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
                 break;
             }
 
@@ -1999,8 +2003,8 @@ void zen_BinaryEntityGenerator_onExitUnaryExpression(zen_ASTListener_t* astListe
                 /* The UnaryPlusOperator.applyUnaryPlus() function is invoked against the object
                  * whose "deeply toggled" internal state is required. It returns an object with its
                  * internal state "deeply toggled".
-                 *
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
+                 */
+                // zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
                 break;
             }
 
@@ -2008,8 +2012,8 @@ void zen_BinaryEntityGenerator_onExitUnaryExpression(zen_ASTListener_t* astListe
                 /* The UnaryPlusOperator.applyUnaryPlus() function is invoked against the object
                  * whose "toggled" internal state is required. It returns an object with its
                  * internal state "toggled".
-                 *
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
+                 */
+                // zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
                 break;
             }
 
@@ -2019,31 +2023,35 @@ void zen_BinaryEntityGenerator_onExitUnaryExpression(zen_ASTListener_t* astListe
                     /* The onPreIncrement() function is invoked against the object whose internal
                      * state has to be "incremented by 1". It returns an object with its internal
                      * state "incremented by 1".
-                     *
-                    zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
+                     */
+                    // zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
                 }
                 else {
                     /* The onPreDecrement() function is invoked against the object whose internal
                      * state has to be "incremented by 1". It returns an object with its internal
                      * state "incremented by 1".
-                     *
-                    zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
+                     */
+                    // zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
                 }
                 /* A copy of the "incremented" object is required on the operand stack for
                  * assignment.
-                 *
-                zen_BinaryEntityGenerator_emitDuplicate(generator);
+                 */
+                // zen_BinaryEntityGenerator_emitDuplicate(generator);
                 /* Assign the variable the object which represents the new state.
                  *
                  * TODO: Change store_a to store_a1 (and friends) and
                  *       store_field when necessary.
-                 *
-                zen_BinaryEntityGenerator_emitStoreReference(generator, 0);
+                 */
+                // zen_BinaryEntityGenerator_emitStoreReference(generator, 0);
 
                 break;
             }
         }
-    }*/
+    }
+}
+
+void zen_BinaryEntityGenerator_onExitUnaryExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // postfixExpression
@@ -2079,6 +2087,42 @@ void zen_BinaryEntityGenerator_invokeEvaluate(zen_BinaryEntityGenerator_t* gener
 
 }
 
+/*
+ * Zen allows operator overriding through a combination of functions and
+ * annotations.
+ *
+ * All the operators in Zen are dispatched to a function call.
+ * The ZenKernel.evaluate(...) function finds a suitable handler for the
+ * operator defined within the operand object and dispatches it. In other words,
+ * the compiler translates expressions with operators to equivalent
+ * ZenKernel.evaluate(...) calls.
+ *
+ * For example, in the HashMap class the following annotation
+ * overrides the subscript operator.
+ *
+ * @Operator symbol='[]'
+ * function getValue(key)
+ *     ...
+ *
+ * With that information, consider the following snippet of code.
+ *
+ * var emailAddresses = {
+ *     'Samuel Rowe' : 'samuelrowe1999@gmail.com',
+ *     'Joel E. Rego' : 'joelerego@gmail.com'
+ * }
+ * var myEmailAddress = emailAddresses['Samuel Rowe']
+ *
+ * The above code snippet is equivalent to the following expression statement.
+ *
+ * var emailAddresses = {
+ *     'Samuel Rowe' : 'samuelrowe1999@gmail.com',
+ *     'Joel E. Rego' : 'joelerego@gmail.com'
+ * }
+ * var myEmailAddress = ZenKernel.evaluate(emailAddresses, 'Samuel Rowe', '[]')
+ *
+ * In fact, when you compile the former code snippet the compiler generates
+ * instructions as if the code was written in the latter form.
+ */
 void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
@@ -2167,7 +2211,7 @@ void zen_BinaryEntityGenerator_onEnterPostfixExpression(zen_ASTListener_t* astLi
      * nodes.
      */
     zen_ASTListener_visitFirstChild(astListener);
-    
+
         /*
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_PostfixExpressionContext_t* context = (zen_PostfixExpressionContext_t*)node->m_context;
