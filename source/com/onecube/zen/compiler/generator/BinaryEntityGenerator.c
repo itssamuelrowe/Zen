@@ -1939,34 +1939,54 @@ void zen_BinaryEntityGenerator_onEnterMultiplicativeExpression(zen_ASTListener_t
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_MultiplicativeExpressionContext_t* context = (zen_MultiplicativeExpressionContext_t*)node->m_context;
+
+    zen_ASTNode_t* multiplicativeOperator = context->m_multiplicativeOperator;
+    if (multiplicativeOperator != NULL) {
+        zen_ASTListener_visitFirstChild(astListener);
+    }
 }
 
 void zen_BinaryEntityGenerator_onExitMultiplicativeExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {/*
+    zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_MultiplicativeExpressionContext_t* context = (zen_MultiplicativeExpressionContext_t*)node->m_context;
 
     zen_ASTNode_t* multiplicativeOperator = context->m_multiplicativeOperator;
     if (multiplicativeOperator != NULL) {
-        zen_Token_t* multiplicativeOperatorToken = (zen_Token_t*)(multiplicativeOperator->m_context);
+        zen_ASTWalker_walk(astListener, context->m_multiplicativeExpression);
+        
+        zen_Token_t* multiplicativeOperatorToken = (zen_Token_t*)multiplicativeOperator->m_context;
         zen_TokenType_t multiplicativeOperatorTokenType = zen_Token_getType(multiplicativeOperatorToken);
+        
+        uint8_t* symbol = NULL;
+        int32_t symbolSize = 1;
+        
         switch (multiplicativeOperatorTokenType) {
             case ZEN_TOKEN_ASTERISK: {
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
+                symbol = "*";
+                
                 break;
             }
 
             case ZEN_TOKEN_FORWARD_SLASH: {
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
+                symbol = "/";
+                
                 break;
             }
 
             case ZEN_TOKEN_MODULUS: {
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
+                symbol = "%";
+                
                 break;
             }
+            
+            default: {
+                printf("[error] Control should not reach here.\n");
+            }
         }
-    }*/
+        
+        zen_BinaryEntityGenerator_invokeEvaluate(generator, symbol, symbolSize);
+    }
 }
 
 // unaryExpression
