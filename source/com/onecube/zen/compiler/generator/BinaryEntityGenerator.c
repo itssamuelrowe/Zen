@@ -1704,6 +1704,11 @@ void zen_BinaryEntityGenerator_onEnterLogicalOrExpression(zen_ASTListener_t* ast
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_LogicalOrExpressionContext_t* context = (zen_LogicalOrExpressionContext_t*)node->m_context;
+
+    /* Generates the instructions corresponding to the very first child of
+     * the node.
+     */
+    zen_ASTListener_visitFirstChild(astListener);
 }
 
 void zen_BinaryEntityGenerator_onExitLogicalOrExpression(zen_ASTListener_t* astListener,
@@ -1711,7 +1716,29 @@ void zen_BinaryEntityGenerator_onExitLogicalOrExpression(zen_ASTListener_t* astL
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_LogicalOrExpressionContext_t* context = (zen_LogicalOrExpressionContext_t*)node->m_context;
 
-    /* TODO */
+    int32_t size = jtk_ArrayList_getSize(context->m_logicalAndExpressions);
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        zen_ASTNode_t* logicalAndExpressions = jtk_ArrayList_getValue(context->m_logicalAndExpressions, i);
+
+        /* At this point, the instructions corresponding to the left operand
+         * should be generated. The generation of the instructions for
+         * logical OR expressions follow the order: operand1 operand2 operator.
+         * In other words, the compiler generates instructions for logical OR
+         * expressions in postfix order. Therefore, generate the instructions for
+         * the right operand and invoking the ZenKernel.evaluate(...) function,
+         * which takes care of *aggregating* the result.
+         */
+        zen_ASTWalker_walk(astListener, logicalAndExpressions);
+
+        /* Generate the instructions corresponding to invoking the
+         * ZenKernel.evaluate() function. Since, Zen is dynamically typed
+         * the compiler cannot determine the type of the operands. Therefore,
+         * logical OR operation is delegated to functions annotated with the
+         * Operator annotation.
+         */
+        zen_BinaryEntityGenerator_invokeEvaluate(generator, "||", 2);
+    }
 }
 
 // logicalAndExpression
@@ -1736,17 +1763,17 @@ void zen_BinaryEntityGenerator_onExitLogicalAndExpression(zen_ASTListener_t* ast
     int32_t i;
     for (i = 0; i < size; i++) {
         zen_ASTNode_t* inclusiveOrExpression = jtk_ArrayList_getValue(context->m_inclusiveOrExpressions, i);
-        
+
         /* At this point, the instructions corresponding to the left operand
          * should be generated. The generation of the instructions for
-         * and expressions follow the order: operand1 operand2 operator.
-         * In other words, the compiler generates instructions for and
+         * logical AND expressions follow the order: operand1 operand2 operator.
+         * In other words, the compiler generates instructions for logical AND
          * expressions in postfix order. Therefore, generate the instructions for
          * the right operand and invoking the ZenKernel.evaluate(...) function,
          * which takes care of *aggregating* the result.
          */
         zen_ASTWalker_walk(astListener, inclusiveOrExpression);
-        
+
         /* Generate the instructions corresponding to invoking the
          * ZenKernel.evaluate() function. Since, Zen is dynamically typed
          * the compiler cannot determine the type of the operands. Therefore,
@@ -1779,7 +1806,7 @@ void zen_BinaryEntityGenerator_onExitInclusiveOrExpression(zen_ASTListener_t* as
     int32_t i;
     for (i = 0; i < size; i++) {
         zen_ASTNode_t* exclusiveOrExpression = jtk_ArrayList_getValue(context->m_exclusiveOrExpressions, i);
-        
+
         /* At this point, the instructions corresponding to the left operand
          * should be generated. The generation of the instructions for
          * inclusive or expressions follow the order: operand1 operand2 operator.
@@ -1789,7 +1816,7 @@ void zen_BinaryEntityGenerator_onExitInclusiveOrExpression(zen_ASTListener_t* as
          * which takes care of *aggregating* the result.
          */
         zen_ASTWalker_walk(astListener, exclusiveOrExpression);
-        
+
         /* Generate the instructions corresponding to invoking the
          * ZenKernel.evaluate() function. Since, Zen is dynamically typed
          * the compiler cannot determine the type of the operands. Therefore,
@@ -1822,7 +1849,7 @@ void zen_BinaryEntityGenerator_onExitExclusiveOrExpression(zen_ASTListener_t* as
     int32_t i;
     for (i = 0; i < size; i++) {
         zen_ASTNode_t* andExpression = jtk_ArrayList_getValue(context->m_andExpressions, i);
-        
+
         /* At this point, the instructions corresponding to the left operand
          * should be generated. The generation of the instructions for
          * and expressions follow the order: operand1 operand2 operator.
@@ -1832,7 +1859,7 @@ void zen_BinaryEntityGenerator_onExitExclusiveOrExpression(zen_ASTListener_t* as
          * which takes care of *aggregating* the result.
          */
         zen_ASTWalker_walk(astListener, andExpression);
-        
+
         /* Generate the instructions corresponding to invoking the
          * ZenKernel.evaluate() function. Since, Zen is dynamically typed
          * the compiler cannot determine the type of the operands. Therefore,
@@ -1865,7 +1892,7 @@ void zen_BinaryEntityGenerator_onExitAndExpression(zen_ASTListener_t* astListene
     int32_t i;
     for (i = 0; i < size; i++) {
         zen_ASTNode_t* equalityExpression = jtk_ArrayList_getValue(context->m_equalityExpressions, i);
-        
+
         /* At this point, the instructions corresponding to the left operand
          * should be generated. The generation of the instructions for
          * shift expressions follow the order: operand1 operand2 operator.
@@ -1875,7 +1902,7 @@ void zen_BinaryEntityGenerator_onExitAndExpression(zen_ASTListener_t* astListene
          * which takes care of *aggregating* the result.
          */
         zen_ASTWalker_walk(astListener, equalityExpression);
-        
+
         /* Generate the instructions corresponding to invoking the
          * ZenKernel.evaluate() function. Since, Zen is dynamically typed
          * the compiler cannot determine the type of the operands. Therefore,
@@ -1940,7 +1967,7 @@ void zen_BinaryEntityGenerator_onExitRelationalExpression(zen_ASTListener_t* ast
     int32_t i;
     for (i = 0; i < size; i++) {
         jtk_Pair_t* pair = (jtk_Pair_t*)jtk_ArrayList_getValue(context->m_shiftExpressions, i);
-        
+
         /* Retrieve the relational operator. */
         zen_ASTNode_t* relationalOperator = pair->m_left;
         /* At this point, the instructions corresponding to the left operand
@@ -1952,7 +1979,7 @@ void zen_BinaryEntityGenerator_onExitRelationalExpression(zen_ASTListener_t* ast
          * which takes care of *aggregating* the result.
          */
         zen_ASTWalker_walk(astListener, pair->m_right);
-        
+
         /* Retrieve the corresponding relational operator token from the AST
          * node.
          */
@@ -1961,7 +1988,7 @@ void zen_BinaryEntityGenerator_onExitRelationalExpression(zen_ASTListener_t* ast
         zen_TokenType_t relationalOperatorTokenType = zen_Token_getType(relationalOperatorToken);
 
         if (relationalOperatorTokenType == ZEN_TOKEN_KEYWORD_IS) {
-            
+
         }
         else {
             /* The values of symbol and symbolSize are the only arbitrary variables
@@ -1971,7 +1998,7 @@ void zen_BinaryEntityGenerator_onExitRelationalExpression(zen_ASTListener_t* ast
              */
             uint8_t* symbol = NULL;
             int32_t symbolSize = 1;
-            
+
             switch (relationalOperatorTokenType) {
                 case ZEN_TOKEN_LEFT_ANGLE_BRACKET: {
                     /* The kernel should find a function annotated with the Operator
@@ -1990,7 +2017,7 @@ void zen_BinaryEntityGenerator_onExitRelationalExpression(zen_ASTListener_t* ast
 
                     break;
                 }
-                
+
                 case ZEN_TOKEN_LEFT_ANGLE_BRACKET_EQUAL: {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '<=' symbol.
@@ -2000,10 +2027,10 @@ void zen_BinaryEntityGenerator_onExitRelationalExpression(zen_ASTListener_t* ast
                      * and '>=' symbols. Therefore, update the symbol size.
                      */
                     symbolSize = 2;
-       
+
                     break;
                 }
-                
+
                 case ZEN_TOKEN_RIGHT_ANGLE_BRACKET_EQUAL: {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '>=' symbol.
@@ -2013,7 +2040,7 @@ void zen_BinaryEntityGenerator_onExitRelationalExpression(zen_ASTListener_t* ast
                      * and '>=' symbols. Therefore, update the symbol size.
                      */
                     symbolSize = 2;
-       
+
                     break;
                 }
 
@@ -2022,7 +2049,7 @@ void zen_BinaryEntityGenerator_onExitRelationalExpression(zen_ASTListener_t* ast
                     printf("[error] Control should not reach here.\n");
                 }
             }
-            
+
             /* Generate the instructions corresponding to invoking the
              * ZenKernel.evaluate() function. Since, Zen is dynamically typed
              * the compiler cannot determine the type of the operands. Therefore,
@@ -2056,7 +2083,7 @@ void zen_BinaryEntityGenerator_onExitShiftExpression(zen_ASTListener_t* astListe
     int32_t i;
     for (i = 0; i < size; i++) {
         jtk_Pair_t* pair = (jtk_Pair_t*)jtk_ArrayList_getValue(context->m_additiveExpressions, i);
-        
+
         /* Retrieve the shift operator. */
         zen_ASTNode_t* shiftOperator = pair->m_left;
         /* At this point, the instructions corresponding to the left operand
@@ -2068,7 +2095,7 @@ void zen_BinaryEntityGenerator_onExitShiftExpression(zen_ASTListener_t* astListe
          * which takes care of *aggregating* the result.
          */
         zen_ASTWalker_walk(astListener, pair->m_right);
-        
+
         /* Retrieve the corresponding shift operator token from the AST
          * node.
          */
@@ -2102,7 +2129,7 @@ void zen_BinaryEntityGenerator_onExitShiftExpression(zen_ASTListener_t* astListe
 
                 break;
             }
-            
+
             case ZEN_TOKEN_RIGHT_ANGLE_BRACKET_3: {
                 /* The kernel should find a function annotated with the Operator
                  * annotation that handles the '-' symbol.
@@ -2112,7 +2139,7 @@ void zen_BinaryEntityGenerator_onExitShiftExpression(zen_ASTListener_t* astListe
                  * Therefore, update the symbol size.
                  */
                 symbolSize = 3;
-   
+
                 break;
             }
 
@@ -2138,7 +2165,7 @@ void zen_BinaryEntityGenerator_onEnterAdditiveExpression(zen_ASTListener_t* astL
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_AdditiveExpressionContext_t* context = (zen_AdditiveExpressionContext_t*)node->m_context;
-    
+
     /* Generates the instructions corresponding to the very first child of
      * the node.
      */
@@ -2154,7 +2181,7 @@ void zen_BinaryEntityGenerator_onExitAdditiveExpression(zen_ASTListener_t* astLi
     int32_t i;
     for (i = 0; i < size; i++) {
         jtk_Pair_t* pair = (jtk_Pair_t*)jtk_ArrayList_getValue(context->m_multiplicativeExpressions, i);
-        
+
         /* Retrieve the additive operator. */
         zen_ASTNode_t* additiveOperator = pair->m_left;
         /* At this point, the instructions corresponding to the left operand
@@ -2166,7 +2193,7 @@ void zen_BinaryEntityGenerator_onExitAdditiveExpression(zen_ASTListener_t* astLi
          * which takes care of *aggregating* the result.
          */
         zen_ASTWalker_walk(astListener, pair->m_right);
-        
+
         /* Retrieve the corresponding additive operator token from the AST
          * node.
          */
@@ -2223,7 +2250,7 @@ void zen_BinaryEntityGenerator_onEnterMultiplicativeExpression(zen_ASTListener_t
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_MultiplicativeExpressionContext_t* context = (zen_MultiplicativeExpressionContext_t*)node->m_context;
-    
+
     /* Generates the instructions corresponding to the very first child of
      * the node.
      */
@@ -2239,7 +2266,7 @@ void zen_BinaryEntityGenerator_onExitMultiplicativeExpression(zen_ASTListener_t*
     int32_t i;
     for (i = 0; i < size; i++) {
         jtk_Pair_t* pair = (jtk_Pair_t*)jtk_ArrayList_getValue(context->m_unaryExpressions, i);
-        
+
         /* Retrieve the multiplicative operator. */
         zen_ASTNode_t* multiplicativeOperator = pair->m_left;
         /* At this point, the instructions corresponding to the left operand
@@ -2251,7 +2278,7 @@ void zen_BinaryEntityGenerator_onExitMultiplicativeExpression(zen_ASTListener_t*
          * which takes care of *aggregating* the result.
          */
         zen_ASTWalker_walk(astListener, pair->m_right);
-        
+
         /* Retrieve the corresponding multiplicative operator token from the AST
          * node.
          */

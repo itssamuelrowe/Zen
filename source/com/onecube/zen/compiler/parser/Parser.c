@@ -2251,7 +2251,7 @@ void zen_Parser_conditionalExpression(zen_Parser_t* parser, zen_ASTNode_t* node)
 
 /*
  * logicalOrExpression
- * :	logicalAndExpression ('or' logicalOrExpression)?
+ * :	logicalAndExpression ('or' logicalAndExpression)*
  * ;
  */
 void zen_Parser_logicalOrExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
@@ -2263,13 +2263,13 @@ void zen_Parser_logicalOrExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
     context->m_logicalAndExpression = logicalAndExpression;
     zen_Parser_logicalAndExpression(parser, logicalAndExpression);
 
-    if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_KEYWORD_OR) {
+    while (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_KEYWORD_OR) {
         /* Consume and discard the 'or' token. */
         zen_TokenStream_consume(parser->m_tokens);
 
-        zen_ASTNode_t* logicalOrExpression = zen_ASTNode_new(node);
-        context->m_logicalOrExpression = logicalOrExpression;
-        zen_Parser_logicalOrExpression(parser, logicalOrExpression);
+        zen_ASTNode_t* logicalAndExpression0 = zen_ASTNode_new(node);
+        jtk_ArrayList_add(context->m_logicalAndExpressions, logicalAndExpression0);
+        zen_Parser_logicalAndExpression(parser, logicalAndExpression0);
     }
 
     zen_StackTrace_exit();
