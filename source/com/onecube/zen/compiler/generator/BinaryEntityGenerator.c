@@ -1754,16 +1754,41 @@ void zen_BinaryEntityGenerator_onEnterExclusiveOrExpression(zen_ASTListener_t* a
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_ExclusiveOrExpressionContext_t* context = (zen_ExclusiveOrExpressionContext_t*)node->m_context;
+
+    /* Generates the instructions corresponding to the very first child of
+     * the node.
+     */
+    zen_ASTListener_visitFirstChild(astListener);
 }
 
 void zen_BinaryEntityGenerator_onExitExclusiveOrExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {/*
+    zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_ExclusiveOrExpressionContext_t* context = (zen_ExclusiveOrExpressionContext_t*)node->m_context;
 
-    if (context->m_exclusiveOrExpression != NULL) {
-        zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
-    }*/
+    int32_t size = jtk_ArrayList_getSize(context->m_andExpressions);
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        zen_ASTNode_t* andExpression = jtk_ArrayList_getValue(context->m_andExpressions, i);
+        
+        /* At this point, the instructions corresponding to the left operand
+         * should be generated. The generation of the instructions for
+         * and expressions follow the order: operand1 operand2 operator.
+         * In other words, the compiler generates instructions for and
+         * expressions in postfix order. Therefore, generate the instructions for
+         * the right operand and invoking the ZenKernel.evaluate(...) function,
+         * which takes care of *aggregating* the result.
+         */
+        zen_ASTWalker_walk(astListener, andExpression);
+        
+        /* Generate the instructions corresponding to invoking the
+         * ZenKernel.evaluate() function. Since, Zen is dynamically typed
+         * the compiler cannot determine the type of the operands. Therefore,
+         * bitwise and operation is delegated to functions annotated with the
+         * Operator annotation.
+         */
+        zen_BinaryEntityGenerator_invokeEvaluate(generator, "^", 1);
+    }
 }
 
 // andExpression

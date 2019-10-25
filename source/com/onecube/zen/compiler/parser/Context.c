@@ -1963,7 +1963,7 @@ zen_ExclusiveOrExpressionContext_t* zen_ExclusiveOrExpressionContext_new(zen_AST
     zen_ExclusiveOrExpressionContext_t* context = zen_Memory_allocate(zen_ExclusiveOrExpressionContext_t, 1);
     context->m_node = node;
     context->m_andExpression = NULL;
-    context->m_exclusiveOrExpression = NULL;
+    context->m_andExpressions = jtk_ArrayList_new();
 
     zen_Context_initializeNode(node, ZEN_AST_NODE_TYPE_EXCLUSIVE_OR_EXPRESSION, context,
         (zen_ContextDestructorFunction_t)zen_ExclusiveOrExpressionContext_delete,
@@ -1975,6 +1975,7 @@ zen_ExclusiveOrExpressionContext_t* zen_ExclusiveOrExpressionContext_new(zen_AST
 void zen_ExclusiveOrExpressionContext_delete(zen_ExclusiveOrExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
+    jtk_ArrayList_delete(context->m_andExpressions);
     jtk_Memory_deallocate(context);
 }
 
@@ -1984,7 +1985,7 @@ void zen_ExclusiveOrExpressionContext_getChildren(zen_ExclusiveOrExpressionConte
     jtk_Assert_assertObject(children, "The specified children is null.");
 
     jtk_ArrayList_addPredicatively(children, context->m_andExpression, jtk_Object_isNotNull);
-    jtk_ArrayList_addPredicatively(children, context->m_exclusiveOrExpression, jtk_Object_isNotNull);
+    jtk_ArrayList_addAll(children, JTK_COLLECTION_ARRAY_LIST, context->m_andExpressions);
 }
 
 /*******************************************************************************

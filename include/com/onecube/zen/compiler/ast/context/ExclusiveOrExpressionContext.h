@@ -19,6 +19,7 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_EXCLUSIVE_OR_EXPRESSION_CONTEXT_H
 #define COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_EXCLUSIVE_OR_EXPRESSION_CONTEXT_H
 
+#include <jtk/collection/list/ArrayList.h>
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
 
@@ -35,7 +36,7 @@
 struct zen_ExclusiveOrExpressionContext_t {
     zen_ASTNode_t* m_node;
     zen_ASTNode_t* m_andExpression;
-    zen_ASTNode_t* m_exclusiveOrExpression;
+    jtk_ArrayList_t* m_andExpressions;
 };
 
 /**

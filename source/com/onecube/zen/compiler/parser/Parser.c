@@ -2351,9 +2351,9 @@ void zen_Parser_exclusiveOrExpression(zen_Parser_t* parser, zen_ASTNode_t* node)
         /* Consume and discard the '^' token. */
         zen_TokenStream_consume(parser->m_tokens);
 
-        zen_ASTNode_t* exclusiveOrExpression = zen_ASTNode_new(node);
-        context->m_exclusiveOrExpression = exclusiveOrExpression;
-        zen_Parser_exclusiveOrExpression(parser, exclusiveOrExpression);
+        zen_ASTNode_t* andExpression0 = zen_ASTNode_new(node);
+        jtk_ArrayList_add(context->m_andExpressions, andExpression0);
+        zen_Parser_andExpression(parser, andExpression0);
     }
 
     zen_StackTrace_exit();
