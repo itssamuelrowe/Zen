@@ -1720,6 +1720,11 @@ void zen_BinaryEntityGenerator_onEnterLogicalAndExpression(zen_ASTListener_t* as
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_LogicalAndExpressionContext_t* context = (zen_LogicalAndExpressionContext_t*)node->m_context;
+
+    /* Generates the instructions corresponding to the very first child of
+     * the node.
+     */
+    zen_ASTListener_visitFirstChild(astListener);
 }
 
 void zen_BinaryEntityGenerator_onExitLogicalAndExpression(zen_ASTListener_t* astListener,
@@ -1727,7 +1732,29 @@ void zen_BinaryEntityGenerator_onExitLogicalAndExpression(zen_ASTListener_t* ast
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_LogicalAndExpressionContext_t* context = (zen_LogicalAndExpressionContext_t*)node->m_context;
 
-    /* TODO */
+    int32_t size = jtk_ArrayList_getSize(context->m_inclusiveOrExpressions);
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        zen_ASTNode_t* inclusiveOrExpression = jtk_ArrayList_getValue(context->m_inclusiveOrExpressions, i);
+        
+        /* At this point, the instructions corresponding to the left operand
+         * should be generated. The generation of the instructions for
+         * and expressions follow the order: operand1 operand2 operator.
+         * In other words, the compiler generates instructions for and
+         * expressions in postfix order. Therefore, generate the instructions for
+         * the right operand and invoking the ZenKernel.evaluate(...) function,
+         * which takes care of *aggregating* the result.
+         */
+        zen_ASTWalker_walk(astListener, inclusiveOrExpression);
+        
+        /* Generate the instructions corresponding to invoking the
+         * ZenKernel.evaluate() function. Since, Zen is dynamically typed
+         * the compiler cannot determine the type of the operands. Therefore,
+         * logical AND operation is delegated to functions annotated with the
+         * Operator annotation.
+         */
+        zen_BinaryEntityGenerator_invokeEvaluate(generator, "&&", 2);
+    }
 }
 
 // inclusiveOrExpression

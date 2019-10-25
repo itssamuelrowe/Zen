@@ -1899,7 +1899,7 @@ zen_LogicalAndExpressionContext_t* zen_LogicalAndExpressionContext_new(zen_ASTNo
     zen_LogicalAndExpressionContext_t* context = zen_Memory_allocate(zen_LogicalAndExpressionContext_t, 1);
     context->m_node = node;
     context->m_inclusiveOrExpression = NULL;
-    context->m_logicalAndExpression = NULL;
+    context->m_inclusiveOrExpressions = jtk_ArrayList_new();
 
     zen_Context_initializeNode(node, ZEN_AST_NODE_TYPE_LOGICAL_AND_EXPRESSION, context,
         (zen_ContextDestructorFunction_t)zen_LogicalAndExpressionContext_delete,
@@ -1911,6 +1911,7 @@ zen_LogicalAndExpressionContext_t* zen_LogicalAndExpressionContext_new(zen_ASTNo
 void zen_LogicalAndExpressionContext_delete(zen_LogicalAndExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
+    jtk_ArrayList_delete(context->m_inclusiveOrExpressions);
     jtk_Memory_deallocate(context);
 }
 
@@ -1920,7 +1921,7 @@ void zen_LogicalAndExpressionContext_getChildren(zen_LogicalAndExpressionContext
     jtk_Assert_assertObject(children, "The specified children is null.");
 
     jtk_ArrayList_addPredicatively(children, context->m_inclusiveOrExpression, jtk_Object_isNotNull);
-    jtk_ArrayList_addPredicatively(children, context->m_logicalAndExpression, jtk_Object_isNotNull);
+    jtk_ArrayList_addAll(children, JTK_COLLECTION_ARRAY_LIST, context->m_inclusiveOrExpressions);
 }
 
 /*******************************************************************************

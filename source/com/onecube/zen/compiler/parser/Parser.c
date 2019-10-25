@@ -2291,13 +2291,13 @@ void zen_Parser_logicalAndExpression(zen_Parser_t* parser, zen_ASTNode_t* node) 
     zen_Parser_inclusiveOrExpression(parser, inclusiveOrExpression);
 
     /* Parse the expression to the right of the operator, if any. */
-    if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_KEYWORD_AND) {
+    while (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_KEYWORD_AND) {
         /* Consume and discard the 'and' token. */
         zen_TokenStream_consume(parser->m_tokens);
 
-        zen_ASTNode_t* logicalAndExpression = zen_ASTNode_new(node);
-        context->m_logicalAndExpression = logicalAndExpression;
-        zen_Parser_logicalAndExpression(parser, logicalAndExpression);
+        zen_ASTNode_t* inclusiveOrExpression0 = zen_ASTNode_new(node);
+        jtk_ArrayList_add(context->m_inclusiveOrExpressions, inclusiveOrExpression0);
+        zen_Parser_inclusiveOrExpression(parser, inclusiveOrExpression0);
     }
 
     zen_StackTrace_exit();
@@ -2483,7 +2483,7 @@ bool zen_Parser_isRelationalOperator(zen_TokenType_t type) {
 
 /*
  * shiftExpression
- * :	additiveExpression (shiftOperator shiftExpression)?
+ * :	additiveExpression (shiftOperator additiveExpression)*
  * ;
  */
 void zen_Parser_shiftExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {

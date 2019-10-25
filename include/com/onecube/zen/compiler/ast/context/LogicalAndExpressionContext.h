@@ -19,6 +19,8 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_LOGICAL_AND_EXPRESSION_CONTEXT_H
 #define COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_LOGICAL_AND_EXPRESSION_CONTEXT_H
 
+#include <jtk/collection/list/ArrayList.h>
+
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
 
@@ -36,14 +38,14 @@ struct zen_LogicalAndExpressionContext_t {
     zen_ASTNode_t* m_node;
 
     /**
-     * The expression on the left of the operator.
+     * The inclusiveOrExpression node on the left side of the operator.
      */
     zen_ASTNode_t* m_inclusiveOrExpression;
 
     /**
-     * The logicalAnd expression on the right of the operator.
+     * The inclusiveOrExpression nodes on the right side of the operator.
      */
-    zen_ASTNode_t* m_logicalAndExpression;
+    jtk_ArrayList_t* m_inclusiveOrExpressions;
 };
 
 /**
