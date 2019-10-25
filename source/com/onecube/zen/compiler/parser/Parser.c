@@ -2523,7 +2523,7 @@ bool zen_Parser_isShiftOperator(zen_TokenType_t type) {
 
 /*
  * additiveExpression
- * :	multiplicativeExpression (additiveOperator additiveExpression)?
+ * :	multiplicativeExpression (multiplicativeOperator multiplicativeExpression)*
  * ;
  */
 void zen_Parser_additiveExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
@@ -2537,16 +2537,19 @@ void zen_Parser_additiveExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
     zen_Parser_multiplicativeExpression(parser, multiplicativeExpression);
 
     /* Parse the expression to the right of the operator, if any. */
-    if (zen_Parser_isAdditiveOperator(zen_TokenStream_la(parser->m_tokens, 1))) {
+    while (zen_Parser_isAdditiveOperator(zen_TokenStream_la(parser->m_tokens, 1))) {
+        jtk_Pair_t* pair = jtk_Pair_new();
+        jtk_ArrayList_add(context->m_multiplicativeExpressions, pair);
+        
         zen_Token_t* additiveOperatorToken = zen_TokenStream_lt(parser->m_tokens, 1);
         zen_ASTNode_t* additiveOperator = zen_Parser_newTerminalNode(node, additiveOperatorToken);
-        context->m_additiveOperator = additiveOperator;
+        pair->m_left = additiveOperator;
         /* Consume the additive operator token. */
         zen_TokenStream_consume(parser->m_tokens);
 
-        zen_ASTNode_t* additiveExpression = zen_ASTNode_new(node);
-        context->m_additiveExpression = additiveExpression;
-        zen_Parser_additiveExpression(parser, additiveExpression);
+        zen_ASTNode_t* multiplicativeExpression0 = zen_ASTNode_new(node);
+        pair->m_right = multiplicativeExpression0;
+        zen_Parser_multiplicativeExpression(parser, multiplicativeExpression0);
     }
 
     zen_StackTrace_exit();
@@ -2581,6 +2584,7 @@ void zen_Parser_multiplicativeExpression(zen_Parser_t* parser, zen_ASTNode_t* no
     /* Parse the expression to the right of the operator, if any. */
     while (zen_Parser_isMultiplicativeOperator(zen_TokenStream_la(parser->m_tokens, 1))) {
         jtk_Pair_t* pair = jtk_Pair_new();
+        jtk_ArrayList_add(context->m_unaryExpressions, pair);
 
         zen_Token_t* multiplicativeOperatorToken = zen_TokenStream_lt(parser->m_tokens, 1);
         zen_ASTNode_t* multiplicativeOperator = zen_Parser_newTerminalNode(node, multiplicativeOperatorToken);
@@ -2588,11 +2592,9 @@ void zen_Parser_multiplicativeExpression(zen_Parser_t* parser, zen_ASTNode_t* no
         /* Consume the multiplicative operator token. */
         zen_TokenStream_consume(parser->m_tokens);
 
-        zen_ASTNode_t* unaryExpression = zen_ASTNode_new(node);
-        pair->m_right = unaryExpression;
-        zen_Parser_unaryExpression(parser, unaryExpression);
-
-        jtk_ArrayList_add(context->m_unaryExpressions, pair);
+        zen_ASTNode_t* unaryExpression0 = zen_ASTNode_new(node);
+        pair->m_right = unaryExpression0;
+        zen_Parser_unaryExpression(parser, unaryExpression0);
     }
 
     zen_StackTrace_exit();

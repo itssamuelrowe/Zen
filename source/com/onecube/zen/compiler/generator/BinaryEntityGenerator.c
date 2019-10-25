@@ -1941,6 +1941,9 @@ void zen_BinaryEntityGenerator_onEnterMultiplicativeExpression(zen_ASTListener_t
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_MultiplicativeExpressionContext_t* context = (zen_MultiplicativeExpressionContext_t*)node->m_context;
     
+    /* Generates the instructions corresponding to the very first child of
+     * the node.
+     */
     zen_ASTListener_visitFirstChild(astListener);
 }
 
@@ -1956,13 +1959,13 @@ void zen_BinaryEntityGenerator_onExitMultiplicativeExpression(zen_ASTListener_t*
         
         /* Retrieve the multiplicative operator. */
         zen_ASTNode_t* multiplicativeOperator = pair->m_left;
-        /* At this point, the instructions corresponding to the operands
+        /* At this point, the instructions corresponding to the left operand
          * should be generated. The generation of the instructions for
          * multiplicative expressions follow the order: operand1 operand2 operator.
          * In other words, the compiler generates instructions for multiplicative
          * expressions in postfix order. Therefore, generate the instructions for
-         * invoking the ZenKernel.evaluate(...) function, which takes care of
-         * *aggregating* the result.
+         * the right operand and invoking the ZenKernel.evaluate(...) function,
+         * which takes care of *aggregating* the result.
          */
         zen_ASTWalker_walk(astListener, pair->m_right);
         

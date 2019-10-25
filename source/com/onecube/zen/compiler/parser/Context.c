@@ -2129,8 +2129,7 @@ zen_AdditiveExpressionContext_t* zen_AdditiveExpressionContext_new(zen_ASTNode_t
     zen_AdditiveExpressionContext_t* context = zen_Memory_allocate(zen_AdditiveExpressionContext_t, 1);
     context->m_node = node;
     context->m_multiplicativeExpression = NULL;
-    context->m_additiveOperator = NULL;
-    context->m_additiveExpression = NULL;
+    context->m_multiplicativeExpressions = jtk_ArrayList_new();
 
     zen_Context_initializeNode(node, ZEN_AST_NODE_TYPE_ADDITIVE_EXPRESSION, context,
         (zen_ContextDestructorFunction_t)zen_AdditiveExpressionContext_delete,
@@ -2142,6 +2141,14 @@ zen_AdditiveExpressionContext_t* zen_AdditiveExpressionContext_new(zen_ASTNode_t
 void zen_AdditiveExpressionContext_delete(zen_AdditiveExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
+    int32_t size = jtk_ArrayList_getSize(context->m_multiplicativeExpressions);
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        jtk_Pair_t* pair = (jtk_Pair_t*)jtk_ArrayList_getValue(
+            context->m_multiplicativeExpressions, i);
+        jtk_Pair_delete(pair);
+    }
+    jtk_ArrayList_delete(context->m_multiplicativeExpressions);
     jtk_Memory_deallocate(context);
 }
 
@@ -2151,9 +2158,13 @@ void zen_AdditiveExpressionContext_getChildren(zen_AdditiveExpressionContext_t* 
     jtk_Assert_assertObject(children, "The specified children is null.");
 
     jtk_ArrayList_add(children, context->m_multiplicativeExpression);
-    if (context->m_additiveOperator != NULL) {
-        jtk_ArrayList_add(children, context->m_additiveOperator);
-        jtk_ArrayList_add(children, context->m_additiveExpression);
+
+    int32_t size = jtk_ArrayList_getSize(context->m_multiplicativeExpressions);
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        jtk_Pair_t* pair = (jtk_Pair_t*)jtk_ArrayList_getValue(context->m_multiplicativeExpressions, i);
+        jtk_ArrayList_add(children, pair->m_left);
+        jtk_ArrayList_add(children, pair->m_right);
     }
 }
 
