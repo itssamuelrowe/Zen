@@ -1995,7 +1995,7 @@ zen_AndExpressionContext_t* zen_AndExpressionContext_new(zen_ASTNode_t* node) {
     zen_AndExpressionContext_t* context = zen_Memory_allocate(zen_AndExpressionContext_t, 1);
     context->m_node = node;
     context->m_equalityExpression = NULL;
-    context->m_andExpression = NULL;
+    context->m_equalityExpressions = jtk_ArrayList_new();
 
     zen_Context_initializeNode(node, ZEN_AST_NODE_TYPE_AND_EXPRESSION, context,
         (zen_ContextDestructorFunction_t)zen_AndExpressionContext_delete,
@@ -2007,6 +2007,7 @@ zen_AndExpressionContext_t* zen_AndExpressionContext_new(zen_ASTNode_t* node) {
 void zen_AndExpressionContext_delete(zen_AndExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
+    jtk_ArrayList_delete(context->m_equalityExpressions);
     jtk_Memory_deallocate(context);
 }
 
@@ -2016,7 +2017,7 @@ void zen_AndExpressionContext_getChildren(zen_AndExpressionContext_t* context,
     jtk_Assert_assertObject(children, "The specified children is null.");
 
     jtk_ArrayList_addPredicatively(children, context->m_equalityExpression, jtk_Object_isNotNull);
-    jtk_ArrayList_addPredicatively(children, context->m_andExpression, jtk_Object_isNotNull);
+    jtk_ArrayList_addAll(children, JTK_COLLECTION_ARRAY_LIST, context->m_equalityExpressions);
 }
 
 /*******************************************************************************

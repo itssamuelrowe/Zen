@@ -2375,13 +2375,14 @@ void zen_Parser_andExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
     zen_Parser_equalityExpression(parser, equalityExpression);
 
     /* Parse the expression to the right of the operator, if any. */
-    if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_AMPERSAND) {
+    while (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_AMPERSAND) {
+        
         /* Consume and discard the '&' token. */
         zen_TokenStream_consume(parser->m_tokens);
 
-        zen_ASTNode_t* andExpression = zen_ASTNode_new(node);
-        context->m_andExpression = andExpression;
-        zen_Parser_andExpression(parser, andExpression);
+        zen_ASTNode_t* equalityExpression0 = zen_ASTNode_new(node);
+        jtk_ArrayList_add(context->m_equalityExpressions, equalityExpression0);
+        zen_Parser_equalityExpression(parser, equalityExpression0);
     }
 
     zen_StackTrace_exit();
