@@ -1904,34 +1904,83 @@ void zen_BinaryEntityGenerator_onEnterAdditiveExpression(zen_ASTListener_t* astL
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_AdditiveExpressionContext_t* context = (zen_AdditiveExpressionContext_t*)node->m_context;
+    
+    /* Generates the instructions corresponding to the very first child of
+     * the node.
+     */
+    zen_ASTListener_visitFirstChild(astListener);
 }
 
 void zen_BinaryEntityGenerator_onExitAdditiveExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {/*
+    zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_AdditiveExpressionContext_t* context = (zen_AdditiveExpressionContext_t*)node->m_context;
 
-    zen_ASTNode_t* additiveOperator = context->m_additiveOperator;
-    if (additiveOperator != NULL) {
-        zen_Token_t* additiveOperatorToken = (zen_Token_t*)(additiveOperator->m_context);
+    int32_t size = jtk_ArrayList_getSize(context->m_multiplicativeExpressions);
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        jtk_Pair_t* pair = (jtk_Pair_t*)jtk_ArrayList_getValue(context->m_multiplicativeExpressions, i);
+        
+        /* Retrieve the additive operator. */
+        zen_ASTNode_t* additiveOperator = pair->m_left;
+        /* At this point, the instructions corresponding to the left operand
+         * should be generated. The generation of the instructions for
+         * additive expressions follow the order: operand1 operand2 operator.
+         * In other words, the compiler generates instructions for additive
+         * expressions in postfix order. Therefore, generate the instructions for
+         * the right operand and invoking the ZenKernel.evaluate(...) function,
+         * which takes care of *aggregating* the result.
+         */
+        zen_ASTWalker_walk(astListener, pair->m_right);
+        
+        /* Retrieve the corresponding additive operator token from the AST
+         * node.
+         */
+        zen_Token_t* additiveOperatorToken = (zen_Token_t*)additiveOperator->m_context;
+        /* Retrieve the type of the additive operator. */
         zen_TokenType_t additiveOperatorTokenType = zen_Token_getType(additiveOperatorToken);
+
+        /* The values of symbol and symbolSize are the only arbitrary variables
+         * when invoking the zen_BinaryEntityGenerator_invokeEvaluate() function.
+         * Therefore, instead of rewriting the invocation expression multiple
+         * times, I have factored it out.
+         */
+        uint8_t* symbol = NULL;
+        int32_t symbolSize = 1;
+
         switch (additiveOperatorTokenType) {
             case ZEN_TOKEN_PLUS: {
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, /* "..." * 0);
+                /* The kernel should find a function annotated with the Operator
+                 * annotation that handles the '+' symbol.
+                 */
+                symbol = "+";
+
                 break;
             }
 
             case ZEN_TOKEN_DASH: {
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
+                /* The kernel should find a function annotated with the Operator
+                 * annotation that handles the '-' symbol.
+                 */
+                symbol = "/";
+
                 break;
             }
 
             default: {
-                fprintf(stderr, "[internal error] Control should not reach here.\n");
-                break;
+                /* The generator should not reach this code! */
+                printf("[error] Control should not reach here.\n");
             }
         }
-    }*/
+
+        /* Generate the instructions corresponding to invoking the
+         * ZenKernel.evaluate() function. Since, Zen is dynamically typed
+         * the compiler cannot determine the type of the operands. Therefore,
+         * the multiplication/division/modulus operations are delegated to
+         * functions annotated with the Operator annotation.
+         */
+        zen_BinaryEntityGenerator_invokeEvaluate(generator, symbol, symbolSize);
+    }
 }
 
 // multiplicativeExpression
