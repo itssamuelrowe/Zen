@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// #include <jtk/collection/Pair.h>
+#include <jtk/collection/Pair.h>
 
 #include <com/onecube/zen/compiler/ast/context/Context.h>
 #include <com/onecube/zen/compiler/parser/Parser.h>
@@ -2565,7 +2565,7 @@ bool zen_Parser_isAdditiveOperator(zen_TokenType_t type) {
 
 /*
  * multiplicativeExpression
- * :	unaryExpression (multiplicativeOperator multiplicativeExpression)?
+ * :	unaryExpression (multiplicativeOperator unaryExpression)*
  * ;
  */
 void zen_Parser_multiplicativeExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
@@ -2579,16 +2579,20 @@ void zen_Parser_multiplicativeExpression(zen_Parser_t* parser, zen_ASTNode_t* no
     zen_Parser_unaryExpression(parser, unaryExpression);
 
     /* Parse the expression to the right of the operator, if any. */
-    if (zen_Parser_isMultiplicativeOperator(zen_TokenStream_la(parser->m_tokens, 1))) {
+    while (zen_Parser_isMultiplicativeOperator(zen_TokenStream_la(parser->m_tokens, 1))) {
+        jtk_Pair_t* pair = jtk_Pair_new();
+
         zen_Token_t* multiplicativeOperatorToken = zen_TokenStream_lt(parser->m_tokens, 1);
         zen_ASTNode_t* multiplicativeOperator = zen_Parser_newTerminalNode(node, multiplicativeOperatorToken);
-        context->m_multiplicativeOperator = multiplicativeOperator;
+        pair->m_left = multiplicativeOperator;
         /* Consume the multiplicative operator token. */
         zen_TokenStream_consume(parser->m_tokens);
 
-        zen_ASTNode_t* multiplicativeExpression = zen_ASTNode_new(node);
-        context->m_multiplicativeExpression = multiplicativeExpression;
-        zen_Parser_multiplicativeExpression(parser, multiplicativeExpression);
+        zen_ASTNode_t* unaryExpression = zen_ASTNode_new(node);
+        pair->m_right = unaryExpression;
+        zen_Parser_unaryExpression(parser, unaryExpression);
+
+        jtk_ArrayList_add(context->m_unaryExpressions, pair);
     }
 
     zen_StackTrace_exit();

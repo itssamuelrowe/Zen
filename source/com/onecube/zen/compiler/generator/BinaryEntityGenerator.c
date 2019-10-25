@@ -20,6 +20,7 @@
 #include <jtk/core/Long.h>
 #include <jtk/core/VariableArguments.h>
 #include <jtk/core/StringBuilder.h>
+#include <jtk/collection/Pair.h>
 
 #include <com/onecube/zen/compiler/ast/ASTWalker.h>
 #include <com/onecube/zen/compiler/ast/context/Context.h>
@@ -1939,11 +1940,8 @@ void zen_BinaryEntityGenerator_onEnterMultiplicativeExpression(zen_ASTListener_t
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_MultiplicativeExpressionContext_t* context = (zen_MultiplicativeExpressionContext_t*)node->m_context;
-
-    zen_ASTNode_t* multiplicativeOperator = context->m_multiplicativeOperator;
-    if (multiplicativeOperator != NULL) {
-        zen_ASTListener_visitFirstChild(astListener);
-    }
+    
+    zen_ASTListener_visitFirstChild(astListener);
 }
 
 void zen_BinaryEntityGenerator_onExitMultiplicativeExpression(zen_ASTListener_t* astListener,
@@ -1951,40 +1949,78 @@ void zen_BinaryEntityGenerator_onExitMultiplicativeExpression(zen_ASTListener_t*
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_MultiplicativeExpressionContext_t* context = (zen_MultiplicativeExpressionContext_t*)node->m_context;
 
-    zen_ASTNode_t* multiplicativeOperator = context->m_multiplicativeOperator;
-    if (multiplicativeOperator != NULL) {
-        zen_ASTWalker_walk(astListener, context->m_multiplicativeExpression);
+    int32_t size = jtk_ArrayList_getSize(context->m_unaryExpressions);
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        jtk_Pair_t* pair = (jtk_Pair_t*)jtk_ArrayList_getValue(context->m_unaryExpressions, i);
         
+        /* Retrieve the multiplicative operator. */
+        zen_ASTNode_t* multiplicativeOperator = pair->m_left;
+        /* At this point, the instructions corresponding to the operands
+         * should be generated. The generation of the instructions for
+         * multiplicative expressions follow the order: operand1 operand2 operator.
+         * In other words, the compiler generates instructions for multiplicative
+         * expressions in postfix order. Therefore, generate the instructions for
+         * invoking the ZenKernel.evaluate(...) function, which takes care of
+         * *aggregating* the result.
+         */
+        zen_ASTWalker_walk(astListener, pair->m_right);
+        
+        /* Retrieve the corresponding multiplicative operator token from the AST
+         * node.
+         */
         zen_Token_t* multiplicativeOperatorToken = (zen_Token_t*)multiplicativeOperator->m_context;
+        /* Retrieve the type of the multiplicative operator. */
         zen_TokenType_t multiplicativeOperatorTokenType = zen_Token_getType(multiplicativeOperatorToken);
-        
+
+        /* The values of symbol and symbolSize are the only arbitrary variables
+         * when invoking the zen_BinaryEntityGenerator_invokeEvaluate() function.
+         * Therefore, instead of rewriting the invocation expression multiple
+         * times, I have factored it out.
+         */
         uint8_t* symbol = NULL;
         int32_t symbolSize = 1;
-        
+
         switch (multiplicativeOperatorTokenType) {
             case ZEN_TOKEN_ASTERISK: {
+                /* The kernel should find a function annotated with the Operator
+                 * annotation that handles the '*' symbol.
+                 */
                 symbol = "*";
-                
+
                 break;
             }
 
             case ZEN_TOKEN_FORWARD_SLASH: {
+                /* The kernel should find a function annotated with the Operator
+                 * annotation that handles the '/' symbol.
+                 */
                 symbol = "/";
-                
+
                 break;
             }
 
             case ZEN_TOKEN_MODULUS: {
+                /* The kernel should find a function annotated with the Operator
+                 * annotation that handles the '%' symbol.
+                 */
                 symbol = "%";
-                
+
                 break;
             }
-            
+
             default: {
+                /* The generator should not reach this code! */
                 printf("[error] Control should not reach here.\n");
             }
         }
-        
+
+        /* Generate the instructions corresponding to invoking the
+         * ZenKernel.evaluate() function. Since, Zen is dynamically typed
+         * the compiler cannot determine the type of the operands. Therefore,
+         * the multiplication/division/modulus operations are delegated to
+         * functions annotated with the Operator annotation.
+         */
         zen_BinaryEntityGenerator_invokeEvaluate(generator, symbol, symbolSize);
     }
 }
@@ -2187,6 +2223,12 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                  */
                 zen_ASTWalker_walk(astListener, subscriptContext->m_expression);
 
+                /* Generate the instructions corresponding to invoking the
+                 * ZenKernel.evaluate() function. Since, Zen is dynamically typed
+                 * the compiler cannot determine the type of the operands. Therefore,
+                 * the subscript operation is delegated to the function annotated
+                 * with the Operator annotation.
+                 */
                 zen_BinaryEntityGenerator_invokeEvaluate(generator, "[]", 2);
 
                 /* The normal behaviour of the AST walker causes the generator to

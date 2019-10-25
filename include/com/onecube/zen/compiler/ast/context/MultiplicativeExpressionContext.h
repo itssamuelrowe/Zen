@@ -19,6 +19,7 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_MULTIPLICATIVE_EXPRESSION_CONTEXT_H
 #define COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_MULTIPLICATIVE_EXPRESSION_CONTEXT_H
 
+#include <jtk/collection/list/ArrayList.h>
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
 
@@ -35,8 +36,7 @@
 struct zen_MultiplicativeExpressionContext_t {
     zen_ASTNode_t* m_node;
     zen_ASTNode_t* m_unaryExpression;
-    zen_ASTNode_t* m_multiplicativeOperator;
-    zen_ASTNode_t* m_multiplicativeExpression;
+    jtk_ArrayList_t* m_unaryExpressions;
 };
 
 /**

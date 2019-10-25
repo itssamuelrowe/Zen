@@ -34,6 +34,7 @@
  */
 
 #include <jtk/core/Object.h>
+#include <jtk/collection/Pair.h>
 
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
 #include <com/onecube/zen/compiler/ast/context/Context.h>
@@ -2164,8 +2165,7 @@ zen_MultiplicativeExpressionContext_t* zen_MultiplicativeExpressionContext_new(z
     zen_MultiplicativeExpressionContext_t* context = zen_Memory_allocate(zen_MultiplicativeExpressionContext_t, 1);
     context->m_node = node;
     context->m_unaryExpression = NULL;
-    context->m_multiplicativeOperator = NULL;
-    context->m_multiplicativeExpression = NULL;
+    context->m_unaryExpressions = jtk_ArrayList_new();
 
     zen_Context_initializeNode(node, ZEN_AST_NODE_TYPE_MULTIPLICATIVE_EXPRESSION, context,
         (zen_ContextDestructorFunction_t)zen_MultiplicativeExpressionContext_delete,
@@ -2177,6 +2177,13 @@ zen_MultiplicativeExpressionContext_t* zen_MultiplicativeExpressionContext_new(z
 void zen_MultiplicativeExpressionContext_delete(zen_MultiplicativeExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
+    int32_t size = jtk_ArrayList_getSize(context->m_unaryExpressions);
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        jtk_Pair_t* pair = (jtk_Pair_t*)jtk_ArrayList_getValue(context->m_unaryExpressions, i);
+        jtk_Pair_delete(pair);
+    }
+    jtk_ArrayList_delete(context->m_unaryExpressions);
     jtk_Memory_deallocate(context);
 }
 
@@ -2186,9 +2193,13 @@ void zen_MultiplicativeExpressionContext_getChildren(zen_MultiplicativeExpressio
     jtk_Assert_assertObject(children, "The specified children is null.");
 
     jtk_ArrayList_add(children, context->m_unaryExpression);
-    if (context->m_multiplicativeOperator != NULL) {
-        jtk_ArrayList_add(children, context->m_multiplicativeOperator);
-        jtk_ArrayList_add(children, context->m_multiplicativeExpression);
+
+    int32_t size = jtk_ArrayList_getSize(context->m_unaryExpressions);
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        jtk_Pair_t* pair = (jtk_Pair_t*)jtk_ArrayList_getValue(context->m_unaryExpressions, i);
+        jtk_ArrayList_add(children, pair->m_left);
+        jtk_ArrayList_add(children, pair->m_right);
     }
 }
 
