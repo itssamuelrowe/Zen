@@ -1868,34 +1868,96 @@ void zen_BinaryEntityGenerator_onEnterShiftExpression(zen_ASTListener_t* astList
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_ShiftExpressionContext_t* context = (zen_ShiftExpressionContext_t*)node->m_context;
+
+    /* Generates the instructions corresponding to the very first child of
+     * the node.
+     */
+    zen_ASTListener_visitFirstChild(astListener);
 }
 
 void zen_BinaryEntityGenerator_onExitShiftExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {/*
+    zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_ShiftExpressionContext_t* context = (zen_ShiftExpressionContext_t*)node->m_context;
 
-    zen_ASTNode_t* shiftOperator = context->m_shiftOperator;
-    if (shiftOperator != NULL) {
-        zen_Token_t* shiftOperatorToken = (zen_Token_t*)(shiftOperator->m_context);
+    int32_t size = jtk_ArrayList_getSize(context->m_additiveExpressions);
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        jtk_Pair_t* pair = (jtk_Pair_t*)jtk_ArrayList_getValue(context->m_additiveExpressions, i);
+        
+        /* Retrieve the shift operator. */
+        zen_ASTNode_t* shiftOperator = pair->m_left;
+        /* At this point, the instructions corresponding to the left operand
+         * should be generated. The generation of the instructions for
+         * shift expressions follow the order: operand1 operand2 operator.
+         * In other words, the compiler generates instructions for shift
+         * expressions in postfix order. Therefore, generate the instructions for
+         * the right operand and invoking the ZenKernel.evaluate(...) function,
+         * which takes care of *aggregating* the result.
+         */
+        zen_ASTWalker_walk(astListener, pair->m_right);
+        
+        /* Retrieve the corresponding shift operator token from the AST
+         * node.
+         */
+        zen_Token_t* shiftOperatorToken = (zen_Token_t*)shiftOperator->m_context;
+        /* Retrieve the type of the shift operator. */
         zen_TokenType_t shiftOperatorTokenType = zen_Token_getType(shiftOperatorToken);
+
+        /* The values of symbol and symbolSize are the only arbitrary variables
+         * when invoking the zen_BinaryEntityGenerator_invokeEvaluate() function.
+         * Therefore, instead of rewriting the invocation expression multiple
+         * times, I have factored it out.
+         */
+        uint8_t* symbol = NULL;
+        int32_t symbolSize = 2;
+
         switch (shiftOperatorTokenType) {
             case ZEN_TOKEN_LEFT_ANGLE_BRACKET_2: {
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
+                /* The kernel should find a function annotated with the Operator
+                 * annotation that handles the '+' symbol.
+                 */
+                symbol = ">>";
+
                 break;
             }
 
             case ZEN_TOKEN_RIGHT_ANGLE_BRACKET_2: {
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
+                /* The kernel should find a function annotated with the Operator
+                 * annotation that handles the '-' symbol.
+                 */
+                symbol = "<<";
+
+                break;
+            }
+            
+            case ZEN_TOKEN_RIGHT_ANGLE_BRACKET_3: {
+                /* The kernel should find a function annotated with the Operator
+                 * annotation that handles the '-' symbol.
+                 */
+                symbol = "<<<";
+                /* All the other symbols are of length 2, except for the '<<<' symbol.
+                 * Therefore, update the symbol size.
+                 */
+                symbolSize = 3;
+   
                 break;
             }
 
-            case ZEN_TOKEN_RIGHT_ANGLE_BRACKET_3: {
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
-                break;
+            default: {
+                /* The generator should not reach this code! */
+                printf("[error] Control should not reach here.\n");
             }
         }
-    }*/
+
+        /* Generate the instructions corresponding to invoking the
+         * ZenKernel.evaluate() function. Since, Zen is dynamically typed
+         * the compiler cannot determine the type of the operands. Therefore,
+         * the left shift, right shift, and extended right shift operations are
+         * delegated to functions annotated with the Operator annotation.
+         */
+        zen_BinaryEntityGenerator_invokeEvaluate(generator, symbol, symbolSize);
+    }
 }
 
 // additiveExpression
@@ -1962,7 +2024,7 @@ void zen_BinaryEntityGenerator_onExitAdditiveExpression(zen_ASTListener_t* astLi
                 /* The kernel should find a function annotated with the Operator
                  * annotation that handles the '-' symbol.
                  */
-                symbol = "/";
+                symbol = "-";
 
                 break;
             }
@@ -1976,7 +2038,7 @@ void zen_BinaryEntityGenerator_onExitAdditiveExpression(zen_ASTListener_t* astLi
         /* Generate the instructions corresponding to invoking the
          * ZenKernel.evaluate() function. Since, Zen is dynamically typed
          * the compiler cannot determine the type of the operands. Therefore,
-         * the multiplication/division/modulus operations are delegated to
+         * the addition and subtraction operations are delegated to
          * functions annotated with the Operator annotation.
          */
         zen_BinaryEntityGenerator_invokeEvaluate(generator, symbol, symbolSize);

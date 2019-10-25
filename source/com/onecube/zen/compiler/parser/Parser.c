@@ -2493,16 +2493,19 @@ void zen_Parser_shiftExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
     zen_Parser_additiveExpression(parser, additiveExpression);
 
     /* Parse the expression to the right of the operator, if any. */
-    if (zen_Parser_isShiftOperator(zen_TokenStream_la(parser->m_tokens, 1))) {
+    while (zen_Parser_isShiftOperator(zen_TokenStream_la(parser->m_tokens, 1))) {
+        jtk_Pair_t* pair = jtk_Pair_new();
+        jtk_ArrayList_add(context->m_additiveExpressions, pair);
+        
         zen_Token_t* shiftOperatorToken = zen_TokenStream_lt(parser->m_tokens, 1);
         zen_ASTNode_t* shiftOperator = zen_Parser_newTerminalNode(node, shiftOperatorToken);
-        context->m_shiftOperator = shiftOperator;
+        pair->m_left = shiftOperator;
         /* Consume the shift operator token. */
         zen_TokenStream_consume(parser->m_tokens);
 
-        zen_ASTNode_t* shiftExpression = zen_ASTNode_new(node);
-        context->m_shiftExpression = shiftExpression;
-        zen_Parser_shiftExpression(parser, shiftExpression);
+        zen_ASTNode_t* additiveExpression = zen_ASTNode_new(node);
+        pair->m_right = additiveExpression;
+        zen_Parser_additiveExpression(parser, additiveExpression);
     }
 
     zen_StackTrace_exit();
