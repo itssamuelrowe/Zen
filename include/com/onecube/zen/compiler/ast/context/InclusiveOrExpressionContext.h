@@ -40,9 +40,9 @@ struct zen_InclusiveOrExpressionContext_t {
     zen_ASTNode_t* m_exclusiveOrExpression;
 
     /**
-     * The exclusiveOrExpressions on the right of the operator.
+     * The list of exclusiveOrExpressions on the right of the operator.
      */
-    zen_ASTNode_t* m_inclusiveOrExpression;
+    jtk_ArrayList_t* m_exclusiveOrExpressions;
 };
 
 /**

@@ -2305,7 +2305,7 @@ void zen_Parser_logicalAndExpression(zen_Parser_t* parser, zen_ASTNode_t* node) 
 
 /*
  * inclusiveOrExpression
- * :	exclusiveOrExpression ('|' inclusiveOrExpression)?
+ * :	exclusiveOrExpression ('|' exclusiveOrExpression)*
  * ;
  */
 void zen_Parser_inclusiveOrExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
@@ -2323,9 +2323,9 @@ void zen_Parser_inclusiveOrExpression(zen_Parser_t* parser, zen_ASTNode_t* node)
         /* Consume and discard the '|' token. */
         zen_TokenStream_consume(parser->m_tokens);
 
-        zen_ASTNode_t* inclusiveOrExpression = zen_ASTNode_new(node);
-        context->m_inclusiveOrExpression = inclusiveOrExpression;
-        zen_Parser_inclusiveOrExpression(parser, inclusiveOrExpression);
+        zen_ASTNode_t* exclusiveOrExpression0 = zen_ASTNode_new(node);
+        jtk_ArrayList_add(context->m_exclusiveOrExpressions, exclusiveOrExpression0);
+        zen_Parser_exclusiveOrExpression(parser, exclusiveOrExpression0);
     }
 
     zen_StackTrace_exit();
@@ -2333,7 +2333,7 @@ void zen_Parser_inclusiveOrExpression(zen_Parser_t* parser, zen_ASTNode_t* node)
 
 /*
  * exclusiveOrExpression
- * :	andExpression ('^' exclusiveOrExpression)?
+ * :	andExpression ('^' andExpression)*
  * ;
  */
 void zen_Parser_exclusiveOrExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
@@ -2347,7 +2347,7 @@ void zen_Parser_exclusiveOrExpression(zen_Parser_t* parser, zen_ASTNode_t* node)
     zen_Parser_andExpression(parser, andExpression);
 
     /* Parse the expression to the right of the operator, if any. */
-    if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_CARET) {
+    while (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_CARET) {
         /* Consume and discard the '^' token. */
         zen_TokenStream_consume(parser->m_tokens);
 
@@ -2361,7 +2361,7 @@ void zen_Parser_exclusiveOrExpression(zen_Parser_t* parser, zen_ASTNode_t* node)
 
 /*
  * andExpression
- * :	equalityExpression ('&' andExpression)?
+ * :	equalityExpression ('&' equalityExpression)*
  * ;
  */
 void zen_Parser_andExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
