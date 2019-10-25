@@ -2061,8 +2061,7 @@ zen_RelationalExpressionContext_t* zen_RelationalExpressionContext_new(zen_ASTNo
     zen_RelationalExpressionContext_t* context = zen_Memory_allocate(zen_RelationalExpressionContext_t, 1);
     context->m_node = node;
     context->m_shiftExpression = NULL;
-    context->m_relationalOperator = NULL;
-    context->m_relationalExpression = NULL;
+    context->m_shiftExpressions = jtk_ArrayList_new();
 
     zen_Context_initializeNode(node, ZEN_AST_NODE_TYPE_RELATIONAL_EXPRESSION, context,
         (zen_ContextDestructorFunction_t)zen_RelationalExpressionContext_delete,
@@ -2074,6 +2073,14 @@ zen_RelationalExpressionContext_t* zen_RelationalExpressionContext_new(zen_ASTNo
 void zen_RelationalExpressionContext_delete(zen_RelationalExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
+    int32_t size = jtk_ArrayList_getSize(context->m_shiftExpressions);
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        jtk_Pair_t* pair = (jtk_Pair_t*)jtk_ArrayList_getValue(
+            context->m_shiftExpressions, i);
+        jtk_Pair_delete(pair);
+    }
+    jtk_ArrayList_delete(context->m_shiftExpressions);
     jtk_Memory_deallocate(context);
 }
 
@@ -2083,8 +2090,14 @@ void zen_RelationalExpressionContext_getChildren(zen_RelationalExpressionContext
     jtk_Assert_assertObject(children, "The specified children is null.");
 
     jtk_ArrayList_addPredicatively(children, context->m_shiftExpression, jtk_Object_isNotNull);
-    jtk_ArrayList_addPredicatively(children, context->m_relationalOperator, jtk_Object_isNotNull);
-    jtk_ArrayList_addPredicatively(children, context->m_relationalExpression, jtk_Object_isNotNull);
+    
+    int32_t size = jtk_ArrayList_getSize(context->m_shiftExpressions);
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        jtk_Pair_t* pair = (jtk_Pair_t*)jtk_ArrayList_getValue(context->m_shiftExpressions, i);
+        jtk_ArrayList_add(children, pair->m_left);
+        jtk_ArrayList_add(children, pair->m_right);
+    }
 }
 
 /*******************************************************************************

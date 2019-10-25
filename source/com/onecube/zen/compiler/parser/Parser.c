@@ -2431,7 +2431,7 @@ bool zen_Parser_isEqualityOperator(zen_TokenType_t type) {
 
 /*
  * relationalExpression
- * :	shiftExpression (relationalOperator relationalExpression)?
+ * :	shiftExpression (relationalOperator shiftExpression)*
  * ;
  */
 void zen_Parser_relationalExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
@@ -2445,16 +2445,19 @@ void zen_Parser_relationalExpression(zen_Parser_t* parser, zen_ASTNode_t* node) 
     zen_Parser_shiftExpression(parser, shiftExpression);
 
     /* Parse the expression to the right of the operator, if any. */
-    if (zen_Parser_isRelationalOperator(zen_TokenStream_la(parser->m_tokens, 1))) {
+    while (zen_Parser_isRelationalOperator(zen_TokenStream_la(parser->m_tokens, 1))) {
+        jtk_Pair_t* pair = jtk_Pair_new();
+        jtk_ArrayList_add(context->m_shiftExpressions, pair);
+        
         zen_Token_t* relationalOperatorToken = zen_TokenStream_lt(parser->m_tokens, 1);
         zen_ASTNode_t* relationalOperator = zen_Parser_newTerminalNode(node, relationalOperatorToken);
-        context->m_relationalOperator = relationalOperator;
+        pair->m_left = relationalOperator;
         /* Consume the relational operator. */
         zen_TokenStream_consume(parser->m_tokens);
 
-        zen_ASTNode_t* relationalExpression = zen_ASTNode_new(node);
-        context->m_relationalExpression = relationalExpression;
-        zen_Parser_relationalExpression(parser, relationalExpression);
+        zen_ASTNode_t* shiftExpression0 = zen_ASTNode_new(node);
+        pair->m_right = shiftExpression0;
+        zen_Parser_shiftExpression(parser, shiftExpression0);
     }
 
     zen_StackTrace_exit();
@@ -2503,9 +2506,9 @@ void zen_Parser_shiftExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
         /* Consume the shift operator token. */
         zen_TokenStream_consume(parser->m_tokens);
 
-        zen_ASTNode_t* additiveExpression = zen_ASTNode_new(node);
-        pair->m_right = additiveExpression;
-        zen_Parser_additiveExpression(parser, additiveExpression);
+        zen_ASTNode_t* additiveExpression0 = zen_ASTNode_new(node);
+        pair->m_right = additiveExpression0;
+        zen_Parser_additiveExpression(parser, additiveExpression0);
     }
 
     zen_StackTrace_exit();

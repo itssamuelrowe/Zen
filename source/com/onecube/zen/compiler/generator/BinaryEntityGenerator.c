@@ -1822,44 +1822,114 @@ void zen_BinaryEntityGenerator_onEnterRelationalExpression(zen_ASTListener_t* as
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_RelationalExpressionContext_t* context = (zen_RelationalExpressionContext_t*)node->m_context;
+
+    /* Generates the instructions corresponding to the very first child of
+     * the node.
+     */
+    zen_ASTListener_visitFirstChild(astListener);
 }
 
 void zen_BinaryEntityGenerator_onExitRelationalExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {/*
+    zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_RelationalExpressionContext_t* context = (zen_RelationalExpressionContext_t*)node->m_context;
 
-    zen_ASTNode_t* relationalOperator = context->m_relationalOperator;
-    if (relationalOperator != NULL) {
-        zen_Token_t* relationalOperatorToken = (zen_Token_t*)(relationalOperator->m_context);
+    int32_t size = jtk_ArrayList_getSize(context->m_shiftExpressions);
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        jtk_Pair_t* pair = (jtk_Pair_t*)jtk_ArrayList_getValue(context->m_shiftExpressions, i);
+        
+        /* Retrieve the relational operator. */
+        zen_ASTNode_t* relationalOperator = pair->m_left;
+        /* At this point, the instructions corresponding to the left operand
+         * should be generated. The generation of the instructions for
+         * relational expressions follow the order: operand1 operand2 operator.
+         * In other words, the compiler generates instructions for relational
+         * expressions in postfix order. Therefore, generate the instructions for
+         * the right operand and invoking the ZenKernel.evaluate(...) function,
+         * which takes care of *aggregating* the result.
+         */
+        zen_ASTWalker_walk(astListener, pair->m_right);
+        
+        /* Retrieve the corresponding relational operator token from the AST
+         * node.
+         */
+        zen_Token_t* relationalOperatorToken = (zen_Token_t*)relationalOperator->m_context;
+        /* Retrieve the type of the relational operator. */
         zen_TokenType_t relationalOperatorTokenType = zen_Token_getType(relationalOperatorToken);
-        switch (relationalOperatorTokenType) {
-            case ZEN_TOKEN_LEFT_ANGLE_BRACKET: {
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
-                break;
-            }
 
-            case ZEN_TOKEN_RIGHT_ANGLE_BRACKET: {
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
-                break;
-            }
-
-            case ZEN_TOKEN_LEFT_ANGLE_BRACKET_EQUAL: {
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
-                break;
-            }
-
-            case ZEN_TOKEN_RIGHT_ANGLE_BRACKET_EQUAL: {
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
-                break;
-            }
-
-            case ZEN_TOKEN_KEYWORD_IS: {
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
-                break;
-            }
+        if (relationalOperatorTokenType == ZEN_TOKEN_KEYWORD_IS) {
+            
         }
-    }*/
+        else {
+            /* The values of symbol and symbolSize are the only arbitrary variables
+             * when invoking the zen_BinaryEntityGenerator_invokeEvaluate() function.
+             * Therefore, instead of rewriting the invocation expression multiple
+             * times, I have factored it out.
+             */
+            uint8_t* symbol = NULL;
+            int32_t symbolSize = 1;
+            
+            switch (relationalOperatorTokenType) {
+                case ZEN_TOKEN_LEFT_ANGLE_BRACKET: {
+                    /* The kernel should find a function annotated with the Operator
+                     * annotation that handles the '+' symbol.
+                     */
+                    symbol = "<";
+
+                    break;
+                }
+
+                case ZEN_TOKEN_RIGHT_ANGLE_BRACKET: {
+                    /* The kernel should find a function annotated with the Operator
+                     * annotation that handles the '>' symbol.
+                     */
+                    symbol = ">";
+
+                    break;
+                }
+                
+                case ZEN_TOKEN_LEFT_ANGLE_BRACKET_EQUAL: {
+                    /* The kernel should find a function annotated with the Operator
+                     * annotation that handles the '<=' symbol.
+                     */
+                    symbol = "<=";
+                    /* All the other symbols are of length 1, except for the '<='
+                     * and '>=' symbols. Therefore, update the symbol size.
+                     */
+                    symbolSize = 2;
+       
+                    break;
+                }
+                
+                case ZEN_TOKEN_RIGHT_ANGLE_BRACKET_EQUAL: {
+                    /* The kernel should find a function annotated with the Operator
+                     * annotation that handles the '>=' symbol.
+                     */
+                    symbol = ">=";
+                    /* All the other symbols are of length 1, except for the '<='
+                     * and '>=' symbols. Therefore, update the symbol size.
+                     */
+                    symbolSize = 2;
+       
+                    break;
+                }
+
+                default: {
+                    /* The generator should not reach this code! */
+                    printf("[error] Control should not reach here.\n");
+                }
+            }
+            
+            /* Generate the instructions corresponding to invoking the
+             * ZenKernel.evaluate() function. Since, Zen is dynamically typed
+             * the compiler cannot determine the type of the operands. Therefore,
+             * the left shift, right shift, and extended right shift operations are
+             * delegated to functions annotated with the Operator annotation.
+             */
+            zen_BinaryEntityGenerator_invokeEvaluate(generator, symbol, symbolSize);
+        }
+    }
 }
 
 // shiftExpression

@@ -19,6 +19,7 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_RELATIONAL_EXPRESSION_CONTEXT_H
 #define COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_RELATIONAL_EXPRESSION_CONTEXT_H
 
+#include <jtk/collection/list/ArrayList.h>
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
 
@@ -35,8 +36,7 @@
 struct zen_RelationalExpressionContext_t {
     zen_ASTNode_t* m_node;
     zen_ASTNode_t* m_shiftExpression;
-    zen_ASTNode_t* m_relationalOperator;
-    zen_ASTNode_t* m_relationalExpression;
+    jtk_ArrayList_t* m_shiftExpressions;
 };
 
 /**
