@@ -2376,7 +2376,7 @@ void zen_Parser_andExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
 
     /* Parse the expression to the right of the operator, if any. */
     while (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_AMPERSAND) {
-        
+
         /* Consume and discard the '&' token. */
         zen_TokenStream_consume(parser->m_tokens);
 
@@ -2449,7 +2449,7 @@ void zen_Parser_relationalExpression(zen_Parser_t* parser, zen_ASTNode_t* node) 
     while (zen_Parser_isRelationalOperator(zen_TokenStream_la(parser->m_tokens, 1))) {
         jtk_Pair_t* pair = jtk_Pair_new();
         jtk_ArrayList_add(context->m_shiftExpressions, pair);
-        
+
         zen_Token_t* relationalOperatorToken = zen_TokenStream_lt(parser->m_tokens, 1);
         zen_ASTNode_t* relationalOperator = zen_Parser_newTerminalNode(node, relationalOperatorToken);
         pair->m_left = relationalOperator;
@@ -2500,7 +2500,7 @@ void zen_Parser_shiftExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
     while (zen_Parser_isShiftOperator(zen_TokenStream_la(parser->m_tokens, 1))) {
         jtk_Pair_t* pair = jtk_Pair_new();
         jtk_ArrayList_add(context->m_additiveExpressions, pair);
-        
+
         zen_Token_t* shiftOperatorToken = zen_TokenStream_lt(parser->m_tokens, 1);
         zen_ASTNode_t* shiftOperator = zen_Parser_newTerminalNode(node, shiftOperatorToken);
         pair->m_left = shiftOperator;
@@ -2547,7 +2547,7 @@ void zen_Parser_additiveExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
     while (zen_Parser_isAdditiveOperator(zen_TokenStream_la(parser->m_tokens, 1))) {
         jtk_Pair_t* pair = jtk_Pair_new();
         jtk_ArrayList_add(context->m_multiplicativeExpressions, pair);
-        
+
         zen_Token_t* additiveOperatorToken = zen_TokenStream_lt(parser->m_tokens, 1);
         zen_ASTNode_t* additiveOperator = zen_Parser_newTerminalNode(node, additiveOperatorToken);
         pair->m_left = additiveOperator;

@@ -2224,7 +2224,8 @@ void zen_BinaryEntityBuilder_emitReturnReference(zen_BinaryEntityBuilder_t* buil
 
 /* Store */
 
-void zen_BinaryEntityBuilder_emitStoreInteger(zen_BinaryEntityBuilder_t* builder, uint8_t index) {
+void zen_BinaryEntityBuilder_emitStoreInteger(zen_BinaryEntityBuilder_t* builder,
+    uint8_t index) {
     jtk_Assert_assertObject(builder, "The specified builder is null.");
 
     zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(builder->m_channels, 0);
