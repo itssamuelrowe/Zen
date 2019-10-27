@@ -1644,8 +1644,7 @@ void zen_BinaryEntityDisassember_disassembleInstructions(
             case ZEN_BYTE_CODE_LOAD_CPR: {
                 jtk_StringBuilder_appendEx_z(builder, "load_cpr ", 9);
 
-                uint16_t index = (bytes[++i] << 8) | bytes[++i];
-                jtk_StringBuilder_append_i(builder, index);
+                jtk_StringBuilder_append_i(builder, bytes[++i]);
 
                 break;
             }
@@ -2589,6 +2588,16 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
         zen_ASTWalker_walk(astListener, elseIfClauseContext->m_expression);
     }
     */
+
+    /* TODO: Should generate a jump instruction immediately after the instructions
+     * corresponding to the body of the if clause when an else clause is present.
+     */
+    if (context->m_elseClause != NULL) {
+        zen_ASTNode_t* elseClause = context->m_elseClause;
+        zen_ElseClauseContext_t* elseClauseContext =
+            (zen_ElseClauseContext_t*)elseClause->m_context;
+        zen_ASTWalker_walk(astListener, elseClauseContext->m_statementSuite);
+    }
 }
 
 // ifClause
