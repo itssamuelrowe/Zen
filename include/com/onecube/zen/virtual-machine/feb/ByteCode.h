@@ -1536,7 +1536,7 @@ enum zen_ByteCode_t {
      * `value == 0`.
      *
      * If the comparison succeeds, the `offset0` and `offset1` arguments are
-     * used to evaluate a signed 16-bit offset, with the expression
+     * used to evaluate an unsigned 16-bit offset, with the expression
      * `(offset0 << 8) | offset1`. The control is transferred to the instruction
      * at this offset. The offset should point to a valid byte within the byte
      * code range.
@@ -1566,7 +1566,7 @@ enum zen_ByteCode_t {
      * `value != 0`.
      *
      * If the comparison succeeds, the `offset0` and `offset1` arguments are
-     * used to evaluate a signed 16-bit offset, with the expression
+     * used to evaluate a unsigned 16-bit offset, with the expression
      * `(offset0 << 8) | offset1`. The control is transferred to the instruction
      * at this offset. The offset should point to a valid byte within the byte
      * code range.
@@ -1596,7 +1596,7 @@ enum zen_ByteCode_t {
      * `value < 0`.
      *
      * If the comparison succeeds, the `offset0` and `offset1` arguments are
-     * used to evaluate a signed 16-bit offset, with the expression
+     * used to evaluate a unsigned 16-bit offset, with the expression
      * `(offset0 << 8) | offset1`. The control is transferred to the instruction
      * at this offset. The offset should point to a valid byte within the byte
      * code range.
@@ -1626,7 +1626,7 @@ enum zen_ByteCode_t {
      * `value > 0`.
      *
      * If the comparison succeeds, the `offset0` and `offset1` arguments are
-     * used to evaluate a signed 16-bit offset, with the expression
+     * used to evaluate a unsigned 16-bit offset, with the expression
      * `(offset0 << 8) | offset1`. The control is transferred to the instruction
      * at this offset. The offset should point to a valid byte within the byte
      * code range.
@@ -1656,7 +1656,7 @@ enum zen_ByteCode_t {
      * shown as `value <= 0`.
      *
      * If the comparison succeeds, the `offset0` and `offset1` arguments are
-     * used to evaluate a signed 16-bit offset, with the expression
+     * used to evaluate a unsigned 16-bit offset, with the expression
      * `(offset0 << 8) | offset1`. The control is transferred to the instruction
      * at this offset. The offset should point to a valid byte within the byte
      * code range.
@@ -1686,7 +1686,7 @@ enum zen_ByteCode_t {
      * shown as `value >= 0`.
      *
      * If the comparison succeeds, the `offset0` and `offset1` arguments are
-     * used to evaluate a signed 16-bit offset, with the expression
+     * used to evaluate a unsigned 16-bit offset, with the expression
      * `(offset0 << 8) | offset1`. The control is transferred to the instruction
      * at this offset. The offset should point to a valid byte within the byte
      * code range.
@@ -1716,7 +1716,7 @@ enum zen_ByteCode_t {
      * `value1 == value2`.
      *
      * If the comparison succeeds, the `offset0` and `offset1` arguments are
-     * used to evaluate a signed 16-bit offset, with the expression
+     * used to evaluate a unsigned 16-bit offset, with the expression
      * `(offset0 << 8) | offset1`. The control is transferred to the instruction
      * at this offset. The offset should point to a valid byte within the byte
      * code range.
@@ -1748,7 +1748,7 @@ enum zen_ByteCode_t {
      * as `value1 != value2`.
      *
      * If the comparison succeeds, the `offset0` and `offset1` arguments are
-     * used to evaluate a signed 16-bit offset, with the expression
+     * used to evaluate a unsigned 16-bit offset, with the expression
      * `(offset0 << 8) | offset1`. The control is transferred to the instruction
      * at this offset. The offset should point to a valid byte within the byte
      * code range.
@@ -1780,7 +1780,7 @@ enum zen_ByteCode_t {
      * as `value1 < value2`.
      *
      * If the comparison succeeds, the `offset0` and `offset1` arguments are
-     * used to evaluate a signed 16-bit offset, with the expression
+     * used to evaluate a unsigned 16-bit offset, with the expression
      * `(offset0 << 8) | offset1`. The control is transferred to the instruction
      * at this offset. The offset should point to a valid byte within the byte
      * code range.
@@ -1812,7 +1812,7 @@ enum zen_ByteCode_t {
      * as `value1 > value2`.
      *
      * If the comparison succeeds, the `offset0` and `offset1` arguments are
-     * used to evaluate a signed 16-bit offset, with the expression
+     * used to evaluate a unsigned 16-bit offset, with the expression
      * `(offset0 << 8) | offset1`. The control is transferred to the instruction
      * at this offset. The offset should point to a valid byte within the byte
      * code range.
@@ -1844,7 +1844,7 @@ enum zen_ByteCode_t {
      * `value2`, shown as `value1 <= value2`.
      *
      * If the comparison succeeds, the `offset0` and `offset1` arguments are
-     * used to evaluate a signed 16-bit offset, with the expression
+     * used to evaluate a unsigned 16-bit offset, with the expression
      * `(offset0 << 8) | offset1`. The control is transferred to the instruction
      * at this offset. The offset should point to a valid byte within the byte
      * code range.
@@ -1876,7 +1876,7 @@ enum zen_ByteCode_t {
      * `value2`, shown as `value1 <= value2`.
      *
      * If the comparison succeeds, the `offset0` and `offset1` arguments are
-     * used to evaluate a signed 16-bit offset, with the expression
+     * used to evaluate a unsigned 16-bit offset, with the expression
      * `(offset0 << 8) | offset1`. The control is transferred to the instruction
      * at this offset. The offset should point to a valid byte within the byte
      * code range.
@@ -1908,7 +1908,7 @@ enum zen_ByteCode_t {
      * `value1 == value2`.
      *
      * If the comparison succeeds, the `offset0` and `offset1` arguments are
-     * used to evaluate a signed 16-bit offset, with the expression
+     * used to evaluate a unsigned 16-bit offset, with the expression
      * `(offset0 << 8) | offset1`. The control is transferred to the instruction
      * at this offset. The offset should point to a valid byte within the byte
      * code range.
@@ -1944,7 +1944,7 @@ enum zen_ByteCode_t {
      * `value1 != value2`.
      *
      * If the comparison succeeds, the `offset0` and `offset1` arguments are
-     * used to evaluate a signed 16-bit offset, with the expression
+     * used to evaluate a unsigned 16-bit offset, with the expression
      * `(offset0 << 8) | offset1`. The control is transferred to the instruction
      * at this offset. The offset should point to a valid byte within the byte
      * code range.
@@ -1980,7 +1980,7 @@ enum zen_ByteCode_t {
      * `value1 == null`.
      *
      * If the comparison succeeds, the `offset0` and `offset1` arguments are
-     * used to evaluate a signed 16-bit offset, with the expression
+     * used to evaluate a unsigned 16-bit offset, with the expression
      * `(offset0 << 8) | offset1`. The control is transferred to the instruction
      * at this offset. The offset should point to a valid byte within the byte
      * code range.
@@ -2012,7 +2012,7 @@ enum zen_ByteCode_t {
      * `value1 != null`.
      *
      * If the comparison succeeds, the `offset0` and `offset1` arguments are
-     * used to evaluate a signed 16-bit offset, with the expression
+     * used to evaluate a unsigned 16-bit offset, with the expression
      * `(offset0 << 8) | offset1`. The control is transferred to the instruction
      * at this offset. The offset should point to a valid byte within the byte
      * code range.

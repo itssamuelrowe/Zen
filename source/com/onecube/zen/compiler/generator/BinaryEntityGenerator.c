@@ -2513,147 +2513,125 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
         getValueDescriptor, getValueDescriptorSize, getValueName,
         getValueNameSize);
 
+    int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
+         generator->m_instructions);
+    zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
+         generator->m_instructions, parentChannelIndex);
+         
     zen_ASTNode_t* ifClause = context->m_ifClause;
     zen_IfClauseContext_t* ifClauseContext = (zen_IfClauseContext_t*)ifClause->m_context;
-    
-    /* Generate the instructions corresponding to the conditional expression
-     * specified to the if clause.
-     */
-    zen_ASTWalker_walk(astListener, ifClauseContext->m_expression);
-    
-    /* Invoke the Boolean#getValue() function to retrieve the primitive equivalent
-     * of the resulting object.
-     */
-    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions,
-        getValueIndex);
+    zen_ASTNode_t* expression = ifClauseContext->m_expression;
+    zen_ASTNode_t* statementSuite = ifClauseContext->m_statementSuite;
 
-    /* Log the emission of the invoke_special instruction. */
-    printf("[debug] Emitted invoke_virtual %d\n", getValueIndex);
-
-    int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
-        generator->m_instructions);
-    zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
-        generator->m_instructions, parentChannelIndex);
-    int32_t parentChannelSize = zen_DataChannel_getSize(parentChannel);
-
-    int32_t temporaryChannelIndex = zen_BinaryEntityBuilder_addChannel(
-        generator->m_instructions);
-    zen_DataChannel_t* temporaryChannel = zen_BinaryEntityBuilder_getChannel(
-        generator->m_instructions, temporaryChannelIndex);
-    zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_instructions,
-        temporaryChannelIndex);
-
-    /* Generate the instructions corresponding to the statement suite specified
-     * to the if clause on the temporary channel.
-     */
-    zen_ASTWalker_walk(astListener, ifClauseContext->m_statementSuite);
-
-    /* Evaluate the size of the temporary channel after generating instructions
-     * corresponding to the statement suite.
-     */
-    int32_t temporaryChannelSize = zen_DataChannel_getSize(temporaryChannel);
-
-    /* Reactivate the parent channel as the active channel. */
-    zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_instructions, parentChannelIndex);
-
-    /* Evaluate the offset where the jump instruction should branch when the
-     * condition is false. Since the jump instruction is not already on the
-     * channel, 3 is explicitly added to the offset computation, which is the
-     * length of the jump instruction.
-     *
-     * Note: the instructions are indexed beginning from zero. Otherwise,
-     * an extra 1 should be added to the offset.
-     */
-    int32_t jumpOffset = parentChannelSize + temporaryChannelSize + 3;
-    /* Emit the jump_eq0_i instruction. */
-    zen_BinaryEntityBuilder_emitJumpEqual0Integer(generator->m_instructions,
-        jumpOffset);
-
-    /* Log the emission of the jump_eq0_i instruction. */
-    printf("[debug] Emitted jump_eq0_i %d\n", jumpOffset);
-
-    zen_DataChannel_appendChannel(parentChannel, temporaryChannel);
-    zen_BinaryEntityBuilder_removeChannel(generator->m_instructions, temporaryChannelIndex);
-
-    // Generate jump to skip the ladder
-    
     int32_t size = jtk_ArrayList_getSize(context->m_elseIfClauses);
-    int32_t i;
-    for (i = 0; i < size; i++) {
-        zen_ASTNode_t* elseIfClause = (zen_ASTNode_t*)jtk_ArrayList_getValue(
-            context->m_elseIfClauses, i);
-        zen_ElseIfClauseContext_t* elseIfClauseContext =
-            (zen_ElseIfClauseContext_t*)elseIfClause->m_context;
-            
+    int32_t* skipIndexes = jtk_Memory_allocate(int32_t, size + 1);
+
+    int32_t index = -1;
+    do {
         /* Generate the instructions corresponding to the conditional expression
-         * specified to the else if clause.
+         * specified to the if clause.
          */
-        zen_ASTWalker_walk(astListener, elseIfClauseContext->m_expression);
-    
+        zen_ASTWalker_walk(astListener, expression);
+
         /* Invoke the Boolean#getValue() function to retrieve the primitive equivalent
          * of the resulting object.
          */
         zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions,
             getValueIndex);
-        
+
         /* Log the emission of the invoke_special instruction. */
         printf("[debug] Emitted invoke_virtual %d\n", getValueIndex);
 
-        parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
-            generator->m_instructions);
-        parentChannel = zen_BinaryEntityBuilder_getChannel(
-            generator->m_instructions, parentChannelIndex);
-        parentChannelSize = zen_DataChannel_getSize(parentChannel);
+        /* Emit the jump_eq0_i instruction. */
+        zen_BinaryEntityBuilder_emitJumpEqual0Integer(generator->m_instructions, 0);
 
-        temporaryChannelIndex = zen_BinaryEntityBuilder_addChannel(
-            generator->m_instructions);
-        temporaryChannel = zen_BinaryEntityBuilder_getChannel(
-            generator->m_instructions, temporaryChannelIndex);
-        zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_instructions,
-            temporaryChannelIndex);
+        /* Log the emission of the jump_eq0_i instruction. */
+        printf("[debug] Emitted jump_eq0_i 0 (dummy index)\n");
+
+        /* Save the index of the byte where the dummy data was written. */
+        int32_t updateIndex = zen_DataChannel_getSize(parentChannel) - 2;
 
         /* Generate the instructions corresponding to the statement suite specified
-         * to the else if clause on the temporary channel.
+         * to the if clause.
          */
-        zen_ASTWalker_walk(astListener, elseIfClauseContext->m_statementSuite);
+        zen_ASTWalker_walk(astListener, statementSuite);
 
-        /* Evaluate the size of the temporary channel after generating instructions
-         * corresponding to the statement suite.
+
+        /* Update the loop counter and prepare for the next iteration, if any. */
+        index++;
+
+        /* A jump instrution should not be generated only if the current
+         * clause is the last if/else if clause.
          */
-        temporaryChannelSize = zen_DataChannel_getSize(temporaryChannel);
+        if (index != size) {
+            /* If the if clause was selected and executed all the other clauses should
+             * be skipped. Generate a jump instruction to skip the ladder. Given the
+             * whole ladder has not been generated yet, the jump offset cannot be
+             * evaluated right now. Therefore, emit the jump instruction with a dummy
+             * offset.
+             */
+            zen_BinaryEntityBuilder_emitJump(generator->m_instructions, 0);
 
-        /* Reactivate the parent channel as the active channel. */
-        zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_instructions, parentChannelIndex);
+            /* Log the emission of the jump instruction. */
+            printf("[debug] Emitted jump 0 (dummy index)\n");
 
-        /* Evaluate the offset where the jump instruction should branch when the
-         * condition is false. Since the jump instruction is not already on the
-         * channel, 3 is explicitly added to the offset computation, which is the
-         * length of the jump instruction.
+            /* Save the index of the bytes where the dummy data was written. */
+            skipIndexes[index + 1] = zen_DataChannel_getSize(parentChannel) - 2;
+
+
+            zen_ASTNode_t* elseIfClause = jtk_ArrayList_getValue(context->m_elseIfClauses, index);
+            zen_ElseIfClauseContext_t* elseIfClauseContext =
+                (zen_ElseIfClauseContext_t*)elseIfClause->m_context;
+            expression = elseIfClauseContext->m_expression;
+            statementSuite = elseIfClauseContext->m_statementSuite;
+        }
+        
+        /* The new parent channel size is equal to the offset where the jump
+         * instruction should branch when the condition is false.
          *
          * Note: the instructions are indexed beginning from zero. Otherwise,
          * an extra 1 should be added to the offset.
          */
-        jumpOffset = parentChannelSize + temporaryChannelSize + 3;
-        /* Emit the jump_eq0_i instruction. */
-        zen_BinaryEntityBuilder_emitJumpEqual0Integer(generator->m_instructions,
-            jumpOffset);
+        int32_t newParentChannelSize = zen_DataChannel_getSize(parentChannel);
 
-        /* Log the emission of the jump_eq0_i instruction. */
-        printf("[debug] Emitted jump_eq0_i %d\n", jumpOffset);
-
-        zen_DataChannel_appendChannel(parentChannel, temporaryChannel);
-        zen_BinaryEntityBuilder_removeChannel(generator->m_instructions, temporaryChannelIndex);
-
+        parentChannel->m_bytes[updateIndex] = (newParentChannelSize & 0x0000FF00) >> 8;
+        parentChannel->m_bytes[updateIndex + 1] = newParentChannelSize & 0x000000FF;
     }
+    while (index < size);
 
     /* TODO: Should generate a jump instruction immediately after the instructions
      * corresponding to the body of the if clause when an else clause is present.
      */
     if (context->m_elseClause != NULL) {
+        /* If the previous if/else if clause was selected and executed all the
+         * the else clause should be skipped. Generate a jump instruction to skip
+         * the else clause. Given the else clause has not been generated yet,
+         * the jump offset cannot be evaluated right now. Therefore, emit the
+         * jump instruction with a dummy offset.
+         */
+        zen_BinaryEntityBuilder_emitJump(generator->m_instructions, 0);
+
+        /* Log the emission of the jump instruction. */
+        printf("[debug] Emitted jump 0 (dummy index)\n");
+
+        /* Save the index of the bytes where the dummy data was written. */
+        skipIndexes[index] = zen_DataChannel_getSize(parentChannel) - 2;
+
+        /* Retrieve the AST node for the else clause. */
         zen_ASTNode_t* elseClause = context->m_elseClause;
+        /* Retrieve the context associated with the AST node of the else clause. */
         zen_ElseClauseContext_t* elseClauseContext =
             (zen_ElseClauseContext_t*)elseClause->m_context;
+        /* Generate the instructions for the statements within the else clause. */
         zen_ASTWalker_walk(astListener, elseClauseContext->m_statementSuite);
+    }
+
+    int32_t newParentChannelSize = zen_DataChannel_getSize(parentChannel);
+    int32_t i;
+    for (i = 0; i <= size; i++) {
+        uint16_t skipIndex = skipIndexes[i];
+        parentChannel->m_bytes[skipIndex] = (newParentChannelSize & 0x0000FF00) >> 8;
+        parentChannel->m_bytes[skipIndex + 1] = newParentChannelSize & 0x000000FF;
     }
 }
 
