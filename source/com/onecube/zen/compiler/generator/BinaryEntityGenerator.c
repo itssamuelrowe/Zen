@@ -673,6 +673,23 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
         fwrite(channel->m_bytes, channel->m_index, 1, fp);
         fclose(fp);
     }
+
+    /* Retrieve the data channel on which the instructions of the
+     * function/initializer were written.
+     */
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(
+        generator->m_instructions->m_channels, 0);
+    /* Retrieve the bytes that were written on the data channel. */
+    uint8_t* bytes = zen_DataChannel_getBytes(channel);
+    /* Retrieve the number of bytes that were written on the data channel. */
+    int32_t size = zen_DataChannel_getSize(channel);
+
+    jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+
+    zen_BinaryEntityDisassember_disassembleInstructions(bytes, size, builder);
+    printf("%.*s", builder->m_size, builder->m_value);
+
+    jtk_StringBuilder_delete(builder);
 }
 
 // importDeclaration
@@ -884,6 +901,1321 @@ zen_InstructionAttribute_t* zen_BinaryEntityGenerator_makeInstructionAttribute(
         instructionLength,
         instructions);
     return instructionAttribute;
+}
+
+void zen_BinaryEntityDisassember_disassembleInstructions(
+    uint8_t* bytes, int32_t size, jtk_StringBuilder_t* builder) {
+
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        uint8_t byteCode = bytes[i];
+        jtk_StringBuilder_appendEx_z(builder, "[debug] #", 9);
+        jtk_StringBuilder_append_i(builder, i);
+        jtk_StringBuilder_appendEx_z(builder, " ", 1);
+
+        switch (byteCode) {
+            /* No Operation */
+            case ZEN_BYTE_CODE_NOP: {
+                jtk_StringBuilder_appendEx_z(builder, "nop", 3);
+
+                break;
+            }
+
+            /* Add */
+
+            case ZEN_BYTE_CODE_ADD_I: {
+                jtk_StringBuilder_appendEx_z(builder, "add_i", 5);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_ADD_L: {
+                jtk_StringBuilder_appendEx_z(builder, "add_l", 5);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_ADD_F: {
+                jtk_StringBuilder_appendEx_z(builder, "add_f", 5);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_ADD_D: {
+                jtk_StringBuilder_appendEx_z(builder, "add_d", 5);
+
+                break;
+            }
+
+            /* Bitwise AND */
+
+            case ZEN_BYTE_CODE_AND_I: {
+                jtk_StringBuilder_appendEx_z(builder, "and_i", 5);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_AND_L: {
+                jtk_StringBuilder_appendEx_z(builder, "and_l", 5);
+
+                break;
+            }
+
+            /* Bitwise OR */
+
+            case ZEN_BYTE_CODE_OR_I: {
+                jtk_StringBuilder_appendEx_z(builder, "or_i", 4);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_OR_L: {
+                jtk_StringBuilder_appendEx_z(builder, "or_l", 4);
+
+                break;
+            }
+
+            /* Bitwise Shift */
+
+            case ZEN_BYTE_CODE_SHIFT_LEFT_I: {
+                jtk_StringBuilder_appendEx_z(builder, "shift_left_i", 12);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_SHIFT_LEFT_L: {
+                jtk_StringBuilder_appendEx_z(builder, "shift_left_l", 12);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_SHIFT_RIGHT_I: {
+                jtk_StringBuilder_appendEx_z(builder, "shift_right_i", 13);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_SHIFT_RIGHT_L: {
+                jtk_StringBuilder_appendEx_z(builder, "shift_right_l", 13);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_SHIFT_RIGHT_UI: {
+                jtk_StringBuilder_appendEx_z(builder, "shift_right_ui", 14);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_SHIFT_RIGHT_UL: {
+                jtk_StringBuilder_appendEx_z(builder, "shift_right_ul", 14);
+
+                break;
+            }
+
+            /* Bitwise XOR */
+
+            case ZEN_BYTE_CODE_XOR_I: {
+                jtk_StringBuilder_appendEx_z(builder, "xor_i", 5);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_XOR_L: {
+                jtk_StringBuilder_appendEx_z(builder, "xor_l", 5);
+
+                break;
+            }
+
+            /* Cast */
+
+            case ZEN_BYTE_CODE_CAST_ITL: {
+                jtk_StringBuilder_appendEx_z(builder, "cast_itl", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_CAST_ITF: {
+                jtk_StringBuilder_appendEx_z(builder, "cast_itf", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_CAST_ITD: {
+                jtk_StringBuilder_appendEx_z(builder, "cast_itd", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_CAST_LTI: {
+                jtk_StringBuilder_appendEx_z(builder, "cast_lti", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_CAST_LTF: {
+                jtk_StringBuilder_appendEx_z(builder, "cast_itf", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_CAST_LTD: {
+                jtk_StringBuilder_appendEx_z(builder, "cast_itd", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_CAST_FTI: {
+                jtk_StringBuilder_appendEx_z(builder, "cast_fti", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_CAST_FTL: {
+                jtk_StringBuilder_appendEx_z(builder, "cast_ftl", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_CAST_FTD: {
+                jtk_StringBuilder_appendEx_z(builder, "cast_ftd", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_CAST_DTI: {
+                jtk_StringBuilder_appendEx_z(builder, "cast_dti", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_CAST_DTL: {
+                jtk_StringBuilder_appendEx_z(builder, "cast_dtl", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_CAST_DTF: {
+                jtk_StringBuilder_appendEx_z(builder, "cast_dtf", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_CAST_ITC: {
+                jtk_StringBuilder_appendEx_z(builder, "cast_itc", 8);
+
+                break;
+            }
+
+            /* Check Cast */
+
+            case ZEN_BYTE_CODE_CHECK_CAST: {
+                jtk_StringBuilder_appendEx_z(builder, "check_cast", 10);
+
+                break;
+            }
+
+            /* Compare */
+
+            case ZEN_BYTE_CODE_COMPARE_L: {
+                jtk_StringBuilder_appendEx_z(builder, "compare_l", 9);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_COMPARE_LT_F: {
+                jtk_StringBuilder_appendEx_z(builder, "compare_lt_f", 12);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_COMPARE_GT_F: {
+                jtk_StringBuilder_appendEx_z(builder, "compare_gt_f", 12);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_COMPARE_LT_D: {
+                jtk_StringBuilder_appendEx_z(builder, "compare_lt_d", 12);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_COMPARE_GT_D: {
+                jtk_StringBuilder_appendEx_z(builder, "compare_gt_d", 12);
+
+                break;
+            }
+
+            /* Divide */
+
+            case ZEN_BYTE_CODE_DIVIDE_I: {
+                jtk_StringBuilder_appendEx_z(builder, "divide_i", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_DIVIDE_L: {
+                jtk_StringBuilder_appendEx_z(builder, "divide_l", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_DIVIDE_F: {
+                jtk_StringBuilder_appendEx_z(builder, "divide_f", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_DIVIDE_D: {
+                jtk_StringBuilder_appendEx_z(builder, "divide_d", 8);
+
+                break;
+            }
+
+            /* Duplicate */
+
+            case ZEN_BYTE_CODE_DUPLICATE: {
+                jtk_StringBuilder_appendEx_z(builder, "duplicate", 9);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_DUPLICATE_X1: {
+                jtk_StringBuilder_appendEx_z(builder, "duplicate_x1", 12);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_DUPLICATE_X2: {
+                jtk_StringBuilder_appendEx_z(builder, "duplicate_x2", 12);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_DUPLICATE2: {
+                jtk_StringBuilder_appendEx_z(builder, "duplicate2", 10);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_DUPLICATE2_X1: {
+                jtk_StringBuilder_appendEx_z(builder, "duplicate2_x1", 13);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_DUPLICATE2_X2: {
+                jtk_StringBuilder_appendEx_z(builder, "duplicate2_x2", 13);
+
+                break;
+            }
+
+            /* Jump */
+
+            case ZEN_BYTE_CODE_JUMP_EQ0_I: {
+                jtk_StringBuilder_appendEx_z(builder, "jump_eq0_i ", 11);
+
+                uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, offset);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_JUMP_NE0_I: {
+                jtk_StringBuilder_appendEx_z(builder, "jump_ne0_i ", 11);
+
+                uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, offset);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_JUMP_LT0_I: {
+                jtk_StringBuilder_appendEx_z(builder, "jump_lt0_i ", 11);
+
+                uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, offset);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_JUMP_GT0_I: {
+                jtk_StringBuilder_appendEx_z(builder, "jump_gt0_i ", 11);
+
+                uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, offset);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_JUMP_GE0_I: {
+                jtk_StringBuilder_appendEx_z(builder, "jump_ge0_i ", 11);
+
+                uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, offset);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_JUMP_LE0_I: {
+                jtk_StringBuilder_appendEx_z(builder, "jump_le0_i ", 11);
+
+                uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, offset);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_JUMP_EQ_I: {
+                jtk_StringBuilder_appendEx_z(builder, "jump_eq_i ", 10);
+
+                uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, offset);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_JUMP_NE_I: {
+                jtk_StringBuilder_appendEx_z(builder, "jump_ne_i ", 10);
+
+                uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, offset);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_JUMP_LT_I: {
+                jtk_StringBuilder_appendEx_z(builder, "jump_lt_i ", 10);
+
+                uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, offset);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_JUMP_GT_I: {
+                jtk_StringBuilder_appendEx_z(builder, "jump_gt_i ", 10);
+
+                uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, offset);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_JUMP_GE_I: {
+                jtk_StringBuilder_appendEx_z(builder, "jump_ge_i ", 10);
+
+                uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, offset);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_JUMP_LE_I: {
+                jtk_StringBuilder_appendEx_z(builder, "jump_le_i ", 10);
+
+                uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, offset);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_JUMP_EQ_A: {
+                jtk_StringBuilder_appendEx_z(builder, "jump_eq_a ", 10);
+
+                uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, offset);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_JUMP_NE_A: {
+                jtk_StringBuilder_appendEx_z(builder, "jump_ne_a ", 10);
+
+                uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, offset);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_JUMP_EQN_A: {
+                jtk_StringBuilder_appendEx_z(builder, "jump_eqn_a ", 11);
+
+                uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, offset);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_JUMP_NEN_A: {
+                jtk_StringBuilder_appendEx_z(builder, "jump_nen_a ", 11);
+
+                uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, offset);
+
+                break;
+            }
+
+
+            /* Increment */
+
+            case ZEN_BYTE_CODE_INCREMENT_I: {
+                jtk_StringBuilder_appendEx_z(builder, "increment_i ", 12);
+                jtk_StringBuilder_append_i(builder, bytes[++i]);
+                jtk_StringBuilder_appendEx_z(builder, " ", 1);
+                jtk_StringBuilder_append_i(builder, bytes[++i]);
+
+                break;
+            }
+
+            /* Invoke */
+
+            case ZEN_BYTE_CODE_INVOKE_SPECIAL: {
+                jtk_StringBuilder_appendEx_z(builder, "invoke_special ", 15);
+
+                uint16_t index = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, index);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_INVOKE_VIRTUAL: {
+                jtk_StringBuilder_appendEx_z(builder, "invoke_virtual ", 15);
+
+                uint16_t index = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, index);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_INVOKE_DYNAMIC: {
+                jtk_StringBuilder_appendEx_z(builder, "invoke_dynamic ", 15);
+
+                uint16_t index = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, index);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_INVOKE_STATIC: {
+                jtk_StringBuilder_appendEx_z(builder, "invoke_static ", 14);
+
+                uint16_t index = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, index);
+
+                break;
+            }
+
+            /* Jump */
+
+            case ZEN_BYTE_CODE_JUMP: {
+                jtk_StringBuilder_appendEx_z(builder, "jump ", 5);
+
+                uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, offset);
+
+                break;
+            }
+
+            /* Load */
+
+            case ZEN_BYTE_CODE_LOAD_I: {
+                jtk_StringBuilder_appendEx_z(builder, "load_i ", 7);
+                jtk_StringBuilder_append_i(builder, bytes[++i]);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_L: {
+                jtk_StringBuilder_appendEx_z(builder, "load_l ", 7);
+                jtk_StringBuilder_append_i(builder, bytes[++i]);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_F: {
+                jtk_StringBuilder_appendEx_z(builder, "load_f ", 7);
+                jtk_StringBuilder_append_i(builder, bytes[++i]);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_D: {
+                jtk_StringBuilder_appendEx_z(builder, "load_d ", 7);
+                jtk_StringBuilder_append_i(builder, bytes[++i]);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_A: {
+                jtk_StringBuilder_appendEx_z(builder, "load_a ", 7);
+                jtk_StringBuilder_append_i(builder, bytes[++i]);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_I0: {
+                jtk_StringBuilder_appendEx_z(builder, "load_i0", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_I1: {
+                jtk_StringBuilder_appendEx_z(builder, "load_i1", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_I2: {
+                jtk_StringBuilder_appendEx_z(builder, "load_i2", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_I3: {
+                jtk_StringBuilder_appendEx_z(builder, "load_i3", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_L0: {
+                jtk_StringBuilder_appendEx_z(builder, "load_l0", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_L1: {
+                jtk_StringBuilder_appendEx_z(builder, "load_l1", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_L2: {
+                jtk_StringBuilder_appendEx_z(builder, "load_l2", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_L3: {
+                jtk_StringBuilder_appendEx_z(builder, "load_l3", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_F0: {
+                jtk_StringBuilder_appendEx_z(builder, "load_f0", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_F1: {
+                jtk_StringBuilder_appendEx_z(builder, "load_f1", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_F2: {
+                jtk_StringBuilder_appendEx_z(builder, "load_f2", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_F3: {
+                jtk_StringBuilder_appendEx_z(builder, "load_f3", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_D0: {
+                jtk_StringBuilder_appendEx_z(builder, "load_d0", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_D1: {
+                jtk_StringBuilder_appendEx_z(builder, "load_d1", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_D2: {
+                jtk_StringBuilder_appendEx_z(builder, "load_d2", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_D3: {
+                jtk_StringBuilder_appendEx_z(builder, "load_d3", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_A0: {
+                jtk_StringBuilder_appendEx_z(builder, "load_a0", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_A1: {
+                jtk_StringBuilder_appendEx_z(builder, "load_a1", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_A2: {
+                jtk_StringBuilder_appendEx_z(builder, "load_a2", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_A3: {
+                jtk_StringBuilder_appendEx_z(builder, "load_a3", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_AB: {
+                jtk_StringBuilder_appendEx_z(builder, "load_ab", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_AC: {
+                jtk_StringBuilder_appendEx_z(builder, "load_ac", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_AS: {
+                jtk_StringBuilder_appendEx_z(builder, "load_as", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_AI: {
+                jtk_StringBuilder_appendEx_z(builder, "load_ai", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_AL: {
+                jtk_StringBuilder_appendEx_z(builder, "load_al", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_AF: {
+                jtk_StringBuilder_appendEx_z(builder, "load_af", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_AD: {
+                jtk_StringBuilder_appendEx_z(builder, "load_ad", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_AA: {
+                jtk_StringBuilder_appendEx_z(builder, "load_aa", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_INSTANCE_FIELD: {
+                jtk_StringBuilder_appendEx_z(builder, "load_instance_field ", 20);
+
+                uint16_t index = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, index);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_STATIC_FIELD: {
+                jtk_StringBuilder_appendEx_z(builder, "load_static_field ", 18);
+
+                uint16_t index = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, index);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_CPR: {
+                jtk_StringBuilder_appendEx_z(builder, "load_cpr ", 9);
+
+                uint16_t index = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, index);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_LOAD_ARRAY_SIZE: {
+                jtk_StringBuilder_appendEx_z(builder, "load_array_size", 15);
+
+                break;
+            }
+
+            /* Modulo */
+
+            case ZEN_BYTE_CODE_MODULO_I: {
+                jtk_StringBuilder_appendEx_z(builder, "modulo_i", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_MODULO_L: {
+                jtk_StringBuilder_appendEx_z(builder, "modulo_l", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_MODULO_F: {
+                jtk_StringBuilder_appendEx_z(builder, "modulo_f", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_MODULO_D: {
+                jtk_StringBuilder_appendEx_z(builder, "modulo_d", 8);
+
+                break;
+            }
+
+
+            /* Multiply */
+
+            case ZEN_BYTE_CODE_MULTIPLY_I: {
+                jtk_StringBuilder_appendEx_z(builder, "multiply_i", 10);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_MULTIPLY_L: {
+                jtk_StringBuilder_appendEx_z(builder, "multiply_l", 10);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_MULTIPLY_F: {
+                jtk_StringBuilder_appendEx_z(builder, "multiply_f", 10);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_MULTIPLY_D: {
+                jtk_StringBuilder_appendEx_z(builder, "multiply_d", 10);
+
+                break;
+            }
+
+
+            /* Negate */
+
+            case ZEN_BYTE_CODE_NEGATE_I: {
+                jtk_StringBuilder_appendEx_z(builder, "negate_i", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_NEGATE_L: {
+                jtk_StringBuilder_appendEx_z(builder, "negate_l", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_NEGATE_F: {
+                jtk_StringBuilder_appendEx_z(builder, "negate_f", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_NEGATE_D: {
+                jtk_StringBuilder_appendEx_z(builder, "negate_d", 8);
+
+                break;
+            }
+
+            /* New */
+
+            case ZEN_BYTE_CODE_NEW: {
+                jtk_StringBuilder_appendEx_z(builder, "new ", 4);
+
+                uint16_t index = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, index);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_NEW_ARRAY: {
+                jtk_StringBuilder_appendEx_z(builder, "new_array ", 10);
+                jtk_StringBuilder_append_i(builder, bytes[++i]);
+
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_NEW_ARRAY_A: {
+                jtk_StringBuilder_appendEx_z(builder, "new_array_a ", 12);
+
+                uint16_t index = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, index);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_NEW_ARRAY_AN: {
+                jtk_StringBuilder_appendEx_z(builder, "new_array_an ", 13);
+
+                uint16_t index = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, index);
+
+                jtk_StringBuilder_appendEx_z(builder, " ", 1);
+
+                jtk_StringBuilder_append_i(builder, bytes[++i]);
+
+                break;
+            }
+
+
+            /* Pop */
+
+            case ZEN_BYTE_CODE_POP: {
+                jtk_StringBuilder_appendEx_z(builder, "pop", 3);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_POP2: {
+                jtk_StringBuilder_appendEx_z(builder, "pop2", 4);
+
+                break;
+            }
+
+            /* Push */
+
+            case ZEN_BYTE_CODE_PUSH_NULL: {
+                jtk_StringBuilder_appendEx_z(builder, "push_null", 9);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_PUSH_IN1: {
+                jtk_StringBuilder_appendEx_z(builder, "push_in1", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_PUSH_I0: {
+                jtk_StringBuilder_appendEx_z(builder, "push_i0", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_PUSH_I1: {
+                jtk_StringBuilder_appendEx_z(builder, "push_i1", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_PUSH_I2: {
+                jtk_StringBuilder_appendEx_z(builder, "push_i2", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_PUSH_I3: {
+                jtk_StringBuilder_appendEx_z(builder, "push_i3", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_PUSH_I4: {
+                jtk_StringBuilder_appendEx_z(builder, "push_i4", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_PUSH_I5: {
+                jtk_StringBuilder_appendEx_z(builder, "push_i5", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_PUSH_L0: {
+                jtk_StringBuilder_appendEx_z(builder, "push_l0", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_PUSH_L1: {
+                jtk_StringBuilder_appendEx_z(builder, "push_l1", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_PUSH_F0: {
+                jtk_StringBuilder_appendEx_z(builder, "push_f0", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_PUSH_F1: {
+                jtk_StringBuilder_appendEx_z(builder, "push_f1", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_PUSH_F2: {
+                jtk_StringBuilder_appendEx_z(builder, "push_f2", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_PUSH_D0: {
+                jtk_StringBuilder_appendEx_z(builder, "push_d0", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_PUSH_D1: {
+                jtk_StringBuilder_appendEx_z(builder, "push_d1", 7);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_PUSH_B: {
+                jtk_StringBuilder_appendEx_z(builder, "push_b ", 7);
+
+                jtk_StringBuilder_append_i(builder, bytes[++i]);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_PUSH_S: {
+                jtk_StringBuilder_appendEx_z(builder, "push_s ", 7);
+
+                uint16_t value = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, value);
+
+                break;
+            }
+
+            /* Return */
+
+            case ZEN_BYTE_CODE_RETURN: {
+                jtk_StringBuilder_appendEx_z(builder, "return", 6);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_RETURN_I: {
+                jtk_StringBuilder_appendEx_z(builder, "return_i", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_RETURN_L: {
+                jtk_StringBuilder_appendEx_z(builder, "return_l", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_RETURN_F: {
+                jtk_StringBuilder_appendEx_z(builder, "return_f", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_RETURN_D: {
+                jtk_StringBuilder_appendEx_z(builder, "return_d", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_RETURN_A: {
+                jtk_StringBuilder_appendEx_z(builder, "return_a", 8);
+
+                break;
+            }
+
+            /* RTTI */
+
+            case ZEN_BYTE_CODE_RTTI: {
+                jtk_StringBuilder_appendEx_z(builder, "rtti", 4);
+
+                break;
+            }
+
+            /* Store */
+
+            case ZEN_BYTE_CODE_STORE_I: {
+                jtk_StringBuilder_appendEx_z(builder, "store_i ", 8);
+
+                jtk_StringBuilder_append_i(builder, bytes[++i]);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_I0: {
+                jtk_StringBuilder_appendEx_z(builder, "store_i0", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_I1: {
+                jtk_StringBuilder_appendEx_z(builder, "store_i1", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_I2: {
+                jtk_StringBuilder_appendEx_z(builder, "stor_i2", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_I3: {
+                jtk_StringBuilder_appendEx_z(builder, "store_i3", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_L: {
+                jtk_StringBuilder_appendEx_z(builder, "store_l ", 8);
+
+                jtk_StringBuilder_append_i(builder, bytes[++i]);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_L0: {
+                jtk_StringBuilder_appendEx_z(builder, "store_l0", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_L1: {
+                jtk_StringBuilder_appendEx_z(builder, "store_l1", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_L2: {
+                jtk_StringBuilder_appendEx_z(builder, "store_l2", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_L3: {
+                jtk_StringBuilder_appendEx_z(builder, "store_l3", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_F: {
+                jtk_StringBuilder_appendEx_z(builder, "store_f ", 8);
+
+                jtk_StringBuilder_append_i(builder, bytes[++i]);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_F0: {
+                jtk_StringBuilder_appendEx_z(builder, "store_f0", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_F1: {
+                jtk_StringBuilder_appendEx_z(builder, "store_f1", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_F2: {
+                jtk_StringBuilder_appendEx_z(builder, "store_f2", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_F3: {
+                jtk_StringBuilder_appendEx_z(builder, "store_f3", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_D: {
+                jtk_StringBuilder_appendEx_z(builder, "store_d ", 8);
+
+                jtk_StringBuilder_append_i(builder, bytes[++i]);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_D0: {
+                jtk_StringBuilder_appendEx_z(builder, "store_d0", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_D1: {
+                jtk_StringBuilder_appendEx_z(builder, "store_d1", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_D2: {
+                jtk_StringBuilder_appendEx_z(builder, "store_d2", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_D3: {
+                jtk_StringBuilder_appendEx_z(builder, "store_d3", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_A: {
+                jtk_StringBuilder_appendEx_z(builder, "store_a ", 8);
+
+                jtk_StringBuilder_append_i(builder, bytes[++i]);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_A0: {
+                jtk_StringBuilder_appendEx_z(builder, "store_a0", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_A1: {
+                jtk_StringBuilder_appendEx_z(builder, "store_a1", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_A2: {
+                jtk_StringBuilder_appendEx_z(builder, "store_a2", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_A3: {
+                jtk_StringBuilder_appendEx_z(builder, "store_a3", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_AB: {
+                jtk_StringBuilder_appendEx_z(builder, "store_ab", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_AC: {
+                jtk_StringBuilder_appendEx_z(builder, "store_ac", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_AS: {
+                jtk_StringBuilder_appendEx_z(builder, "store_as", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_AI: {
+                jtk_StringBuilder_appendEx_z(builder, "store_ai", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_AL: {
+                jtk_StringBuilder_appendEx_z(builder, "store_al", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_AF: {
+                jtk_StringBuilder_appendEx_z(builder, "store_af", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_AD: {
+                jtk_StringBuilder_appendEx_z(builder, "store_ad", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_AA: {
+                jtk_StringBuilder_appendEx_z(builder, "store_aa", 8);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_STATIC_FIELD: {
+                jtk_StringBuilder_appendEx_z(builder, "store_static_field ", 19);
+
+                uint16_t index = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, index);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_STORE_INSTANCE_FIELD: {
+                jtk_StringBuilder_appendEx_z(builder, "store_instance_field ", 21);
+
+                uint16_t index = (bytes[++i] << 8) | bytes[++i];
+                jtk_StringBuilder_append_i(builder, index);
+
+                break;
+            }
+
+            /* Swap */
+
+            case ZEN_BYTE_CODE_SWAP: {
+                jtk_StringBuilder_appendEx_z(builder, "swap", 4);
+
+                break;
+            }
+
+            /* Switch */
+
+            case ZEN_BYTE_CODE_SWITCH_TABLE: {
+                jtk_StringBuilder_appendEx_z(builder, "switch_table", 12);
+
+                break;
+            }
+
+            case ZEN_BYTE_CODE_SWITCH_SEARCH: {
+                jtk_StringBuilder_appendEx_z(builder, "switch_search", 13);
+
+                break;
+            }
+
+            /* Throw */
+
+            case ZEN_BYTE_CODE_THROW: {
+                jtk_StringBuilder_appendEx_z(builder, "throw", 4);
+
+                break;
+            }
+
+            /* Wide */
+
+            case ZEN_BYTE_CODE_WIDE: {
+                jtk_StringBuilder_appendEx_z(builder, "wide", 4);
+
+                break;
+            }
+        }
+
+        jtk_StringBuilder_appendEx_z(builder, "\n", 1);
+    }
 }
 
 // TODO: Somebody has to destroy the instruction attribute that was allocated here.
@@ -1178,7 +2510,7 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
     zen_ASTNode_t* ifClause = context->m_ifClause;
     zen_IfClauseContext_t* ifClauseContext = (zen_IfClauseContext_t*)ifClause->m_context;
     zen_ASTWalker_walk(astListener, ifClauseContext->m_expression);
-    
+
     const uint8_t* booleanClassName = "zen/core/Boolean";
     int32_t booleanClassNameSize = 16;
     const uint8_t* getValueDescriptor = "z:v";
@@ -1198,7 +2530,7 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
 
     /* Log the emission of the invoke_special instruction. */
     printf("[debug] Emitted invoke_virtual %d\n", getValueIndex);
-    
+
     int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
         generator->m_instructions);
     zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
@@ -1211,7 +2543,7 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
         generator->m_instructions, temporaryChannelIndex);
     zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_instructions,
         temporaryChannelIndex);
-    
+
     /* Generate the instructions corresponding to the statement suite specified
      * to the if clause on the temporary channel.
      */
@@ -1221,7 +2553,7 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
      * corresponding to the statement suite.
      */
     int32_t temporaryChannelSize = zen_DataChannel_getSize(temporaryChannel);
-    
+
     /* Reactivate the parent channel as the active channel. */
     zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_instructions, parentChannelIndex);
 
@@ -1237,13 +2569,13 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
     /* Emit the jump_eq0_i instruction. */
     zen_BinaryEntityBuilder_emitJumpEqual0Integer(generator->m_instructions,
         jumpOffset);
-    
+
     /* Log the emission of the invoke_special instruction. */
     printf("[debug] Emitted jump_eq0_i %d\n", jumpOffset);
-    
+
     zen_DataChannel_appendChannel(parentChannel, temporaryChannel);
     zen_BinaryEntityBuilder_removeChannel(generator->m_instructions, temporaryChannelIndex);
-    
+
     /*
     zen_BinaryEntityBuilder
 
