@@ -29,7 +29,7 @@ JTK is a library designed for writing applications and libraries in C. It provid
 core utilities such as collections, unit testing, I/O streams, threads and much
 more. You can find the latest version of JTK [here](https://github.com/itssamuelrowe/jtk).
 
-[Windows]
+### Compiling Zen on Windows
 
 For compiling Zen on Windows, you first need to install MSYS2 or WSL.
 The steps required to install MSYS2 or WSL are beyond the scope of this
@@ -72,7 +72,7 @@ Linux section.
    As of this version, a plethora of warnings are generated. We are working to
    eradicate these warnings.
 
-[Linux]
+### Compiling Zen on Linux and WSL
 
 1. For compiling Zen on Linux or WSL, you need CMake and GNU Make (or any other make
    utility that CMake is compatible with).
