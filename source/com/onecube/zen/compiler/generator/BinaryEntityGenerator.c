@@ -2556,7 +2556,6 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
          */
         zen_ASTWalker_walk(astListener, statementSuite);
 
-
         /* Update the loop counter and prepare for the next iteration, if any. */
         index++;
 
@@ -2576,8 +2575,7 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
             printf("[debug] Emitted jump 0 (dummy index)\n");
 
             /* Save the index of the bytes where the dummy data was written. */
-            skipIndexes[index + 1] = zen_DataChannel_getSize(parentChannel) - 2;
-
+            skipIndexes[index] = zen_DataChannel_getSize(parentChannel) - 2;
 
             zen_ASTNode_t* elseIfClause = jtk_ArrayList_getValue(context->m_elseIfClauses, index);
             zen_ElseIfClauseContext_t* elseIfClauseContext =
@@ -2599,6 +2597,12 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
     }
     while (index < size);
 
+    /* When there is no else clause, the number of skip indexes to fill is given
+     * by the number of else if clauses. However, when an else clause is present,
+     * the number of skip indexes to fill is given by the number of else if clauses
+     * plus 1, which is also equal to the maximum number of skip indexes.
+     */
+    int32_t numberOfSkips = size;
     /* TODO: Should generate a jump instruction immediately after the instructions
      * corresponding to the body of the if clause when an else clause is present.
      */
@@ -2616,6 +2620,9 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
 
         /* Save the index of the bytes where the dummy data was written. */
         skipIndexes[index] = zen_DataChannel_getSize(parentChannel) - 2;
+        
+        /* Increase the number of skips to indicate the presence of an else clause. */
+        numberOfSkips++;
 
         /* Retrieve the AST node for the else clause. */
         zen_ASTNode_t* elseClause = context->m_elseClause;
@@ -2628,11 +2635,13 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
 
     int32_t newParentChannelSize = zen_DataChannel_getSize(parentChannel);
     int32_t i;
-    for (i = 0; i <= size; i++) {
+    for (i = 0; i < numberOfSkips; i++) {
         uint16_t skipIndex = skipIndexes[i];
         parentChannel->m_bytes[skipIndex] = (newParentChannelSize & 0x0000FF00) >> 8;
         parentChannel->m_bytes[skipIndex + 1] = newParentChannelSize & 0x000000FF;
     }
+    
+    jtk_Memory_deallocate(skipIndexes);
 }
 
 // ifClause
