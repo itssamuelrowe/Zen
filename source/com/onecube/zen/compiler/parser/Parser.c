@@ -1162,7 +1162,7 @@ void zen_Parser_continueStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
 
 /*
  * returnStatement
- * :    'return' expression?
+ * :    'return' expression
  * ;
  */
 void zen_Parser_returnStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
@@ -1173,11 +1173,11 @@ void zen_Parser_returnStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
     /* Match and discard the 'return' token. */
     zen_Parser_match(parser, ZEN_TOKEN_KEYWORD_RETURN);
 
-    if (zen_Parser_isExpressionFollow(zen_TokenStream_la(parser->m_tokens, 1))) {
+    // if (zen_Parser_isExpressionFollow(zen_TokenStream_la(parser->m_tokens, 1))) {
         zen_ASTNode_t* expression = zen_ASTNode_new(node);
         context->m_expression = expression;
         zen_Parser_expression(parser, expression);
-    }
+    // }
 
     zen_StackTrace_exit();
 }
