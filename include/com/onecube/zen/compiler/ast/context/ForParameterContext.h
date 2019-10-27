@@ -16,8 +16,8 @@
 
 // Wednesday, July 17, 2019
 
-#ifndef COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_FOR_PARAMETERS_CONTEXT_H
-#define COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_FOR_PARAMETERS_CONTEXT_H
+#ifndef COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_FOR_PARAMETER_CONTEXT_H
+#define COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_FOR_PARAMETER_CONTEXT_H
 
 #include <jtk/collection/list/ArrayList.h>
 
@@ -25,45 +25,46 @@
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
 
 /*******************************************************************************
- * ForParametersContext                                                        *
+ * ForParameterContext                                                        *
  *******************************************************************************/
 
 /**
- * @class ForParametersContext
+ * @class ForParameterContext
  * @ingroup zen_compiler_ast
  * @author Samuel Rowe
  * @since zen 1.0
  */
-struct zen_ForParametersContext_t {
+struct zen_ForParameterContext_t {
     zen_ASTNode_t* m_node;
-    zen_ASTNode_t* m_declarator;
-    jtk_ArrayList_t* m_identifiers;
+    bool m_declaration;
+    bool m_variable;
+    zen_ASTNode_t* m_identifier;
 };
 
 /**
- * @memberof ForParametersContext
+ * @memberof ForParameterContext
  */
-typedef struct zen_ForParametersContext_t zen_ForParametersContext_t;
+typedef struct zen_ForParameterContext_t zen_ForParameterContext_t;
 
 // Constructor
 
 /**
- * @memberof ForParametersContext
+ * @memberof ForParameterContext
  */
-zen_ForParametersContext_t* zen_ForParametersContext_new(zen_ASTNode_t* node);
+zen_ForParameterContext_t* zen_ForParameterContext_new(zen_ASTNode_t* node);
 
 // Destructor
 
 /**
- * @memberof ForParametersContext
+ * @memberof ForParameterContext
  */
-void zen_ForParametersContext_delete(zen_ForParametersContext_t* context);
+void zen_ForParameterContext_delete(zen_ForParameterContext_t* context);
 
 // Children
 
 /**
- * @memberof ForParametersContext
+ * @memberof ForParameterContext
  */
-void zen_ForParametersContext_getChildren(zen_ForParametersContext_t* context, jtk_ArrayList_t* children);
+void zen_ForParameterContext_getChildren(zen_ForParameterContext_t* context, jtk_ArrayList_t* children);
 
-#endif /* COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_FOR_PARAMETERS_CONTEXT_H */
+#endif /* COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_FOR_PARAMETER_CONTEXT_H */

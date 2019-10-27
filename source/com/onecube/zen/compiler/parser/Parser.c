@@ -1463,8 +1463,10 @@ void zen_Parser_labelClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
 
 /*
  * whileStatement
- * :    'while' expression statementSuite elseClause?
+ * :    'while' expression statementSuite
  * ;
+ *
+ * TODO: Remove elseClause!
  */
 void zen_Parser_whileStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
     zen_StackTrace_enter();
@@ -1482,31 +1484,32 @@ void zen_Parser_whileStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
     context->m_statementSuite = statementSuite;
 	zen_Parser_statementSuite(parser, statementSuite);
 
+    /*
 	if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_KEYWORD_ELSE) {
 		zen_ASTNode_t* elseClause = zen_ASTNode_new(node);
         context->m_elseClause = elseClause;
 		zen_Parser_elseClause(parser, elseClause);
 	}
+    */
 
     zen_StackTrace_exit();
 }
 
 
 /*
- * forParameters
- * :    ('var'|'final')? IDENTIFIER (',' IDENTIFIER)*
+ * forParameter
+ * :    ('var' | 'final')? IDENTIFIER
  * ;
  */
-void zen_Parser_forParameters(zen_Parser_t* parser, zen_ASTNode_t* node) {
+void zen_Parser_forParameter(zen_Parser_t* parser, zen_ASTNode_t* node) {
     zen_StackTrace_enter();
 
-    zen_ForParametersContext_t* context = zen_ForParametersContext_new(node);
+    zen_ForParameterContext_t* context = zen_ForParameterContext_new(node);
 
     zen_TokenType_t la1 = zen_TokenStream_la(parser->m_tokens, 1);
     if ((la1 == ZEN_TOKEN_KEYWORD_VAR) || (la1 == ZEN_TOKEN_KEYWORD_FINAL)) {
-        zen_Token_t* declaratorToken = zen_TokenStream_lt(parser->m_tokens, 1);
-        zen_ASTNode_t* declarator = zen_Parser_newTerminalNode(node, declaratorToken);
-        context->m_declarator = declarator;
+        context->m_declaration = true;
+        context->m_variable = (la1 == ZEN_TOKEN_KEYWORD_VAR);
 
         /* Consume the 'var' or 'final' token. */
         zen_TokenStream_consume(parser->m_tokens);
@@ -1514,24 +1517,17 @@ void zen_Parser_forParameters(zen_Parser_t* parser, zen_ASTNode_t* node) {
 
     zen_Token_t* identifierToken = zen_Parser_matchAndYield(parser, ZEN_TOKEN_IDENTIFIER);
     zen_ASTNode_t* identifier = zen_Parser_newTerminalNode(parser, identifierToken);
-    jtk_ArrayList_add(context->m_identifiers, identifier);
-
-    while (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_COMMA) {
-        /* Consume and discard the ',' token. */
-        zen_TokenStream_consume(parser->m_tokens);
-
-        identifierToken = zen_Parser_matchAndYield(parser, ZEN_TOKEN_IDENTIFIER);
-        identifier = zen_Parser_newTerminalNode(parser, identifierToken);
-        jtk_ArrayList_add(context->m_identifiers, identifier);
-    }
+    context->m_identifier = identifier;
 
     zen_StackTrace_exit();
 }
 
 /*
  * forStatement
- * :    'for' forParameters 'in' expression statementSuite elseClause?
+ * :    'for' forParameters 'in' expression statementSuite
  * ;
+ *
+ * TODO: Remove elseClause!
  */
 void zen_Parser_forStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
     zen_StackTrace_enter();
@@ -1541,9 +1537,9 @@ void zen_Parser_forStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
     /* Match and discard the 'for' token. */
     zen_Parser_match(parser, ZEN_TOKEN_KEYWORD_FOR);
 
-    zen_ASTNode_t* forParameters = zen_ASTNode_new(node);
-    context->m_forParameters = forParameters;
-    zen_Parser_forParameters(parser, forParameters);
+    zen_ASTNode_t* forParameter = zen_ASTNode_new(node);
+    context->m_forParameter = forParameter;
+    zen_Parser_forParameter(parser, forParameter);
 
     /* Match and discard the 'in' token. */
 	zen_Parser_match(parser, ZEN_TOKEN_KEYWORD_IN);
@@ -1556,11 +1552,13 @@ void zen_Parser_forStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
     context->m_statementSuite = statementSuite;
 	zen_Parser_statementSuite(parser, statementSuite);
 
+    /*
 	if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_KEYWORD_ELSE) {
 		zen_ASTNode_t* elseClause = zen_ASTNode_new(node);
         context->m_elseClause = elseClause;
 		zen_Parser_elseClause(parser, elseClause);
 	}
+    */
 
     zen_StackTrace_exit();
 }

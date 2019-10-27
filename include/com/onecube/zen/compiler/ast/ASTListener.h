@@ -917,8 +917,8 @@ struct zen_ASTListener_t {
     zen_OnEnterForStatementFunction_t m_onEnterForStatement;
     zen_OnExitForStatementFunction_t m_onExitForStatement;
     
-    zen_OnEnterForParametersFunction_t m_onEnterForParameters;
-    zen_OnExitForParametersFunction_t m_onExitForParameters;
+    zen_OnEnterForParametersFunction_t m_onEnterForParameter;
+    zen_OnExitForParametersFunction_t m_onExitForParameter;
 
     zen_OnEnterTryStatementFunction_t m_onEnterTryStatement;
     zen_OnExitTryStatementFunction_t m_onExitTryStatement;

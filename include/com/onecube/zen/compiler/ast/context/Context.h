@@ -79,7 +79,7 @@
 #include <com/onecube/zen/compiler/ast/context/LabelClauseContext.h>
 #include <com/onecube/zen/compiler/ast/context/WhileStatementContext.h>
 #include <com/onecube/zen/compiler/ast/context/ForStatementContext.h>
-#include <com/onecube/zen/compiler/ast/context/ForParametersContext.h>
+#include <com/onecube/zen/compiler/ast/context/ForParameterContext.h>
 #include <com/onecube/zen/compiler/ast/context/TryStatementContext.h>
 #include <com/onecube/zen/compiler/ast/context/TryClauseContext.h>
 #include <com/onecube/zen/compiler/ast/context/CatchClauseContext.h>

@@ -261,8 +261,8 @@ void zen_ASTWalker_enterRule(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
             break;
         }
 
-        case ZEN_AST_NODE_TYPE_FOR_PARAMETERS: {
-            listener->m_onEnterForParameters(listener, node);
+        case ZEN_AST_NODE_TYPE_FOR_PARAMETER: {
+            listener->m_onEnterForParameter(listener, node);
             break;
         }
 
@@ -648,8 +648,8 @@ void zen_ASTWalker_exitRule(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
             break;
         }
 
-        case ZEN_AST_NODE_TYPE_FOR_PARAMETERS: {
-            listener->m_onExitForParameters(listener, node);
+        case ZEN_AST_NODE_TYPE_FOR_PARAMETER: {
+            listener->m_onExitForParameter(listener, node);
             break;
         }
 

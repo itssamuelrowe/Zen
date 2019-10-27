@@ -34,7 +34,7 @@
  */
 struct zen_ForStatementContext_t {
     zen_ASTNode_t* m_node;
-    zen_ASTNode_t* m_forParameters;
+    zen_ASTNode_t* m_forParameter;
     zen_ASTNode_t* m_expression;
     zen_ASTNode_t* m_statementSuite;
     zen_ASTNode_t* m_elseClause;

@@ -165,8 +165,8 @@ zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_newEx(
     astListener->m_onEnterForStatement = zen_BinaryEntityGenerator_onEnterForStatement;
     astListener->m_onExitForStatement = zen_BinaryEntityGenerator_onExitForStatement;
 
-    astListener->m_onEnterForParameters = zen_BinaryEntityGenerator_onEnterForParameters;
-    astListener->m_onExitForParameters = zen_BinaryEntityGenerator_onExitForParameters;
+    astListener->m_onEnterForParameter = zen_BinaryEntityGenerator_onEnterForParameters;
+    astListener->m_onExitForParameter = zen_BinaryEntityGenerator_onExitForParameters;
 
     astListener->m_onEnterTryStatement = zen_BinaryEntityGenerator_onEnterTryStatement;
     astListener->m_onExitTryStatement = zen_BinaryEntityGenerator_onExitTryStatement;
@@ -2750,13 +2750,13 @@ void zen_BinaryEntityGenerator_onExitWhileStatement(zen_ASTListener_t* astListen
      * to the while statement.
      */
     zen_ASTWalker_walk(astListener, context->m_statementSuite);
-    
+
     /* Generate a jump instruction to loop back to the conditional expression. */
     zen_BinaryEntityBuilder_emitJump(generator->m_instructions, loopIndex);
 
     /* Log the emission of the jump instruction. */
     printf("[debug] Emitted jump %d\n", loopIndex);
-    
+
     uint16_t newParentChannelSize = zen_DataChannel_getSize(parentChannel);
     parentChannel->m_bytes[updateIndex] = (newParentChannelSize & 0x0000FF00) >> 8;
     parentChannel->m_bytes[updateIndex + 1] = newParentChannelSize & 0x000000FF;
@@ -2765,9 +2765,21 @@ void zen_BinaryEntityGenerator_onExitWhileStatement(zen_ASTListener_t* astListen
 // forStatement
 
 void zen_BinaryEntityGenerator_onEnterForStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    zen_ForStatementContext_t* context = (zen_ForStatementContext_t*)node->m_context;
+
+    /* The normal behaviour of the AST walker causes the generator to emit instructions
+     * in an undesirable fashion. Therefore, we partially switch from the listener
+     * to visitor design pattern. The AST walker can be guided to switch to this
+     * mode via zen_ASTWalker_ignoreChildren() function which causes the AST walker
+     * to skip iterating over the children nodes.
+     */
+    zen_ASTListener_skipChildren(astListener);
 }
 
 void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    zen_ForStatementContext_t* context = (zen_ForStatementContext_t*)node->m_context;
 }
 
 // forParameters

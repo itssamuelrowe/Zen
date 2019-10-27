@@ -133,8 +133,8 @@ zen_ASTListener_t* zen_ASTListener_newWithContext(void* context) {
     listener->m_onEnterForStatement = zen_ASTListener_onEnterForStatement;
     listener->m_onExitForStatement = zen_ASTListener_onExitForStatement;
 
-    listener->m_onEnterForParameters = zen_ASTListener_onEnterForParameters;
-    listener->m_onExitForParameters = zen_ASTListener_onExitForParameters;
+    listener->m_onEnterForParameter = zen_ASTListener_onEnterForParameters;
+    listener->m_onExitForParameter = zen_ASTListener_onExitForParameters;
 
     listener->m_onEnterTryStatement = zen_ASTListener_onEnterTryStatement;
     listener->m_onExitTryStatement = zen_ASTListener_onExitTryStatement;

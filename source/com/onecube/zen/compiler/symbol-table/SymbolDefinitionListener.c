@@ -57,7 +57,7 @@ zen_SymbolDefinitionListener_t* zen_SymbolDefinitionListener_new(zen_SymbolTable
     astListener->m_onEnterVariableDeclaration = zen_SymbolDefinitionListener_onEnterVariableDeclaration;
     astListener->m_onEnterConstantDeclaration = zen_SymbolDefinitionListener_onEnterConstantDeclaration;
     astListener->m_onEnterLabelClause = zen_SymbolDefinitionListener_onEnterLabelClause;
-    astListener->m_onEnterForParameters = zen_SymbolDefinitionListener_onEnterForParameters;
+    astListener->m_onEnterForParameter = zen_SymbolDefinitionListener_onEnterForParameters;
     astListener->m_onEnterClassDeclaration = zen_SymbolDefinitionListener_onEnterClassDeclaration;
     astListener->m_onExitClassDeclaration = zen_SymbolDefinitionListener_onExitClassDeclaration;
     astListener->m_onEnterEnumerationDeclaration = zen_SymbolDefinitionListener_onEnterEnumerationDeclaration;
@@ -686,32 +686,26 @@ void zen_SymbolDefinitionListener_onEnterForParameters(
     jtk_Assert_assertObject(node, "The specified AST node is null.");
 
     zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
-    zen_ForParametersContext_t* forParametersContext = (zen_ForParametersContext_t*)node->m_context;
+    zen_ForParameterContext_t* forParametersContext = (zen_ForParameterContext_t*)node->m_context;
 
-    if (forParametersContext->m_declarator != NULL) {
-        bool variable = zen_Token_getType((zen_Token_t*)forParametersContext->m_declarator->m_context) == ZEN_TOKEN_KEYWORD_VAR;
+    if (forParametersContext->m_declaration) {
+        zen_ASTNode_t* identifier = forParametersContext->m_identifier;
+        const uint8_t* identifierText = zen_Token_getText((zen_Token_t*)identifier->m_context);
 
-        int32_t size = jtk_ArrayList_getSize(forParametersContext->m_identifiers);
-        int32_t i;
-        for (i = 0; i < size; i++) {
-            zen_ASTNode_t* identifier = (zen_ASTNode_t*)jtk_ArrayList_getValue(forParametersContext->m_identifiers, i);
-            const uint8_t* identifierText = zen_Token_getText((zen_Token_t*)identifier->m_context);
-
-            zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
-            if (symbol != NULL) {
-                zen_ErrorHandler_reportError(NULL, "Redeclaration of symbol as loop parameter", (zen_Token_t*)identifier->m_context);
+        zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
+        if (symbol != NULL) {
+            zen_ErrorHandler_reportError(NULL, "Redeclaration of symbol as loop parameter", (zen_Token_t*)identifier->m_context);
+        }
+        else {
+            if (forParametersContext->m_variable) {
+                zen_VariableSymbol_t* variableSymbol = zen_VariableSymbol_new(identifier, listener->m_symbolTable->m_currentScope);
+                symbol = zen_VariableSymbol_getSymbol(variableSymbol);
             }
             else {
-                if (variable) {
-                    zen_VariableSymbol_t* variableSymbol = zen_VariableSymbol_new(identifier, listener->m_symbolTable->m_currentScope);
-                    symbol = zen_VariableSymbol_getSymbol(variableSymbol);
-                }
-                else {
-                    zen_ConstantSymbol_t* constantSymbol = zen_ConstantSymbol_new(identifier, listener->m_symbolTable->m_currentScope);
-                    symbol = zen_ConstantSymbol_getSymbol(constantSymbol);
-                }
-                zen_SymbolTable_define(listener->m_symbolTable, symbol);
+                zen_ConstantSymbol_t* constantSymbol = zen_ConstantSymbol_new(identifier, listener->m_symbolTable->m_currentScope);
+                symbol = zen_ConstantSymbol_getSymbol(constantSymbol);
             }
+            zen_SymbolTable_define(listener->m_symbolTable, symbol);
         }
     }
 }

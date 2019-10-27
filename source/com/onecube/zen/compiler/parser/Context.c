@@ -1070,7 +1070,6 @@ zen_WhileStatementContext_t* zen_WhileStatementContext_new(zen_ASTNode_t* node) 
     context->m_node = node;
     context->m_expression = NULL;
     context->m_statementSuite = NULL;
-    context->m_elseClause = NULL;
 
     zen_Context_initializeNode(node, ZEN_AST_NODE_TYPE_WHILE_STATEMENT, context,
         (zen_ContextDestructorFunction_t)zen_WhileStatementContext_delete,
@@ -1092,9 +1091,6 @@ void zen_WhileStatementContext_getChildren(zen_WhileStatementContext_t* context,
 
     jtk_ArrayList_add(children, context->m_expression);
     jtk_ArrayList_add(children, context->m_statementSuite);
-    if (context->m_elseClause != NULL) {
-        jtk_ArrayList_add(children, context->m_elseClause);
-    }
 }
 
 /*******************************************************************************
@@ -1104,10 +1100,9 @@ void zen_WhileStatementContext_getChildren(zen_WhileStatementContext_t* context,
 zen_ForStatementContext_t* zen_ForStatementContext_new(zen_ASTNode_t* node) {
     zen_ForStatementContext_t* context = zen_Memory_allocate(zen_ForStatementContext_t, 1);
     context->m_node = node;
-    context->m_forParameters = NULL;
+    context->m_forParameter = NULL;
     context->m_expression = NULL;
     context->m_statementSuite = NULL;
-    context->m_elseClause = NULL;
 
     zen_Context_initializeNode(node, ZEN_AST_NODE_TYPE_FOR_STATEMENT, context,
         (zen_ContextDestructorFunction_t)zen_ForStatementContext_delete,
@@ -1127,47 +1122,40 @@ void zen_ForStatementContext_getChildren(zen_ForStatementContext_t* context,
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_add(children, context->m_forParameters);
+    jtk_ArrayList_add(children, context->m_forParameter);
     jtk_ArrayList_add(children, context->m_expression);
     jtk_ArrayList_add(children, context->m_statementSuite);
-    if (context->m_elseClause != NULL) {
-        jtk_ArrayList_add(children, context->m_elseClause);
-    }
 }
 
 /*******************************************************************************
- * ForParametersContext                                                        *
+ * ForParameterContext                                                         *
  *******************************************************************************/
 
-zen_ForParametersContext_t* zen_ForParametersContext_new(zen_ASTNode_t* node) {
-    zen_ForParametersContext_t* context = zen_Memory_allocate(zen_ForParametersContext_t, 1);
+zen_ForParameterContext_t* zen_ForParameterContext_new(zen_ASTNode_t* node) {
+    zen_ForParameterContext_t* context = zen_Memory_allocate(zen_ForParameterContext_t, 1);
     context->m_node = node;
-    context->m_declarator = NULL;
-    context->m_identifiers = jtk_ArrayList_new();
+    context->m_declaration = false;
+    context->m_variable = false;
+    context->m_identifier = NULL;
 
-    zen_Context_initializeNode(node,ZEN_AST_NODE_TYPE_FOR_PARAMETERS, context,
-        (zen_ContextDestructorFunction_t)zen_ForParametersContext_delete,
-        (zen_EnumerateContextChildrenFunction_t)zen_ForParametersContext_getChildren);
+    zen_Context_initializeNode(node, ZEN_AST_NODE_TYPE_FOR_PARAMETER, context,
+        (zen_ContextDestructorFunction_t)zen_ForParameterContext_delete,
+        (zen_EnumerateContextChildrenFunction_t)zen_ForParameterContext_getChildren);
 
     return context;
 }
 
-void zen_ForParametersContext_delete(zen_ForParametersContext_t* context) {
+void zen_ForParameterContext_delete(zen_ForParameterContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    jtk_ArrayList_delete(context->m_identifiers);
     jtk_Memory_deallocate(context);
 }
 
-void zen_ForParametersContext_getChildren(zen_ForParametersContext_t* context,
+void zen_ForParameterContext_getChildren(zen_ForParameterContext_t* context,
     jtk_ArrayList_t* children) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    if (context->m_declarator != NULL) {
-        jtk_ArrayList_add(children, context->m_declarator);
-    }
-
-    jtk_ArrayList_addAll(children, JTK_COLLECTION_ARRAY_LIST, context->m_identifiers);
+    jtk_ArrayList_addPredicatively(children, context->m_identifier, jtk_Object_isNotNull);
 }
 
 /*******************************************************************************
