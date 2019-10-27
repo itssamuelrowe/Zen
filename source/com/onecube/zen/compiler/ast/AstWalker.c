@@ -79,12 +79,12 @@ void zen_ASTWalker_walk(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
             }
         }
 
-        zen_ASTWalker_exitRule(listener, node);
-
         // TODO: If the walker allows a node to prevent its siblings from being visited
         // please process it here. Further, do not reset to ZEN_AST_WALKER_STATE_VISIT_CHILDREN.
 
         zen_ASTListener_visitChildren(listener);
+        
+        zen_ASTWalker_exitRule(listener, node);
     }
 
     // printf("[node exit] %s\n", zen_Parser_getRuleName(node->m_type));

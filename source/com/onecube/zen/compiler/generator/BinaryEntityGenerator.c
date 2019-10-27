@@ -402,7 +402,8 @@ void zen_BinaryEntityGenerator_onExitCompilationUnit(zen_ASTListener_t* astListe
     zen_SymbolTable_invalidateCurrentScope(generator->m_symbolTable);
 
     /* Push a data channel, where the bytes generated will be written. */
-    zen_BinaryEntityBuilder_pushChannel(generator->m_builder);
+    int32_t primaryChannelIndex = zen_BinaryEntityBuilder_addChannel(generator->m_builder);
+    zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_builder, primaryChannelIndex);
 }
 
 #include <stdio.h>
@@ -743,7 +744,8 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
     zen_Scope_t* scope = zen_ASTAnnotations_get(generator->m_scopes, node);
     zen_SymbolTable_setCurrentScope(generator->m_symbolTable, scope);
 
-    zen_BinaryEntityBuilder_pushChannel(generator->m_instructions);
+    int32_t instructionChannelIndex = zen_BinaryEntityBuilder_addChannel(generator->m_instructions);
+    zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_instructions, instructionChannelIndex);
 
     // TODO: Remove the following statement. Make sure that the instruction
     // length is never zero.
@@ -765,12 +767,13 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
  *
  * type
  * :    'v'
- * |    properType
+ * |    valueType
  * ;
  *
- * properType
+ * valueType
  * :    'z'
  * |    'b'
+ * |    'c'
  * |    's'
  * |    'i'
  * |    'l'
@@ -781,7 +784,7 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
  * ;
  *
  * arrayType
- * :    '@'+ properType
+ * :    '@'+ valueType
  * ;
  *
  * className
@@ -794,7 +797,6 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
  * The function descriptor for this function is shown below.
  * (zen/core/Object):(zen/core/Object)@(zen/core/Object)
  */
-
 jtk_String_t* zen_BinaryEntityGenerator_getDescriptorEx(zen_BinaryEntityGenerator_t* generator,
     zen_ASTNode_t* functionParameters, bool constructor) {
     zen_FunctionParametersContext_t* functionParametersContext =
@@ -1153,9 +1155,108 @@ void zen_BinaryEntityGenerator_onExitCompoundStatement(zen_ASTListener_t* astLis
 // ifStatement
 
 void zen_BinaryEntityGenerator_onEnterIfStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    zen_IfStatementContext_t* context = (zen_IfStatementContext_t*)node->m_context;
+
+    /* The normal behaviour of the AST walker causes the generator to emit instructions
+     * in an undesirable fashion. Therefore, we partially switch from the listener
+     * to visitor design pattern. The AST walker can be guided to switch to this
+     * mode via zen_ASTWalker_ignoreChildren() function which causes the AST walker
+     * to skip iterating over the children nodes.
+     */
+    zen_ASTListener_skipChildren(astListener);
 }
 
+/*
+ * [expression]
+ * jump_eq0_i
+ */
 void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    zen_IfStatementContext_t* context = (zen_IfStatementContext_t*)node->m_context;
+
+    zen_ASTNode_t* ifClause = context->m_ifClause;
+    zen_IfClauseContext_t* ifClauseContext = (zen_IfClauseContext_t*)ifClause->m_context;
+    zen_ASTWalker_walk(astListener, ifClauseContext->m_expression);
+    
+    const uint8_t* booleanClassName = "zen/core/Boolean";
+    int32_t booleanClassNameSize = 16;
+    const uint8_t* getValueDescriptor = "z:v";
+    int32_t getValueDescriptorSize = 3;
+    const uint8_t* getValueName = "getValue";
+    int32_t getValueNameSize = 8;
+    uint16_t getValueIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, booleanClassName, booleanClassNameSize,
+        getValueDescriptor, getValueDescriptorSize, getValueName,
+        getValueNameSize);
+
+    /* Invoke the Boolean#getValue() function to retrieve the primitive equivalent
+     * of the object.
+     */
+    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions,
+        getValueIndex);
+
+    /* Log the emission of the invoke_special instruction. */
+    printf("[debug] Emitted invoke_virtual %d\n", getValueIndex);
+    
+    int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
+        generator->m_instructions);
+    zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
+        generator->m_instructions, parentChannelIndex);
+    int32_t parentChannelSize = zen_DataChannel_getSize(parentChannel);
+
+    int32_t temporaryChannelIndex = zen_BinaryEntityBuilder_addChannel(
+        generator->m_instructions);
+    zen_DataChannel_t* temporaryChannel = zen_BinaryEntityBuilder_getChannel(
+        generator->m_instructions, temporaryChannelIndex);
+    zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_instructions,
+        temporaryChannelIndex);
+    
+    /* Generate the instructions corresponding to the statement suite specified
+     * to the if clause on the temporary channel.
+     */
+    zen_ASTWalker_walk(astListener, ifClauseContext->m_statementSuite);
+
+    /* Evaluate the size of the temporary channel after generating instructions
+     * corresponding to the statement suite.
+     */
+    int32_t temporaryChannelSize = zen_DataChannel_getSize(temporaryChannel);
+    
+    /* Reactivate the parent channel as the active channel. */
+    zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_instructions, parentChannelIndex);
+
+    /* Evaluate the offset where the jump instruction should branch when the
+     * condition is false. Since the jump instruction is not already on the
+     * channel, 3 is explicitly added to the offset computation, which is the
+     * length of the jump instruction.
+     *
+     * Note: the instructions are indexed beginning from zero. Otherwise,
+     * an extra 1 should be added to the offset.
+     */
+    int32_t jumpOffset = parentChannelSize + temporaryChannelSize + 3;
+    /* Emit the jump_eq0_i instruction. */
+    zen_BinaryEntityBuilder_emitJumpEqual0Integer(generator->m_instructions,
+        jumpOffset);
+    
+    /* Log the emission of the invoke_special instruction. */
+    printf("[debug] Emitted jump_eq0_i %d\n", jumpOffset);
+    
+    zen_DataChannel_appendChannel(parentChannel, temporaryChannel);
+    zen_BinaryEntityBuilder_removeChannel(generator->m_instructions, temporaryChannelIndex);
+    
+    /*
+    zen_BinaryEntityBuilder
+
+    int32_t size = jtk_ArrayList_getSize(context->m_elseIfClauses);
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        zen_ASTNode_t* elseIfClause = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+            context->m_elseIfClauses, i);
+        zen_ElseIfClauseContext_t* elseIfClauseContext =
+            (zen_ElseIfClauseContext_t*)elseIfClause->m_context;
+        zen_ASTWalker_walk(astListener, elseIfClauseContext->m_expression);
+    }
+    */
 }
 
 // ifClause
@@ -1203,7 +1304,7 @@ void zen_BinaryEntityGenerator_onExitLabel(zen_ASTListener_t* astListener, zen_A
 void zen_BinaryEntityGenerator_onEnterWhileStatement(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    // zen_BinaryEntityBuilder_pushChannel(generator->m_builder);
+    // zen_BinaryEntityBuilder_addChannel(generator->m_builder);
 }
 
 void zen_BinaryEntityGenerator_onExitWhileStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {/*
@@ -1541,7 +1642,7 @@ void zen_BinaryEntityGenerator_onEnterExpression(zen_ASTListener_t* astListener,
     zen_ASTAnnotation_t* annotation = zen_ASTAnnotations_get(generator->m_annotations, node);
     if (annotation != NULL) {
         if (zen_ASTAnnotation_getType(annotation) == ZEN_AST_ANNOTATION_TYPE_ASYMETRICAL_CHANNEL_MANAGEMENT) {
-            zen_BinaryEntityBuilder_pushChannel(generator->m_builder);
+            zen_BinaryEntityBuilder_addChannel(generator->m_builder);
         }
     }*/
 }
@@ -3253,6 +3354,9 @@ void zen_BinaryEntityGenerator_onEnterMapExpression(zen_ASTListener_t* astListen
      * the hash map. Otherwise, the HashMap#putValue() function
      * should be invoked n number of times, where n is the size of the value
      * array.
+     *
+     * TODO: Can we optimize map expressions by invoking HashMap#putValue()
+     * when the number of entries is less than a certain threshold?
      *
      * Emit the new_array_a instruction to create the temporary array.
      */

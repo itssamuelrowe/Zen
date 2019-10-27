@@ -57,6 +57,7 @@ struct zen_BinaryEntityBuilder_t {
     jtk_ArrayList_t* m_channels;
     uint16_t m_constantPoolIndex;
     int32_t m_identifier;
+    int32_t m_activeChannelIndex;
 };
 
 /**
@@ -83,6 +84,13 @@ void zen_BinaryEntityBuilder_delete(zen_BinaryEntityBuilder_t* builder);
 int32_t zen_BinaryEntityBuilder_pushChannel(zen_BinaryEntityBuilder_t* builder);
 
 void zen_BinaryEntityBuilder_popChannel(zen_BinaryEntityBuilder_t* builder);
+
+zen_DataChannel_t* zen_BinaryEntityBuilder_getActiveChannel(zen_BinaryEntityBuilder_t* builder);
+
+void zen_BinaryEntityBuilder_setActiveChannelIndex(zen_BinaryEntityBuilder_t* builder,
+    int32_t activeChannelIndex);
+
+int32_t zen_BinaryEntityBuilder_getActiveChannelIndex(zen_BinaryEntityBuilder_t* builder);
 
 // Emit
 
