@@ -2517,7 +2517,7 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
          generator->m_instructions);
     zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
          generator->m_instructions, parentChannelIndex);
-         
+
     zen_ASTNode_t* ifClause = context->m_ifClause;
     zen_IfClauseContext_t* ifClauseContext = (zen_IfClauseContext_t*)ifClause->m_context;
     zen_ASTNode_t* expression = ifClauseContext->m_expression;
@@ -2583,7 +2583,7 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
             expression = elseIfClauseContext->m_expression;
             statementSuite = elseIfClauseContext->m_statementSuite;
         }
-        
+
         /* The new parent channel size is equal to the offset where the jump
          * instruction should branch when the condition is false.
          *
@@ -2620,7 +2620,7 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
 
         /* Save the index of the bytes where the dummy data was written. */
         skipIndexes[index] = zen_DataChannel_getSize(parentChannel) - 2;
-        
+
         /* Increase the number of skips to indicate the presence of an else clause. */
         numberOfSkips++;
 
@@ -2640,16 +2640,18 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
         parentChannel->m_bytes[skipIndex] = (newParentChannelSize & 0x0000FF00) >> 8;
         parentChannel->m_bytes[skipIndex + 1] = newParentChannelSize & 0x000000FF;
     }
-    
+
     jtk_Memory_deallocate(skipIndexes);
 }
 
 // ifClause
 
-void zen_BinaryEntityGenerator_onEnterIfClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterIfClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitIfClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitIfClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // elseIfClause
@@ -2689,16 +2691,75 @@ void zen_BinaryEntityGenerator_onExitLabel(zen_ASTListener_t* astListener, zen_A
 void zen_BinaryEntityGenerator_onEnterWhileStatement(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    // zen_BinaryEntityBuilder_addChannel(generator->m_builder);
+    zen_WhileStatementContext_t* context = (zen_WhileStatementContext_t*)node->m_context;
+
+    /* The normal behaviour of the AST walker causes the generator to emit instructions
+     * in an undesirable fashion. Therefore, we partially switch from the listener
+     * to visitor design pattern. The AST walker can be guided to switch to this
+     * mode via zen_ASTWalker_ignoreChildren() function which causes the AST walker
+     * to skip iterating over the children nodes.
+     */
+    zen_ASTListener_skipChildren(astListener);
 }
 
-void zen_BinaryEntityGenerator_onExitWhileStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {/*
+void zen_BinaryEntityGenerator_onExitWhileStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    zen_WhileStatementContext_t* context = (zen_WhileStatementContext_t*)node->m_context;
 
-    zen_ByteCodeChannel_t* statementSuiteChannel = zen_ChannelManager_peek(generator->m_channelManager);
-    uint32_t index = zen_ByteCodeChannel_getSize(statementSuiteChannel);
-    zen_BinaryEntityGenerator_emitJump(generator, index);
-    zen_ChannelManager_merge(generator->m_channelManager);*/
+    const uint8_t* booleanClassName = "zen/core/Boolean";
+    int32_t booleanClassNameSize = 16;
+    const uint8_t* getValueDescriptor = "z:v";
+    int32_t getValueDescriptorSize = 3;
+    const uint8_t* getValueName = "getValue";
+    int32_t getValueNameSize = 8;
+    uint16_t getValueIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, booleanClassName, booleanClassNameSize,
+        getValueDescriptor, getValueDescriptorSize, getValueName,
+        getValueNameSize);
+
+    int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
+         generator->m_instructions);
+    zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
+         generator->m_instructions, parentChannelIndex);
+    uint16_t loopIndex = zen_DataChannel_getSize(parentChannel);
+
+    /* Generate the instructions corresponding to the conditional expression
+     * specified to the while statement.
+     */
+    zen_ASTWalker_walk(astListener, context->m_expression);
+
+    /* Invoke the Boolean#getValue() function to retrieve the primitive equivalent
+     * of the resulting object.
+     */
+    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions,
+        getValueIndex);
+
+    /* Log the emission of the invoke_special instruction. */
+    printf("[debug] Emitted invoke_virtual %d\n", getValueIndex);
+
+    /* Emit the jump_eq0_i instruction. */
+    zen_BinaryEntityBuilder_emitJumpEqual0Integer(generator->m_instructions, 0);
+
+    /* Log the emission of the jump_eq0_i instruction. */
+    printf("[debug] Emitted jump_eq0_i 0 (dummy index)\n");
+
+    /* Save the index of the byte where the dummy data was written. */
+    int32_t updateIndex = zen_DataChannel_getSize(parentChannel) - 2;
+
+    /* Generate the instructions corresponding to the statement suite specified
+     * to the while statement.
+     */
+    zen_ASTWalker_walk(astListener, context->m_statementSuite);
+    
+    /* Generate a jump instruction to loop back to the conditional expression. */
+    zen_BinaryEntityBuilder_emitJump(generator->m_instructions, loopIndex);
+
+    /* Log the emission of the jump instruction. */
+    printf("[debug] Emitted jump %d\n", loopIndex);
+    
+    uint16_t newParentChannelSize = zen_DataChannel_getSize(parentChannel);
+    parentChannel->m_bytes[updateIndex] = (newParentChannelSize & 0x0000FF00) >> 8;
+    parentChannel->m_bytes[updateIndex + 1] = newParentChannelSize & 0x000000FF;
 }
 
 // forStatement
