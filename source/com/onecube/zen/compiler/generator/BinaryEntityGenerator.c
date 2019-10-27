@@ -1114,10 +1114,10 @@ void zen_BinaryEntityGenerator_onExitReturnStatement(zen_ASTListener_t* astListe
     /* Retrieve the context of the AST node. */
     zen_ReturnStatementContext_t* context =
         (zen_ReturnStatementContext_t*)node->m_context;
-    
+
     /* Emit the return_a instruction. */
     zen_BinaryEntityBuilder_emitReturnReference(generator->m_instructions);
-    
+
     /* Log the emission of the instruction. */
     printf("[debug] Emitted return_a\n");
 }
@@ -1128,6 +1128,18 @@ void zen_BinaryEntityGenerator_onEnterThrowStatement(zen_ASTListener_t* astListe
 }
 
 void zen_BinaryEntityGenerator_onExitThrowStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+    /* Retrieve the generator associated with the AST listener. */
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+
+    /* Retrieve the context of the AST node. */
+    zen_ThrowStatementContext_t* context =
+        (zen_ThrowStatementContext_t*)node->m_context;
+
+    /* Emit the throw instruction. */
+    zen_BinaryEntityBuilder_emitThrow(generator->m_instructions);
+
+    /* Log the emission of the instruction. */
+    printf("[debug] Emitted throw\n");
 }
 
 // compoundStatement
