@@ -4889,6 +4889,69 @@ void zen_BinaryEntityGenerator_invokeEvaluate(zen_BinaryEntityGenerator_t* gener
  * In fact, when you compile the former code snippet the compiler generates
  * instructions as if the code was written in the latter form.
  */
+
+/*
+ * The generation is divided into two categories:
+ *  i. Only the primary expression is present.
+ *  ii. The primary expression along with the postfix parts are present.
+ *
+ * ALGORITHM FOR GENERATION WHEN ONLY THE PRIMARY EXPRESSION IS PRESENT
+ *
+ * 1. For an identifier
+ *    a. Resolve the symbol for with the given identifier.
+ *    b. If the symbol is local and variable or constant, then generate the
+ *       load_a instruction.
+ *    c. If the symbol is a class member and variable or constant, then
+ *       generate load_instance_field or load_static_field instruction depending
+ *       on the type of the member.
+ *    d. If the symbol is a class, enumeration, or annotation then generate the
+ *       load_cpr instruction.
+ *    e. If the symbol is a function, pass the reference of the symbol to the next
+ *       phase, whose algorithm is described below.
+ *    f. For all other symbols, print an error message that the previous phases
+ *       have malfunctioned.
+ *
+ * 2. For literals
+ *    a. For an integer value, generate one of the following instructions depending on
+ *       value: load_cpr, push_b, push_s, push_i*, and push_l*.
+ *    b. For a floating-point value, generate one of the following instructions
+ *       depending on the value: load_cpr, push_f*, and push_d*.
+ *    c. For a string value, generate the load_cpr instruction.
+ *    d. For true and false literals generate push_i1 and push_i0, respectively.
+ *    e. For null literal, generate the push_null instruction.
+ *
+ * 3. For expressions enclosed in parenthesis, simply walk through the expressions
+ *    tree.
+ *
+ * 4. For map and list expressions, please refer to the algorithms documented with
+ *    their respective generators.
+ *
+ * ALGORITHM FOR GENERATION WHEN BOTH THE PRIMARY EXPRESSION AND THE POSTFIX PARTS
+ * ARE PRESENT
+ *
+ * 1. The subscript operator requires an object that implements the operator
+ *    on the operand stack, which becomes the first operand. Therefore,
+ *    generate the instructions corresponding to the primary expression and the
+ *    postfix parts prior to the current postfix part. The second operand should
+ *    be evaluated by walking over the tree of the expression specified inside
+ *    the square brackets. After which, the ZenKernel.evaluate(operand1, operand2, '[]')
+ *    call should be made.
+ * 2. For function arguments
+ *    a. If function arguments is the very first postfix part, then use the
+ *       function symbol resolved in the previous phase. Generate instructions
+ *       to invoke the ZenKernel.dispatch() function to simulate the function
+ *       call.
+ *    b. When function arguments postfix part occurs at a position other than the
+ *       beginning of the list of postfix parts, it is processed along with the
+ *       member access postfix part.
+ * 3. For member access postfix parts, the subsequent postfix part is checked to
+ *    see if it is a function arguments postfix part. If true, the algorithm
+ *    generates instructions to invoke the ZenKernel.dispatch() function to
+ *    simulate the function call.
+ *    However, if the subsequent postfix part is not a function arguments postfix
+ *    part, then either the load_static_field or  the load_instance_field instruction
+ *    is generated.
+ */
 void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
