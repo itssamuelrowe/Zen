@@ -39,6 +39,9 @@
  * BinaryEntityGenerator                                                       *
  *******************************************************************************/
 
+struct zen_FunctionRecord_t {
+};
+
 /**
  * @author Samuel Rowe
  * @since zen 1.0
@@ -97,6 +100,11 @@ struct zen_BinaryEntityGenerator_t {
      * a variable is declared within a function scope.
      */
     int32_t m_localVariableCount;
+    
+    /**
+     * The list of exception handler sites within the function being declared.
+     */
+    jtk_ArrayList_t* m_exceptionHandlerSites;
 };
 
 /**

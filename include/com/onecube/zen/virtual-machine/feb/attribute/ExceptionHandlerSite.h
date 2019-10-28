@@ -60,6 +60,15 @@ struct zen_ExceptionHandlerSite_t {
      */
     uint16_t m_handlerIndex;
 
+    /**
+     * A valid index into the constant pool. The entry at this index should
+     * be an instance of the zen_ConstantPoolClass_t structure.
+     *
+     * A value of zero is considered a null value. Such a value indicates
+     * that the handler site is capable of handling any type of exception.
+     *
+     * The reason why constant pool indexes start from 1 is apparent here.
+     */
     uint16_t m_exceptionClassIndex;
 };
 
