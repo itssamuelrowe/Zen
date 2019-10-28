@@ -3545,6 +3545,11 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
     /* Log the emission of the invoke_virtual instruction. */
     printf("[debug] Emitted invoke_virtual %d\n", acquireIndex);
 
+    /* Save the index where the instruction section for the statement suite
+     * specified to the synchronize statement begins (inclusive).
+     */
+    int32_t startIndex1 = zen_DataChannel_getSize(parentChannel);
+
     /* Generate the instructions corresponding to the statement suite specified
      * to the synchronize statement.
      */
@@ -3562,6 +3567,11 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
     /* Log the emission of the invoke_virtual instruction. */
     printf("[debug] Emitted invoke_virtual %d\n", releaseIndex);
 
+    /* Save the index where the instruction section for the statement suite
+     * specified to the synchronize statement ends (exclusive).
+     */
+    int32_t stopIndex1 = zen_DataChannel_getSize(parentChannel);
+
     /* The synchronize statement generates an implicit finally clause that releases
      * the lock when an exception is triggered within the statement suite specified
      * to the synchronize statement. Therefore, generate a jump instruction to
@@ -3578,6 +3588,11 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
 
     /* Save the index of the bytes where the dummy data was written. */
     int32_t skipIndex = zen_DataChannel_getSize(parentChannel) - 2;
+
+    /* Save the index where the instruction section for the implicit finally
+     * clause begins (inclusive).
+     */
+    int32_t startIndex2 = zen_DataChannel_getSize(parentChannel);
 
     /* The virtual machine pushes the exception that was thrown to the operand
      * stack before the control is passed to the implicit finally clause, thanks
@@ -3600,6 +3615,11 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
     /* Log the emission of the invoke_virtual instruction. */
     printf("[debug] Emitted invoke_virtual %d\n", releaseIndex);
 
+    /* Save the index where the instruction section for the implicit finally
+     * clause ends (exclusive).
+     */
+    int32_t stopIndex2 = zen_DataChannel_getSize(parentChannel);
+
     /* Load the thrown exception from the local variable. */
     zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
 
@@ -3615,6 +3635,21 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
     uint16_t newParentChannelSize = zen_DataChannel_getSize(parentChannel);
     parentChannel->m_bytes[skipIndex] = (newParentChannelSize & 0x0000FF00) >> 8;
     parentChannel->m_bytes[skipIndex + 1] = newParentChannelSize & 0x000000FF;
+
+    zen_ExceptionHandlerSite_t* type1Handler = jtk_Memory_allocate(zen_ExceptionHandlerSite_t, 1);
+    type1Handler->m_startIndex = startIndex1;
+    type1Handler->m_stopIndex = stopIndex1;
+    type1Handler->m_handlerIndex = startIndex2;
+    type1Handler->m_exceptionClassIndex = 0;
+
+    zen_ExceptionHandlerSite_t* type2Handler = jtk_Memory_allocate(zen_ExceptionHandlerSite_t, 1);
+    type2Handler->m_startIndex = startIndex2;
+    type2Handler->m_stopIndex = stopIndex2;
+    type2Handler->m_handlerIndex = startIndex2;
+    type2Handler->m_exceptionClassIndex = 0;
+
+    jtk_ArrayList_add(generator->m_exceptionHandlerSites, type1Handler);
+    jtk_ArrayList_add(generator->m_exceptionHandlerSites, type2Handler);
 }
 
 // withStatement
