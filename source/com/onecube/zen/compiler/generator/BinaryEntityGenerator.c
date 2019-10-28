@@ -2607,7 +2607,7 @@ void zen_BinaryEntityGenerator_onEnterIfStatement(zen_ASTListener_t* astListener
     /* The normal behaviour of the AST walker causes the generator to emit instructions
      * in an undesirable fashion. Therefore, we partially switch from the listener
      * to visitor design pattern. The AST walker can be guided to switch to this
-     * mode via zen_ASTWalker_ignoreChildren() function which causes the AST walker
+     * mode via zen_ASTListener_skipChildren() function which causes the AST walker
      * to skip iterating over the children nodes.
      */
     zen_ASTListener_skipChildren(astListener);
@@ -2812,7 +2812,7 @@ void zen_BinaryEntityGenerator_onEnterWhileStatement(zen_ASTListener_t* astListe
     /* The normal behaviour of the AST walker causes the generator to emit instructions
      * in an undesirable fashion. Therefore, we partially switch from the listener
      * to visitor design pattern. The AST walker can be guided to switch to this
-     * mode via zen_ASTWalker_ignoreChildren() function which causes the AST walker
+     * mode via zen_ASTListener_skipChildren() function which causes the AST walker
      * to skip iterating over the children nodes.
      */
     zen_ASTListener_skipChildren(astListener);
@@ -2887,7 +2887,7 @@ void zen_BinaryEntityGenerator_onEnterForStatement(zen_ASTListener_t* astListene
     /* The normal behaviour of the AST walker causes the generator to emit instructions
      * in an undesirable fashion. Therefore, we partially switch from the listener
      * to visitor design pattern. The AST walker can be guided to switch to this
-     * mode via zen_ASTWalker_ignoreChildren() function which causes the AST walker
+     * mode via zen_ASTListener_skipChildren() function which causes the AST walker
      * to skip iterating over the children nodes.
      */
     zen_ASTListener_skipChildren(astListener);
@@ -3041,7 +3041,7 @@ void zen_BinaryEntityGenerator_onEnterTryStatement(zen_ASTListener_t* astListene
     /* The normal behaviour of the AST walker causes the generator to emit instructions
      * in an undesirable fashion. Therefore, we partially switch from the listener
      * to visitor design pattern. The AST walker can be guided to switch to this
-     * mode via zen_ASTWalker_ignoreChildren() function which causes the AST walker
+     * mode via zen_ASTListener_skipChildren() function which causes the AST walker
      * to skip iterating over the children nodes.
      */
     zen_ASTListener_skipChildren(astListener);
@@ -3063,7 +3063,7 @@ void zen_BinaryEntityGenerator_onEnterTryStatement(zen_ASTListener_t* astListene
  *   4. Jump to the instruction immediately following the try statement.
  *
  * - Catch Clause
- *   1. The virtual machine pushs the exception that was caught to the operand stack.
+ *   1. The virtual machine pushes the exception that was caught to the operand stack.
  *      Store this reference in a local variable.
  *   2. Generate instructions corresponding to the statement suite specified
  *      to the catch clause.
@@ -3082,7 +3082,7 @@ void zen_BinaryEntityGenerator_onEnterTryStatement(zen_ASTListener_t* astListene
  *   of the Throwable class. A record of this implicit clause is added to the
  *   exception table.
  *
- *   1. The virtual machine pushs the exception that was caught to the operand
+ *   1. The virtual machine pushes the exception that was caught to the operand
  *      stack. Store this reference in a local variable.
  *   2. Generate instructions corresponding to the statement suite specified
  *      to the finally clause.
@@ -3110,7 +3110,7 @@ void zen_BinaryEntityGenerator_onEnterTryStatement(zen_ASTListener_t* astListene
  *      was generated.
  *
  * - Catch Clause
- *   1. The virtual machine pushs the exception that was caught to the operand
+ *   1. The virtual machine pushes the exception that was caught to the operand
  *      stack. Store this reference in a local variable.
  *   2. Generate instructions corresponding to the statement suite specified
  *      to the catch clause.
@@ -3133,7 +3133,7 @@ void zen_BinaryEntityGenerator_onEnterTryStatement(zen_ASTListener_t* astListene
  *   of the Throwable class. A record of this implicit clause is added to the
  *   exception table.
  *
- *   1. The virtual machine pushs the exception that was caught to the operand
+ *   1. The virtual machine pushes the exception that was caught to the operand
  *      stack. Store this reference in a local variable.
  *   2. Generate instructions corresponding to the statement suite specified
  *      to the finally clause.
@@ -3283,7 +3283,7 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
             statementSuite = catchClauseContext->m_statementSuite;
             // Update the exception class name here.
 
-            /* The virtual machine pushs the exception that was caught to the
+            /* The virtual machine pushes the exception that was caught to the
              * operand stack. Store this reference in a local variable.
              */
             zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
@@ -3348,7 +3348,7 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
 
         jtk_ArrayList_add(generator->m_exceptionHandlerSites, type2Handler);
 
-        /* The virtual machine pushs the exception that was caught to the operand
+        /* The virtual machine pushes the exception that was caught to the operand
          * stack. Store this reference in a local variable.
          */
         zen_BinaryEntityBuilder_emitStoreReference(generator->m_instructions, 0);
@@ -3404,10 +3404,12 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
 
 // tryClause
 
-void zen_BinaryEntityGenerator_onEnterTryClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterTryClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitTryClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitTryClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // catchClause
@@ -3436,10 +3438,183 @@ void zen_BinaryEntityGenerator_onExitFinallyClause(zen_ASTListener_t* astListene
 
 // synchronizeStatement
 
-void zen_BinaryEntityGenerator_onEnterSynchronizeStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterSynchronizeStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+    /* Retrieve the generator associated with the AST listener. */
+    zen_BinaryEntityGenerator_t* generator =
+        (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    /* Retrieve the context of the AST node. */
+    zen_SynchronizeStatementContext_t* context =
+        (zen_SynchronizeStatementContext_t*)node->m_context;
+
+    zen_ASTListener_skipChildren(astListener);
 }
 
-void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+/*
+ * ALGORITHM FOR GENERATING INSTRUCTIONS CORRESPONDING TO SYNCHRONIZE
+ * STATEMENTS
+ *
+ * 1. Generate the instructions corresponding to the expression specified
+ *    to the synchronize statement.
+ * 2. Make a duplicate of the resulting lock object.
+ * 3. Store the duplicate reference in a local variable that only the
+ *    compiler has access to.
+ * 4. Invoke the Lock#acquire() function.
+ * 5. Generate the instructions corresponding to the statement suite specified
+ *    to the synchronize statement.
+ * 6. Load the reference to the lock object from the local variable.
+ * 7. Invoke the Lock#release() function.
+ * 8. The synchronize statement generates an implicit finally clause that releases
+ *    the lock when an exception is triggered within the statement suite specified
+ *    to the synchronize statement. Therefore, generate a jump instruction to
+ *    skip the finally clause section.
+ * 9. An exception is pushed onto the operand stack for the finally clause to
+ *    throw again. Therefore, store the reference to the exception in a local
+ *    variable.
+ * 10. Load the reference to the lock object from the local variable.
+ * 11. Invoke the Lock#release() function.
+ * 12. Load the reference to the exception that was thrown.
+ * 13. Rethrow the exception that caused the finally clause to execute.
+ *
+ * The following records will be stored in the exception table.
+ * 1. Any exception that is triggered within the statement suite is handled
+ *    by the implicit finally clause.
+ * 2. Any exception that is thrown by the Lock#release() function is handled
+ *    by the finally clause.
+ *
+ * The Lock#release() may throw an exception within the bounds of the finally
+ * clause. From the above records we know that the control is passed to the
+ * implicit finally clause when an exception is thrown by the Lock#release()
+ * function. This results in the implicit finally clause forming a loop.
+ */
+void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+    /* Retrieve the generator associated with the AST listener. */
+    zen_BinaryEntityGenerator_t* generator =
+        (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    /* Retrieve the context of the AST node. */
+    zen_SynchronizeStatementContext_t* context =
+        (zen_SynchronizeStatementContext_t*)node->m_context;
+
+    int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
+        generator->m_instructions);
+    zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
+        generator->m_instructions, parentChannelIndex);
+
+    const uint8_t* lockClassName = "zen/concurrency/lock/Lock";
+    int32_t lockClassNameSize = 25;
+
+    const uint8_t* acquireDescriptor = "v:v";
+    int32_t acquireDescriptorSize = 3;
+    const uint8_t* acquireName = "acquire";
+    int32_t acquireNameSize = 7;
+    uint16_t acquireIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, lockClassName, lockClassNameSize,
+        acquireDescriptor, acquireDescriptorSize, acquireName, acquireNameSize);
+
+    const uint8_t* releaseDescriptor = "v:v";
+    int32_t releaseDescriptorSize = 3;
+    const uint8_t* releaseName = "release";
+    int32_t releaseNameSize = 7;
+    uint16_t releaseIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, lockClassName, lockClassNameSize,
+        releaseDescriptor, releaseDescriptorSize, releaseName, releaseNameSize);
+
+    /* Generate the instructions for the expression specified to the
+     * synchronize statement.
+     */
+    zen_ASTWalker_walk(astListener, context->m_expression);
+
+    /* Make a duplicate of the resulting lock object. */
+    zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+
+    /* Log the emission of the duplicate instruction. */
+    printf("[debug] Emitted duplicate\n");
+
+    /* Store the duplicate reference in a local variable that only the
+     * compiler has access to.
+     */
+    zen_BinaryEntityBuilder_emitStoreReference(generator->m_instructions, 0);
+
+    /* Log the emission of the store_a instruction. */
+    printf("[debug] Emitted store_a 0 (dummy index)\n");
+
+    /* Invoke the Lock#acquire() function. */
+    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions, acquireIndex);
+
+    /* Log the emission of the invoke_virtual instruction. */
+    printf("[debug] Emitted invoke_virtual %d\n", acquireIndex);
+
+    /* Generate the instructions corresponding to the statement suite specified
+     * to the synchronize statement.
+     */
+    zen_ASTWalker_walk(astListener, context->m_statementSuite);
+
+    /* Load the reference to the lock object from the local variable. */
+    zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+
+    /* Log the emission of the load_a instruction. */
+    printf("[debug] Emitted load_a 0 (dummy index)\n");
+
+    /* Invoke the Lock#release() function. */
+    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions, releaseIndex);
+
+    /* Log the emission of the invoke_virtual instruction. */
+    printf("[debug] Emitted invoke_virtual %d\n", releaseIndex);
+
+    /* The synchronize statement generates an implicit finally clause that releases
+     * the lock when an exception is triggered within the statement suite specified
+     * to the synchronize statement. Therefore, generate a jump instruction to
+     * skip the finally clause section.
+     *
+     * Given the implicity finally clause section has not been generated yet,
+     * the jump offset cannot be evaluated right now. Therefore, emit the jump
+     * instruction with a dummy offset.
+     */
+    zen_BinaryEntityBuilder_emitJump(generator->m_instructions, 0);
+
+    /* Log the emission of the jump instruction. */
+    printf("[debug] Emitted jump 0 (dummy index)\n");
+
+    /* Save the index of the bytes where the dummy data was written. */
+    int32_t skipIndex = zen_DataChannel_getSize(parentChannel) - 2;
+
+    /* The virtual machine pushes the exception that was thrown to the operand
+     * stack before the control is passed to the implicit finally clause, thanks
+     * to the exception table. Store this reference in a local variable.
+     */
+    zen_BinaryEntityBuilder_emitStoreReference(generator->m_instructions, 0);
+
+    /* Log the emission of the store_a instruction. */
+    printf("[debug] Emitted store_a 0 (dummy index)\n");
+
+    /* Load the reference to the lock object from the local variable. */
+    zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+
+    /* Log the emission of the load_a instruction. */
+    printf("[debug] Emitted load_a 0 (dummy index)\n");
+
+    /* Invoke the Lock#release() function. */
+    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions, releaseIndex);
+
+    /* Log the emission of the invoke_virtual instruction. */
+    printf("[debug] Emitted invoke_virtual %d\n", releaseIndex);
+
+    /* Load the thrown exception from the local variable. */
+    zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+
+    /* Log the emission of the store_a instruction. */
+    printf("[debug] Emitted load_a 0 (dummy index)\n");
+
+    /* Throw the exception again. */
+    zen_BinaryEntityBuilder_emitThrow(generator->m_instructions);
+
+    /* Log the emission of the throw instruction. */
+    printf("[debug] Emitted throw\n");
+
+    uint16_t newParentChannelSize = zen_DataChannel_getSize(parentChannel);
+    parentChannel->m_bytes[skipIndex] = (newParentChannelSize & 0x0000FF00) >> 8;
+    parentChannel->m_bytes[skipIndex + 1] = newParentChannelSize & 0x000000FF;
 }
 
 // withStatement
@@ -4734,7 +4909,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                 /* The normal behaviour of the AST walker causes the generator to
                  * emit instructions in an undesirable fashion. Therefore, we partially
                  * switch from the listener to visitor design pattern. The AST walker
-                 * can be guided to switch to this mode via zen_ASTWalker_ignoreChildren()
+                 * can be guided to switch to this mode via zen_ASTListener_skipChildren()
                  * function which causes the AST walker to skip iterating over the children
                  * nodes.
                  */
@@ -4768,7 +4943,7 @@ void zen_BinaryEntityGenerator_onEnterPostfixExpression(zen_ASTListener_t* astLi
     /* The normal behaviour of the AST walker causes the generator to
      * emit instructions in an undesirable fashion. Therefore, we partially
      * switch from the listener to visitor design pattern. The AST walker
-     * can be guided to switch to this mode via zen_ASTWalker_ignoreChildren()
+     * can be guided to switch to this mode via zen_ASTListener_skipChildren()
      * function which causes the AST walker to skip iterating over the children
      * nodes.
      */
@@ -5512,7 +5687,7 @@ void zen_BinaryEntityGenerator_onEnterMapExpression(zen_ASTListener_t* astListen
     /* The normal behaviour of the AST walker causes the generator to emit instructions
      * in an undesirable fashion. Therefore, we partially switch from the listener
      * to visitor design pattern. The AST walker can be guided to switch to this
-     * mode via zen_ASTWalker_ignoreChildren() function which causes the AST walker
+     * mode via zen_ASTListener_skipChildren() function which causes the AST walker
      * to skip iterating over the children nodes.
      */
     zen_ASTListener_skipChildren(astListener);
@@ -5647,7 +5822,7 @@ void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListe
     /* The normal behaviour of the AST walker causes the generator to emit instructions
      * in an undesirable fashion. Therefore, we partially switch from the listener
      * to visitor design pattern. The AST walker can be guided to switch to this
-     * mode via zen_ASTWalker_ignoreChildren() function which causes the AST walker
+     * mode via zen_ASTListener_skipChildren() function which causes the AST walker
      * to skip iterating over the children nodes.
      */
     zen_ASTListener_skipChildren(astListener);
@@ -5866,7 +6041,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
     /* The normal behaviour of the AST walker causes the generator to emit instructions
      * in an undesirable fashion. Therefore, we partially switch from the listener
      * to visitor design pattern. The AST walker can be guided to switch to this
-     * mode via zen_ASTWalker_ignoreChildren() function which causes the AST walker
+     * mode via zen_ASTListener_skipChildren() function which causes the AST walker
      * to skip iterating over the children nodes.
      */
     zen_ASTListener_skipChildren(astListener);
