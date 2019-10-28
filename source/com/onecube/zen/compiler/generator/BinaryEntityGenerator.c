@@ -2681,11 +2681,12 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
      * plus 1, which is also equal to the maximum number of skip indexes.
      */
     int32_t numberOfSkips = size;
-    /* TODO: Should generate a jump instruction immediately after the instructions
-     * corresponding to the body of the if clause when an else clause is present.
+    /* A jump instruction is generated immediately after the instructions
+     * corresponding to the body of an if/else if clause when an else clause
+     * is present.
      */
     if (context->m_elseClause != NULL) {
-        /* If the previous if/else if clause was selected and executed all the
+        /* If the previous if/else if clause was selected and executed then
          * the else clause should be skipped. Generate a jump instruction to skip
          * the else clause. Given the else clause has not been generated yet,
          * the jump offset cannot be evaluated right now. Therefore, emit the
@@ -2993,10 +2994,208 @@ void zen_BinaryEntityGenerator_onExitForParameters(zen_ASTListener_t* astListene
 
 // tryStatement
 
-void zen_BinaryEntityGenerator_onEnterTryStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterTryStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+    /* Retrieve the generator associated with the AST listener. */
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    /* Retrieve the context of the AST node. */
+    zen_TryStatementContext_t* context = (zen_TryStatementContext_t*)node->m_context;
+
+    /* The normal behaviour of the AST walker causes the generator to emit instructions
+     * in an undesirable fashion. Therefore, we partially switch from the listener
+     * to visitor design pattern. The AST walker can be guided to switch to this
+     * mode via zen_ASTWalker_ignoreChildren() function which causes the AST walker
+     * to skip iterating over the children nodes.
+     */
+    zen_ASTListener_skipChildren(astListener);
 }
 
-void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+/*
+ * The algorithm for generating instructions corresponding to a try statement is
+ * given below.
+ * 
+ * ### Algorithm 1
+ *
+ * - Try Clause
+ *   1. Generate instructions corresponding to the statement suite specified
+ *      to the try clause.
+ *   2. Record the start and stop indexes of these instructions on the data
+ *      channel. They will be later used to generate the exception table.
+ *   3. Generate instructions corresponding to the statement suite specified to
+ *      the finally clause.
+ *   4. Jump to the instruction immediately following the try statement.
+ *
+ * - Catch Clause
+ *   1. The virtual machine pushs the exception that was caught to the operand stack.
+ *      Store this reference in a local variable.
+ *   2. Generate instructions corresponding to the statement suite specified
+ *      to the catch clause.
+ *   3. Record the start and stop indexes of these instructions on the data
+ *      channel. They will be later used to generate the exception table.
+ *   4. Generate instructions corresponding to the statement suite specified to
+ *      the finally clause.
+ *   5. Jump to the instruction immediately following the try statement.
+ *
+ * - Finally Clause
+ *   This section of instructions handle exceptions that were triggered either
+ *   by the statement suite specified to the try clause or the catch clause.
+ *   In both the cases, the exceptions are thrown again.
+ *
+ *   This section is basically an implicit catch clause that handles instances
+ *   of the Throwable class. A record of this implicit clause is added to the
+ *   exception table.
+ *
+ *   1. The virtual machine pushs the exception that was caught to the operand
+ *      stack. Store this reference in a local variable.
+ *   2. Generate instructions corresponding to the statement suite specified
+ *      to the finally clause.
+ *   3. Load the caught exception from the local variable.
+ *   4. Throw the caught exception again.
+ *
+ * The primary disadvantage with the algorithm described above is the duplicate
+ * copies of the finally clause. Consider a try statement with `n + 1` clauses,
+ * where n is the number catch clauses and 1 represents the try clause. For such
+ * a statement this algorithm generates `n + 2` copies of the finally clause.
+ * The additional 1 represents the finally clause generated to handle unhandled
+ * exceptions thrown either by the try clause or the catch clause.
+ *
+ * The following algorithm describes another approach where there are only
+ * 2 copies of the finally clause.
+ *
+ * ### Algorithm 2
+ *
+ * - Try Clause
+ *   1. Generate instructions corresponding to the statement suite specified
+ *      to the try clause.
+ *   2. Record the start and stop indexes of these instructions on the data
+ *      channel. They will be later used to generate the exception table.
+ *   3. Jump to the section (FC1) where the instructions of the finally clause
+ *      was generated.
+ *
+ * - Catch Clause
+ *   1. The virtual machine pushs the exception that was caught to the operand
+ *      stack. Store this reference in a local variable.
+ *   2. Generate instructions corresponding to the statement suite specified
+ *      to the catch clause.
+ *   3. Record the start and stop indexes of these instructions on the data
+ *      channel. They will be later used to generate the exception table.
+ *   4. Jump to the section (FC1) where the instructions of the finally clause
+ *      was generated.
+ *
+ * - Finally Clause 1 (FC1)
+ *   1. Generate instructions corresponding to the statement suite specified
+ *      to the finally clause.
+ *   2. Jump to the instruction immediately following the try statement.
+ *
+ * - Finally Clause 2 (FC2)
+ *   This section of instructions handle exceptions that were triggered either
+ *   by the statement suite specified to the try clause or the catch clause.
+ *   In both the cases, the exceptions are thrown again.
+ *
+ *   This section is basically an implicit catch clause that handles instances
+ *   of the Throwable class. A record of this implicit clause is added to the
+ *   exception table.
+ *
+ *   1. The virtual machine pushs the exception that was caught to the operand
+ *      stack. Store this reference in a local variable.
+ *   2. Generate instructions corresponding to the statement suite specified
+ *      to the finally clause.
+ *   3. Load the caught exception from the local variable.
+ *   4. Throw the caught exception again.
+ *
+ * For both the algorithms, the following records are stored in the exception
+ * table.
+ *  - The exceptions triggered within the try clause and are handled by the catch
+ *    clauses. These exceptions are not thrown again implicitly.
+ *  - The exceptions triggered within the try clause but are not handled by the
+ *    catch clauses. These exceptions are thrown again implicity by the finally
+ *    clause.
+ *  - The exceptions triggered within the catch clause. These exceptions are thrown
+ *    again implicity by the finally clause.
+ *
+ * The latter algorithm is used in this implementation.
+ */
+void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+    /* Retrieve the generator associated with the AST listener. */
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    /* Retrieve the context of the AST node. */
+    zen_TryStatementContext_t* context = (zen_TryStatementContext_t*)node->m_context;
+
+    int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
+        generator->m_instructions);
+    zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
+        generator->m_instructions, parentChannelIndex);
+
+    zen_ASTNode_t* tryClause = context->m_tryClause;
+    zen_TryClauseContext_t* tryClauseContext = (zen_TryClauseContext_t*)tryClause->m_context;
+
+    zen_ASTNode_t* statementSuite = tryClauseContext->m_statementSuite;
+
+    int32_t numberOfCatchClauses = jtk_ArrayList_getSize(context->m_catchClauses);
+    int32_t* skipIndexes = jtk_Memory_allocate(int32_t, size + 1);
+
+    int32_t index = -1;
+    do {
+        /* Generate the instructions corresponding to the statement suite specified
+         * to the current clause.
+         */
+        zen_ASTWalker_walk(astListener, statementSuite);
+
+        index++;
+
+        /* A jump instrution should not be generated only if there are no
+         * catch clauses or if the current catch clause is the last catch
+         * clause.
+         */
+        if (index != numberOfCatchClauses) {
+            /* If the current clause is a try clause and it executes completely,
+             * without triggering any exception, the catch clauses and the finally
+             * clause should be skipped.
+             *
+             * Similarly, if the current clause is catch clause and it executes
+             * completely, without triggering any exception, subsequence catch
+             * clauses and the finally clause should be skipped.
+             *
+             * Given the statement has not been generated yet, the jump offset
+             * cannot be evaluated right now. Therefore, emit the jump instruction
+             * with a dummy offset.
+             *
+             * Emit the jump instruction to skip the other clauses.
+             */
+            zen_BinaryEntityBuilder_emitJump(generator->m_instructions, 0);
+
+            /* Log the emission of the jump instruction. */
+            printf("[debug] Emitted jump 0 (dummy index)\n");
+
+            /* Save the index of the bytes where the dummy data was written. */
+            skipIndexes[index] = zen_DataChannel_getSize(parentChannel) - 2;
+
+            zen_ASTNode_t* catchClause = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+                context->m_catchClauses, index);
+            zen_CatchClauseContext_t* catchClauseContext =
+                (zen_CatchClauseContext_t*)catchClause->m_context;
+            statementSuite = catchClauseContext->m_statementSuite;
+
+            // TODO: Generate the exception table.
+        }
+    }
+    while (index < numberOfCatchClauses);
+    
+    /* The number of skip indexes to fill is given by the number of catch
+     * clauses.
+     */
+    int32_t numberOfSkips = numberOfCatchClauses;
+    
+    if (context->m_finallyClause != NULL) {
+        /* Retrieve the AST node for the finally clause. */
+        zen_ASTNode_t* finallyClause = context->m_finallyClause;
+        /* Retrieve the context associated with the AST node of the finally clause. */
+        zen_FinallyClauseContext_t* finallyClauseContext =
+            (zen_FinallyClauseContext_t*)finallyClause->m_context;
+        /* Generate the instructions for the statements within the finally clause. */
+        zen_ASTWalker_walk(astListener, finallyClauseContext->m_statementSuite);
+    }
 }
 
 // tryClause
@@ -4817,10 +5016,10 @@ void zen_BinaryEntityGenerator_onEnterPrimaryExpression(
                     else {
                         printf("[todo] What should I do here?\n");
                     }
-                    
+
                     /* Emit the load_a instruction. */
                     zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, index);
-                    
+
                     /* Log the emission of the load_a instruction. */
                     printf("[debug] Emitted load_a %d\n", index);
                 }
