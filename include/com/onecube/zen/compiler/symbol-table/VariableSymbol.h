@@ -36,6 +36,7 @@ struct zen_VariableSymbol_t {
     zen_Symbol_t* m_symbol;
     jtk_ArrayList_t* m_modifiers;
     int32_t m_implicitModifiers;
+    int32_t m_index;
 };
 
 /**

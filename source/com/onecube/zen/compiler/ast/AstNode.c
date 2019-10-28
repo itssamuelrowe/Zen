@@ -108,21 +108,27 @@ jtk_ArrayList_t* zen_ASTNode_getChildren(zen_ASTNode_t* node) {
 void zen_ASTNode_toString0(zen_ASTNode_t* node, jtk_StringBuilder_t* builder) {
     jtk_Assert_assertObject(node, "The specified node is null.");
 
-    jtk_ArrayList_t* nodes = zen_ASTNode_getChildren(node);
-    int32_t size = jtk_ArrayList_getSize(nodes);
-    int32_t i;
-    for (i = 0; i < size; i++) {
-        zen_ASTNode_t* node = jtk_ArrayList_getValue(nodes, i);
-        if (node->m_type == ZEN_AST_NODE_TYPE_TERMINAL) {
-            zen_Token_t* token = (zen_Token_t*)node->m_context;
-            jtk_StringBuilder_appendEx_z(builder, token->m_text, token->m_length);
-        }
-        else if (node->m_type == ZEN_AST_NODE_TYPE_UNKNOWN) {
-            jtk_StringBuilder_appendEx_z(builder, "<unknown>", 9);
-        }
-        else {
-            // TODO: I am not sure what happens when the node is erroneous.
-            zen_ASTNode_toString0(node, builder);
+    if (node->m_type == ZEN_AST_NODE_TYPE_TERMINAL) {
+        zen_Token_t* token = (zen_Token_t*)node->m_context;
+        jtk_StringBuilder_appendEx_z(builder, token->m_text, token->m_length);
+    }
+    else {
+        jtk_ArrayList_t* nodes = zen_ASTNode_getChildren(node);
+        int32_t size = jtk_ArrayList_getSize(nodes);
+        int32_t i;
+        for (i = 0; i < size; i++) {
+            zen_ASTNode_t* child = jtk_ArrayList_getValue(nodes, i);
+            if (child->m_type == ZEN_AST_NODE_TYPE_TERMINAL) {
+                zen_Token_t* token = (zen_Token_t*)child->m_context;
+                jtk_StringBuilder_appendEx_z(builder, token->m_text, token->m_length);
+            }
+            else if (child->m_type == ZEN_AST_NODE_TYPE_UNKNOWN) {
+                jtk_StringBuilder_appendEx_z(builder, "<unknown>", 9);
+            }
+            else {
+                // TODO: I am not sure what happens when the child is erroneous.
+                zen_ASTNode_toString0(child, builder);
+            }
         }
     }
 }

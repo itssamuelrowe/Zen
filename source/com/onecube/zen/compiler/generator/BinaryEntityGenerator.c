@@ -31,6 +31,8 @@
 #include <com/onecube/zen/compiler/generator/BinaryEntityBuilder.h>
 #include <com/onecube/zen/compiler/symbol-table/Symbol.h>
 #include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/ConstantSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/VariableSymbol.h>
 #include <com/onecube/zen/compiler/generator/BinaryEntityGenerator.h>
 #include <com/onecube/zen/virtual-machine/feb/EntityType.h>
 #include <com/onecube/zen/virtual-machine/feb/attribute/InstructionAttribute.h>
@@ -2365,15 +2367,15 @@ void zen_BinaryEntityGenerator_onExitVariableDeclarator(zen_ASTListener_t* astLi
     /* Retrieve the current scope from the symbol table. */
     zen_Scope_t* currentScope = zen_SymbolTable_getCurrentScope(generator->m_symbolTable);
 
+    /* Retrieve the identifier AST node. */
+    zen_ASTNode_t* identifier = context->m_identifier;
+    /* Retrieve the identifier token. */
+    zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+
     /* If a class scope encloses the variable being declared, we are processing
      * a class member declaration.
      */
     if (zen_Scope_isClassScope(currentScope)) {
-        /* Retrieve the identifier AST node. */
-        zen_ASTNode_t* identifier = context->m_identifier;
-        /* Retrieve the identifier token. */
-        zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
-
         uint16_t flags = 0;
 
         /* Retrieve the constant pool index for the variable name. */
@@ -2393,6 +2395,25 @@ void zen_BinaryEntityGenerator_onExitVariableDeclarator(zen_ASTListener_t* astLi
         /* Add the field entity to the list of fields. */
         jtk_ArrayList_add(generator->m_fields, fieldEntity);
     }
+    else if (zen_Scope_isLocalScope(currentScope)) {
+        /* Retrieve the string equivalent to the identifier node. */
+        int32_t identifierSize;
+        uint8_t* identifierText = zen_ASTNode_toCString(identifier, &identifierSize);
+
+        /* TODO: If the local scope belongs to an instance function, then a local
+         * variable for the "this" reference should be created.
+         */
+        int32_t index = generator->m_localVariableCount++;
+
+        zen_Symbol_t* symbol = zen_Scope_resolve(currentScope, identifierText);
+        if (zen_Symbol_isVariable(symbol)) {
+            zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)symbol->m_context;
+            variableSymbol->m_index = index;
+        }
+        else {
+            printf("[internal error] Identifier recognized by variable declarator registered as a non-variable entity in the symbol table.\n");
+        }
+    }
 }
 
 // constantDeclaration
@@ -2401,6 +2422,63 @@ void zen_BinaryEntityGenerator_onEnterConstantDeclaration(zen_ASTListener_t* ast
 }
 
 void zen_BinaryEntityGenerator_onExitConstantDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+    /* Retrieve the generator associated with the AST listener. */
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+
+    /* Retrieve the context associated with the AST node. */
+    zen_ConstantDeclaratorContext_t* context = (zen_ConstantDeclaratorContext_t*)node->m_context;
+
+    /* Retrieve the current scope from the symbol table. */
+    zen_Scope_t* currentScope = zen_SymbolTable_getCurrentScope(generator->m_symbolTable);
+
+    /* Retrieve the identifier AST node. */
+    zen_ASTNode_t* identifier = context->m_identifier;
+    /* Retrieve the identifier token. */
+    zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+
+    /* If a class scope encloses the constant being declared, we are processing
+     * a class member declaration.
+     */
+    if (zen_Scope_isClassScope(currentScope)) {
+        uint16_t flags = 0;
+
+        /* Retrieve the constant pool index for the constant name. */
+        uint16_t nameIndex = zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
+            generator->m_constantPoolBuilder,
+            identifierToken->m_text, identifierToken->m_length);
+
+        uint16_t descriptorIndex = zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
+            generator->m_constantPoolBuilder,
+            "com/todo/Class", 14);
+
+        /* Create an instance of the field entity that represents the constant
+         * declared.
+         */
+        zen_FieldEntity_t* fieldEntity = zen_FieldEntity_new(flags, nameIndex, descriptorIndex);
+
+        /* Add the field entity to the list of fields. */
+        jtk_ArrayList_add(generator->m_fields, fieldEntity);
+    }
+    else if (zen_Scope_isLocalScope(currentScope)) {
+        /* Retrieve the string equivalent to the identifier node. */
+        int32_t identifierSize;
+        uint8_t* identifierText = zen_ASTNode_toCString(identifier, &identifierSize);
+
+        /* Although a constant is being declared, we increment the local variable
+         * count here. This is because the virtual machine recognizes only local
+         * variables. Local constants are syntatic sugar over local variables.
+         */
+        int32_t index = generator->m_localVariableCount++;
+
+        zen_Symbol_t* symbol = zen_Scope_resolve(currentScope, identifierText);
+        if (zen_Symbol_isConstant(symbol)) {
+            zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
+            constantSymbol->m_index = index;
+        }
+        else {
+            printf("[internal error] Identifier recognized by constant declarator registered as a non-constant entity in the symbol table.\n");
+        }
+    }
 }
 
 // constantDeclarator
@@ -2873,7 +2951,7 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
 
     /* Log the emission of the jump_eq0_i instruction. */
     printf("[debug] Emitted jump_eq0_i 0 (dummy index)\n");
-    
+
     /* Save the index of the byte where the dummy data was written. */
     int32_t updateIndex = zen_DataChannel_getSize(parentChannel) - 2;
 
@@ -2882,10 +2960,10 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
 
     /* Log the emission of the invoke_virtual instruction. */
     printf("[debug] Emitted invoke_virtual %d\n", getNextIndex);
-    
+
     /* Store the retrieved value in a local variable. */
     zen_BinaryEntityBuilder_emitStoreReference(generator->m_instructions, 0);
-    
+
     /* Log the emission of the store_a instruction. */
     printf("[debug] Emitted store_a %d (dummy index)\n", 0);
 
@@ -4694,13 +4772,13 @@ void zen_BinaryEntityGenerator_onEnterPrimaryExpression(
      * identifier.
      */
     if (zen_ASTNode_isTerminal(context->m_expression)) {
+        zen_ASTNode_t* expression = context->m_expression;
         /* Retrieve the token that the primary expression represents. */
-        zen_Token_t* token = (zen_Token_t*)context->m_expression->m_context;
+        zen_Token_t* token = (zen_Token_t*)expression->m_context;
 
         switch (zen_Token_getType(token)) {
-            /*
             case ZEN_TOKEN_IDENTIFIER: {
-                zen_ASTNode_t* assignmentExpression = zen_ASTHelper_getAncestor(context->m_expression, ZEN_AST_NODE_ASSIGNMENT_EXPRESSION);
+                /*zen_ASTNode_t* assignmentExpression = zen_ASTHelper_getAncestor(context->m_expression, ZEN_AST_NODE_ASSIGNMENT_EXPRESSION);
                 zen_AssignmentExpressionContext_t* assignmentExpressionContext = (zen_AssignmentExpressionContext_t*)assignmentExpression->m_context;
                 if (assignmentExpression != NULL) {
                     zen_ASTNode_t* assignmentOperator = assignmentExpressionContext->m_assignmentOperator;
@@ -4713,20 +4791,41 @@ void zen_BinaryEntityGenerator_onEnterPrimaryExpression(
                         }
                     }
                 }
+                */
 
-                const uint8_t* identifierText = zen_Token_getText(token);
+                /* Retrieve the string equivalent to the identifier node. */
+                int32_t identifierSize;
+                uint8_t* identifierText = zen_ASTNode_toCString(expression, &identifierSize);
+
+                /* Resolve the symbol in the symbol table. */
                 zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, identifierText);
                 zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(symbol);
                 if (zen_Scope_isClassScope(enclosingScope)) {
-                    zen_BinaryEntityGenerator_emitLoadReference(generator, 0);
-                    zen_BinaryEntityGenerator_emitLoadInstanceField(generator, 10);
+                    // zen_BinaryEntityGenerator_emitLoadReference(generator, 0);
+                    // zen_BinaryEntityGenerator_emitLoadInstanceField(generator, 10);
                 }
-                else {
-                    zen_BinaryEntityGenerator_emitLoadReference(generator, 10);
+                else if (zen_Scope_isLocalScope(enclosingScope)) {
+                    int32_t index = -1;
+                    if (zen_Symbol_isVariable(symbol)) {
+                        zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)symbol->m_context;
+                        index = variableSymbol->m_index;
+                    }
+                    else if (zen_Symbol_isConstant(symbol)) {
+                        zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
+                        index = constantSymbol->m_index;
+                    }
+                    else {
+                        printf("[todo] What should I do here?\n");
+                    }
+                    
+                    /* Emit the load_a instruction. */
+                    zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, index);
+                    
+                    /* Log the emission of the load_a instruction. */
+                    printf("[debug] Emitted load_a %d\n", index);
                 }
                 break;
             }
-            */
 
             case ZEN_TOKEN_INTEGER_LITERAL: {
                 uint8_t* integerText = zen_Token_getText(token);

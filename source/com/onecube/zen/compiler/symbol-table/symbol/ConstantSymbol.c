@@ -31,6 +31,7 @@ zen_ConstantSymbol_t* zen_ConstantSymbol_new(zen_ASTNode_t* identifier,
     constantSymbol->m_symbol = symbol;
     constantSymbol->m_explicitModifiers = jtk_ArrayList_new();
     constantSymbol->m_modifiers = 0;
+    constantSymbol->m_index = -1;
 
     return constantSymbol;
 }

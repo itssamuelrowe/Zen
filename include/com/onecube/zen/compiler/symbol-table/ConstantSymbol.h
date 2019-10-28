@@ -39,6 +39,7 @@ struct zen_ConstantSymbol_t {
     zen_Symbol_t* m_symbol;
     jtk_ArrayList_t* m_explicitModifiers; /* Useful for reporting errors. */
     int32_t m_modifiers;
+    int32_t m_index;
 };
 
 /**

@@ -24,15 +24,16 @@
 
 zen_VariableSymbol_t* zen_VariableSymbol_new(zen_ASTNode_t* identifier,
     zen_Scope_t* enclosingScope) {
-    zen_VariableSymbol_t* VariableSymbol = zen_Memory_allocate(zen_VariableSymbol_t, 1);
+    zen_VariableSymbol_t* variableSymbol = zen_Memory_allocate(zen_VariableSymbol_t, 1);
 
-    zen_Symbol_t* symbol = zen_Symbol_new(ZEN_SYMBOL_CATEGORY_VARIABLE, identifier, enclosingScope, VariableSymbol);
+    zen_Symbol_t* symbol = zen_Symbol_new(ZEN_SYMBOL_CATEGORY_VARIABLE, identifier, enclosingScope, variableSymbol);
 
-    VariableSymbol->m_symbol = symbol;
-    VariableSymbol->m_modifiers = jtk_ArrayList_new();
-    VariableSymbol->m_implicitModifiers = 0;
+    variableSymbol->m_symbol = symbol;
+    variableSymbol->m_modifiers = jtk_ArrayList_new();
+    variableSymbol->m_implicitModifiers = 0;
+    variableSymbol->m_index = -1;
 
-    return VariableSymbol;
+    return variableSymbol;
 }
 
 void zen_VariableSymbol_delete(zen_VariableSymbol_t* symbol) {
