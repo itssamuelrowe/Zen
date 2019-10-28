@@ -4904,10 +4904,13 @@ void zen_BinaryEntityGenerator_invokeEvaluate(zen_BinaryEntityGenerator_t* gener
  *    c. If the symbol is a class member and variable or constant, then
  *       generate load_instance_field or load_static_field instruction depending
  *       on the type of the member.
- *    d. If the symbol is a class, enumeration, or annotation then generate the
- *       load_cpr instruction.
- *    e. If the symbol is a function, pass the reference of the symbol to the next
- *       phase, whose algorithm is described below.
+ *    d. If the symbol is a class, enumeration, or annotation and there are no
+ *       postfix parts then generate the load_cpr instruction.
+ *       Otherwise, pass the reference of the symbol to the next phase, whose
+ *       algorithm is described below.
+ *    e. If the symbol is a function and there are no postfix parts then generate
+ *       the load_cpr instruction. Otherwise, pass the reference of the symbol
+ *       to the next phase, whose algorithm is described below.
  *    f. For all other symbols, print an error message that the previous phases
  *       have malfunctioned.
  *
@@ -4944,6 +4947,9 @@ void zen_BinaryEntityGenerator_invokeEvaluate(zen_BinaryEntityGenerator_t* gener
  *    b. When function arguments postfix part occurs at a position other than the
  *       beginning of the list of postfix parts, it is processed along with the
  *       member access postfix part.
+ *    In any case, the generator walks through each expression that constitutes
+ *    a function argument generating instructions. The arguments are processed
+ *    from left to right.
  * 3. For member access postfix parts, the subsequent postfix part is checked to
  *    see if it is a function arguments postfix part. If true, the algorithm
  *    generates instructions to invoke the ZenKernel.dispatch() function to
