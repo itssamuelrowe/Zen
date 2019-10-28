@@ -3186,6 +3186,9 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
     uint8_t* exceptionClassName = "Exception";
     int32_t exceptionClassSize = 9;
 
+    zen_ASTNode_t* catchClause = NULL;
+    zen_CatchClauseContext_t* catchClauseContext = NULL;
+
     int32_t index = -1;
     do {
         /* Save the index where the instruction section for the current clause
@@ -3219,18 +3222,30 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
             uint16_t exceptionClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
                 generator->m_constantPoolBuilder, exceptionClassName, exceptionClassSize);
 
-            /* In this exception handler site, the exceptions triggered within the
-             * try clause are handled by the catch clauses. These exceptions are
-             * not implicitly thrown again.
-             */
-            zen_ExceptionHandlerSite_t* type1Handler =
-                jtk_Memory_allocate(zen_ExceptionHandlerSite_t, 1);
-            type1Handler->m_startIndex = tryClauseStartIndex;
-            type1Handler->m_stopIndex = tryClauseStopIndex;
-            type1Handler->m_handlerIndex = startIndex - 2;
-            type1Handler->m_exceptionClassIndex = exceptionClassIndex;
+            zen_ASTNode_t* catchFilter = catchClauseContext->m_catchFilter;
+            zen_CatchFilterContext_t* catchFilterContext =
+                (zen_CatchFilterContext_t*)catchFilter->m_context;
+            int32_t filterCount = jtk_ArrayList_getSize(catchFilterContext->m_typeNames);
+            int32_t filterIndex;
+            for (filterIndex = 0; filterIndex < filterCount; filterIndex++) {
+                zen_ASTNode_t* typeName = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+                    catchFilterContext->m_typeNames, filterIndex);
 
-            jtk_ArrayList_add(generator->m_exceptionHandlerSites, type1Handler);
+                // TODO: Evaluate the class name
+
+                /* In this exception handler site, the exceptions triggered within the
+                 * try clause are handled by the catch clauses. These exceptions are
+                 * not implicitly thrown again.
+                 */
+                zen_ExceptionHandlerSite_t* type1Handler =
+                    jtk_Memory_allocate(zen_ExceptionHandlerSite_t, 1);
+                type1Handler->m_startIndex = tryClauseStartIndex;
+                type1Handler->m_stopIndex = tryClauseStopIndex;
+                type1Handler->m_handlerIndex = startIndex - 2;
+                type1Handler->m_exceptionClassIndex = exceptionClassIndex;
+
+                jtk_ArrayList_add(generator->m_exceptionHandlerSites, type1Handler);
+            }
         }
 
         index++;
@@ -3262,10 +3277,9 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
             /* Save the index of the bytes where the dummy data was written. */
             updateIndexes[index] = zen_DataChannel_getSize(parentChannel) - 2;
 
-            zen_ASTNode_t* catchClause = (zen_ASTNode_t*)jtk_ArrayList_getValue(
-                context->m_catchClauses, index);
-            zen_CatchClauseContext_t* catchClauseContext =
-                (zen_CatchClauseContext_t*)catchClause->m_context;
+            catchClause = (zen_ASTNode_t*)jtk_ArrayList_getValue(context->m_catchClauses,
+                index);
+            catchClauseContext =(zen_CatchClauseContext_t*)catchClause->m_context;
             statementSuite = catchClauseContext->m_statementSuite;
             // Update the exception class name here.
 
@@ -3379,7 +3393,7 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
             type3Handler->m_stopIndex = catchClauseIndexes[(j * 2) + 1];
             type3Handler->m_handlerIndex = fc2StartIndex;
             type3Handler->m_exceptionClassIndex = 0;
-            
+
             jtk_ArrayList_add(generator->m_exceptionHandlerSites, type3Handler);
         }
     }
