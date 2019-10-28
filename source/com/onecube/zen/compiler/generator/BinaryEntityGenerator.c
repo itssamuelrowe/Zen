@@ -2201,7 +2201,7 @@ void zen_BinaryEntityDisassember_disassembleInstructions(
             /* Throw */
 
             case ZEN_BYTE_CODE_THROW: {
-                jtk_StringBuilder_appendEx_z(builder, "throw", 4);
+                jtk_StringBuilder_appendEx_z(builder, "throw", 5);
 
                 break;
             }
@@ -2403,12 +2403,16 @@ void zen_BinaryEntityGenerator_onExitVariableDeclarator(zen_ASTListener_t* astLi
         /* TODO: If the local scope belongs to an instance function, then a local
          * variable for the "this" reference should be created.
          */
-        int32_t index = generator->m_localVariableCount++;
 
         zen_Symbol_t* symbol = zen_Scope_resolve(currentScope, identifierText);
         if (zen_Symbol_isVariable(symbol)) {
             zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)symbol->m_context;
-            variableSymbol->m_index = index;
+            /* Generate and assign the index of the local variable only if it
+             * was not previously assigned an index.
+             */
+            if (variableSymbol->m_index < 0) {
+                variableSymbol->m_index = generator->m_localVariableCount++;;
+            }
         }
         else {
             printf("[internal error] Identifier recognized by variable declarator registered as a non-variable entity in the symbol table.\n");
@@ -2468,12 +2472,15 @@ void zen_BinaryEntityGenerator_onExitConstantDeclaration(zen_ASTListener_t* astL
          * count here. This is because the virtual machine recognizes only local
          * variables. Local constants are syntatic sugar over local variables.
          */
-        int32_t index = generator->m_localVariableCount++;
-
         zen_Symbol_t* symbol = zen_Scope_resolve(currentScope, identifierText);
         if (zen_Symbol_isConstant(symbol)) {
             zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
-            constantSymbol->m_index = index;
+            /* Generate and assign the index of the local variable only if it
+             * was not previously assigned an index.
+             */
+            if (constantSymbol->m_index < 0) {
+                constantSymbol->m_index = generator->m_localVariableCount++;;
+            }
         }
         else {
             printf("[internal error] Identifier recognized by constant declarator registered as a non-constant entity in the symbol table.\n");
@@ -3013,7 +3020,7 @@ void zen_BinaryEntityGenerator_onEnterTryStatement(zen_ASTListener_t* astListene
 /*
  * The algorithm for generating instructions corresponding to a try statement is
  * given below.
- * 
+ *
  * ### Algorithm 1
  *
  * - Try Clause
@@ -3133,10 +3140,21 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
     zen_ASTNode_t* statementSuite = tryClauseContext->m_statementSuite;
 
     int32_t numberOfCatchClauses = jtk_ArrayList_getSize(context->m_catchClauses);
-    int32_t* skipIndexes = jtk_Memory_allocate(int32_t, size + 1);
+    /* This includes indexes for the try clause and n - 1 catch clauses,
+     * where n represents the number of catch clauses. A jump instruction
+     * is not generated for the last catch clause. Because it can fall through
+     * to the FC1 section without an explicit jump.
+     */
+    int32_t* updateIndexes = jtk_Memory_allocate(int32_t, numberOfCatchClauses);
+    int32_t* ranges = jtk_Memory_allocate(int32_t, (numberOfCatchClauses + 1) * 2);
 
     int32_t index = -1;
     do {
+        /* Save the index where the instruction section for the current clause
+         * begins (inclusive).
+         */
+        int32_t startIndex = zen_DataChannel_getSize(parentChannel);
+
         /* Generate the instructions corresponding to the statement suite specified
          * to the current clause.
          */
@@ -3169,7 +3187,7 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
             printf("[debug] Emitted jump 0 (dummy index)\n");
 
             /* Save the index of the bytes where the dummy data was written. */
-            skipIndexes[index] = zen_DataChannel_getSize(parentChannel) - 2;
+            updateIndexes[index] = zen_DataChannel_getSize(parentChannel) - 2;
 
             zen_ASTNode_t* catchClause = (zen_ASTNode_t*)jtk_ArrayList_getValue(
                 context->m_catchClauses, index);
@@ -3177,25 +3195,101 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
                 (zen_CatchClauseContext_t*)catchClause->m_context;
             statementSuite = catchClauseContext->m_statementSuite;
 
-            // TODO: Generate the exception table.
+            /* The virtual machine pushs the exception that was caught to the
+             * operand stack. Store this reference in a local variable.
+             */
+            zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+
+            /*Log the emission of the load_a instruction. */
+            printf("[debug] Emitted load_a 0 (dummy index)\n");
         }
+
+        /* Save the index where the instruction section for the current clause
+         * ends (exclusive).
+         */
+        int32_t stopIndex = zen_DataChannel_getSize(parentChannel);
+
+        /* Save the range where the instruction section corresponding to the
+         * previous clause occurs within the byte stream.
+         */
+        ranges[(index * 2) + 0] = startIndex;
+        ranges[(index * 2) + 1] = stopIndex;
     }
     while (index < numberOfCatchClauses);
-    
-    /* The number of skip indexes to fill is given by the number of catch
-     * clauses.
-     */
-    int32_t numberOfSkips = numberOfCatchClauses;
-    
+
+    int32_t fc1StartIndex = zen_DataChannel_getSize(parentChannel);
+    int32_t i;
+    for (i = 0; i < numberOfCatchClauses; i++) {
+        uint16_t updateIndex = updateIndexes[i];
+        parentChannel->m_bytes[updateIndex] = (0x0000FF00 & fc1StartIndex) >> 8;
+        parentChannel->m_bytes[updateIndex + 1] = (0x000000FF & fc1StartIndex);
+    }
+
     if (context->m_finallyClause != NULL) {
         /* Retrieve the AST node for the finally clause. */
         zen_ASTNode_t* finallyClause = context->m_finallyClause;
         /* Retrieve the context associated with the AST node of the finally clause. */
         zen_FinallyClauseContext_t* finallyClauseContext =
             (zen_FinallyClauseContext_t*)finallyClause->m_context;
-        /* Generate the instructions for the statements within the finally clause. */
+
+        /* Generate the instructions for the statement suite specified to the
+         * finally clause. This constitutes the bulk of the FC1 section.
+         */
         zen_ASTWalker_walk(astListener, finallyClauseContext->m_statementSuite);
+
+        /* Once the FC1 section is completed, the program should skip the FC2
+         * section.
+         *
+         * Given the FC2 section has not been generated yet, the jump offset
+         * cannot be evaluated right now. Therefore, emit the jump instruction
+         * with a dummy offset.
+         *
+         * Emit the jump instruction to skip the FC2 section.
+         */
+        zen_BinaryEntityBuilder_emitJump(generator->m_instructions, 0);
+
+        /* Log the emission of the jump instruction. */
+        printf("[debug] Emitted jump 0 (dummy index)\n");
+
+        /* Save the index of the bytes where the dummy data was written. */
+        int32_t skipIndex = zen_DataChannel_getSize(parentChannel) - 2;
+
+        /* Generate the FC2 section. */
+
+        /* The virtual machine pushs the exception that was caught to the operand
+         * stack. Store this reference in a local variable.
+         */
+        zen_BinaryEntityBuilder_emitStoreReference(generator->m_instructions, 0);
+
+        /* Log the emission of the store_a instruction. */
+        printf("[debug] Emitted store_a 0 (dummy index)\n");
+
+        /* Generate the instructions for the statement suite specified to the
+         * finally clause. This constitutes the bulk of the FC2 section.
+         */
+        zen_ASTWalker_walk(astListener, finallyClauseContext->m_statementSuite);
+
+        /* Load the caught exception from the local variable. */
+        zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+
+        /* Log the emission of the store_a instruction. */
+        printf("[debug] Emitted load_a 0 (dummy index)\n");
+
+        /* Throw the caught exception again. */
+        zen_BinaryEntityBuilder_emitThrow(generator->m_instructions);
+
+        /* Log the emission of the throw instruction. */
+        printf("[debug] Emitted throw\n");
+
+        int32_t fc2StopIndex = zen_DataChannel_getSize(parentChannel);
+        parentChannel->m_bytes[skipIndex] = (0x0000FF00 & fc2StopIndex) >> 8;
+        parentChannel->m_bytes[skipIndex + 1] = (0x000000FF & fc2StopIndex);
     }
+
+    // TODO: Generate the exception table.
+    
+    jtk_Memory_deallocate(ranges);
+    jtk_Memory_deallocate(updateIndexes);
 }
 
 // tryClause
