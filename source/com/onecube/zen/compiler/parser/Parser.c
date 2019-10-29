@@ -2863,7 +2863,7 @@ void zen_Parser_postfixOperator(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * |	'false'
  * |	STRING_LITERAL
  * |	'null'
- * |	'undefined'
+ * |    'this'
  * ;
  *
  * NOTE: The primaryExpression rule has no context. It simply forwards the
@@ -2888,6 +2888,7 @@ void zen_Parser_primaryExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
                 context->m_expression = zen_Parser_newTerminalNode(node, identifier);
                 /* Consume the identifier token. */
                 zen_TokenStream_consume(parser->m_tokens);
+                
                 break;
             }
 
@@ -2901,6 +2902,7 @@ void zen_Parser_primaryExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
 
                 /* Match and discard the ')' token. */
                 zen_Parser_match(parser, ZEN_TOKEN_RIGHT_PARENTHESIS);
+                
                 break;
             }
 
@@ -2908,6 +2910,7 @@ void zen_Parser_primaryExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
                 zen_ASTNode_t* mapExpression = zen_ASTNode_new(node);
                 context->m_expression = mapExpression;
                 zen_Parser_mapExpression(parser, mapExpression);
+                
                 break;
             }
 
@@ -2915,6 +2918,7 @@ void zen_Parser_primaryExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
                 zen_ASTNode_t* listExpression = zen_ASTNode_new(node);
                 context->m_expression = listExpression;
                 zen_Parser_listExpression(parser, listExpression);
+                
                 break;
             }
 
@@ -2922,6 +2926,16 @@ void zen_Parser_primaryExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
                 zen_ASTNode_t* newExpression = zen_ASTNode_new(node);
                 context->m_expression = newExpression;
                 zen_Parser_newExpression(parser, newExpression);
+                
+                break;
+            }
+            
+            case ZEN_TOKEN_KEYWORD_THIS: {
+                zen_Token_t* keyword = zen_TokenStream_lt(parser->m_tokens, 1);
+                context->m_expression = zen_Parser_newTerminalNode(node, keyword);
+                /* Consume the this keyword. */
+                zen_TokenStream_consume(parser->m_tokens);
+                
                 break;
             }
 
@@ -2944,6 +2958,7 @@ bool zen_Parser_isPrimaryExpressionFollow(zen_TokenType_t type) {
     }
     else {
         switch (type) {
+            case ZEN_TOKEN_KEYWORD_THIS:
             case ZEN_TOKEN_IDENTIFIER:
             case ZEN_TOKEN_LEFT_PARENTHESIS:
             case ZEN_TOKEN_LEFT_BRACE:

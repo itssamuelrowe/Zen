@@ -143,6 +143,7 @@ uint8_t zen_Lexer_literalNames[][25] = {
     { 'e', 'n', 'u', 'm', '\0' },
     { 'n', 'u', 'l', 'l', '\0' },
     { 't', 'h', 'e', 'n', '\0' },
+    { 't', 'h', 'i', 's', '\0' },
     { 't', 'r', 'u', 'e', '\0' },
     { 'w', 'i', 't', 'h', '\0' },
 
@@ -1577,6 +1578,9 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                 }
                                 else if (jtk_CString_equals(text, length, zen_Lexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_THEN], 4)) {
                                     lexer->m_type = ZEN_TOKEN_KEYWORD_THEN;
+                                }
+                                else if (jtk_CString_equals(text, length, zen_Lexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_THIS], 4)) {
+                                    lexer->m_type = ZEN_TOKEN_KEYWORD_THIS;
                                 }
                                 else if (jtk_CString_equals(text, length, zen_Lexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_TRUE], 4)) {
                                     lexer->m_type = ZEN_TOKEN_KEYWORD_TRUE;
