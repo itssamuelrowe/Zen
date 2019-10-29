@@ -5283,6 +5283,9 @@ void zen_BinaryEntityGenerator_loadInteger(zen_BinaryEntityGenerator_t* generato
  *    However, if the subsequent postfix part is not a function arguments postfix
  *    part, then either the load_static_field or  the load_instance_field instruction
  *    is generated.
+ *    It should be noted that the identifiers in the member access are not resolved
+ *    for their declaration in the symbol table. They are intended to be verified
+ *    at runtime due to the dynamic nature of Zen.
  */
 void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
@@ -5328,8 +5331,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                 zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, identifierText);
 
                 zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(symbol);
-                if ((postfixPartCount == 0) && (zen_Symbol_isVariable(symbol) ||
-                    zen_Symbol_isConstant(symbol))) {
+                if (zen_Symbol_isVariable(symbol) || zen_Symbol_isConstant(symbol)) {
                     if (zen_Scope_isClassScope(enclosingScope)) {
                         if (zen_Symbol_isVariable(symbol)) {
                             // TODO: Move modifierNodes, explicitModifiers, and implicitModifiers to zen_Symbol_t class.
