@@ -2555,7 +2555,7 @@ void zen_MapExpressionContext_getChildren(zen_MapExpressionContext_t* context,
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_add(children, context->m_mapEntries);
+    jtk_ArrayList_addPredicatively(children, context->m_mapEntries, jtk_Object_isNotNull);
 }
 
 /*******************************************************************************
@@ -2648,7 +2648,7 @@ void zen_ListExpressionContext_getChildren(zen_ListExpressionContext_t* context,
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_add(children, context->m_expressions);
+    jtk_ArrayList_addPredicatively(children, context->m_expressions, jtk_Object_isNotNull);
 }
 
 /*******************************************************************************

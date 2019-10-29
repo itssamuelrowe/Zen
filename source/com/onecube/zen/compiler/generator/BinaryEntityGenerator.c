@@ -3684,68 +3684,100 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
 /*
  * ALGORITHM FOR GENERATING INSTRUCTIONS CORRESPONDING TO WITH STATEMENT
  *
- * 1. Generate the instructions corresponding to the expression specified to
- *    the with statement.
- * 2. Store the resulting object in a local variable, say L1, which can be accessed
- *    only by the compiler.
- * 3. Generate the instructions corresponding to the statement suite specified
- *    to the with statement.
- * 4. Load the object from the local variable L1.
- * 5. Invoke the ZenKernel.close() function to close the resource.
- * 6. Jump to skip FC1 and FC2 sections.
+ * The following steps should be repeated for managing N objects.
+ * Note that the closing of the resources is in the order opposite to that
+ * specified to the with statement.
  *
- * Finally Clause 1 (FC1)
- * This section handles the exceptions thrown the statement suite.
+ * The structure of the instructions generated for 3 expressions is shown below.
+ * [expression-1]
+ *     [expression-2]
+ *         [expression-3]
+ *             [statement suite]
+ *         [FC1-3]
+ *         [FC2-3]
+ *     [FC1-2]
+ *     [FC2-2]
+ * [FC1-1]
+ * [FC1-2]
+ *
+ * In the following paragraphs, I refer to anything in between expression-k
+ * and FC1-k as the core section for the kth iteration.
+ *
+ * Repeat the following sections N times, where N is the number of expressions
+ * specified to the with statement.
+ *
+ * [Primary]
+ * 1. Generate the instructions corresponding to the kth expression specified to
+ *    the with statement.
+ * 2. Store the resulting objects in local variable, say Lk, which can be
+ *    accessed only by the compiler.
+ * 3. If k is equal to N, generate the instructions corresponding to the
+ *    statement suite specified to the with statement.
+ * 4. Load the object from the local variable Lk.
+ * 5. Invoke the ZenKernel.close() function to close the resource.
+ * 6. Jump to skip FC1-k and FC2-k sections.
+ *
+ * [Finally Clause 1 (FC1)]
+ * This section handles the exceptions thrown by the core section.
  *
  * 1. The virtual machine pushes the thrown exception to the operand stack.
- *    Store this reference in a local variable, say L2, which can be accessed
- *    only by compiler.
- * 2. Load the object from the local variable L1.
+ *    Store this reference in a local variable, say L[k + x] (where x is the base
+ *    local variable index), which can be accessed only by the compiler.
+ * 2. Load the object from the local variable Lk.
  * 3. Invoke the ZenKernel.close() function to close the resource.
- * 4. Load the exception object that was thrown by the statement suite.
+ * 4. Load the exception object that was thrown by the core section.
  * 5. Throw the exception again.
  *
- * Finally Clause 2 (FC2)
+ * [Finally Clause 2 (FC2)]
  * This section handles the exceptions thrown by the FC2 section.
  *
  * 1. The virtual machine pushes the thrown exception to the operand stack.
- *    Store this reference in a local variable, say L3, which can be accessed
- *    only by compiler.
- * 2. Load the exception object that was thrown by the statement suite. In other
- *    words, load the object referenced by L2.
+ *    Store this reference in a local variable, say L[k + y] (where y is the base
+ *    local variable index), which can be accessed only by the compiler.
+ * 2. Load the exception object that was thrown by the core section. In other
+ *    words, load the object referenced by L[k + x].
  * 3. Load the exception object that was thrown by the ZenKernel.close() function
- *    in the FC1 section.
+ *    in the FC1 section. In other words, load the object referenced by L[k + y].
  * 4. Invoke the Throwable#suppress() function to add the exception thrown by
- *    the FC1 section to the exception thrown by the statement
- *    suite.
- * 5. Load the exception object that was thrown by the statement suite.
+ *    the FC1 section to the exception thrown by the core section.
+ *    In other words, `L[k + x].suppress(L[k + y])`.
+ * 5. Load the exception object that was thrown by the core section. In other
+ *    words, load the object referenced by L[k + x].
  * 6. Throw the exception again.
  *
  * The following cases of exceptions can be summarized along with the behavior
  * of the with statement.
- * 1. The statement suite does not trigger any exception.
+ * 1. The core section does not trigger any exception.
  *    The ZenKernel.close() function does not trigger any exception.
  *
- * 2. The statement suite does not trigger any exception.
+ * 2. The core section does not trigger any exception.
  *    The ZenKernel.close() function triggers any exception.
  *
- * 3. The statement suite triggers an exception.
+ * 3. The core section triggers an exception.
  *    The ZenKernel.close() function does not trigger any exception.
  *
- *    In such cases, the control is transferred to the FC1 section, which
- *    closes the resource. The exception thrown by the statement suite is
+ *    In such cases, the control is transferred to the FC1-k section, which
+ *    closes the resource. The exception thrown by the core is
  *    thrown again.
  *
- * 4. The statement suite triggers an exception.
+ * 4. The core triggers an exception.
  *    The ZenKernel.close() function triggers an exception.
  *
- *    In such cases, the control is first transferred to the FC1 section,
- *    which makes an attempt to close the resource. This triggers another
- *    exception. Thus, the control is transferred to the FC2 section.
- *    In the FC2 section, the exception thrown by the ZenKernel.close() function
- *    is suppressed by the exception thrown by the statement suite using the
- *    Throwable#suppress() function. The oldest exception, that is, the exception
- *    thrown by statement suite, is thrown again.
+ *    The core section trigger an exception. This results in the control being
+ *    transferred to the FC1-k section, which makes an attempt to close the
+ *    resource. This triggers another exception. Thus, the control is transferred
+ *    to the FC2-k section. In the FC2-k section, the exception thrown by the
+ *    ZenKernel.close() function is suppressed by the exception thrown by the
+ *    core section using the Throwable#suppress() function. The oldest exception,
+ *    that is, the exception thrown by the core section, is thrown again.
+ *
+ * The following records are added to the exception table.
+ * 1. The exceptions thrown by the core section are handled by the FC1-k section.
+ * 2. The exceptions thrown by the FC1-k section are handled by the FC2-k section.
+ *
+ * Notice that for N expressions, N * 2 records are added to the exception table.
+ * Similarly, 3N + 1 sections of instructions are generated, that is,
+ * N expressions, N FC1 sections, N FC2 sections, and 1 statement suite.
  */
 void zen_BinaryEntityGenerator_onEnterWithStatement(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {

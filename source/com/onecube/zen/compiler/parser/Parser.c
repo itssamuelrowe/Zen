@@ -1804,7 +1804,7 @@ void zen_Parser_withParameters(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_ASTNode_t* withParameter0 = zen_ASTNode_new(node);
         jtk_ArrayList_add(context->m_withParameters, withParameter0);
         zen_Parser_withParameter(parser, withParameter0);
-        
+
         la1 = zen_TokenStream_la(parser->m_tokens, 1);
     }
 
