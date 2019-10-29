@@ -2380,14 +2380,6 @@ void zen_BinaryEntityGenerator_onEnterVariableDeclaration(zen_ASTListener_t* ast
 }
 
 void zen_BinaryEntityGenerator_onExitVariableDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-}
-
-// variableDeclarator
-
-void zen_BinaryEntityGenerator_onEnterVariableDeclarator(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-}
-
-void zen_BinaryEntityGenerator_onExitVariableDeclarator(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
     /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
 
@@ -2459,6 +2451,14 @@ void zen_BinaryEntityGenerator_onExitVariableDeclarator(zen_ASTListener_t* astLi
     }
 }
 
+// variableDeclarator
+
+void zen_BinaryEntityGenerator_onEnterVariableDeclarator(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_BinaryEntityGenerator_onExitVariableDeclarator(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
 // constantDeclaration
 
 void zen_BinaryEntityGenerator_onEnterConstantDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
@@ -2526,7 +2526,7 @@ void zen_BinaryEntityGenerator_onExitConstantDeclaration(zen_ASTListener_t* astL
                  * was not previously assigned an index.
                  */
                 if (constantSymbol->m_index < 0) {
-                    constantSymbol->m_index = generator->m_localVariableCount++;;
+                    constantSymbol->m_index = generator->m_localVariableCount++;
                 }
             }
             else {
@@ -5611,7 +5611,7 @@ void zen_BinaryEntityGenerator_onEnterPostfixExpression(zen_ASTListener_t* astLi
      * function which causes the AST walker to skip iterating over the children
      * nodes.
      */
-    zen_ASTListener_visitFirstChild(astListener);
+    zen_ASTListener_skipChildren(astListener);
 }
 
 // subscript
