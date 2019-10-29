@@ -5557,6 +5557,15 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
         dispatch2Descriptor, dispatch2DescriptorSize, dispatchName,
         dispatchNameSize);
 
+    const uint8_t* loadFieldDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/String)";
+    int32_t loadFieldDescriptorSize = 52;
+    const uint8_t* loadFieldName = "loadField";
+    int32_t loadFieldNameSize = 9;
+    uint16_t loadFieldIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
+        loadFieldDescriptor, loadFieldDescriptorSize, loadFieldName,
+        loadFieldNameSize);
+
     const uint8_t* objectClassName = "zen.core.Object";
     int32_t objectClassNameSize = 15;
     uint16_t objectClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
@@ -5735,6 +5744,11 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                 zen_ASTNode_t* identifier = memberAccessContext->m_identifier;
                 zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
 
+                /* The name of the function/field to invoke/load. */
+                int32_t targetNameIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
+                    generator->m_constantPoolBuilder, identifierToken->m_text,
+                    identifierToken->m_length);
+
                 zen_ASTNode_t* functionArguments = NULL;
 
                 if ((i + 1) < postfixPartCount) {
@@ -5755,11 +5769,6 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                      * postfix part occurs at the zeroth position. This behavior is a direct
                      * result of Zen not supporting nested classes.
                      */
-
-                    /* The name of the function to invoke. */
-                    int32_t targetNameIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
-                        generator->m_constantPoolBuilder, identifierToken->m_text,
-                        identifierToken->m_length);
 
                     /* Push the name of the target function on the operand stack. */
                     zen_BinaryEntityBuilder_emitLoadCPR(generator->m_instructions,
@@ -5828,7 +5837,20 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                     printf("[debug] Emitted invoke_static %d\n", index);
                 }
                 else {
+                    /* Push the name of the field to load on the operand stack. */
+                    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_instructions,
+                        targetNameIndex);
 
+                    /* Log the emission of the load_cpr instruction. */
+                    printf("[debug] Emitted load_cpr %d\n", targetNameIndex);
+
+                    /* Invoke the ZenKernel.loadField() function to load the value
+                     * stored in a field.
+                     */
+                    zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_instructions, loadFieldIndex);
+
+                    /* Log the emission of the invoke_static instruction. */
+                    printf("[debug] Emitted invoke_static %d\n", loadFieldIndex);
                 }
 
                 break;
