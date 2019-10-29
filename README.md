@@ -27,7 +27,7 @@ function main(...arguments)
     var name = prompt('What\'s your name? ')
     if name.isBlank()
         print('The specified name is blank.')
-    else if name.equals('Samuel Rowe')
+    else if name == 'Samuel Rowe'
         print('Hey! That\'s my name, too!')
     else
         print('Hi, %s!', name)

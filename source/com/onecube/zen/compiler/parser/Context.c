@@ -2020,8 +2020,7 @@ zen_EqualityExpressionContext_t* zen_EqualityExpressionContext_new(zen_ASTNode_t
     zen_EqualityExpressionContext_t* context = zen_Memory_allocate(zen_EqualityExpressionContext_t, 1);
     context->m_node = node;
     context->m_relationalExpression = NULL;
-    context->m_equalityOperator = NULL;
-    context->m_equalityExpression = NULL;
+    context->m_relationalExpressions = jtk_ArrayList_new();
 
     zen_Context_initializeNode(node, ZEN_AST_NODE_TYPE_EQUALITY_EXPRESSION, context,
         (zen_ContextDestructorFunction_t)zen_EqualityExpressionContext_delete,
@@ -2033,6 +2032,13 @@ zen_EqualityExpressionContext_t* zen_EqualityExpressionContext_new(zen_ASTNode_t
 void zen_EqualityExpressionContext_delete(zen_EqualityExpressionContext_t* context) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
+    int32_t size = jtk_ArrayList_getSize(context->m_relationalExpressions);
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        jtk_Pair_t* pair = (jtk_Pair_t*)jtk_ArrayList_getValue(context->m_relationalExpressions, i);
+        jtk_Pair_delete(pair);
+    }
+    jtk_ArrayList_delete(context->m_relationalExpressions);
     jtk_Memory_deallocate(context);
 }
 
@@ -2042,8 +2048,14 @@ void zen_EqualityExpressionContext_getChildren(zen_EqualityExpressionContext_t* 
     jtk_Assert_assertObject(children, "The specified children is null.");
 
     jtk_ArrayList_addPredicatively(children, context->m_relationalExpression, jtk_Object_isNotNull);
-    jtk_ArrayList_addPredicatively(children, context->m_equalityOperator, jtk_Object_isNotNull);
-    jtk_ArrayList_addPredicatively(children, context->m_equalityExpression, jtk_Object_isNotNull);
+    
+    int32_t size = jtk_ArrayList_getSize(context->m_relationalExpressions);
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        jtk_Pair_t* pair = (jtk_Pair_t*)jtk_ArrayList_getValue(context->m_relationalExpressions, i);
+        jtk_ArrayList_addPredicatively(children, pair->m_left, jtk_Object_isNotNull);
+        jtk_ArrayList_addPredicatively(children, pair->m_right, jtk_Object_isNotNull);
+    }
 }
 
 /*******************************************************************************
