@@ -4,7 +4,7 @@ Zen is a general purpose programming language designed to build simple, reliable
 
 ## Example 1
 
-```javascript
+```python
 function factorial(n)
     return n <= 1 then 1 else n * factorial(n - 1)
 
@@ -22,15 +22,15 @@ Enter an integer: 5
 ```
 
 ## Example 2
-```javascript
+```python
 function main(...arguments)
     var name = prompt('What\'s your name? ')
     if name.isBlank()
-        printf('The specified name is blank.')
+        print('The specified name is blank.')
     else if name.equals('Samuel Rowe')
-        printf('Hey! That\'s my name, too!')
+        print('Hey! That\'s my name, too!')
     else
-        printf('Hi, %s!', name)
+        print('Hi, %s!', name)
 ```
 
 The above example generates the following output:
