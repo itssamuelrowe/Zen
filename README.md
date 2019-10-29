@@ -2,9 +2,9 @@
 
 Zen is a general purpose programming language designed to build simple, reliable and efficient programs.
 
-## Example
+## Example 1
 
-```python
+```javascript
 function factorial(n)
     return n <= 1 then 1 else n * factorial(n - 1)
 
@@ -19,6 +19,25 @@ The above example generates the following output:
 ```
 Enter an integer: 5
 5! = 120
+```
+
+## Example 2
+```javascript
+function main(...arguments)
+    var name = prompt('What\'s your name? ')
+    if name.isBlank()
+        printf('The specified name is blank.')
+    else if name.equals('Samuel Rowe')
+        printf('Hey! That\'s my name, too!')
+    else
+        printf('Hi, %s!', name)
+```
+
+The above example generates the following output:
+
+```
+What's your name? Samuel Rowe
+Hey! That's my name, too!
 ```
 
 ## Installation

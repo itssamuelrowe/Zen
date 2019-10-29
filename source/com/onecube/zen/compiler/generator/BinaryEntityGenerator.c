@@ -5625,7 +5625,10 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                     (zen_FunctionArgumentsContext_t*)postfixPart->m_context;
 
                 if (i == 0) {
-                    if (zen_Symbol_isFunction(primarySymbol)) {
+                    if (primarySymbol == NULL) {
+                        printf("[internal error] Variable treated as function. Looks like the semantic analysis phase malfunctioned.\n");
+                    }
+                    else if (zen_Symbol_isFunction(primarySymbol)) {
                         zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)primarySymbol->m_context;
                         if (true /* !zen_Symbol_isStatic(primarySymbol) */) {
                             /* The "this" reference is always stored at the zeroth position
