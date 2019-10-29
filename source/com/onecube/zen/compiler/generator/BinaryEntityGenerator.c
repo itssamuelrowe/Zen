@@ -5649,52 +5649,58 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                             zen_BinaryEntityBuilder_emitLoadCPR(generator->m_instructions,
                                 targetNameIndex);
 
+                            int32_t index = dispatch2Index;
+
                             zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
-                            zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
-                            int32_t argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
-                            if (argumentCount > 0) {
-                                /* Push the size of the list onto the operand stack. */
-                                zen_BinaryEntityGenerator_loadInteger(generator, argumentCount);
+                            if (expressions != NULL) {
+                                zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
+                                int32_t argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
+                                if (argumentCount > 0) {
+                                    /* Push the size of the list onto the operand stack. */
+                                    zen_BinaryEntityGenerator_loadInteger(generator, argumentCount);
 
-                                /* In Zen, function invocations are simulated using the ZenKerenel.dispatch()
-                                 * function. It requires the arguments of the function invocation in an array.
-                                 * Therefore, create an array and fill it with the arguments.
-                                 *
-                                 * Emit the new_array_a instruction to create the array.
-                                 */
-                                zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_instructions,
-                                    objectClassIndex);
+                                    /* In Zen, function invocations are simulated using the ZenKerenel.dispatch()
+                                     * function. It requires the arguments of the function invocation in an array.
+                                     * Therefore, create an array and fill it with the arguments.
+                                     *
+                                     * Emit the new_array_a instruction to create the array.
+                                     */
+                                    zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_instructions,
+                                        objectClassIndex);
 
-                                /* Log the emission of the new_array_a instruction. */
-                                printf("[debug] Emitted new_array_a %d\n", objectClassIndex);
+                                    /* Log the emission of the new_array_a instruction. */
+                                    printf("[debug] Emitted new_array_a %d\n", objectClassIndex);
 
-                                int32_t argumentIndex;
-                                for (argumentIndex = 0; argumentIndex < argumentCount; argumentIndex++) {
-                                    /* Retrieve the expression for the current argument. */
-                                    zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
-                                        expressionsContext->m_expressions, argumentIndex);
+                                    int32_t argumentIndex;
+                                    for (argumentIndex = 0; argumentIndex < argumentCount; argumentIndex++) {
+                                        /* Retrieve the expression for the current argument. */
+                                        zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+                                            expressionsContext->m_expressions, argumentIndex);
 
-                                    /* Duplicate the reference to the argument array. */
-                                    zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+                                        /* Duplicate the reference to the argument array. */
+                                        zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
 
-                                    /* Log the emission of the duplicate instruction. */
-                                    printf("[debug] Emitted duplicate\n");
+                                        /* Log the emission of the duplicate instruction. */
+                                        printf("[debug] Emitted duplicate\n");
 
-                                    /* Push the index at which the result of the expression will be stored. */
-                                    zen_BinaryEntityGenerator_loadInteger(generator, i);
+                                        /* Push the index at which the result of the expression will be stored. */
+                                        zen_BinaryEntityGenerator_loadInteger(generator, i);
 
-                                    /* Visit the expression node and generate the relevant instructions. */
-                                    zen_ASTWalker_walk(astListener, argument);
+                                        /* Visit the expression node and generate the relevant instructions. */
+                                        zen_ASTWalker_walk(astListener, argument);
 
-                                    /* Store the result in the argument array. */
-                                    zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_instructions);
+                                        /* Store the result in the argument array. */
+                                        zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_instructions);
 
-                                    /* Log the emission of the store_aa instruction. */
-                                    printf("[debug] Emitted store_aa\n");
+                                        /* Log the emission of the store_aa instruction. */
+                                        printf("[debug] Emitted store_aa\n");
+
+                                    }
+
+                                    index = dispatchIndex;
                                 }
                             }
 
-                            int32_t index = (argumentCount == 0)? dispatchIndex : dispatch2Index;
                             /* Invoke the ZenKernel.dispatch() function to simulate a function
                              * call.
                              */
@@ -5744,8 +5750,6 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                      * postfix part occurs at the zeroth position. This behavior is a direct
                      * result of Zen not supporting nested classes.
                      */
-                    zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
-                    zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
 
                     /* The name of the function to invoke. */
                     int32_t targetNameIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
@@ -5759,50 +5763,57 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                     /* Log the emission of the load_cpr instruction. */
                     printf("[debug] Emitted load_cpr %d\n", targetNameIndex);
 
-                    int32_t argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
-                    if (argumentCount > 0) {
-                        /* Push the size of the list onto the operand stack. */
-                        zen_BinaryEntityGenerator_loadInteger(generator, argumentCount);
+                    int32_t index = dispatch2Index;
 
-                        /* In Zen, function invocations are simulated using the ZenKerenel.dispatch()
-                         * function. It requires the arguments of the function invocation in an array.
-                         * Therefore, create an array and fill it with the arguments.
-                         *
-                         * Emit the new_array_a instruction to create the array.
-                         */
-                        zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_instructions,
-                            objectClassIndex);
+                    zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
+                    if (expressions != NULL) {
+                        zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
+                        int32_t argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
+                        if (argumentCount > 0) {
+                            /* Push the size of the list onto the operand stack. */
+                            zen_BinaryEntityGenerator_loadInteger(generator, argumentCount);
 
-                        /* Log the emission of the new_array_a instruction. */
-                        printf("[debug] Emitted new_array_a %d\n", objectClassIndex);
+                            /* In Zen, function invocations are simulated using the ZenKerenel.dispatch()
+                             * function. It requires the arguments of the function invocation in an array.
+                             * Therefore, create an array and fill it with the arguments.
+                             *
+                             * Emit the new_array_a instruction to create the array.
+                             */
+                            zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_instructions,
+                                objectClassIndex);
 
-                        int32_t argumentIndex;
-                        for (argumentIndex = 0; argumentIndex < argumentCount; argumentIndex++) {
-                            /* Retrieve the expression for the current argument. */
-                            zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
-                                expressionsContext->m_expressions, argumentIndex);
+                            /* Log the emission of the new_array_a instruction. */
+                            printf("[debug] Emitted new_array_a %d\n", objectClassIndex);
 
-                            /* Duplicate the reference to the argument array. */
-                            zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+                            int32_t argumentIndex;
+                            for (argumentIndex = 0; argumentIndex < argumentCount; argumentIndex++) {
+                                /* Retrieve the expression for the current argument. */
+                                zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+                                    expressionsContext->m_expressions, argumentIndex);
 
-                            /* Log the emission of the duplicate instruction. */
-                            printf("[debug] Emitted duplicate\n");
+                                /* Duplicate the reference to the argument array. */
+                                zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
 
-                            /* Push the index at which the result of the expression will be stored. */
-                            zen_BinaryEntityGenerator_loadInteger(generator, i);
+                                /* Log the emission of the duplicate instruction. */
+                                printf("[debug] Emitted duplicate\n");
 
-                            /* Visit the expression node and generate the relevant instructions. */
-                            zen_ASTWalker_walk(astListener, argument);
+                                /* Push the index at which the result of the expression will be stored. */
+                                zen_BinaryEntityGenerator_loadInteger(generator, i);
 
-                            /* Store the result in the argument array. */
-                            zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_instructions);
+                                /* Visit the expression node and generate the relevant instructions. */
+                                zen_ASTWalker_walk(astListener, argument);
 
-                            /* Log the emission of the store_aa instruction. */
-                            printf("[debug] Emitted store_aa\n");
+                                /* Store the result in the argument array. */
+                                zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_instructions);
+
+                                /* Log the emission of the store_aa instruction. */
+                                printf("[debug] Emitted store_aa\n");
+                            }
+
+                            index = dispatchIndex;
                         }
                     }
 
-                    int32_t index = (argumentCount == 0)? dispatchIndex : dispatch2Index;
                     /* Invoke the ZenKernel.dispatch() function to simulate a function
                      * call.
                      */
