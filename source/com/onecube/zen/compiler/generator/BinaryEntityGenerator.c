@@ -3675,6 +3675,72 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
 
 // withStatement
 
+/*
+ * ALGORITHM FOR GENERATING INSTRUCTIONS CORRESPONDING TO WITH STATEMENT
+ *
+ * 1. Generate the instructions corresponding to the expression specified to
+ *    the with statement.
+ * 2. Store the resulting object in a local variable, say L1, which can be accessed
+ *    only by the compiler.
+ * 3. Generate the instructions corresponding to the statement suite specified
+ *    to the with statement.
+ * 4. Load the object from the local variable L1.
+ * 5. Invoke the ZenKernel.close() function to close the resource.
+ * 6. Jump to skip FC1 and FC2 sections.
+ *
+ * Finally Clause 1 (FC1)
+ * This section handles the exceptions thrown the statement suite.
+ *
+ * 1. The virtual machine pushes the thrown exception to the operand stack.
+ *    Store this reference in a local variable, say L2, which can be accessed
+ *    only by compiler.
+ * 2. Load the object from the local variable L1.
+ * 3. Invoke the ZenKernel.close() function to close the resource.
+ * 4. Load the exception object that was thrown by the statement suite.
+ * 5. Throw the exception again.
+ *
+ * Finally Clause 2 (FC2)
+ * This section handles the exceptions thrown by the FC2 section.
+ *
+ * 1. The virtual machine pushes the thrown exception to the operand stack.
+ *    Store this reference in a local variable, say L3, which can be accessed
+ *    only by compiler.
+ * 2. Load the exception object that was thrown by the statement suite. In other
+ *    words, load the object referenced by L2.
+ * 3. Load the exception object that was thrown by the ZenKernel.close() function
+ *    in the FC1 section.
+ * 4. Invoke the Throwable#suppress() function to add the exception thrown by
+ *    the FC1 section to the exception thrown by the statement
+ *    suite.
+ * 5. Load the exception object that was thrown by the statement suite.
+ * 6. Throw the exception again.
+ *
+ * The following cases of exceptions can be summarized along with the behavior
+ * of the with statement.
+ * 1. The statement suite does not trigger any exception.
+ *    The ZenKernel.close() function does not trigger any exception.
+ *
+ * 2. The statement suite does not trigger any exception.
+ *    The ZenKernel.close() function triggers any exception.
+ *
+ * 3. The statement suite triggers an exception.
+ *    The ZenKernel.close() function does not trigger any exception.
+ *
+ *    In such cases, the control is transferred to the FC1 section, which
+ *    closes the resource. The exception thrown by the statement suite is
+ *    thrown again.
+ *
+ * 4. The statement suite triggers an exception.
+ *    The ZenKernel.close() function triggers an exception.
+ *
+ *    In such cases, the control is first transferred to the FC1 section,
+ *    which makes an attempt to close the resource. This triggers another
+ *    exception. Thus, the control is transferred to the FC2 section.
+ *    In the FC2 section, the exception thrown by the ZenKernel.close() function
+ *    is suppressed by the exception thrown by the statement suite using the
+ *    Throwable#suppress() function. The oldest exception, that is, the exception
+ *    thrown by statement suite, is thrown again.
+ */
 void zen_BinaryEntityGenerator_onEnterWithStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
 }
 
@@ -4337,7 +4403,7 @@ void zen_BinaryEntityGenerator_onEnterEqualityExpression(zen_ASTListener_t* astL
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_EqualityExpressionContext_t* context = (zen_EqualityExpressionContext_t*)node->m_context;
-    
+
     /* Generates the instructions corresponding to the very first child of
      * the node.
      */
