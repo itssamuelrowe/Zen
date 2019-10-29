@@ -71,6 +71,8 @@ const char zen_Parser_ruleNames[][50] = {
     "finallyClause",
     "synchronizeStatement",
     "withStatement",
+    "withParameters",
+    "withParameter",
     "classDeclaration",
     "classClassExtendsClause",
     "classSuite",
@@ -1511,7 +1513,7 @@ void zen_Parser_forParameter(zen_Parser_t* parser, zen_ASTNode_t* node) {
         context->m_declaration = true;
         context->m_variable = (la1 == ZEN_TOKEN_KEYWORD_VAR);
 
-        /* Consume the 'var' or 'final' token. */
+        /* Consume 'var' or 'final' token. */
         zen_TokenStream_consume(parser->m_tokens);
     }
 
@@ -1758,8 +1760,7 @@ void zen_Parser_synchronizeStatement(zen_Parser_t* parser, zen_ASTNode_t* node) 
 
 /*
  * withStatement
- * :	'with' expressions statementSuite
- * TODO :	'with' (expressions (as IDENTIFIER)?)+ statementSuite
+ * :	'with' withParameters statementSuite
  * ;
  */
 void zen_Parser_withStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
@@ -1770,13 +1771,74 @@ void zen_Parser_withStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
     /* Match and discard the 'with' token. */
     zen_Parser_match(parser, ZEN_TOKEN_KEYWORD_WITH);
 
-    zen_ASTNode_t* expressions = zen_ASTNode_new(node);
-    context->m_expressions = expressions;
-    zen_Parser_expressions(parser, expressions);
+    zen_ASTNode_t* withParameters = zen_ASTNode_new(node);
+    context->m_withParameters = withParameters;
+    zen_Parser_withParameters(parser, withParameters);
 
     zen_ASTNode_t* statementSuite = zen_ASTNode_new(node);
     context->m_statementSuite = statementSuite;
     zen_Parser_statementSuite(parser, statementSuite);
+
+    zen_StackTrace_exit();
+}
+
+/*
+ * withParameters
+ * :    withParameter (',' withParameter)*
+ * ;
+ */
+void zen_Parser_withParameters(zen_Parser_t* parser, zen_ASTNode_t* node) {
+    zen_StackTrace_enter();
+
+    zen_WithParametersContext_t* context = zen_WithParametersContext_new(node);
+
+    zen_ASTNode_t* withParameter = zen_ASTNode_new(node);
+    jtk_ArrayList_add(context->m_withParameters, withParameter);
+    zen_Parser_withParameter(parser, withParameter);
+
+    zen_TokenType_t la1 = zen_TokenStream_la(parser->m_tokens, 1);
+    while (la1 == ZEN_TOKEN_COMMA) {
+        /* Match and discard the ',' token. */
+        zen_Parser_match(parser, ZEN_TOKEN_COMMA);
+
+        zen_ASTNode_t* withParameter0 = zen_ASTNode_new(node);
+        jtk_ArrayList_add(context->m_withParameters, withParameter0);
+        zen_Parser_withParameter(parser, withParameter0);
+        
+        la1 = zen_TokenStream_la(parser->m_tokens, 1);
+    }
+
+    zen_StackTrace_exit();
+}
+
+/*
+ * withParameter
+ * :    (('var' | 'final') IDENTIFIER '=' )? expression
+ * ;
+ */
+void zen_Parser_withParameter(zen_Parser_t* parser, zen_ASTNode_t* node) {
+    zen_StackTrace_enter();
+
+    zen_WithParameterContext_t* context = zen_WithParameterContext_new(node);
+
+    zen_TokenType_t la1 = zen_TokenStream_la(parser->m_tokens, 1);
+    if ((la1 == ZEN_TOKEN_KEYWORD_VAR) || (la1 == ZEN_TOKEN_KEYWORD_FINAL)) {
+        /* Consume 'var' or 'final' token. */
+        zen_TokenStream_consume(parser->m_tokens);
+
+        context->m_variable = (la1 == ZEN_TOKEN_KEYWORD_VAR);
+
+        zen_Token_t* identifierToken = zen_Parser_matchAndYield(parser, ZEN_TOKEN_IDENTIFIER);
+        zen_ASTNode_t* identifier = zen_Parser_newTerminalNode(parser, identifierToken);
+        context->m_identifier = identifier;
+
+        /* Match and discard the '=' token. */
+        zen_Parser_match(parser, ZEN_TOKEN_EQUAL);
+    }
+
+	zen_ASTNode_t* expression = zen_ASTNode_new(node);
+    context->m_expression = expression;
+	zen_Parser_expression(parser, expression);
 
     zen_StackTrace_exit();
 }

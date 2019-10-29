@@ -157,6 +157,12 @@ zen_ASTListener_t* zen_ASTListener_newWithContext(void* context) {
     listener->m_onEnterWithStatement = zen_ASTListener_onEnterWithStatement;
     listener->m_onExitWithStatement = zen_ASTListener_onExitWithStatement;
 
+    listener->m_onEnterWithParameters = zen_ASTListener_onEnterWithParameters;
+    listener->m_onExitWithParameters = zen_ASTListener_onExitWithParameters;
+
+    listener->m_onEnterWithParameter = zen_ASTListener_onEnterWithParameter;
+    listener->m_onExitWithParameter = zen_ASTListener_onExitWithParameter;
+
     listener->m_onEnterClassDeclaration = zen_ASTListener_onEnterClassDeclaration;
     listener->m_onExitClassDeclaration = zen_ASTListener_onExitClassDeclaration;
 
@@ -608,6 +614,22 @@ void zen_ASTListener_onEnterWithStatement(zen_ASTListener_t* listener, zen_ASTNo
 }
 
 void zen_ASTListener_onExitWithStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
+}
+
+// withParameters
+
+void zen_ASTListener_onEnterWithParameters(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
+}
+
+void zen_ASTListener_onExitWithParameters(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
+}
+
+// withParameter
+
+void zen_ASTListener_onEnterWithParameter(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
+}
+
+void zen_ASTListener_onExitWithParameter(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
 // classDeclaration

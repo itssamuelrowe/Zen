@@ -14,54 +14,56 @@
  * limitations under the License.
  */
 
-// Wednesday, July 17, 2019
+// Thursday, October 29, 2019
 
-#ifndef COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_WITH_STATEMENT_CONTEXT_H
-#define COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_WITH_STATEMENT_CONTEXT_H
+#ifndef COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_WITH_PARAMETER_CONTEXT_H
+#define COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_WITH_PARAMETER_CONTEXT_H
 
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
 
 /*******************************************************************************
- * WithStatementContext                                                        *
+ * WithParameterContext                                                        *
  *******************************************************************************/
 
 /**
- * @class WithStatementContext
+ * @class WithParameterContext
  * @ingroup zen_compiler_ast
  * @author Samuel Rowe
  * @since zen 1.0
  */
-struct zen_WithStatementContext_t {
+struct zen_WithParameterContext_t {
     zen_ASTNode_t* m_node;
-    zen_ASTNode_t* m_withParameters;
-    zen_ASTNode_t* m_statementSuite;
+    bool m_variable;
+    zen_ASTNode_t* m_identifier;
+    zen_ASTNode_t* m_expression;
 };
 
 /**
- * @memberof WithStatementContext
+ * @memberof WithParameterContext
  */
-typedef struct zen_WithStatementContext_t zen_WithStatementContext_t;
+typedef struct zen_WithParameterContext_t zen_WithParameterContext_t;
 
 // Constructor
 
 /**
- * @memberof WithStatementContext
+ * @memberof WithParameterContext
  */
-zen_WithStatementContext_t* zen_WithStatementContext_new(zen_ASTNode_t* node);
+zen_WithParameterContext_t* zen_WithParameterContext_new(zen_ASTNode_t* node);
 
 // Destructor
 
 /**
- * @memberof WithStatementContext
+ * @memberof WithParameterContext
  */
-void zen_WithStatementContext_delete(zen_WithStatementContext_t* context);
+void zen_WithParameterContext_delete(zen_WithParameterContext_t* context);
 
 // Children
 
 /**
- * @memberof WithStatementContext
+ * @memberof WithParameterContext
  */
-void zen_WithStatementContext_getChildren(zen_WithStatementContext_t* context, jtk_ArrayList_t* children);
+void zen_WithParameterContext_getChildren(zen_WithParameterContext_t* context,
+    jtk_ArrayList_t* children);
 
-#endif /* COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_WITH_STATEMENT_CONTEXT_H */
+#endif /* COM_ONECUBE_ZEN_COMPILER_AST_CONTEXT_WITH_PARAMETER_CONTEXT_H */

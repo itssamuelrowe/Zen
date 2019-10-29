@@ -465,6 +465,26 @@ typedef void (*zen_OnExitWithStatementFunction_t)(zen_ASTListener_t* listener, z
 /**
  * @memberof ASTListener
  */
+typedef void (*zen_OnEnterWithParametersFunction_t)(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+typedef void (*zen_OnExitWithParametersFunction_t)(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+typedef void (*zen_OnEnterWithParameterFunction_t)(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+typedef void (*zen_OnExitWithParameterFunction_t)(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
 typedef void (*zen_OnEnterClassDeclarationFunction_t)(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
 /**
@@ -940,6 +960,12 @@ struct zen_ASTListener_t {
 
     zen_OnEnterWithStatementFunction_t m_onEnterWithStatement;
     zen_OnExitWithStatementFunction_t m_onExitWithStatement;
+
+    zen_OnEnterWithParametersFunction_t m_onEnterWithParameters;
+    zen_OnExitWithParametersFunction_t m_onExitWithParameters;
+    
+    zen_OnEnterWithParameterFunction_t m_onEnterWithParameter;
+    zen_OnExitWithParameterFunction_t m_onExitWithParameter;
 
     zen_OnEnterClassDeclarationFunction_t m_onEnterClassDeclaration;
     zen_OnExitClassDeclarationFunction_t m_onExitClassDeclaration;
@@ -1494,6 +1520,26 @@ void zen_ASTListener_onEnterWithStatement(zen_ASTListener_t* listener, zen_ASTNo
  * @memberof ASTListener
  */
 void zen_ASTListener_onExitWithStatement(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_ASTListener_onEnterWithParameters(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_ASTListener_onExitWithParameters(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_ASTListener_onEnterWithParameter(zen_ASTListener_t* listener, zen_ASTNode_t* node);
+
+/**
+ * @memberof ASTListener
+ */
+void zen_ASTListener_onExitWithParameter(zen_ASTListener_t* listener, zen_ASTNode_t* node);
 
 /**
  * @memberof ASTListener

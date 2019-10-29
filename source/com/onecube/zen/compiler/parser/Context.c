@@ -1390,7 +1390,7 @@ void zen_SynchronizeStatementContext_getChildren(zen_SynchronizeStatementContext
 zen_WithStatementContext_t* zen_WithStatementContext_new(zen_ASTNode_t* node) {
     zen_WithStatementContext_t* context = zen_Memory_allocate(zen_WithStatementContext_t, 1);
     context->m_node = node;
-    context->m_expressions = NULL;
+    context->m_withParameters = NULL;
     context->m_statementSuite = NULL;
 
     zen_Context_initializeNode(node, ZEN_AST_NODE_TYPE_WITH_STATEMENT, context,
@@ -1411,8 +1411,72 @@ void zen_WithStatementContext_getChildren(zen_WithStatementContext_t* context,
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_add(children, context->m_expressions);
+    jtk_ArrayList_add(children, context->m_withParameters);
     jtk_ArrayList_add(children, context->m_statementSuite);
+}
+
+/*******************************************************************************
+ * WithParametersContext                                                       *
+ *******************************************************************************/
+
+zen_WithParametersContext_t* zen_WithParametersContext_new(zen_ASTNode_t* node) {
+    zen_WithParametersContext_t* context = zen_Memory_allocate(zen_WithParametersContext_t, 1);
+    context->m_node = node;
+    context->m_withParameters = jtk_ArrayList_new();
+
+    zen_Context_initializeNode(node, ZEN_AST_NODE_TYPE_WITH_PARAMETERS, context,
+        (zen_ContextDestructorFunction_t)zen_WithParametersContext_delete,
+        (zen_EnumerateContextChildrenFunction_t)zen_WithParametersContext_getChildren);
+
+    return context;
+}
+
+void zen_WithParametersContext_delete(zen_WithParametersContext_t* context) {
+    jtk_Assert_assertObject(context, "The specified context is null.");
+
+    jtk_ArrayList_delete(context->m_withParameters);
+    jtk_Memory_deallocate(context);
+}
+
+void zen_WithParametersContext_getChildren(zen_WithParametersContext_t* context,
+    jtk_ArrayList_t* children) {
+    jtk_Assert_assertObject(context, "The specified context is null.");
+    jtk_Assert_assertObject(children, "The specified children is null.");
+
+    jtk_ArrayList_addAll(children, JTK_COLLECTION_ARRAY_LIST, context->m_withParameters);
+}
+
+/*******************************************************************************
+ * WithParameterContext                                                        *
+ *******************************************************************************/
+
+zen_WithParameterContext_t* zen_WithParameterContext_new(zen_ASTNode_t* node) {
+    zen_WithParameterContext_t* context = zen_Memory_allocate(zen_WithParameterContext_t, 1);
+    context->m_node = node;
+    context->m_variable = true;
+    context->m_identifier = NULL;
+    context->m_expression = NULL;
+
+    zen_Context_initializeNode(node, ZEN_AST_NODE_TYPE_WITH_PARAMETER, context,
+        (zen_ContextDestructorFunction_t)zen_WithParameterContext_delete,
+        (zen_EnumerateContextChildrenFunction_t)zen_WithParameterContext_getChildren);
+
+    return context;
+}
+
+void zen_WithParameterContext_delete(zen_WithParameterContext_t* context) {
+    jtk_Assert_assertObject(context, "The specified context is null.");
+
+    jtk_Memory_deallocate(context);
+}
+
+void zen_WithParameterContext_getChildren(zen_WithParameterContext_t* context,
+    jtk_ArrayList_t* children) {
+    jtk_Assert_assertObject(context, "The specified context is null.");
+    jtk_Assert_assertObject(children, "The specified children is null.");
+
+    jtk_ArrayList_addPredicatively(children, context->m_identifier, jtk_Object_isNotNull);
+    jtk_ArrayList_addPredicatively(children, context->m_expression, jtk_Object_isNotNull);
 }
 
 /*******************************************************************************

@@ -87,6 +87,8 @@
 #include <com/onecube/zen/compiler/ast/context/FinallyClauseContext.h>
 #include <com/onecube/zen/compiler/ast/context/SynchronizeStatementContext.h>
 #include <com/onecube/zen/compiler/ast/context/WithStatementContext.h>
+#include <com/onecube/zen/compiler/ast/context/WithParametersContext.h>
+#include <com/onecube/zen/compiler/ast/context/WithParameterContext.h>
 #include <com/onecube/zen/compiler/ast/context/ClassDeclarationContext.h>
 #include <com/onecube/zen/compiler/ast/context/ClassExtendsClauseContext.h>
 #include <com/onecube/zen/compiler/ast/context/ClassSuiteContext.h>

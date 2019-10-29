@@ -3468,6 +3468,12 @@ void zen_BinaryEntityGenerator_onEnterSynchronizeStatement(zen_ASTListener_t* as
     zen_SynchronizeStatementContext_t* context =
         (zen_SynchronizeStatementContext_t*)node->m_context;
 
+    /* The normal behaviour of the AST walker causes the generator to emit instructions
+     * in an undesirable fashion. Therefore, we partially switch from the listener
+     * to visitor design pattern. The AST walker can be guided to switch to this
+     * mode via zen_ASTListener_skipChildren() function which causes the AST walker
+     * to skip iterating over the children nodes.
+     */
     zen_ASTListener_skipChildren(astListener);
 }
 
@@ -3741,10 +3747,41 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
  *    Throwable#suppress() function. The oldest exception, that is, the exception
  *    thrown by statement suite, is thrown again.
  */
-void zen_BinaryEntityGenerator_onEnterWithStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterWithStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+    jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
+    jtk_Assert_assertObject(node, "The specified AST node is null.");
+
+    /* Retrieve the generator associated with the AST listener. */
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+
+    /* Retrieve the context of the AST node. */
+    zen_WithStatementContext_t* context = (zen_WithStatementContext_t*)node->m_context;
+
+    /* The normal behaviour of the AST walker causes the generator to emit instructions
+     * in an undesirable fashion. Therefore, we partially switch from the listener
+     * to visitor design pattern. The AST walker can be guided to switch to this
+     * mode via zen_ASTListener_skipChildren() function which causes the AST walker
+     * to skip iterating over the children nodes.
+     */
+    zen_ASTListener_skipChildren(astListener);
 }
 
-void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+    jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
+    jtk_Assert_assertObject(node, "The specified AST node is null.");
+
+    /* Retrieve the generator associated with the AST listener. */
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+
+    /* Retrieve the context of the AST node. */
+    zen_WithStatementContext_t* context = (zen_WithStatementContext_t*)node->m_context;
+
+    /* Generate the instructions corresponding to the expression specified to
+     * the with statement.
+     */
+    // zen_ASTWalker_walk(astListener, context->m_expression);
 }
 
 // classDeclaration

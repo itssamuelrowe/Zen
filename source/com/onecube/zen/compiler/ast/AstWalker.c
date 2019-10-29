@@ -300,6 +300,16 @@ void zen_ASTWalker_enterRule(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
             listener->m_onEnterWithStatement(listener, node);
             break;
         }
+        
+        case ZEN_AST_NODE_TYPE_WITH_PARAMETERS: {
+            listener->m_onEnterWithParameters(listener, node);
+            break;
+        }
+        
+        case ZEN_AST_NODE_TYPE_WITH_PARAMETER: {
+            listener->m_onEnterWithParameter(listener, node);
+            break;
+        }
 
         case ZEN_AST_NODE_TYPE_CLASS_DECLARATION: {
             listener->m_onEnterClassDeclaration(listener, node);
@@ -685,6 +695,16 @@ void zen_ASTWalker_exitRule(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 
         case ZEN_AST_NODE_TYPE_WITH_STATEMENT: {
             listener->m_onExitWithStatement(listener, node);
+            break;
+        }
+
+        case ZEN_AST_NODE_TYPE_WITH_PARAMETERS: {
+            listener->m_onExitWithParameters(listener, node);
+            break;
+        }
+        
+        case ZEN_AST_NODE_TYPE_WITH_PARAMETER: {
+            listener->m_onExitWithParameter(listener, node);
             break;
         }
 
