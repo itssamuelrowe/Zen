@@ -3714,17 +3714,18 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
  * 3. If k is equal to N, generate the instructions corresponding to the
  *    statement suite specified to the with statement.
  * 4. Load the object from the local variable Lk.
- * 5. Invoke the ZenKernel.close() function to close the resource.
+ * 5. Invoke the Closeable#close() function to close the resource.
  * 6. Jump to skip FC1-k and FC2-k sections.
  *
  * [Finally Clause 1 (FC1)]
  * This section handles the exceptions thrown by the core section.
  *
  * 1. The virtual machine pushes the thrown exception to the operand stack.
- *    Store this reference in a local variable, say L[k + x] (where x is the base
- *    local variable index), which can be accessed only by the compiler.
- * 2. Load the object from the local variable Lk.
- * 3. Invoke the ZenKernel.close() function to close the resource.
+ *    Store this reference in a local variable, say L[k + x] (where x is the
+ *    base local variable index for private FC1 local variables), which can
+ *    be accessed only by the compiler.
+ * 2. Load the resource object from the local variable Lk.
+ * 3. Invoke the Closeable#close() function to close the resource.
  * 4. Load the exception object that was thrown by the core section.
  * 5. Throw the exception again.
  *
@@ -3733,10 +3734,11 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
  *
  * 1. The virtual machine pushes the thrown exception to the operand stack.
  *    Store this reference in a local variable, say L[k + y] (where y is the base
- *    local variable index), which can be accessed only by the compiler.
+ *    local variable index for private FC2 local variables), which can be accessed
+ *    only by the compiler.
  * 2. Load the exception object that was thrown by the core section. In other
  *    words, load the object referenced by L[k + x].
- * 3. Load the exception object that was thrown by the ZenKernel.close() function
+ * 3. Load the exception object that was thrown by the Closeable#close() function
  *    in the FC1 section. In other words, load the object referenced by L[k + y].
  * 4. Invoke the Throwable#suppress() function to add the exception thrown by
  *    the FC1 section to the exception thrown by the core section.
@@ -3748,26 +3750,26 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
  * The following cases of exceptions can be summarized along with the behavior
  * of the with statement.
  * 1. The core section does not trigger any exception.
- *    The ZenKernel.close() function does not trigger any exception.
+ *    The Closeable#close() function does not trigger any exception.
  *
  * 2. The core section does not trigger any exception.
- *    The ZenKernel.close() function triggers any exception.
+ *    The Closeable#close() function triggers any exception.
  *
  * 3. The core section triggers an exception.
- *    The ZenKernel.close() function does not trigger any exception.
+ *    The Closeable#close() function does not trigger any exception.
  *
  *    In such cases, the control is transferred to the FC1-k section, which
  *    closes the resource. The exception thrown by the core is
  *    thrown again.
  *
  * 4. The core triggers an exception.
- *    The ZenKernel.close() function triggers an exception.
+ *    The Closeable#close() function triggers an exception.
  *
  *    The core section trigger an exception. This results in the control being
  *    transferred to the FC1-k section, which makes an attempt to close the
  *    resource. This triggers another exception. Thus, the control is transferred
  *    to the FC2-k section. In the FC2-k section, the exception thrown by the
- *    ZenKernel.close() function is suppressed by the exception thrown by the
+ *    Closeable#close() function is suppressed by the exception thrown by the
  *    core section using the Throwable#suppress() function. The oldest exception,
  *    that is, the exception thrown by the core section, is thrown again.
  *
@@ -3810,10 +3812,179 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
     /* Retrieve the context of the AST node. */
     zen_WithStatementContext_t* context = (zen_WithStatementContext_t*)node->m_context;
 
-    /* Generate the instructions corresponding to the expression specified to
+    const uint8_t* closeableClassName = "zen/core/Closeable";
+    int32_t closeableClassNameSize = 18;
+    const uint8_t* closeDescriptor = "v:v";
+    int32_t closeDescriptorSize = 3;
+    const uint8_t* closeName = "close";
+    int32_t closeNameSize = 5;
+    uint16_t closeIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, closeableClassName, closeableClassNameSize,
+        closeDescriptor, closeDescriptorSize, closeName, closeNameSize);
+
+    const uint8_t* throwableClassName = "zen/core/Throwable";
+    int32_t throwableClassNameSize = 18;
+    const uint8_t* suppressDescriptor = "v:(zen/core/Throwable)";
+    int32_t suppressDescriptorSize = 22;
+    const uint8_t* suppressName = "suppress";
+    int32_t suppressNameSize = 8;
+    uint16_t suppressIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, throwableClassName, throwableClassNameSize,
+        suppressDescriptor, suppressDescriptorSize, suppressName, suppressNameSize);
+
+    int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
+         generator->m_instructions);
+    zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
+         generator->m_instructions, parentChannelIndex);
+
+    /* Retrieve the the AST node for with parameters rule. */
+    zen_ASTNode_t* withParameters = context->m_withParameters;
+    /* Retrieve the context of the with parameters AST node. */
+    zen_WithParametersContext_t* withParametersContext =
+        (zen_WithParametersContext_t*)withParameters->m_context;
+
+    int32_t withParameterCount = jtk_ArrayList_getSize(withParametersContext->m_withParameters);
+    int32_t withParameterIndex;
+    for (withParameterIndex = 0; withParameterIndex < withParameterCount;
+        withParameterIndex++) {
+        /* Retreive the current with parameter AST node. */
+        zen_ASTNode_t* withParameter = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+            withParametersContext->m_withParameters, withParameterIndex);
+
+        /* Retrieve the context of the current with parameter. */
+        zen_WithParameterContext_t* withParameterContext =
+            (zen_WithParameterContext_t*)withParameter->m_context;
+
+        // TODO: Allocate a local variable if an identifier was specified.
+
+        /* Generate the instructions corresponding to the expression specified to
+         * the with statement.
+         */
+        zen_ASTWalker_walk(astListener, withParameterContext->m_expression);
+
+        /* Allocate a local variable only the compiler has access to. */
+        /* Store the resulting object in the local variable allocated in the previous
+         * step.
+         *
+         * TODO: Allocate a local variable!
+         */
+        zen_BinaryEntityBuilder_emitStoreReference(generator->m_instructions, 0);
+        /* Log the emission of the store_a instruction. */
+        printf("[debug] Emitted store_a 0 (dummy index)\n");
+    }
+
+    /* Generate the instructions corresponding to the statement suite specified to
      * the with statement.
      */
-    // zen_ASTWalker_walk(astListener, context->m_expression);
+    zen_ASTWalker_walk(astListener, context->m_statementSuite);
+
+    int32_t fc1BaseIndex = 0;
+    int32_t fc2BaseIndex = 0;
+
+    for (withParameterIndex = withParameterIndex - 1; withParameterIndex >= 0;
+        withParameterIndex--) {
+        /* Load the resulting object from the local variable we allocated in the
+         * previous loop.
+         */
+        zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+        /* Log the emission of the load_a instruction. */
+        printf("[debug] Emitted load_a 0 (dummy index)\n");
+
+        /* Invoke the Closeable#close() function to close the resource. */
+        zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions, closeIndex);
+        /* Log the emission of the invoke_virtual instruction. */
+        printf("[debug] Emitted invoke_virtual %d\n", closeIndex);
+
+        /* Jump to skip FC1-k and FC2-k sections. */
+        zen_BinaryEntityBuilder_emitJump(generator->m_instructions, 0);
+        /* Log the emission of the jump instruction. */
+        printf("[debug] Emitted jump 0 (dummy index)\n");
+
+        // TODO: Save the index where the dummy data was written.
+
+        /* -- Finally Clause 1 -- */
+
+        /* The virtual machine pushes the thrown exception to the operand stack.
+         * Store this reference in a local variable, say L[k + x] (where x is the
+         * base local variable index for private FC1 local variables), which can
+         * be accessed only by the compiler.
+         */
+        zen_BinaryEntityBuilder_emitStoreReference(generator->m_instructions, 0);
+        /* Log the emission of the store_a instruction. */
+        printf("[debug] store_a 0 (dummy index)\n");
+
+        /* Load the resource object from the local variable Lk. */
+        zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+        /* Log the emission of the load_a instruction. */
+        printf("[debug] load_a 0 (dummy index)\n");
+
+        /* Invoke the Closeable#close() function to close the resource. */
+        zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions, closeIndex);
+        /* Log the emission of the invoke_virtual instruction. */
+        printf("[debug] Emitted invoke_virtual %d\n", closeIndex);
+
+        /* Load the exception object that was thrown by the core section. */
+        zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+        /* Log the emission of the load_a instruction. */
+        printf("[debug] Emitted load_a 0 (dummy index)\n");
+
+        /* Throw the exception again. */
+        zen_BinaryEntityBuilder_emitThrow(generator->m_instructions);
+        /* Log the emission of the throw instruction. */
+        printf("[debug] Emitted throw\n");
+
+        /* -- Finally Clause 2 -- */
+
+        /* The virtual machine pushes the thrown exception to the operand stack.
+         * Store this reference in a local variable, say L[k + y] (where y is the base
+         * local variable index for private FC2 local variables), which can be
+         * accessed only by the compiler.
+         */
+        zen_BinaryEntityBuilder_emitStoreReference(generator->m_instructions, 0);
+        /* Log the emission of the store_a instruction. */
+        printf("[debug] store_a 0 (dummy index)\n");
+
+        /* Load the exception object that was thrown by the core section. In other
+         * words, load the object referenced by L[k + x].
+         */
+        zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+        /* Log the emission of the load_a instruction. */
+        printf("[debug] Emitted load_a 0 (dummy index)\n");
+
+        /* Load the exception object that was thrown by the Closeable#close()
+         * function in the FC1 section. In other words, load the object referenced
+         * by L[k + y].
+         */
+        zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+        /* Log the emission of the load_a instruction. */
+        printf("[debug] Emitted load_a 0 (dummy index)\n");
+
+        /* Invoke the Throwable#suppress() function to add the exception thrown
+         * by the FC1 section to the exception thrown by the core section.
+         * In other words, `L[k + x].suppress(L[k + y])`.
+         */
+        zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions, suppressIndex);
+        /* Log the emission of the invoke_virtual instruction. */
+        printf("[debug] Emitted invoke_virtual %d\n", suppressIndex);
+
+        /* Load the exception object that was thrown by the core section. In
+         * other words, load the object referenced by L[k + x].
+         */
+        zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+        /* Log the emission of the load_a instruction. */
+        printf("[debug] Emitted load_a 0 (dummy index)\n");
+
+        /* Throw the exception again. */
+        zen_BinaryEntityBuilder_emitThrow(generator->m_instructions);
+        /* Log the emission of the throw instruction. */
+        printf("[debug] Emitted throw\n");
+
+        /* I just had an epiphany! All the "Emitted *" log messages could have been
+         * placed in the binary entity builder. This way I would have to repeat the
+         * code less often! I am almost done with the code generate and I do not
+         * have the energy to refactor everything. :(
+         */
+    }
 }
 
 // classDeclaration
