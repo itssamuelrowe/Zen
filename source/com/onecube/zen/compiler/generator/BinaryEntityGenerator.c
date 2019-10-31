@@ -3841,6 +3841,91 @@ int32_t zen_BinaryEntityGenerator_allocateLocalVariables(zen_BinaryEntityGenerat
  * to the same. The new algorithm for generating instructions corresponding
  * to the with statement allocates a minimum of N + 2 local variables for internal
  * operations.
+ *
+ * [EXAMPLE]
+ *
+ * Consider the following program written in Zen.
+ *
+ * function main()
+ *     with 1, 2
+ *         ;
+ *
+ * Notice that the expressions specified to the with statement evaluate to
+ * integers. In reality, one cannot specify integers to the same. However, for
+ * the sake of demonstration I have used integers for expressions and an empty
+ * statement as the statement suite. This allows us to focus on the instructions
+ * that provide the functionality of the with statement.
+ *
+ * ; Expression 1
+ * #1 push_i1
+ * #2 store_a 0
+ * 
+ * ; Expression 2
+ * #4 push_i2
+ * #5 store_a 1
+ * 
+ * ; Statement suite
+ * #7 nop
+ * 
+ * ; The default instructions that make an attempt to close the resource obtained
+ * ; from expression 1. If an exception is thrown here, it propogates without causing
+ * ; transfer of control to FC1-1 or FC2-1 sections. In other words, any exception
+ * ; thrown here will transfer control to FC1-2 section, without causing the FC1-1
+ * ; and FC2-1 sections to execute.
+ * #8 load_a 0
+ * #10 invoke_virtual 6
+ * #13 jump 38
+ * 
+ * ; The FC1-1 section, which makes an attempt to close the resource obtained
+ * ; from expression 1. It throws the exception that originated from the statement
+ * ; suite. The control is transferred to FC1-2 section.
+ * #16 store_a 2
+ * #18 load_a 0
+ * #20 invoke_virtual 6
+ * #23 load_a 2
+ * #25 throw
+ * 
+ * ; The following instructions constitute the FC2-1 section. It supresses the
+ * ; exception thrown by Closeable#close() function with the exception thrown by
+ * ; the statement suite. It throws the exception that originated from the statement
+ * ; suite. The control is transferred to FC1-2 section.
+ * #26 store_a 3
+ * #28 load_a 2
+ * #30 load_a 3
+ * #32 invoke_virtual 11
+ * #35 load_a 2
+ * #37 throw
+ * 
+ * ; The default instructions that make an attempt to close the resource obtained
+ * ; from expression 2. If an exception is thrown here, it propogates without causing
+ * ; transfer of control to FC1-2 or FC2-2 sections. In other words, any exception
+ * ; thrown here will transfer control to instructions beyond the with statement,
+ * ; without causing the FC1-2 and FC2-2 sections to execute.
+ * #38 load_a 1
+ * #40 invoke_virtual 6
+ * #43 jump 68
+ * 
+ * ; The FC1-2 section, which makes an attempt to close the resource obtained
+ * ; from expression 2. It throws the exception that originated from the FC2-1
+ * ; section or expression 2. The control is transferred to instructions beyond
+ * ; the with statement.
+ * #46 store_a 2
+ * #48 load_a 1
+ * #50 invoke_virtual 6
+ * #53 load_a 2
+ * #55 throw
+ * 
+ * ; The following instructions constitute the FC2-2 section. It supresses the
+ * ; exception thrown by Closeable#close() function in FC1-2 section with the
+ * ; exception thrown by the statement suite. It throws the exception that originated
+ * ; from the FC2-1 section or expression 2. The control is transferred to
+ * ; instructions beyond the with statement.
+ * #56 store_a 3
+ * #58 load_a 2
+ * #60 load_a 3
+ * #62 invoke_virtual 11
+ * #65 load_a 2
+ * #67 throw
  */
 void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
@@ -3905,7 +3990,7 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
      */
     // int32_t fc2BaseIndex = zen_BinaryEntityGenerator_allocateLocalVariables(
     //    generator, withParameterCount);
-    
+
     /* Allocate a local variable for storing the exception objects thrown by
      * the core sections. Unlike the previous algorithm, the new algorithm
      * allocates only one local variable. It can be reused given only one FC1
@@ -3954,7 +4039,19 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
         zen_BinaryEntityBuilder_emitStoreReference(generator->m_instructions, resourceIndex);
         /* Log the emission of the store_a instruction. */
         printf("[debug] Emitted store_a %d\n", resourceIndex);
+        
+        int32_t coreStartIndex = zen_DataChannel_getSize(parentChannel);
+        zen_ExceptionHandlerSite_t* type1Handler = jtk_Memory_allocate(
+            zen_ExceptionHandlerSite_t, 1);
+        type1Handler->m_startIndex = coreStartIndex;
+        type1Handler->m_exceptionClassIndex = 0;
+        jtk_ArrayList_add(generator->m_exceptionHandlerSites, type1Handler);
     }
+
+    /* Save the index where the instruction for the statement suite clause
+     * begins (inclusive).
+     */
+    int32_t startIndex = zen_DataChannel_getSize(parentChannel);
 
     /* Generate the instructions corresponding to the statement suite specified to
      * the with statement.
@@ -3967,6 +4064,11 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
         uint8_t resourceIndex = resourceBaseIndex + normalizedIndex;
         // uint8_t fc1ExceptionIndex = fc1BaseIndex + normalizedIndex;
         // uint8_t fc2ExceptionIndex = fc2BaseIndex + normalizedIndex;
+
+        int32_t coreStopIndex = zen_DataChannel_getSize(parentChannel);
+        zen_ExceptionHandlerSite_t* type1Handler = (zen_ExceptionHandlerSite_t*)
+            jtk_ArrayList_getValue(generator->m_exceptionHandlerSites, withParameterIndex);
+        type1Handler->m_stopIndex = coreStopIndex;
         
         /* Load the resulting object from the local variable we allocated in the
          * previous loop.
@@ -3990,6 +4092,9 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
 
         /* -- Finally Clause 1 -- */
 
+        int32_t fc1StartIndex = zen_DataChannel_getSize(parentChannel);
+        type1Handler->m_handlerIndex = fc1StartIndex;
+
         /* The virtual machine pushes the thrown exception to the operand stack.
          * Store this reference in a local variable, say L[k + x] (where x is the
          * base local variable index for private FC1 local variables), which can
@@ -4011,6 +4116,8 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
         /* Log the emission of the invoke_virtual instruction. */
         printf("[debug] Emitted invoke_virtual %d\n", closeIndex);
 
+        int32_t fc1StopIndex = zen_DataChannel_getSize(parentChannel);
+
         /* Load the exception object that was thrown by the core section. */
         zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions,
             fc1ExceptionIndex);
@@ -4023,6 +4130,8 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
         printf("[debug] Emitted throw\n");
 
         /* -- Finally Clause 2 -- */
+
+        int32_t fc2StartIndex = zen_DataChannel_getSize(parentChannel);
 
         /* The virtual machine pushes the thrown exception to the operand stack.
          * Store this reference in a local variable, say L[k + y] (where y is the base
@@ -4075,6 +4184,13 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
         int32_t newParentChannelSize = zen_DataChannel_getSize(parentChannel);
         parentChannel->m_bytes[skipIndex] = (newParentChannelSize & 0x0000FF00) >> 8;
         parentChannel->m_bytes[skipIndex + 1] = newParentChannelSize & 0x000000FF;
+
+        zen_ExceptionHandlerSite_t* type2Handler = jtk_Memory_allocate(zen_ExceptionHandlerSite_t, 1);
+        type2Handler->m_startIndex = fc1StartIndex;
+        type2Handler->m_stopIndex = fc1StopIndex;
+        type2Handler->m_handlerIndex = fc2StartIndex;
+        type2Handler->m_exceptionClassIndex = 0;
+        jtk_ArrayList_add(generator->m_exceptionHandlerSites, type2Handler);
 
         /* I just had an epiphany! All the "Emitted *" log messages could have been
          * placed in the binary entity builder. This way I would have to repeat the
