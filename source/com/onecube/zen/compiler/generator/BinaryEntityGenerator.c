@@ -2542,9 +2542,20 @@ void zen_BinaryEntityGenerator_onExitConstantDeclaration(zen_ASTListener_t* astL
 // constantDeclarator
 
 void zen_BinaryEntityGenerator_onEnterConstantDeclarator(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+    /* Retrieve the generator associated with the AST listener. */
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    /* Retrieve the context of the AST node. */
+    zen_WithStatementContext_t* context = (zen_WithStatementContext_t*)node->m_context;
+
+    zen_ASTListener_skipChildren(astListener);
 }
 
 void zen_BinaryEntityGenerator_onExitConstantDeclarator(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+/* Retrieve the generator associated with the AST listener. */
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    /* Retrieve the context of the AST node. */
+    zen_TryStatementContext_t* context = (zen_TryStatementContext_t*)node->m_context;
+
 }
 
 // assertStatement
@@ -4953,6 +4964,14 @@ void zen_BinaryEntityGenerator_onExitRelationalExpression(zen_ASTListener_t* ast
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_RelationalExpressionContext_t* context = (zen_RelationalExpressionContext_t*)node->m_context;
 
+    /* NOTE: Relational operators have no associativity. In order to implement
+     * this behavior, the parser first recognizes relational operators as if
+     * they have left/right associativity. After which, it manually checks
+     * for the number of operands on the right hand side of the very first
+     * subexpression.
+     *
+     * At this point, we assume size of the shift expressions list is 1 or 0.
+     */
     int32_t size = jtk_ArrayList_getSize(context->m_shiftExpressions);
     int32_t i;
     for (i = 0; i < size; i++) {

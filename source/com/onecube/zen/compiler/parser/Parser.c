@@ -1100,7 +1100,7 @@ void zen_Parser_constantDeclarator(zen_Parser_t* parser, zen_ASTNode_t* node) {
 
 /*
  * assertStatement
- * :    'assert' expression
+ * :    'assert' expression (':' expression)?
  * ;
  */
 void zen_Parser_assertStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
@@ -1111,9 +1111,18 @@ void zen_Parser_assertStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
     /* Match and discard the 'assert' token. */
     zen_Parser_match(parser, ZEN_TOKEN_KEYWORD_ASSERT);
 
-    zen_ASTNode_t* expression = zen_ASTNode_new(node);
-    context->m_expression = expression;
-    zen_Parser_expression(parser, expression);
+    zen_ASTNode_t* conditionExpression = zen_ASTNode_new(node);
+    context->m_condtionExpression = conditionExpression;
+    zen_Parser_expression(parser, conditionExpression);
+
+    if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_IDENTIFIER) {
+        /* Consume and discard the ':' token. */
+        zen_Parser_consume(parser);
+
+        zen_ASTNode_* messageExpression = zen_ASTNode_new(node);
+        context->m_messageExpression = messageExpression;
+        zen_Parser_expression(parser, expression);
+    }
 
     zen_StackTrace_exit();
 }

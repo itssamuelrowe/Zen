@@ -34,7 +34,8 @@
  */
 struct zen_AssertStatementContext_t {
     zen_ASTNode_t* m_node;
-    zen_ASTNode_t* m_expression;
+    zen_ASTNode_t* m_conditionExpression;
+    zen_ASTNode_t* m_messageExpression;
 };
 
 /**
