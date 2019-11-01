@@ -1,0 +1,3 @@
+annotation Operator
+    Integer degree
+    String symbol
