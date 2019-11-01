@@ -881,7 +881,6 @@ zen_InstructionAttribute_t* zen_BinaryEntityGenerator_makeInstructionAttribute(
     /* Retrieve the bytes that were written on the data channel. */
     uint8_t* instructionBytes = zen_DataChannel_getBytes(channel);
 
-
     /* Retrieve a valid index into the constant pool where an UTF-8 entry
      * represents "vm/primary/Instruction".
      */
@@ -5503,59 +5502,78 @@ void zen_BinaryEntityGenerator_onEnterUnaryExpression(zen_ASTListener_t* astList
 
     zen_ASTNode_t* unaryOperator = context->m_unaryOperator;
     if (unaryOperator != NULL) {
+        /* Generate the instructions corresponding to the unary expression. */
+        zen_ASTWalker_walk(astListener, context->m_unaryExpression);
+
+        /* Retrieve the corresponding unary operator token from the AST
+         * node.
+         */
         zen_Token_t* unaryOperatorToken = (zen_Token_t*)unaryOperator->m_context;
+        /* Retrieve the type of the unary operator. */
         zen_TokenType_t unaryOperatorType = zen_Token_getType(unaryOperatorToken);
+
+        /* The values of symbol and symbolSize are the only arbitrary variables
+         * when invoking the zen_BinaryEntityGenerator_invokeEvaluate() function.
+         * Therefore, instead of rewriting the invocation expression multiple
+         * times, I have factored it out.
+         */
+        uint8_t* symbol = NULL;
+        int32_t symbolSize = 1;
+
         switch (unaryOperatorType) {
             case ZEN_TOKEN_PLUS: {
-                /* The UnaryPlusOperator.applyUnaryPlus() function is invoked against the object
-                 * whose "positive" internal state is required. It returns an object with its
-                 * internal state "positive".
+                /* The kernel should find a function annotated with the Operator
+                 * annotation that handles the '1+' symbol.
                  */
-                // zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
+                symbol = "1+";
+                symbolSize = 2;
+
                 break;
             }
 
             case ZEN_TOKEN_DASH: {
-                /* The UnaryPlusOperator.applyUnaryPlus() function is invoked against the object
-                 * whose "negative" internal state is required. It returns an object with its
-                 * internal state "negative".
+                /* The kernel should find a function annotated with the Operator
+                 * annotation that handles the '1-' symbol.
                  */
-                // zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
+                symbol = "1-";
+                symbolSize = 2;
+
                 break;
             }
 
             case ZEN_TOKEN_TILDE: {
-                /* The UnaryPlusOperator.applyUnaryPlus() function is invoked against the object
-                 * whose "deeply toggled" internal state is required. It returns an object with its
-                 * internal state "deeply toggled".
+                /* The kernel should find a function annotated with the Operator
+                 * annotation that handles the '~' symbol.
                  */
-                // zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
+                symbol = "~";
+
                 break;
             }
 
             case ZEN_TOKEN_EXCLAMATION_MARK: {
-                /* The UnaryPlusOperator.applyUnaryPlus() function is invoked against the object
-                 * whose "toggled" internal state is required. It returns an object with its
-                 * internal state "toggled".
+                /* The kernel should find a function annotated with the Operator
+                 * annotation that handles the '!' symbol.
                  */
-                // zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
+                symbol = "!";
+
                 break;
             }
 
+            /*
             case ZEN_TOKEN_PLUS_2:
             case ZEN_TOKEN_DASH_2: {
                 if (unaryOperatorType == ZEN_TOKEN_PLUS_2) {
                     /* The onPreIncrement() function is invoked against the object whose internal
                      * state has to be "incremented by 1". It returns an object with its internal
                      * state "incremented by 1".
-                     */
+                     *
                     // zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
                 }
                 else {
                     /* The onPreDecrement() function is invoked against the object whose internal
                      * state has to be "incremented by 1". It returns an object with its internal
                      * state "incremented by 1".
-                     */
+                     *
                     // zen_BinaryEntityGenerator_emitInvokeVirtual(generator, 0);
                 }
                 /* A copy of the "incremented" object is required on the operand stack for
@@ -5566,12 +5584,26 @@ void zen_BinaryEntityGenerator_onEnterUnaryExpression(zen_ASTListener_t* astList
                  *
                  * TODO: Change store_a to store_a1 (and friends) and
                  *       store_field when necessary.
-                 */
+                 *
                 // zen_BinaryEntityGenerator_emitStoreReference(generator, 0);
 
                 break;
             }
+            */
         }
+
+        /* Generate the instructions corresponding to invoking the
+         * ZenKernel.evaluate() function. Since, Zen is dynamically typed
+         * the compiler cannot determine the type of the operands. Therefore,
+         * the multiplication/division/modulus operations are delegated to
+         * functions annotated with the Operator annotation.
+         */
+        zen_BinaryEntityGenerator_invokeEvaluate(generator, symbol, symbolSize);
+
+        /* The instructions corresponding to the children nodes have been generated.
+         * Therefore, do not visit them again.
+         */
+        zen_ASTListener_skipChildren(astListener);
     }
 }
 
