@@ -712,16 +712,17 @@ void zen_BinaryEntityBuilder_writeInstructionAttribute(
     uint32_t instructionCount, uint8_t* instructions) {
     jtk_Assert_assertObject(builder, "The specified builder is null.");
     jtk_Assert_assertTrue(builder->m_activeChannelIndex >= 0, "Please activate a channel before emitting instructions.");
-    
+
     zen_BinaryEntityBuilder_writeInstructionAttributeHeader(
         builder, nameIndex, length, maxStackSize, localVariableCount,
         instructionCount);
-    
-    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(builder->m_channels, builder->m_activeChannelIndex);
+
+    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(
+        builder->m_channels, builder->m_activeChannelIndex);
     zen_DataChannel_requestCapacity(channel, instructionCount);
-    
-    jtk_Arrays_copyEx_b(channel->m_bytes, channel->m_capacity, channel->m_index,
-        instructions, instructionCount, 0, instructionCount);
+
+    jtk_Arrays_copyEx_b(instructions, instructionCount, 0, channel->m_bytes,
+        channel->m_capacity, channel->m_index, instructionCount);
 }
 
 void zen_BinaryEntityBuilder_writeExceptionTableHeader(zen_BinaryEntityBuilder_t* builder, uint16_t size) {
@@ -2941,7 +2942,7 @@ void zen_BinaryEntityBuilder_emitThrow(zen_BinaryEntityBuilder_t* builder) {
 
 void zen_BinaryEntityBuilder_emitWide(zen_BinaryEntityBuilder_t* builder) {
     jtk_Assert_assertObject(builder, "The specified builder is null.");
-    jtk_Assert_assertTrue(builder->m_activeChannelIndex >= 0, "Please activate a channel before emitting instructions."); 
+    jtk_Assert_assertTrue(builder->m_activeChannelIndex >= 0, "Please activate a channel before emitting instructions.");
 
     zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(builder->m_channels, builder->m_activeChannelIndex);
     zen_DataChannel_requestCapacity(channel, 1);

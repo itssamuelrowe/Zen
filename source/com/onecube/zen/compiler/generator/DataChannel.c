@@ -93,8 +93,9 @@ void zen_DataChannel_appendBytesRange(zen_DataChannel_t* channel,
 
 void zen_DataChannel_requestCapacity(zen_DataChannel_t* channel, int32_t capacity) {
     if (capacity > 0) {
-     int32_t currentCapacity = channel->m_capacity;
-        int32_t requireCapacity = capacity - currentCapacity;
+        int32_t currentCapacity = channel->m_capacity;
+        int32_t minimumCapacity = channel->m_index + capacity;
+        int32_t requireCapacity = minimumCapacity - currentCapacity;
         if (requireCapacity > 0) {
             int32_t newCapacity = (currentCapacity * 2) + 2;
             if ((newCapacity - capacity) < 0) {
