@@ -1112,16 +1112,16 @@ void zen_Parser_assertStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
     zen_Parser_match(parser, ZEN_TOKEN_KEYWORD_ASSERT);
 
     zen_ASTNode_t* conditionExpression = zen_ASTNode_new(node);
-    context->m_condtionExpression = conditionExpression;
+    context->m_conditionExpression = conditionExpression;
     zen_Parser_expression(parser, conditionExpression);
 
     if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_IDENTIFIER) {
         /* Consume and discard the ':' token. */
-        zen_Parser_consume(parser);
+        zen_TokenStream_consume(parser->m_tokens);
 
-        zen_ASTNode_* messageExpression = zen_ASTNode_new(node);
+        zen_ASTNode_t* messageExpression = zen_ASTNode_new(node);
         context->m_messageExpression = messageExpression;
-        zen_Parser_expression(parser, expression);
+        zen_Parser_expression(parser, messageExpression);
     }
 
     zen_StackTrace_exit();

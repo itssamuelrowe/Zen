@@ -89,6 +89,20 @@ int32_t zen_ConstantPoolBuilder_getClassEntryIndex(
 int32_t zen_ConstantPoolBuilder_getClassEntryIndexEx(
     zen_ConstantPoolBuilder_t* builder, uint8_t* bytes, int32_t bytesSize);
 
+// Field Entity
+
+zen_ConstantPoolField_t* zen_ConstantPoolBuilder_getFieldEntry(
+    zen_ConstantPoolBuilder_t* builder, int32_t index);
+
+int32_t zen_ConstantPoolBuilder_getFieldEntryIndex(
+    zen_ConstantPoolBuilder_t* builder, jtk_String_t* class0,
+        jtk_String_t* descriptor, jtk_String_t* name);
+
+int32_t zen_ConstantPoolBuilder_getFieldEntryIndexEx(
+    zen_ConstantPoolBuilder_t* builder, const uint8_t* class0, int32_t classSize,
+    const uint8_t* descriptor, int32_t descriptorSize, const uint8_t* name,
+    int32_t nameSize);
+
 // Function Entity
 
 zen_ConstantPoolFunction_t* zen_ConstantPoolBuilder_getFunctionEntry(

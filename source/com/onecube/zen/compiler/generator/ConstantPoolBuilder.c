@@ -124,7 +124,7 @@ int32_t zen_ConstantPoolBuilder_getClassEntryIndexEx(
         /* Retrieve the constant pool entry to test during this iteration. */
         zen_ConstantPoolEntry_t* entry = (zen_ConstantPoolEntry_t*)jtk_ArrayList_getValue(
             builder->m_entries, i);
-        /* Test the entry only if it is tagged with ZEN_CONSTANT_POOL_TAG_STRING. */
+        /* Test the entry only if it is tagged with ZEN_CONSTANT_POOL_TAG_FUNCTION. */
         if (entry->m_tag == ZEN_CONSTANT_POOL_TAG_CLASS) {
             /* Convert the entry to zen_ConstantPoolClass_t, to extract the index
              * of the UTF-8 entry.
@@ -167,8 +167,138 @@ int32_t zen_ConstantPoolBuilder_getClassEntryIndexEx(
     return result;
 }
 
+// Field Entry
 
-// Class Entry
+zen_ConstantPoolField_t* zen_ConstantPoolBuilder_getFieldEntry(
+    zen_ConstantPoolBuilder_t* builder, int32_t index) {
+    jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
+
+    return (zen_ConstantPoolField_t*)jtk_ArrayList_getValue(builder->m_entries, index);
+}
+
+int32_t zen_ConstantPoolBuilder_getFieldEntryIndex(
+    zen_ConstantPoolBuilder_t* builder, jtk_String_t* class0,
+        jtk_String_t* descriptor, jtk_String_t* name) {
+    jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
+
+    return zen_ConstantPoolBuilder_getFieldEntryIndexEx(builder, class0->m_value,
+        class0->m_size, descriptor->m_value, descriptor->m_size, name->m_value,
+        name->m_size);
+}
+
+int32_t zen_ConstantPoolBuilder_getFieldEntryIndexEx(
+    zen_ConstantPoolBuilder_t* builder, const uint8_t* class0,
+        int32_t classSize, const uint8_t* descriptor, int32_t descriptorSize,
+        const uint8_t* name, int32_t nameSize) {
+    jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
+
+    /* 1. Find the class entry with the given sequence of bytes for class name.
+     * 2. If step 1 found no class entry, insert an UTF-8 entry with the given
+     *    sequence of bytes.
+     * 3. Find the UTF-8 entry with the given sequence of bytes for function
+     *    descriptor.
+     * 4. If step 1 found no UTF-8 entry, insert an UTF-8 entry with the given
+     *    sequence of bytes for function descriptor.
+     * 5. Find the UTF-8 entry with the given sequence of bytes for function
+     *    name.
+     * 6. If step 1 found no UTF-8 entry, insert an UTF-8 entry with the given
+     *    sequence of bytes for function name.
+     * 7. Find the field entry with the index of the UTF-8 entries found in
+     *    the previous.
+     * 8. If step 7 found no field entry, insert a field entry with the index
+     *    pointing to the UTF-8 entries.
+     */
+
+    /* Make sure that the class entry exists with the given sequence of bytes for
+     * class name.
+     * Retrieve the index of such an entry.
+     */
+    int32_t classIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(builder,
+        class0, classSize);
+
+    /* Make sure that the UTF-8 entry exists with the given sequence of bytes for
+     * function descriptor.
+     * Retrieve the index of such an entry.
+     */
+    int32_t descriptorIndex = zen_ConstantPoolBuilder_getUtf8EntryIndexEx(builder,
+        descriptor, descriptorSize);
+
+    /* Make sure that the UTF-8 entry exists with the given sequence of bytes for
+     * function name.
+     * Retrieve the index of such an entry.
+     */
+    int32_t nameIndex = zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
+        builder, name, nameSize);
+
+    /* Retrieve the current size of the entry list. */
+    int32_t size = jtk_ArrayList_getSize(builder->m_entries);
+
+    /* Apply linear search to find the field entry.
+     * In the future, please find a better data structure (probably a dual hash
+     * map) to store the entries.
+     */
+    int32_t i;
+    int32_t result = -1;
+    for (i = 0; i < size; i++) {
+        /* Retrieve the constant pool entry to test during this iteration. */
+        zen_ConstantPoolEntry_t* entry = (zen_ConstantPoolEntry_t*)jtk_ArrayList_getValue(
+            builder->m_entries, i);
+        /* Test the entry only if it is tagged with ZEN_CONSTANT_POOL_TAG_FIELD. */
+        if (entry->m_tag == ZEN_CONSTANT_POOL_TAG_FIELD) {
+            /* Convert the entry to zen_ConstantPoolField_t, to extract the index
+             * of the UTF-8 entries.
+             */
+            zen_ConstantPoolField_t* constantPoolField = (zen_ConstantPoolField_t*)entry;
+
+            /* Compare the UTF-8 indexes of the entry to the UTF-8 indexes equivalent to
+             * the given strings.
+             */
+            if ((constantPoolField->m_classIndex == classIndex) &&
+                (constantPoolField->m_descriptorIndex == descriptorIndex) &&
+                (constantPoolField->m_nameIndex == nameIndex)) {
+                /* Looks like we found a match! Terminate the loop and return the
+                 * current index.
+                 */
+                result = i;
+                break;
+            }
+        }
+    }
+
+    /* If the result is still negative, the entry was not found. In which case,
+     * the entry should be appended to the end of the list.
+     */
+    if (result < 0) {
+        /* Create the constant pool field entry. */
+        zen_ConstantPoolField_t* constantPoolField = zen_Memory_allocate(zen_ConstantPoolField_t, 1);
+        /* Mark the constant pool entry with ZEN_CONSTANT_POOL_TAG_FIELD. */
+        constantPoolField->m_tag = ZEN_CONSTANT_POOL_TAG_FIELD;
+        /* Update the class index of the field entry to point to the class
+         * entry which holds the class details.
+         */
+        constantPoolField->m_classIndex = classIndex;
+        /* Update the descriptor index of the field entry to point to the
+         * UTF-8 entry which holds the descriptor details.
+         */
+        constantPoolField->m_descriptorIndex = descriptorIndex;
+        /* Update the name index of the function entyr to point to the
+         * UTF-8 entry which holds the name details.
+         */
+        constantPoolField->m_nameIndex = nameIndex;
+
+        /* Add the new constant pool class entry to the list. */
+        jtk_ArrayList_add(builder->m_entries, constantPoolField);
+
+        /* The index of the newly inserted entry is equal to the current size of
+         * the entry list.
+         */
+        result = size;
+    }
+
+    return result;
+}
+
+// Function Entry
 
 zen_ConstantPoolFunction_t* zen_ConstantPoolBuilder_getFunctionEntry(
     zen_ConstantPoolBuilder_t* builder, int32_t index) {
@@ -298,7 +428,6 @@ int32_t zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
 
     return result;
 }
-
 
 // Integer Entry
 

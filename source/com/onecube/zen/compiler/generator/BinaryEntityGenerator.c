@@ -2542,28 +2542,175 @@ void zen_BinaryEntityGenerator_onExitConstantDeclaration(zen_ASTListener_t* astL
 // constantDeclarator
 
 void zen_BinaryEntityGenerator_onEnterConstantDeclarator(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-    /* Retrieve the generator associated with the AST listener. */
-    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    /* Retrieve the context of the AST node. */
-    zen_WithStatementContext_t* context = (zen_WithStatementContext_t*)node->m_context;
-
-    zen_ASTListener_skipChildren(astListener);
 }
 
 void zen_BinaryEntityGenerator_onExitConstantDeclarator(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-/* Retrieve the generator associated with the AST listener. */
-    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    /* Retrieve the context of the AST node. */
-    zen_TryStatementContext_t* context = (zen_TryStatementContext_t*)node->m_context;
-
 }
 
 // assertStatement
 
+/*
+ * ALGORITHM TO GENERATE INSTRUCTIONS CORRESPONDING TO ASSERT STATEMENT
+ *
+ * When an assert statement is used within the bounds of a class, a static
+ * field is created by the compiler. This field has the identifier '$assertionEnabled'.
+ * It is initialized in the static initializer block, which is generated
+ * by the compiler.
+ *
+ * 1. Load the static field '$assertionEnabled'.
+ * 2. If assertions are disabled, skip the instruction assertion statement.
+ * 3. Otherwise, execute the instructions corresponding to the condition expression
+ *    specified to the assert statement.
+ * 4. Convert the resulting object into a Boolean primitive.
+ * 5. If the result is true, then skip the assert statement.
+ * 6. Otherwise, execute the instructions corresponding to the message expression
+ *    specified to the assert statement.
+ * 7. Generate the instructions required to create and throw an exception.
+ *    The exception is an instance of the zen.core.AssertionError class.
+ */
 void zen_BinaryEntityGenerator_onEnterAssertStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+    /* Retrieve the generator associated with the AST listener. */
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    /* Retrieve the context of the AST node. */
+    zen_AssertStatementContext_t* context = (zen_AssertStatementContext_t*)node->m_context;
+
+    /* The normal behaviour of the AST walker causes the generator to emit instructions
+     * in an undesirable fashion. Therefore, we partially switch from the listener
+     * to visitor design pattern. The AST walker can be guided to switch to this
+     * mode via zen_ASTListener_skipChildren() function which causes the AST walker
+     * to skip iterating over the children nodes.
+     */
+    zen_ASTListener_skipChildren(astListener);
 }
 
 void zen_BinaryEntityGenerator_onExitAssertStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+/* Retrieve the generator associated with the AST listener. */
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    /* Retrieve the context of the AST node. */
+    zen_AssertStatementContext_t* context = (zen_AssertStatementContext_t*)node->m_context;
+
+    int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
+         generator->m_instructions);
+    zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
+         generator->m_instructions, parentChannelIndex);
+
+    uint8_t* className = "Unknown"; // TODO: Get the name of the current class!
+    int32_t classNameSize = 7;
+    uint8_t* descriptor = "z";
+    int32_t descriptorSize = 1;
+    uint8_t* name = "$assertionEnabled";
+    int32_t nameSize = 17;
+    int32_t assertionEnabledIndex = zen_ConstantPoolBuilder_getFieldEntryIndexEx(
+        generator->m_constantPoolBuilder, className, classNameSize,
+        descriptor, descriptorSize, name, nameSize);
+
+    const uint8_t* booleanClassName = "zen/core/Boolean";
+    int32_t booleanClassNameSize = 16;
+    const uint8_t* getValueDescriptor = "z:v";
+    int32_t getValueDescriptorSize = 3;
+    const uint8_t* getValueName = "getValue";
+    int32_t getValueNameSize = 8;
+    uint16_t getValueIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, booleanClassName, booleanClassNameSize,
+        getValueDescriptor, getValueDescriptorSize, getValueName,
+        getValueNameSize);
+
+    const uint8_t* assertionErrorClassName = "zen/core/AssertionError";
+    int32_t assertionErrorClassNameSize = 26;
+    uint16_t assertionErrorClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
+        generator->m_constantPoolBuilder, assertionErrorClassName,
+        assertionErrorClassNameSize);
+
+    const uint8_t* constructor1Descriptor = "v:@(zen/core/String)";
+    int32_t constructor1DescriptorSize = 20;
+    const uint8_t* constructorName = "<constructor>";
+    int32_t constructorNameSize = 13;
+    uint16_t constructor1Index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, assertionErrorClassName,
+        assertionErrorClassNameSize, constructor1Descriptor, constructor1DescriptorSize,
+        constructorName, constructorNameSize);
+
+    const uint8_t* constructor2Descriptor = "v:v";
+    int32_t constructor2DescriptorSize = 3;
+    uint16_t constructor2Index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, assertionErrorClassName,
+        assertionErrorClassNameSize, constructor2Descriptor, constructor2DescriptorSize,
+        constructorName, constructorNameSize);
+
+    /* Emit the load_static_field instruction. */
+    zen_BinaryEntityBuilder_emitLoadStaticField(generator->m_instructions,
+        assertionEnabledIndex);
+    /* Log the emission of the load_static_field instruction. */
+    printf("[debug] Emitted load_static_field %d\n", assertionEnabledIndex);
+
+    /* Emit the jump_eq0_i instruction. */
+    zen_BinaryEntityBuilder_emitJumpEqual0Integer(generator->m_instructions, 0);
+    /* Log the emission of the jump_eq0_i instruction. */
+    printf("[debug] Emitted jump_eq0_i 0 (dummy index)\n");
+
+    /* Save the index of the byte where the dummy data was written. */
+    int32_t updateIndex1 = zen_DataChannel_getSize(parentChannel) - 2;
+
+    /* Generate the instructions corresponding to the condition expression
+     * specified to the assert statement.
+     */
+    zen_ASTWalker_walk(astListener, context->m_conditionExpression);
+
+    /* Invoke the Boolean#getValue() function to retrieve the primitive equivalent
+     * of the resulting object.
+     */
+    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions,
+        getValueIndex);
+    /* Log the emission of the invoke_special instruction. */
+    printf("[debug] Emitted invoke_virtual %d\n", getValueIndex);
+
+    /* Emit the jump_ne0_i instruction. */
+    zen_BinaryEntityBuilder_emitJumpNotEqual0Integer(generator->m_instructions, 0);
+    /* Log the emission of the jump_ne0_i instruction. */
+    printf("[debug] Emitted jump_ne0_i 0 (dummy index)\n");
+
+    /* Save the index of the byte where the dummy data was written. */
+    int32_t updateIndex2 = zen_DataChannel_getSize(parentChannel) - 2;
+
+    int32_t constructorIndex = constructor2Index;
+    if (context->m_messageExpression != NULL) {
+        /* Generate the instructions corresponding to the message expression
+         * specified to the assert statement.
+         */
+        zen_ASTWalker_walk(astListener, context->m_messageExpression);
+
+        /* Use the constructor that accepts a detail message parameter. */
+        constructorIndex = constructor1Index;
+    }
+
+    /* Create an instance of the AssertionError class. */
+    zen_BinaryEntityBuilder_emitNew(generator->m_instructions, assertionErrorClassIndex);
+    /* Log the emission of the new instruction. */
+    printf("[debug] Emitted new %d\n", assertionErrorClassIndex);
+
+    /* Duplicate the reference of the newly created exception. */
+    zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+    /* Log the emission of the duplicate instruction. */
+    printf("[debug] Emitted duplicate\n");
+
+    /* Invoke the constructor to initialize the new exception instance. */
+    zen_BinaryEntityBuilder_emitInvokeSpecial(generator->m_instructions,
+        constructorIndex);
+    /* Log the emission of the invoke_special instruction. */
+    printf("[debug] Emitted invoke_special %d\n", constructorIndex);
+
+    /* Throw the newly created exception. */
+    zen_BinaryEntityBuilder_emitThrow(generator->m_instructions);
+    /* Log the emission of the throw instruction. */
+    printf("[debug] Emitted throw\n");
+
+    int32_t newParentChannelSize = zen_DataChannel_getSize(parentChannel);
+    /* Update the jump offset of the first jump instruction. */
+    parentChannel->m_bytes[updateIndex1] = (newParentChannelSize & 0x0000FF00) >> 8;
+    parentChannel->m_bytes[updateIndex1 + 1] = newParentChannelSize & 0x000000FF;
+    /* Update the jump offset of the second jump instruction. */
+    parentChannel->m_bytes[updateIndex2] = (newParentChannelSize & 0x0000FF00) >> 8;
+    parentChannel->m_bytes[updateIndex2 + 1] = newParentChannelSize & 0x000000FF;
 }
 
 void zen_BinaryEntityGenerator_onEnterBreakStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
@@ -3870,14 +4017,14 @@ int32_t zen_BinaryEntityGenerator_allocateLocalVariables(zen_BinaryEntityGenerat
  * ; Expression 1
  * #1 push_i1
  * #2 store_a 0
- * 
+ *
  * ; Expression 2
  * #4 push_i2
  * #5 store_a 1
- * 
+ *
  * ; Statement suite
  * #7 nop
- * 
+ *
  * ; The default instructions that make an attempt to close the resource obtained
  * ; from expression 1. If an exception is thrown here, it propogates without causing
  * ; transfer of control to FC1-1 or FC2-1 sections. In other words, any exception
@@ -3886,7 +4033,7 @@ int32_t zen_BinaryEntityGenerator_allocateLocalVariables(zen_BinaryEntityGenerat
  * #8 load_a 0
  * #10 invoke_virtual 6
  * #13 jump 38
- * 
+ *
  * ; The FC1-1 section, which makes an attempt to close the resource obtained
  * ; from expression 1. It throws the exception that originated from the statement
  * ; suite. The control is transferred to FC1-2 section.
@@ -3895,7 +4042,7 @@ int32_t zen_BinaryEntityGenerator_allocateLocalVariables(zen_BinaryEntityGenerat
  * #20 invoke_virtual 6
  * #23 load_a 2
  * #25 throw
- * 
+ *
  * ; The following instructions constitute the FC2-1 section. It supresses the
  * ; exception thrown by Closeable#close() function with the exception thrown by
  * ; the statement suite. It throws the exception that originated from the statement
@@ -3906,7 +4053,7 @@ int32_t zen_BinaryEntityGenerator_allocateLocalVariables(zen_BinaryEntityGenerat
  * #32 invoke_virtual 11
  * #35 load_a 2
  * #37 throw
- * 
+ *
  * ; The default instructions that make an attempt to close the resource obtained
  * ; from expression 2. If an exception is thrown here, it propogates without causing
  * ; transfer of control to FC1-2 or FC2-2 sections. In other words, any exception
@@ -3915,7 +4062,7 @@ int32_t zen_BinaryEntityGenerator_allocateLocalVariables(zen_BinaryEntityGenerat
  * #38 load_a 1
  * #40 invoke_virtual 6
  * #43 jump 68
- * 
+ *
  * ; The FC1-2 section, which makes an attempt to close the resource obtained
  * ; from expression 2. It throws the exception that originated from the FC2-1
  * ; section or expression 2. The control is transferred to instructions beyond
@@ -3925,7 +4072,7 @@ int32_t zen_BinaryEntityGenerator_allocateLocalVariables(zen_BinaryEntityGenerat
  * #50 invoke_virtual 6
  * #53 load_a 2
  * #55 throw
- * 
+ *
  * ; The following instructions constitute the FC2-2 section. It supresses the
  * ; exception thrown by Closeable#close() function in FC1-2 section with the
  * ; exception thrown by the statement suite. It throws the exception that originated
@@ -4050,7 +4197,7 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
         zen_BinaryEntityBuilder_emitStoreReference(generator->m_instructions, resourceIndex);
         /* Log the emission of the store_a instruction. */
         printf("[debug] Emitted store_a %d\n", resourceIndex);
-        
+
         int32_t coreStartIndex = zen_DataChannel_getSize(parentChannel);
         zen_ExceptionHandlerSite_t* type1Handler = jtk_Memory_allocate(
             zen_ExceptionHandlerSite_t, 1);
@@ -4080,7 +4227,7 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
         zen_ExceptionHandlerSite_t* type1Handler = (zen_ExceptionHandlerSite_t*)
             jtk_ArrayList_getValue(generator->m_exceptionHandlerSites, withParameterIndex);
         type1Handler->m_stopIndex = coreStopIndex;
-        
+
         /* Load the resulting object from the local variable we allocated in the
          * previous loop.
          */
@@ -6652,7 +6799,7 @@ void zen_BinaryEntityGenerator_onEnterMapExpression(zen_ASTListener_t* astListen
         printf("[debug] Emitted store_aa\n");
     }
 
-    const uint8_t* hashMapClassName = "zen.collection.map.HashMap";
+    const uint8_t* hashMapClassName = "zen/collection/map/HashMap";
     int32_t hashMapClassNameSize = 26;
     uint16_t hashMapClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
         generator->m_constantPoolBuilder, hashMapClassName, hashMapClassNameSize);
