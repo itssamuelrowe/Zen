@@ -1,0 +1,24 @@
+function main(arguments)
+    var names = [
+        'Samuel Rowe',
+        'Joel E. Rego',
+        'Bill Gates',
+        'Linus Trovalds',
+        'Abraham Lincoln',
+        'Isaac Newton',
+        'Albert Einstein',
+        'Richard Feynman',
+        'Christopher Nolan',
+        'Benedict Cumberbatch'
+    ]
+    var key = 'Marshall Mathers'
+    var result = null
+    for var i in range(0, names.size)
+        if key == names[i]
+            result = i
+            break
+
+    if result != null
+        print('Found the key "%s" at index %d.', key, result)
+    else
+        print('Could not find the key "%s" in the list.', key)

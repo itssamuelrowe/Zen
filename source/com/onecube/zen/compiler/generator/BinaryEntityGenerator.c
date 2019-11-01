@@ -7231,6 +7231,5 @@ void zen_BinaryEntityGenerator_onExitNewExpression(zen_ASTListener_t* astListene
     zen_ASTNode_t* node) {
 }
 
-
-// var j = [ 1, 2, 3, 4 ].freeze.clone.add(5)
-// var j = [ 1, 2, 3, 4 ].freeze.size
+// var j = [ 1, 2, 3, 4 ].freeze().clone().add(5).add(5).removeIndex(2)
+// var j = [ 1, 2, 3, 4 ].freeze().size
