@@ -26,6 +26,7 @@
 #include <com/onecube/zen/compiler/lexer/Lexer.h>
 #include <com/onecube/zen/compiler/lexer/Token.h>
 #include <com/onecube/zen/compiler/lexer/TokenType.h>
+#include <com/onecube/zen/compiler/support/ErrorHandler.h>
 
 #warning "Lexer does not recognize decimal values!"
 
@@ -190,7 +191,8 @@ const uint8_t* zen_Lexer_getLiteralName(zen_TokenType_t type) {
 
 /* Constructor */
 
-zen_Lexer_t* zen_Lexer_new(jtk_InputStream_t* inputStream) {
+zen_Lexer_t* zen_Lexer_new(zen_ErrorHandler_t* errorHandler,
+    jtk_InputStream_t* inputStream) {
     /* The constructor invokes zen_Lexer_consume() to initialize
      * the LA(1) character. Therefore, we assign negative values
      * to certain attributes.
@@ -213,7 +215,7 @@ zen_Lexer_t* zen_Lexer_new(jtk_InputStream_t* inputStream) {
     lexer->m_tokens = jtk_ArrayQueue_new();
     lexer->m_indentations = jtk_ArrayStack_new();
     lexer->m_enclosures = 0;
-    lexer->m_errors = jtk_ArrayList_new();
+    lexer->m_errorHandler = errorHandler;
 
     zen_Lexer_consume(lexer);
 
@@ -240,14 +242,6 @@ void zen_Lexer_delete(zen_Lexer_t* lexer) {
     jtk_ArrayQueue_delete(lexer->m_tokens);
 
     jtk_ArrayStack_delete(lexer->m_indentations);
-
-    size = jtk_ArrayList_getSize(lexer->m_errors);
-    for (i = 0; i < size; i++) {
-        zen_LexerError_t* error = (zen_LexerError_t*)jtk_ArrayList_getValue(lexer->m_errors, i);
-        zen_LexerError_delete(error);
-    }
-    jtk_ArrayList_delete(lexer->m_errors);
-
     jtk_Memory_deallocate(lexer);
 }
 
@@ -369,6 +363,8 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
      * from the input stream unless necessary.
      */
     if (jtk_ArrayQueue_isEmpty(lexer->m_tokens)) {
+        zen_ErrorCode_t errorCode = ZEN_ERROR_CODE_NONE;
+        
         /* We don't exit the loop until
          * -- We have a token.
          * -- We have reached the end of the stream.
@@ -384,6 +380,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
             lexer->m_startIndex = lexer->m_index;
             lexer->m_startLine = lexer->m_line;
             lexer->m_startColumn = lexer->m_column;
+            
 
             switch (lexer->m_la1) {
                 case ZEN_END_OF_STREAM : {
@@ -962,8 +959,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                         do {
                             while (lexer->m_la1 != '*') {
                                 if (lexer->m_la1 == ZEN_END_OF_STREAM) {
-                                    zen_Lexer_t* error = zen_Lexer_createError(lexer, "Unterminated multi-line comment");
-                                    jtk_ArrayList_add(lexer->m_errors, error);
+                                    errorCode = ZEN_ERROR_CODE_UNTERMINATED_MULTI_LINE_COMMENT;
                                     break;
                                 }
 
@@ -1411,13 +1407,18 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
 
                     while (lexer->m_la1 != terminator) {
                         if (lexer->m_la1 == ZEN_END_OF_STREAM) {
+                            /*
                             zen_LexerError_t* error = zen_Lexer_createError(lexer, "Unexpected end of stream in string literal");
                             jtk_ArrayList_add(lexer->m_errors, error);
+                            */
+                            
                             break;
                         }
                         else if (lexer->m_la1 == '\n') {
+                            /*
                             zen_LexerError_t* error = zen_Lexer_createError(lexer, "Unexpected end of line in string literal");
                             jtk_ArrayList_add(lexer->m_errors, error);
+                            */
                             break;
                         }
                         else if (lexer->m_la1 == '\\') {
@@ -1441,15 +1442,19 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                         zen_Lexer_consume(lexer);
                                     }
                                     else {
+                                        /*
                                         zen_LexerError_t* error = zen_Lexer_createError(lexer, "Expected four hexadecimal digits");
                                         jtk_ArrayList_add(lexer->m_errors, error);
+                                        */
                                         break;
                                     }
                                 }
                             }
                             else {
+                                /*
                                 zen_LexerError_t* error = zen_Lexer_createError(lexer, "Unknown escape sequence");
                                 jtk_ArrayList_add(lexer->m_errors, error);
+                                */
 
                                 /* Consume and discard the unknown escape sequence. */
                                 zen_Lexer_consume(lexer);
@@ -2075,8 +2080,11 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                         lexer->m_type = ZEN_TOKEN_INTEGER_LITERAL;
                     }
                     else {
+                        /*
                         zen_LexerError_t* error = zen_Lexer_createError(lexer, "Unknown character");
                         jtk_ArrayList_add(lexer->m_errors, error);
+                        */
+                        
                         /* Consume and discard the unknown character. */
                         zen_Lexer_consume(lexer);
                         /* The lexer has encountered an unrecognized character. */
@@ -2089,6 +2097,14 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
 
         zen_Token_t* newToken = zen_Lexer_createToken(lexer);
         zen_Lexer_emit(lexer, newToken);
+        
+        /* Unlike the parser, the lexer does not support error recovery strategies.
+         * Therefore, all types of errors are collectively recorded at this point. 
+         */
+        if (errorCode != ZEN_ERROR_CODE_NONE) {
+            zen_ErrorHandler_handleLexicalError(lexer->m_errorHandler, lexer,
+                errorCode, newToken);
+        }
     }
 
     zen_Token_t* next = (zen_Token_t*)jtk_ArrayQueue_peek(lexer->m_tokens);

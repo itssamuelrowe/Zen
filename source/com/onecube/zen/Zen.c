@@ -37,6 +37,7 @@
 #include <com/onecube/zen/compiler/symbol-table/SymbolDefinitionListener.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolResolutionListener.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
+#include <com/onecube/zen/compiler/support/ErrorHandler.h>
 
 #include <com/onecube/zen/virtual-machine/feb/Instruction.h>
 
@@ -122,6 +123,30 @@ jtk_InputStream_t* jtk_PathHelper_readEx(const uint8_t* path, uint32_t flags) {
     return result;
 }
 
+const uint8_t* zen_ErrorCode_messages[] = {
+    "None",
+    
+    // Lexical Errors
+    
+    "Unterminated multi-line comment",
+    
+    // Syntactical Errors
+    
+    "No viable alternative"
+};
+
+void printLexicalErrors(jtk_ArrayList_t* errors) {
+    int32_t errorCount = jtk_ArrayList_getSize(errors);
+    int32_t i;
+    for (i = 0; i < errorCount; i++) {
+        zen_Error_t* error = (zen_Error_t*)jtk_ArrayList_getValue(errors, i);
+        zen_Token_t* token = error->m_token;
+        fprintf(stderr, "[error] %d-%d:%d-%d: %s\n", token->m_startLine,
+            token->m_stopLine, token->m_startColumn + 1, token->m_stopColumn + 1,
+            zen_ErrorCode_messages[(int32_t)error->m_code]);
+    }
+}
+
 int32_t main(int32_t length, char** arguments) {
     // jtk_Assert_assertTrue(zen_Instruction_verify(), "The instruction set is invalid.");
 
@@ -161,8 +186,11 @@ int32_t main(int32_t length, char** arguments) {
                 fprintf(stderr, "[error] Path '%s' does not exist.", path);
             }
             else {
+                zen_ErrorHandler_t* errorHandler = zen_ErrorHandler_new();
+                jtk_ArrayList_t* errors = zen_ErrorHandler_getErrors(errorHandler);
+                
                 jtk_InputStream_t* stream = jtk_PathHelper_read(path);
-                zen_Lexer_t* lexer = zen_Lexer_new(stream);
+                zen_Lexer_t* lexer = zen_Lexer_new(errorHandler, stream);
                 zen_TokenStream_t* tokens = zen_TokenStream_new(lexer, ZEN_TOKEN_CHANNEL_DEFAULT);
 
                 if (internalDumpTokens) {
@@ -170,62 +198,70 @@ int32_t main(int32_t length, char** arguments) {
                     printTokens(tokens);
                 }
                 printf("[debug] The lexical analysis phase is complete.\n");
+                
+                int32_t errorCount = jtk_ArrayList_getSize(errors);
+                if (errorCount == 0) {
+                    zen_Parser_t* parser = zen_Parser_new(tokens);
 
-                zen_Parser_t* parser = zen_Parser_new(tokens);
+                    zen_ASTNode_t* compilationUnit = zen_ASTNode_new(NULL);
+                    zen_Parser_compilationUnit(parser, compilationUnit);
+                    printf("[debug] The syntatical analysis phase is complete.\n");
 
-                zen_ASTNode_t* compilationUnit = zen_ASTNode_new(NULL);
-                zen_Parser_compilationUnit(parser, compilationUnit);
-                printf("[debug] The syntatical analysis phase is complete.\n");
+                    if (internalDumpNodes) {
+                        zen_ASTPrinter_t* astPrinter = zen_ASTPrinter_new();
+                        zen_ASTListener_t* astPrinterASTListener = zen_ASTPrinter_getASTListener(astPrinter);
+                        zen_ASTWalker_walk(astPrinterASTListener, compilationUnit);
+                        zen_ASTPrinter_delete(astPrinter);
+                    }
 
-                if (internalDumpNodes) {
-                    zen_ASTPrinter_t* astPrinter = zen_ASTPrinter_new();
-                    zen_ASTListener_t* astPrinterASTListener = zen_ASTPrinter_getASTListener(astPrinter);
-                    zen_ASTWalker_walk(astPrinterASTListener, compilationUnit);
-                    zen_ASTPrinter_delete(astPrinter);
+                    zen_SymbolTable_t* symbolTable = zen_SymbolTable_new();
+                    zen_ASTAnnotations_t* scopes = zen_ASTAnnotations_new();
+
+                    zen_SymbolDefinitionListener_t* symbolDefinitionListener = zen_SymbolDefinitionListener_new(symbolTable, scopes);
+                    zen_ASTListener_t* symbolDefinitionASTListener = zen_SymbolDefinitionListener_getASTListener(symbolDefinitionListener);
+                    zen_ASTWalker_walk(symbolDefinitionASTListener, compilationUnit);
+                    printf("[debug] The symbol definition phase is complete.\n");
+
+                    zen_SymbolResolutionListener_t* symbolResolutionListener = zen_SymbolResolutionListener_new(symbolTable, scopes);
+                    zen_ASTListener_t* symbolResolutionASTListener = zen_SymbolResolutionListener_getASTListener(symbolResolutionListener);
+                    zen_ASTWalker_walk(symbolResolutionASTListener, compilationUnit);
+                    printf("[debug] The symbol resolution phase is complete.\n");
+
+                    // zen_BinaryEntityBuilder_t* entityBuilder = zen_BinaryEntityBuilder_new(symbolTable, scopes);
+                    // zen_BinaryEntityBuilder_build(entityBuilder, compilationUnit);
+
+                    zen_BinaryEntityGenerator_t* generator = zen_BinaryEntityGenerator_newEx(symbolTable, scopes, compilationUnit, NULL);
+                    zen_BinaryEntityGenerator_generate(generator);
+                    printf("[debug] The code generation phase is complete.\n");
+
+                    /* The binary entity generator is not required anymore. Therefore, destroy
+                     * it and release the resources it holds.
+                     */
+                    zen_BinaryEntityGenerator_delete(generator);
+
+                    // zen_BinaryEntityBuilder_delete(entityBuilder);
+                    zen_SymbolDefinitionListener_delete(symbolDefinitionListener);
+
+                    /* The ASTAnnotations that stores the scopes is not required anymore.
+                     * Therefore, destroy it and release the resources it holds.
+                     */
+                    zen_ASTAnnotations_delete(scopes);
+
+                    /* The symbol table is not required anymore. Therefore, destroy it
+                     * and release the resources it holds.
+                     */
+                    zen_SymbolTable_delete(symbolTable);
+
+                    zen_ASTNode_delete(compilationUnit);
+                    zen_Parser_delete(parser);
                 }
-
-                zen_SymbolTable_t* symbolTable = zen_SymbolTable_new();
-                zen_ASTAnnotations_t* scopes = zen_ASTAnnotations_new();
-
-                zen_SymbolDefinitionListener_t* symbolDefinitionListener = zen_SymbolDefinitionListener_new(symbolTable, scopes);
-                zen_ASTListener_t* symbolDefinitionASTListener = zen_SymbolDefinitionListener_getASTListener(symbolDefinitionListener);
-                zen_ASTWalker_walk(symbolDefinitionASTListener, compilationUnit);
-                printf("[debug] The symbol definition phase is complete.\n");
-
-                zen_SymbolResolutionListener_t* symbolResolutionListener = zen_SymbolResolutionListener_new(symbolTable, scopes);
-                zen_ASTListener_t* symbolResolutionASTListener = zen_SymbolResolutionListener_getASTListener(symbolResolutionListener);
-                zen_ASTWalker_walk(symbolResolutionASTListener, compilationUnit);
-                printf("[debug] The symbol resolution phase is complete.\n");
-
-                // zen_BinaryEntityBuilder_t* entityBuilder = zen_BinaryEntityBuilder_new(symbolTable, scopes);
-                // zen_BinaryEntityBuilder_build(entityBuilder, compilationUnit);
-
-                zen_BinaryEntityGenerator_t* generator = zen_BinaryEntityGenerator_newEx(symbolTable, scopes, compilationUnit, NULL);
-                zen_BinaryEntityGenerator_generate(generator);
-                printf("[debug] The code generation phase is complete.\n");
-
-                /* The binary entity generator is not required anymore. Therefore, destroy
-                 * it and release the resources it holds.
-                 */
-                zen_BinaryEntityGenerator_delete(generator);
-
-                // zen_BinaryEntityBuilder_delete(entityBuilder);
-                zen_SymbolDefinitionListener_delete(symbolDefinitionListener);
-
-                /* The ASTAnnotations that stores the scopes is not required anymore.
-                 * Therefore, destroy it and release the resources it holds.
-                 */
-                zen_ASTAnnotations_delete(scopes);
-
-                /* The symbol table is not required anymore. Therefore, destroy it
-                 * and release the resources it holds.
-                 */
-                zen_SymbolTable_delete(symbolTable);
-
-                zen_ASTNode_delete(compilationUnit);
-                zen_Parser_delete(parser);
+                else {
+                    printLexicalErrors(errors);
+                }
+                
                 zen_TokenStream_delete(tokens);
                 zen_Lexer_delete(lexer);
+                zen_ErrorHandler_delete(errorHandler);
                 jtk_InputStream_delete(stream);
             }
         }

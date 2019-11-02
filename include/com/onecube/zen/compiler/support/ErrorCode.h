@@ -30,8 +30,12 @@
  * @since Zen 1.0
  */
 enum zen_ErrorCode_t {
+    ZEN_ERROR_CODE_NONE,
+    
     // Lexcial Errors
-        
+    
+    ZEN_ERROR_CODE_UNTERMINATED_MULTI_LINE_COMMENT,
+    
     // Syntactical Errors
     
     ZEN_ERROR_CODE_NO_VIABLE_ALTERNATIVE,

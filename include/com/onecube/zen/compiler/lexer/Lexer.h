@@ -35,6 +35,10 @@
 
 #define ZEN_END_OF_STREAM -1
 
+/* Forward Reference */
+
+typedef struct zen_ErrorHandler_t zen_ErrorHandler_t;
+
 /*******************************************************************************
  * Lexer                                                                       *
  *******************************************************************************/
@@ -153,7 +157,7 @@ struct zen_Lexer_t {
      */
     int32_t m_enclosures;
     
-    jtk_ArrayList_t* m_errors;
+    zen_ErrorHandler_t* m_errorHandler;
 };
 
 /**
@@ -168,7 +172,7 @@ typedef struct zen_Lexer_t zen_Lexer_t;
  *
  * @return A new lexer.
  */
-zen_Lexer_t* zen_Lexer_new(jtk_InputStream_t* stream);
+zen_Lexer_t* zen_Lexer_new(zen_ErrorHandler_t* errorHandler, jtk_InputStream_t* stream);
 
 // Destructor
 
