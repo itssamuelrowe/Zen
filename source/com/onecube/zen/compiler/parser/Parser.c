@@ -134,7 +134,8 @@ const char* zen_Parser_getRuleName(zen_ASTNodeType_t type) {
 
 /* Syntax Error */
 
-void zen_Parser_reportSyntaxError(zen_Parser_t* parser, zen_Token_t* token, const char* message) {
+void zen_Parser_reportSyntaxError(zen_Parser_t* parser, zen_Token_t* token,
+    const char* message) {
     fprintf(stderr, "[error] %d-%d:%d-%d: %s '%s'\n", token->m_startLine + 1, token->m_stopLine + 1, token->m_startColumn + 1, token->m_stopColumn + 1, message, zen_Lexer_getLiteralName(token->m_type));
 }
 

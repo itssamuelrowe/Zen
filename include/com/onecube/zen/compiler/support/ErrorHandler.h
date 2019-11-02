@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,10 @@
 #include <jtk/collection/list/ArrayList.h>
 
 #include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/compiler/support/Error.h>
+#include <com/onecube/zen/compiler/support/ErrorCode.h>
+#include <com/onecube/zen/compiler/lexer/Lexer.h>
+#include <com/onecube/zen/compiler/parser/Parser.h>
 
 /*******************************************************************************
  * ErrorHandler                                                                *
@@ -30,13 +34,33 @@
 /**
  * @memberof ErrorHandler
  */
-typedef void (*zen_ErrorHandler_OnSyntaxErrorFunction_t)(void* context, zen_Error_t* error);
+typedef void (*zen_ErrorHandler_HandleLexicalErrorFunction_t)(void* context, zen_Lexer_t* lexer, zen_Error_t* error);
 
 /**
  * @memberof ErrorHandler
  */
-typedef void (*zen_ErrorHandler_OnLexicalErrorFunction_t)(void* context, zen_Error_t* error);
- 
+typedef void (*zen_ErrorHandler_HandleSyntacticalErrorFunction_t)(void* context, zen_Parser_t* parser, zen_Error_t* error);
+
+/**
+ * @memberof ErrorHandler
+ */
+typedef void (*zen_ErrorHandler_HandleSemanticalErrorFunction_t)(void* context, void* origin, zen_Error_t* error);
+
+/**
+ * @memberof ErrorHandler
+ */
+typedef void (*zen_ErrorHandler_OnLexicalErrorFunction_t)(void* context, zen_Lexer_t* lexer, zen_Error_t* error);
+
+/**
+ * @memberof ErrorHandler
+ */
+typedef void (*zen_ErrorHandler_OnSyntacticalErrorFunction_t)(void* context, zen_Parser_t* parser, zen_Error_t* error);
+
+/**
+ * @memberof ErrorHandler
+ */
+typedef void (*zen_ErrorHandler_OnSemanticalErrorFunction_t)(void* context, void* origin, zen_Error_t* error);
+
 /**
  * @class ErrorHandler
  * @author Samuel Rowe
@@ -44,14 +68,17 @@ typedef void (*zen_ErrorHandler_OnLexicalErrorFunction_t)(void* context, zen_Err
  * @since zen 1.0
  */
 struct zen_ErrorHandler_t {
-    void* m_context;
-    zen_ErrorHandler_OnSyntaxErrorFunction_t m_onSyntaxError;
+    zen_ErrorHandler_HandleLexicalErrorFunction_t m_handleLexicalError;
+    zen_ErrorHandler_HandleSyntacticalErrorFunction_t m_handleSyntacticalError;
+    zen_ErrorHandler_HandleSemanticalErrorFunction_t m_handleSemanticalError;
+
     zen_ErrorHandler_OnLexicalErrorFunction_t m_onLexicalError;
-    zen_ErrorHandler_OnSemanticErrorFunction_t m_onSemanticError;
+    zen_ErrorHandler_OnSyntacticalErrorFunction_t m_onSyntacticalError;
+    zen_ErrorHandler_OnSemanticalErrorFunction_t m_onSemanticalError;
+
+    jtk_ArrayList_t* m_errors;
     bool m_active;
-    jtk_ArrayList_t* m_syntaxErrors;
-    jtk_ArrayList_t* m_lexicalErrors;
-    jtk_ArrayList_t* m_semanticErrors;
+    void* m_context;
 };
 
 /**
@@ -85,92 +112,71 @@ void zen_ErrorHandler_setActive(zen_ErrorHandler_t* handler, bool active);
  */
 bool zen_ErrorHandler_isActive(zen_ErrorHandler_t* handler);
 
-// Syntax Error
+// Syntactical Error
 
 /**
  * @memberof ErrorHandler
  */
-void zen_ErrorHandler_setOnSyntaxError(zen_ErrorHandler_t* handler, zen_ErrorHandler_OnSyntaxErrorFunction_t m_onSyntaxError);
+void zen_ErrorHandler_setOnSyntacticalError(zen_ErrorHandler_t* handler,
+    zen_ErrorHandler_OnSyntacticalErrorFunction_t onSyntacticalError);
 
 /**
  * @memberof ErrorHandler
  */
-zen_ErrorHandler_OnSyntaxErrorFunction_t zen_ErrorHandler_getOnSyntaxError(zen_ErrorHandler_t* handler);
+zen_ErrorHandler_OnSyntacticalErrorFunction_t zen_ErrorHandler_getOnSyntacticalError(
+    zen_ErrorHandler_t* handler);
 
 /**
  * @memberof ErrorHandler
  */
-jtk_ArrayList_t* zen_ErrorHandler_getSyntaxErrors(zen_ErrorHandler_t* handler);
-
-/**
- * @memberof ErrorHandler
- */
-void zen_ErrorHandler_notifySyntaxErrorListeners(zen_ErrorHandler_t* handler);
-
-/**
- * @memberof ErrorHandler
- */
-void zen_ErrorHandler_reportSyntaxError(zen_ErrorHandler_t* handler, const char* message, zen_ErrorCode_t code, zen_Token_t* offendingToken);
+void zen_ErrorHandler_handleSyntacticalError(zen_ErrorHandler_t* handler,
+    zen_Parser_t* parser, zen_ErrorCode_t errorCode, zen_Token_t* token);
 
 // Lexical Error
 
 /**
  * @memberof ErrorHandler
  */
-void zen_ErrorHandler_setOnLexicalError(zen_ErrorHandler_t* handler, zen_ErrorHandler_OnLexicalErrorFunction_t m_onLexicalError);
+void zen_ErrorHandler_setOnLexicalError(zen_ErrorHandler_t* handler,
+    zen_ErrorHandler_OnLexicalErrorFunction_t onLexicalError);
 
 /**
  * @memberof ErrorHandler
  */
-zen_ErrorHandler_OnLexicalErrorFunction_t zen_ErrorHandler_getOnLexicalError(zen_ErrorHandler_t* handler);
+zen_ErrorHandler_OnLexicalErrorFunction_t zen_ErrorHandler_getOnLexicalError(
+    zen_ErrorHandler_t* handler);
 
 /**
  * @memberof ErrorHandler
  */
-void zen_ErrorHandler_notifyLexicalErrorListeners(zen_ErrorHandler_t* handler);
-
-/**
- * @memberof ErrorHandler
- */
-void zen_ErrorHandler_reportLexicalError(zen_ErrorHandler_t* handler, const char* message, zen_ErrorCode_t code, zen_Token_t* offendingToken);
-
-/**
- * @memberof ErrorHandler
- */
-jtk_ArrayList_t* zen_ErrorHandler_getLexicalErrors(zen_ErrorHandler_t* handler);
+void zen_ErrorHandler_handleLexicalError(zen_ErrorHandler_t* handler,
+    zen_Lexer_t* lexer, zen_ErrorCode_t errorCode, zen_Token_t* token);
 
 // Semantic Error
 
 /**
  * @memberof ErrorHandler
  */
-void zen_ErrorHandler_setOnSemanticError(zen_ErrorHandler_t* handler, zen_ErrorHandler_OnSemanticErrorFunction_t m_onSemanticError);
+void zen_ErrorHandler_setOnSemanticalError(zen_ErrorHandler_t* handler,
+    zen_ErrorHandler_OnSemanticalErrorFunction_t onSemanticalError);
 
 /**
  * @memberof ErrorHandler
  */
-zen_ErrorHandler_OnSemanticErrorFunction_t zen_ErrorHandler_getOnSemanticError(zen_ErrorHandler_t* handler);
+zen_ErrorHandler_OnSemanticalErrorFunction_t zen_ErrorHandler_getOnSemanticalError(
+    zen_ErrorHandler_t* handler);
 
 /**
  * @memberof ErrorHandler
  */
-void zen_ErrorHandler_notifySemanticErrorListeners(zen_ErrorHandler_t* handler);
+void zen_ErrorHandler_handleSemanticalError(zen_ErrorHandler_t* handler,
+    void* origin, zen_ErrorCode_t errorCode, zen_Token_t* token);
+
+// Errors
 
 /**
  * @memberof ErrorHandler
  */
-void zen_ErrorHandler_reportSemanticError(zen_ErrorHandler_t* handler, , const char* message, zen_ErrorCode_t code, zen_Token_t* offendingToken);
-
-/**
- * @memberof ErrorHandler
- */
-jtk_ArrayList_t* zen_ErrorHandler_getSemanticErrors(zen_ErrorHandler_t* handler);
-
-// Notify
-
-/**
- * @memberof ErrorHandler
- */
-void zen_ErrorHandler_notifyAllErrorListeners(zen_ErrorHandler_t* handler);
+jtk_ArrayList_t* zen_ErrorHandler_getErrors(zen_ErrorHandler_t* handler);
 
 #endif /* COM_ONECUBE_ZEN_COMPILER_SUPPORT_ERROR_HANDLER_H */

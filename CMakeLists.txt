@@ -103,13 +103,16 @@ set (
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/MemberVariableSymbol.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/Symbol.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/VariableSymbol.c
+
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/support/Error.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/support/ErrorHandler.c
 )
 
 set (
     ZEN_VIRTUAL_MACHINE_SOURCE
 
     # Binary Entity Format
-    
+
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/Instruction.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/ConstantPool.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/Entity.c
