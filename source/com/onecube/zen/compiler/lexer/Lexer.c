@@ -1406,19 +1406,8 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                     zen_Lexer_consume(lexer);
 
                     while (lexer->m_la1 != terminator) {
-                        if (lexer->m_la1 == ZEN_END_OF_STREAM) {
-                            /*
-                            zen_LexerError_t* error = zen_Lexer_createError(lexer, "Unexpected end of stream in string literal");
-                            jtk_ArrayList_add(lexer->m_errors, error);
-                            */
-                            
-                            break;
-                        }
-                        else if (lexer->m_la1 == '\n') {
-                            /*
-                            zen_LexerError_t* error = zen_Lexer_createError(lexer, "Unexpected end of line in string literal");
-                            jtk_ArrayList_add(lexer->m_errors, error);
-                            */
+                        if ((lexer->m_la1 == ZEN_END_OF_STREAM) || (lexer->m_la1 == '\n')) {
+                            errorCode = ZEN_ERROR_CODE_UNTERMINATED_STRING_LITERAL;
                             break;
                         }
                         else if (lexer->m_la1 == '\\') {
@@ -1442,19 +1431,13 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                         zen_Lexer_consume(lexer);
                                     }
                                     else {
-                                        /*
-                                        zen_LexerError_t* error = zen_Lexer_createError(lexer, "Expected four hexadecimal digits");
-                                        jtk_ArrayList_add(lexer->m_errors, error);
-                                        */
+                                        errorCode = ZEN_ERROR_CODE_MALFORMED_UNICODE_CHARACTER_SEQUENCE;
                                         break;
                                     }
                                 }
                             }
                             else {
-                                /*
-                                zen_LexerError_t* error = zen_Lexer_createError(lexer, "Unknown escape sequence");
-                                jtk_ArrayList_add(lexer->m_errors, error);
-                                */
+                                errorCode = ZEN_ERROR_CODE_INVALID_ESCAPE_SEQUENCE;
 
                                 /* Consume and discard the unknown escape sequence. */
                                 zen_Lexer_consume(lexer);
@@ -2080,10 +2063,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                         lexer->m_type = ZEN_TOKEN_INTEGER_LITERAL;
                     }
                     else {
-                        /*
-                        zen_LexerError_t* error = zen_Lexer_createError(lexer, "Unknown character");
-                        jtk_ArrayList_add(lexer->m_errors, error);
-                        */
+                        errorCode = ZEN_ERROR_CODE_UNKNOWN_CHARACTER;
                         
                         /* Consume and discard the unknown character. */
                         zen_Lexer_consume(lexer);

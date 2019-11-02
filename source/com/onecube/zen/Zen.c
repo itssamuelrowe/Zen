@@ -128,7 +128,11 @@ const uint8_t* zen_ErrorCode_messages[] = {
     
     // Lexical Errors
     
+    "Unterminated string literal",
     "Unterminated multi-line comment",
+    "Expected four hexadecimal digits",
+    "Invalid escape sequence",
+    "Unknown character",
     
     // Syntactical Errors
     
