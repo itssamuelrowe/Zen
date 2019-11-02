@@ -43,7 +43,7 @@
 /* lexer -> parser -> symbol table -> semantic errors -> byte code generator -> interpreter */
 
 void printToken(zen_Token_t* token) {
-    printf("[%d-%d:%d-%d:%s:%s]", token->m_startLine + 1, token->m_stopLine + 1, token->m_startColumn + 1, token->m_stopColumn + 1, token->m_channel == ZEN_TOKEN_CHANNEL_DEFAULT? "default" : "hidden", zen_Lexer_getLiteralName(token->m_type));
+    printf("[%d-%d:%d-%d:%s:%s]", token->m_startLine, token->m_stopLine, token->m_startColumn + 1, token->m_stopColumn + 1, token->m_channel == ZEN_TOKEN_CHANNEL_DEFAULT? "default" : "hidden", zen_Lexer_getLiteralName(token->m_type));
     zen_TokenType_t type = zen_Token_getType(token);
     if ((type == ZEN_TOKEN_IDENTIFIER) || (type == ZEN_TOKEN_INTEGER_LITERAL) ||
         (type == ZEN_TOKEN_STRING_LITERAL)) {

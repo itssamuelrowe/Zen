@@ -386,7 +386,6 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
             lexer->m_startColumn = lexer->m_column;
 
             switch (lexer->m_la1) {
-
                 case ZEN_END_OF_STREAM : {
                     if (!jtk_ArrayStack_isEmpty(lexer->m_indentations)) {
                         /* It appears that the lexer has reached the end of
@@ -466,11 +465,6 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                              */
                             if (lexer->m_la1 == '\n') {
                                 zen_Lexer_consume(lexer);
-
-                                /* Update information such as the current line,
-                                 * current column, etc.
-                                 */
-                                zen_Lexer_onNewline(lexer);
 
                                 /* Update information such as the current line,
                                  * current column, etc.
