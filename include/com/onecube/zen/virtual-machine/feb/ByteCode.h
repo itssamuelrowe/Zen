@@ -46,6 +46,18 @@ enum zen_ByteCode_t {
 
     /* No Operation */
 
+    /**
+     * Performs no operation.
+     *
+     * [Format]
+     * nop
+     *
+     * [Operand Stack]
+     * Before
+     *     ...
+     * After
+     *     ...
+     */
     ZEN_BYTE_CODE_NOP,
 
     /* Add */
@@ -220,7 +232,7 @@ enum zen_ByteCode_t {
      * The result is pushed onto the operand stack.
      *
      * [Format]
-     * add_i
+     * and_i
      *
      * [Operand Stack]
      * Before
@@ -249,7 +261,7 @@ enum zen_ByteCode_t {
      * The result is pushed onto the operand stack.
      *
      * [Format]
-     * add_i
+     * and_l
      *
      * [Operand Stack]
      * Before
@@ -280,7 +292,7 @@ enum zen_ByteCode_t {
      * The result is pushed onto the operand stack.
      *
      * [Format]
-     * add_i
+     * or_i
      *
      * [Operand Stack]
      * Before
@@ -309,7 +321,7 @@ enum zen_ByteCode_t {
      * The result is pushed onto the operand stack.
      *
      * [Format]
-     * add_i
+     * or_l
      *
      * [Operand Stack]
      * Before
@@ -404,7 +416,7 @@ enum zen_ByteCode_t {
      * The result is pushed onto the operand stack.
      *
      * [Format]
-     * shift_left_i
+     * shift_right_i
      *
      * [Operand Stack]
      * Before
@@ -435,7 +447,7 @@ enum zen_ByteCode_t {
      * The result is pushed onto the operand stack.
      *
      * [Format]
-     * shift_left_l
+     * shift_right_l
      *
      * [Operand Stack]
      * Before
@@ -471,7 +483,7 @@ enum zen_ByteCode_t {
      * The result is pushed onto the operand stack.
      *
      * [Format]
-     * shift_right_i
+     * shift_right_ui
      *
      * [Operand Stack]
      * Before
@@ -508,7 +520,7 @@ enum zen_ByteCode_t {
      * The result is pushed onto the operand stack.
      *
      * [Format]
-     * shift_left_l
+     * shift_righ_ul
      *
      * [Operand Stack]
      * Before
@@ -540,7 +552,7 @@ enum zen_ByteCode_t {
      * The result is pushed onto the operand stack.
      *
      * [Format]
-     * add_i
+     * xor_i
      *
      * [Operand Stack]
      * Before
@@ -569,7 +581,7 @@ enum zen_ByteCode_t {
      * The result is pushed onto the operand stack.
      *
      * [Format]
-     * add_i
+     * xor_l
      *
      * [Operand Stack]
      * Before
@@ -628,7 +640,7 @@ enum zen_ByteCode_t {
      * the sign is extended to a 32-bit result.
      *
      * [Format]
-     * cast_itb
+     * cast_its
      *
      * [Operand Stack]
      * Before
@@ -736,7 +748,7 @@ enum zen_ByteCode_t {
      * the sign is extended to a 32-bit result.
      *
      * [Format]
-     * cast_itb
+     * cast_ltb
      *
      * [Operand Stack]
      * Before
@@ -764,7 +776,7 @@ enum zen_ByteCode_t {
      * the sign is extended to a 32-bit result.
      *
      * [Format]
-     * cast_itb
+     * cast_lts
      *
      * [Operand Stack]
      * Before
@@ -792,7 +804,7 @@ enum zen_ByteCode_t {
      * the sign is extended to a 32-bit result.
      *
      * [Format]
-     * cast_itb
+     * cast_lti
      *
      * [Operand Stack]
      * Before
@@ -819,7 +831,7 @@ enum zen_ByteCode_t {
      * This is because `float` has 24-bit significand bits.
      *
      * [Format]
-     * cast_itf
+     * cast_ltf
      *
      * [Operand Stack]
      * Before
@@ -845,7 +857,7 @@ enum zen_ByteCode_t {
      * This is because `double` has 53-bit significand bits.
      *
      * [Format]
-     * cast_itf
+     * cast_ltd
      *
      * [Operand Stack]
      * Before
@@ -1529,7 +1541,198 @@ enum zen_ByteCode_t {
      */
     ZEN_BYTE_CODE_DUPLICATE2_X2,
 
+    /* Increment */
+
+    /**
+     * Increment a local integer variable.
+     *
+     * The `increment_i` instruction can be used in conjunction with the `wide`
+     * mode, in which case the index and constant arguments occupy two bytes each.
+     *
+     * [Format]
+     * increment_i index constant
+     *
+     * [Arguments]
+     * index
+     *     An unsigned byte which is a valid index into the local variable
+     *     array of the current frame. The local variable at the index should
+     *     be a 32-bit integer.
+     * constant
+     *    A signed byte which is added to the current value of the local
+     *    variable.
+     *
+     * [Operand Stack]
+     * Before
+     *     ...
+     * After
+     *     ...
+     *
+     * [Operands]
+     *     This instruction does not require any operands.
+     */
+    ZEN_BYTE_CODE_INCREMENT_I,
+
+    /* Invoke */
+
+    /**
+     * Invoke a special function such as constructor.
+     *
+     * A new frame is created on the virtual machine stack for the function
+     * being invoked. The instance reference and arguments are consecutively
+     * stored in the local variable array of the new frame. The instance reference
+     * stored at index `0`, `argument1` at `1`, `argument2` at `2` and so on.
+     *
+     * It should be noted that in the case of values such `long` and `double`,
+     * two indexes are occupied. Because the reference type depends on the platform,
+     * it may occupy one or two indexes. This is transparent to the binary entity.
+     *
+     * After the new frame is initialized, it is promoted as the current frame.
+     * The instruction pointer (IP) of the current frame is initialized to the
+     * first instruction of the invoked function.
+     *
+     *
+     * [Format]
+     * invoke_special index0 index1
+     *
+     * [Arguments]
+     * index0
+     *     An unsigned byte, along with `index1` forms an index into the constant
+     *     pool. The entry at the specified index should be a `ConstantPoolFunction`
+     *     instance.
+     * index1
+     *    Please refer the documentation of `index0` for more details.
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., instance_reference, [argument1, [argument2, ...]]
+     * After
+     *     ...
+     *
+     * [Operands]
+     * instance_reference
+     *     A reference to an instance whose special function is to be invoked.
+     *     It is popped off the operand stack. The size is contingent on the
+     *     machine, which is transparent to the binary entity format. The value
+     *     is popped off the operand stack.
+     * argument1, argument2, ...
+     *     The arguments passed to the special function. The signature of the
+     *     function determines the number of operands popped off the operand
+     *     stack as arguments.
+     * result
+     *     This instruction does not generate any result.
+     *
+     * [Exceptions]
+     * NullPointerException
+     *     If the instance reference is `null`, this instruction causes the
+     *     virtual machine to throw a `zen.core.NullPointerException`.
+     */
+    ZEN_BYTE_CODE_INVOKE_SPECIAL,
+
+    /**
+     * Invoke a function against an instance.
+     *
+     * [Format]
+     * invoke_virtual index0 index1
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., object_reference, [argument_1, [argument_2, [argument_3, ...]]]
+     * After
+     *     ...,
+     *
+     * [Operands]
+     * index_byte_1
+     *     The `index0` and `index1` bytes together indicate an unsigned integer
+     *     index into the runtime constant pool of the current binary entity.
+     *     The item at this index represents a function descriptor.
+     * index_byte_2
+     *     Please refer the documentation for `index0`.
+     *
+     */
+    ZEN_BYTE_CODE_INVOKE_VIRTUAL,
+    ZEN_BYTE_CODE_INVOKE_DYNAMIC,
+
+    /**
+     * Invoke a static function.
+     *
+     * If the function is not native, a new frame is created on the virtual
+     * machine stack for the function being invoked. The arguments are consecutively
+     * stored in the local variable array of the new frame. `argument1` at `1`,
+     * `argument2` at `2` and so on.
+     *
+     * After the new frame is initialized, it is promoted as the current frame.
+     * The instruction pointer (IP) of the current frame is initialized to the
+     * first instruction of the invoked function.
+     *
+     * If the function returns a value, the value is pushed onto the operand
+     * stack of the previous stack frame.
+     *
+     * If the function is native, a new frame is created on the virtual
+     * machine stack for the function being invoked. The arguments are consecutively
+     * stored in the local variable array of the new frame. `argument1` at `1`,
+     * `argument2` at `2` and so on.
+     *
+     * If the native function returns a value, the platform dependent return
+     * value is converted to an implementation dependent value. The new value is
+     * then pushed onto the operand stack of the previous stack frame.
+     *
+     * It should be noted that in the case of values such `long` and `double`,
+     * two indexes are occupied. Because the reference type depends on the platform,
+     * it may occupy one or two indexes. This is transparent to the binary entity.
+     *
+     * [Format]
+     * invoke_static index0 index1
+     *
+     * [Arguments]
+     * index0
+     *     An unsigned byte, along with `index1` forms an index into the constant
+     *     pool. The entry at the specified index should be a `ConstantPoolFunction`
+     *     instance.
+     * index1
+     *    Please refer the documentation of `index0` for more details.
+     *
+     * [Operand Stack]
+     * Before
+     *     ..., [argument1, [argument2, ...]]
+     * After
+     *     ...
+     *
+     * [Operands]
+     * argument1, argument2, ...
+     *     The arguments passed to the static function. The signature of the
+     *     function determines the number of operands popped off the operand
+     *     stack as arguments.
+     * result
+     *     This instruction does not generate any result.
+     *
+     * [Exceptions]
+     * UndefinedNativeFunctionError
+     *     If a native function is invoked and the virtual machine is not able
+     *     to find its definition, this instruction causes the virtual machine
+     *     to throw a `zen.core.UndefinedNativeFunctionError`.
+     */
+    ZEN_BYTE_CODE_INVOKE_STATIC,
+
     /* Jump */
+
+    /**
+     * Jump to the specified index.
+     *
+     * The instruction pointer (IP) of the current frame is updated to the
+     * instruction at the specified index. The control transfers to that
+     * instruction.
+     *
+     * [Format]
+     * jump index0 index1
+     *
+     * [Arguments]
+     * index0
+     *     An unsigned byte, along with `index1` forms an index into the constant
+     *     pool. The instruction at the specified index should be a valid instruction.
+     * index1
+     *    Please refer the documentation of `index0` for more details.
+     */
+    ZEN_BYTE_CODE_JUMP,
 
     /**
      * Jump to the specified offset if `value` is equal to `0`, shown as
@@ -2038,199 +2241,6 @@ enum zen_ByteCode_t {
      *     This instruction generates no result.
      */
     ZEN_BYTE_CODE_JUMP_NEN_A, // not equal to null
-
-    /* Increment */
-
-    /**
-     * Increment a local integer variable.
-     *
-     * The `increment_i` instruction can be used in conjunction with the `wide`
-     * mode, in which case the index and constant arguments occupy two bytes each.
-     *
-     * [Format]
-     * increment_i index constant
-     *
-     * [Arguments]
-     * index
-     *     An unsigned byte which is a valid index into the local variable
-     *     array of the current frame. The local variable at the index should
-     *     be a 32-bit integer.
-     * constant
-     *    A signed byte which is added to the current value of the local
-     *    variable.
-     *
-     * [Operand Stack]
-     * Before
-     *     ...
-     * After
-     *     ...
-     *
-     * [Operands]
-     *     This instruction does not require any operands.
-     */
-    ZEN_BYTE_CODE_INCREMENT_I,
-
-    /* Invoke */
-
-    /**
-     * Invoke a special function such as constructor.
-     *
-     * A new frame is created on the virtual machine stack for the function
-     * being invoked. The instance reference and arguments are consecutively
-     * stored in the local variable array of the new frame. The instance reference
-     * stored at index `0`, `argument1` at `1`, `argument2` at `2` and so on.
-     *
-     * It should be noted that in the case of values such `long` and `double`,
-     * two indexes are occupied. Because the reference type depends on the platform,
-     * it may occupy one or two indexes. This is transparent to the binary entity.
-     *
-     * After the new frame is initialized, it is promoted as the current frame.
-     * The instruction pointer (IP) of the current frame is initialized to the
-     * first instruction of the invoked function.
-     *
-     *
-     * [Format]
-     * invoke_special index0 index1
-     *
-     * [Arguments]
-     * index0
-     *     An unsigned byte, along with `index1` forms an index into the constant
-     *     pool. The entry at the specified index should be a `ConstantPoolFunction`
-     *     instance.
-     * index1
-     *    Please refer the documentation of `index0` for more details.
-     *
-     * [Operand Stack]
-     * Before
-     *     ..., instance_reference, [argument1, [argument2, ...]]
-     * After
-     *     ...
-     *
-     * [Operands]
-     * instance_reference
-     *     A reference to an instance whose special function is to be invoked.
-     *     It is popped off the operand stack. The size is contingent on the
-     *     machine, which is transparent to the binary entity format. The value
-     *     is popped off the operand stack.
-     * argument1, argument2, ...
-     *     The arguments passed to the special function. The signature of the
-     *     function determines the number of operands popped off the operand
-     *     stack as arguments.
-     * result
-     *     This instruction does not generate any result.
-     *
-     * [Exceptions]
-     * NullPointerException
-     *     If the instance reference is `null`, this instruction causes the
-     *     virtual machine to throw a `zen.core.NullPointerException`.
-     */
-    ZEN_BYTE_CODE_INVOKE_SPECIAL,
-
-    /**
-     * Invoke a function against an instance.
-     *
-     * [Format]
-     * invoke_virtual index0 index1
-     *
-     * [Operand Stack]
-     * Before
-     *     ..., object_reference, [argument_1, [argument_2, [argument_3, ...]]]
-     * After
-     *     ...,
-     *
-     * [Operands]
-     * index_byte_1
-     *     The `index0` and `index1` bytes together indicate an unsigned integer
-     *     index into the runtime constant pool of the current binary entity.
-     *     The item at this index represents a function descriptor.
-     * index_byte_2
-     *     Please refer the documentation for `index0`.
-     *
-     */
-    ZEN_BYTE_CODE_INVOKE_VIRTUAL,
-    ZEN_BYTE_CODE_INVOKE_DYNAMIC,
-
-    /**
-     * Invoke a static function.
-     *
-     * If the function is not native, a new frame is created on the virtual
-     * machine stack for the function being invoked. The arguments are consecutively
-     * stored in the local variable array of the new frame. `argument1` at `1`,
-     * `argument2` at `2` and so on.
-     *
-     * After the new frame is initialized, it is promoted as the current frame.
-     * The instruction pointer (IP) of the current frame is initialized to the
-     * first instruction of the invoked function.
-     *
-     * If the function returns a value, the value is pushed onto the operand
-     * stack of the previous stack frame.
-     *
-     * If the function is native, a new frame is created on the virtual
-     * machine stack for the function being invoked. The arguments are consecutively
-     * stored in the local variable array of the new frame. `argument1` at `1`,
-     * `argument2` at `2` and so on.
-     *
-     * If the native function returns a value, the platform dependent return
-     * value is converted to an implementation dependent value. The new value is
-     * then pushed onto the operand stack of the previous stack frame.
-     *
-     * It should be noted that in the case of values such `long` and `double`,
-     * two indexes are occupied. Because the reference type depends on the platform,
-     * it may occupy one or two indexes. This is transparent to the binary entity.
-     *
-     * [Format]
-     * invoke_static index0 index1
-     *
-     * [Arguments]
-     * index0
-     *     An unsigned byte, along with `index1` forms an index into the constant
-     *     pool. The entry at the specified index should be a `ConstantPoolFunction`
-     *     instance.
-     * index1
-     *    Please refer the documentation of `index0` for more details.
-     *
-     * [Operand Stack]
-     * Before
-     *     ..., [argument1, [argument2, ...]]
-     * After
-     *     ...
-     *
-     * [Operands]
-     * argument1, argument2, ...
-     *     The arguments passed to the static function. The signature of the
-     *     function determines the number of operands popped off the operand
-     *     stack as arguments.
-     * result
-     *     This instruction does not generate any result.
-     *
-     * [Exceptions]
-     * UndefinedNativeFunctionError
-     *     If a native function is invoked and the virtual machine is not able
-     *     to find its definition, this instruction causes the virtual machine
-     *     to throw a `zen.core.UndefinedNativeFunctionError`.
-     */
-    ZEN_BYTE_CODE_INVOKE_STATIC,
-
-    /* Jump */
-
-    /**
-     * Jump to the specified index.
-     *
-     * The instruction pointer (IP) of the current frame is updated to the
-     * instruction at the specified index. The control transfers to that
-     * instruction.
-     *
-     * [Format]
-     * jump index0 index1
-     *
-     * [Arguments]
-     * index0
-     *     An unsigned byte, along with `index1` forms an index into the constant
-     *     pool. The instruction at the specified index should be a valid instruction.
-     * index1
-     *    Please refer the documentation of `index0` for more details.
-     */
-    ZEN_BYTE_CODE_JUMP,
 
     /* Load */
 
