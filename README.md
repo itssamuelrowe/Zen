@@ -2,6 +2,13 @@
 
 Zen is a general purpose programming language designed to build simple, reliable and efficient programs.
 
+This repository contains the reference implementation of the Zen compiler.
+Please explore the following links to find other relevant resources.
+ * [PulsarVM](https://github.com/itssamuelrowe/PulsarVM)
+ * [The Zen Programming Language Specification](https://github.com/itssamuelrowe/The-Zen-Programming-Language-Specification)
+ * [The Zen Virtual Machine Specification](https://github.com/itssamuelrowe/The-Zen-Virtual-Machine-Specification)
+ * [The Zen Programming Language Manual](https://github.com/itssamuelrowe/The-Zen-Programming-Language-Manual)
+
 ## Example 1
 
 ```python

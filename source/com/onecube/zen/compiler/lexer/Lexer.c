@@ -1989,7 +1989,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                             }
                             else if (!jtk_CString_equals(lexer->m_text->m_value, lexer->m_text->m_size, "0", 1)) {
                                 // TODO: Implement jtk_StringBuilder_equals_z() function. */
-                                printf("[error] Invalid prefix in integer literal\n");
+                                errorCode = ZEN_ERROR_CODE_INVALID_INTEGER_LITERAL_PREFIX;
                             }
                         }
                         else {

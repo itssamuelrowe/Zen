@@ -1,0 +1,26 @@
+import orbit.annotation.*
+import orbit.core.*
+import orbit.orm.*
+
+class StudentRepository : CrudRepository
+    ;
+
+@Rest path='/student' response='json'
+class StudentController
+
+    @Property
+    @Inject type='StudentRepository'
+    var repository
+
+    @Request method='GET' path='/insert'
+    @Parameter name='name' type='string'
+    @Parameter name='rollNumber' type='string'
+    function insert(name, rollNumber)
+        var student = new Student(name, rollNumber)
+        repository.insertOne(student)
+        return { 'message' : 'Successfully inserted a new student.' }
+
+function main()
+    var server = new SimpleHttpServer()
+    server.context.registerAll(StudentController, StudentRepository)
+    server.listen()

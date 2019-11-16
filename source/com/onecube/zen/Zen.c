@@ -133,6 +133,7 @@ const uint8_t* zen_ErrorCode_messages[] = {
     "Expected four hexadecimal digits",
     "Invalid escape sequence",
     "Unknown character",
+    "Invalid prefix in integer literal",
     
     // Syntactical Errors
     
