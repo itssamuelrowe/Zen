@@ -2,6 +2,12 @@
 
 Pulsar is the reference implementation of the Zen Virtual Machine (ZVM).
 
+Please explore the following links to find other relevant resources.
+ * [Zen](https://github.com/itssamuelrowe/Zen)
+ * [The Zen Programming Language Specification](https://github.com/itssamuelrowe/The-Zen-Programming-Language-Specification)
+ * [The Zen Virtual Machine Specification](https://github.com/itssamuelrowe/The-Zen-Virtual-Machine-Specification)
+ * [The Zen Programming Language Manual](https://github.com/itssamuelrowe/The-Zen-Programming-Language-Manual)
+
 ## Installation
 
 Before you install Pulsar, you need to install JTK, Parallax and pkg-config on
