@@ -1,6 +1,6 @@
-# Pulsar
+# PulsarVM
 
-Pulsar is the reference implementation of the Zen Virtual Machine (ZVM).
+PulsarVM is the reference implementation of the Zen Virtual Machine (ZVM).
 
 Please explore the following links to find other relevant resources.
  * [Zen](https://github.com/itssamuelrowe/Zen)
@@ -10,7 +10,7 @@ Please explore the following links to find other relevant resources.
 
 ## Installation
 
-Before you install Pulsar, you need to install JTK, Parallax and pkg-config on
+Before you install PulsarVM, you need to install JTK, Parallax and pkg-config on
 your system.
 
 JTK is a library designed for writing applications and libraries in C. It provides
@@ -21,9 +21,9 @@ Parallax is a collection of cross platform components for building reliable,
 high performance language runtime environments based on Eclipse OMR™.
 You can find the latest version of Parallax [here](https://github.com/itssamuelrowe/Parallax).
 
-### Compiling Pulsar on Windows
+### Compiling PulsarVM on Windows
 
-For compiling Pulsar on Windows, you first need to install MSYS2 or WSL.
+For compiling PulsarVM on Windows, you first need to install MSYS2 or WSL.
 The steps required to install MSYS2 or WSL are beyond the scope of this
 documentation. Although you can find tutorials on installing them on the
 Internet.
@@ -65,9 +65,9 @@ Linux section.
    As of this version, a plethora of warnings are generated. We are working to
    eradicate these warnings.
 
-### Compiling Pulsar on Linux and WSL
+### Compiling PulsarVM on Linux and WSL
 
-1. For compiling Pulsar on Linux or WSL, you need CMake and GNU Make (or any other make
+1. For compiling PulsarVM on Linux or WSL, you need CMake and GNU Make (or any other make
    utility that CMake is compatible with).
 2. Extract the source code to any directory of your choice, for the sake of this
    documentation we will refer this location as '/mnt/g/pulsar'.
