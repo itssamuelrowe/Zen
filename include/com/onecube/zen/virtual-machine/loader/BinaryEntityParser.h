@@ -25,12 +25,9 @@
 
 #include <com/onecube/zen/Configuration.h>
 
-#include <com/onecube/zen/virtual-machine/feb/AnnotationEntity.h>
-#include <com/onecube/zen/virtual-machine/feb/ClassEntity.h>
 #include <com/onecube/zen/virtual-machine/feb/FieldEntity.h>
 #include <com/onecube/zen/virtual-machine/feb/FunctionEntity.h>
 #include <com/onecube/zen/virtual-machine/feb/EntityFile.h>
-#include <com/onecube/zen/virtual-machine/feb/PackageEntity.h>
 #include <com/onecube/zen/virtual-machine/feb/EntityType.h>
 
 #include <com/onecube/zen/virtual-machine/feb/attribute/InstructionAttribute.h>
@@ -117,9 +114,5 @@ zen_FunctionEntity_t* zen_BinaryEntityParser_parseFunction(zen_BinaryEntityParse
 /* Parse Field */
 
 zen_FieldEntity_t* zen_BinaryEntityParser_parseField(zen_BinaryEntityParser_t* parser);
-
-/* Parse Class */
-
-zen_ClassEntity_t* zen_BinaryEntityParser_parseClass(zen_BinaryEntityParser_t* parser);
 
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_LOADER_BINARY_ENTITY_PARSER_H */

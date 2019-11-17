@@ -95,8 +95,8 @@ zen_EntityFile_t* zen_BinaryEntityParser_parseEntityFile(zen_BinaryEntityParser_
              */
             if ((majorVersion <= ZEN_BINARY_ENTITY_FORMAT_MAJOR_VERSION) &&
                 (minorVersion <= ZEN_BINARY_ENTITY_FORMAT_MINOR_VERSION)) {
-                uint32_t size = jtk_Tape_readUncheckedInteger(parser->m_tape);
-                entityFile->m_size = size;
+                // uint32_t size = jtk_Tape_readUncheckedInteger(parser->m_tape);
+                // entityFile->m_size = size;
 
                 uint16_t flags = jtk_Tape_readUncheckedShort(parser->m_tape);
                 entityFile->m_flags = flags;
@@ -104,8 +104,8 @@ zen_EntityFile_t* zen_BinaryEntityParser_parseEntityFile(zen_BinaryEntityParser_
                 zen_ConstantPool_t* constantPool = zen_BinaryEntityParser_parseConstantPool(parser);
                 entityFile->m_constantPool = constantPool;
 
-                zen_Entity_t* entity = zen_BinaryEntityParser_parseEntity(parser);
-                entityFile->m_entity = entity;
+                // zen_Entity_t* entity = zen_BinaryEntityParser_parseEntity(parser);
+                // entityFile->m_entity = entity;
             }
             else {
                 // Error: Virtual machine version is lesser than the binary entity file version.
@@ -501,7 +501,7 @@ zen_FieldEntity_t* zen_BinaryEntityParser_parseField(zen_BinaryEntityParser_t* p
 
 /* Parse Class */
 
-zen_ClassEntity_t* zen_BinaryEntityParser_parseClass(zen_BinaryEntityParser_t* parser) {
+/*zen_ClassEntity_t* zen_BinaryEntityParser_parseClass(zen_BinaryEntityParser_t* parser) {
     jtk_Assert_assertObject(parser, "The specified binary entity parser is null.");
 
     zen_ClassEntity_t* classEntity = jtk_Memory_allocate(zen_ClassEntity_t, 1);
@@ -553,7 +553,8 @@ zen_ClassEntity_t* zen_BinaryEntityParser_parseClass(zen_BinaryEntityParser_t* p
 
     return classEntity;
 }
-
+*/
+/*
 zen_AnnotationEntity_t* zen_BinaryEntityParser_parseAnnotation(
     zen_BinaryEntityParser_t* parser) {
     return NULL;
@@ -563,19 +564,18 @@ zen_PackageEntity_t* zen_BinaryEntityParser_parsePackage(
     zen_BinaryEntityParser_t* parser) {
     return NULL;
 }
+*/
 
 /*
 
-import zen.fs.FileHelper as Files
-import zen.net.HttpConnectionHelper as HttpConnections
-import zen.core.ExceptionHelper.print as printStackTrace
+import zen.fs.*
+import zen.net.*
 
 function main
     try
-        var url = new Url()
-        url.setContent('https://www.onecube.in')
-        with connection = HttpConnections.open(url), writer = path.openWriter()
+        with var connection = Url.open('https://www.onecube.in'), \
+             var writer = File.getWriter('output')
             connection.readTo(writer)
     catch Exception exception
-        exception.printStackTrace()
+        exception.print()
 */
