@@ -51,7 +51,7 @@ zen_EntityLoader_t* zen_EntityLoader_newWithEntityDirectories(jtk_Iterator_t* en
 
     zen_EntityLoader_t* loader = zen_EntityLoader_new();
     while (jtk_Iterator_hasNext(entityDirectoryIterator)) {
-        jtk_CString_t* directory = jtk_Iterator_getNext(entityDirectoryIterator);
+        jtk_String_t* directory = jtk_Iterator_getNext(entityDirectoryIterator);
         zen_EntityLoader_addDirectory_s(loader, directory);
     }
 
@@ -74,8 +74,8 @@ void zen_EntityLoader_delete(zen_EntityLoader_t* loader) {
     while (jtk_Iterator_hasNext(entryIterator)) {
         jtk_HashMapEntry_t* entry = (jtk_HashMapEntry_t*)jtk_Iterator_getNext(entryIterator);
 
-        jtk_CString_t* descriptor = (jtk_CString_t*)jtk_HashMapEntry_getKey(entry);
-        jtk_CString_delete(descriptor);
+        jtk_String_t* descriptor = (jtk_String_t*)jtk_HashMapEntry_getKey(entry);
+        jtk_String_delete(descriptor);
 
 #warning "Should the entity be destroyed this way?"
         zen_EntityFile_t* entityFile = (zen_EntityFile_t*)jtk_HashMapEntry_getValue(entry->m_value);
@@ -109,7 +109,7 @@ bool zen_EntityLoader_addDirectory(zen_EntityLoader_t* loader, const uint8_t* di
     return true;
 }
 
-bool zen_EntityLoader_addDirectory_s(zen_EntityLoader_t* loader, jtk_CString_t* directory) {
+bool zen_EntityLoader_addDirectory_s(zen_EntityLoader_t* loader, jtk_String_t* directory) {
     jtk_Assert_assertObject(loader, "The specified entity loader is null.");
     jtk_Assert_assertObject(directory, "The specified directory is null.");
 
@@ -148,9 +148,9 @@ zen_EntityFile_t* zen_EntityLoader_getEntity(zen_EntityLoader_t* loader,
     jtk_Assert_assertObject(loader, "The specified entity loader is null.");
     jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
 
-    jtk_CString_t* string = jtk_CString_new(descriptor);
+    jtk_String_t* string = jtk_String_new(descriptor);
     zen_EntityFile_t* entity = (zen_EntityFile_t*)jtk_HashMap_getValue(loader->m_entities, string);
-    jtk_CString_delete(string);
+    jtk_String_delete(string);
     
     return entity;
 }
@@ -166,10 +166,10 @@ zen_EntityFile_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader,
 
     /* Question. Why is joining two strings so complicated?! */
     // const uint8_t* strings[] = { descriptor, ".feb" };
-    // jtk_CString_t* entityName = jtk_CString_newFromJoinEx(strings, 2);
-    jtk_CString_t* entityName = jtk_CString_newFromJoin(descriptor, ".feb");
+    // jtk_String_t* entityName = jtk_String_newFromJoinEx(strings, 2);
+    jtk_String_t* entityName = jtk_String_newFromJoin(descriptor, ".feb");
     jtk_Path_t* entityFile = jtk_Path_newFromStringEx(entityName->m_value, entityName->m_size);
-    jtk_CString_delete(entityName);
+    jtk_String_delete(entityName);
 
     /* Retrieve an iterator over the list of registered entity directories. */
     jtk_Iterator_t* iterator = jtk_DoublyLinkedList_getIterator(loader->m_directories);
@@ -204,7 +204,7 @@ zen_EntityFile_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader,
                          * ** After a few minutes **
                          * Damn it! Let's go implement that String class! -_-
                          */
-                        jtk_CString_t* entityDescriptor = jtk_CString_new(descriptor);
+                        jtk_String_t* entityDescriptor = jtk_String_new(descriptor);
 
                         jtk_HashMap_put(loader->m_entities, entityDescriptor, result);
                     }
