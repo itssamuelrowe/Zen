@@ -258,6 +258,8 @@ jtk_Array_t* jtk_InputStreamHelper_toArray(jtk_InputStream_t* stream) {
             int32_t newSize = size * 2;
             result = jtk_Arrays_copyOfEx_b(result, size, newSize, 0, false);
             jtk_Memory_deallocate(temporary);
+            
+            size = newSize;
         }
     }
     jtk_Array_t* array = (index == 0)? NULL : jtk_Array_newFromRawArray(result, index);
