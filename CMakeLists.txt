@@ -10,7 +10,7 @@ pkg_search_module(JTK REQUIRED jtk)
 
 # Project Name
 
-project (Zen)
+project (PulsarVM)
 
 # Project Version Number
 
@@ -44,68 +44,6 @@ set (
     ZEN_COMMON_SOURCE
 
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/Configuration.c
-)
-
-set (
-    ZEN_COMPILER_SOURCE
-
-    # Abstract Syntax Tree
-
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/ast/AstAnnotation.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/ast/AstAnnotations.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/ast/AstHelper.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/ast/AstListener.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/ast/AstNode.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/ast/AstPrinter.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/ast/AstWalker.c
-
-    # Generator
-
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/generator/BinaryEntityGenerator.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/generator/BinaryEntityBuilder.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/generator/ConstantPoolBuilder.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/generator/DataChannel.c
-
-    # Lexer
-
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/lexer/Lexer.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/lexer/LexerError.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/lexer/Token.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/lexer/TokenStream.c
-
-    # Parser
-
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/parser/Context.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/parser/Parser.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/parser/ParserError.c
-
-    # Symbol Table
-
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/SymbolDefinitionListener.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/SymbolResolutionListener.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/SymbolTable.c
-
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/scope/ClassScope.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/scope/CompilationUnitScope.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/scope/EnumerationScope.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/scope/FunctionScope.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/scope/LocalScope.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/scope/Scope.c
-
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/ClassSymbol.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/ConstantSymbol.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/EnumerateSymbol.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/EnumerationSymbol.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/FunctionSignature.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/FunctionSymbol.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/LabelSymbol.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/MemberConstantSymbol.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/MemberVariableSymbol.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/Symbol.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/VariableSymbol.c
-
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/support/Error.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/support/ErrorHandler.c
 )
 
 set (
@@ -186,21 +124,11 @@ link_directories(${JTK_LIBRARY_DIRS})
 
 message(WARNING ${JTK_CFLAGS})
 
-add_executable (zen ${ZEN_PUBLIC_HEADERS} ${ZEN_COMMON_SOURCE} ${ZEN_COMPILER_SOURCE} ${ZEN_COMPILER_TOOL_SOURCE} ${ZEN_PRIVATE_HEADERS})
-target_link_libraries(zen ${JTK_LIBRARIES} m)
-target_include_directories(zen SYSTEM PUBLIC ${JTK_INCLUDE_DIRS})
-# target_compile_options(zen PUBLIC -Wall -Wswitch)
-target_compile_options(zen PUBLIC -g -w ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
-
-
-
 # add_executable (zsv ${ZEN_PUBLIC_HEADERS} ${ZEN_COMMON_SOURCE} ${ZEN_ZVM_SPECIFICATION_VIEWER} ${ZEN_PRIVATE_HEADERS})
 # target_compile_options(zsv PUBLIC -Wall -Wswitch)
 
 
-# add_executable(zvm ${ZEN_COMMON_SOURCE} ${ZEN_VIRTUAL_MACHINE_SOURCE} ${ZEN_VIRTUAL_MACHINE_TOOL_SOURCE})
-# target_link_libraries(zvm ${JTK_LIBRARIES})
-# target_include_directories(zvm SYSTEM PUBLIC ${JTK_INCLUDE_DIRS})
-# target_compile_options(zvm PUBLIC -g -w ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
-
-message (WARNING ${JTK_LIBRARY_DIRS})
+add_executable(zvm ${ZEN_COMMON_SOURCE} ${ZEN_VIRTUAL_MACHINE_SOURCE} ${ZEN_VIRTUAL_MACHINE_TOOL_SOURCE})
+target_link_libraries(zvm ${JTK_LIBRARIES})
+target_include_directories(zvm SYSTEM PUBLIC ${JTK_INCLUDE_DIRS})
+target_compile_options(zvm PUBLIC -g -w ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
