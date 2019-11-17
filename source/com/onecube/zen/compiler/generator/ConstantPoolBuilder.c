@@ -28,6 +28,8 @@
 zen_ConstantPoolBuilder_t* zen_ConstantPoolBuilder_new() {
     zen_ConstantPoolBuilder_t* builder = zen_Memory_allocate(zen_ConstantPoolBuilder_t, 1);
     builder->m_entries = jtk_ArrayList_new();
+    /* The first slot of the constant pool is reserved. */
+    jtk_ArrayList_add(builder->m_entries, NULL);
 
     return builder;
 }
@@ -39,7 +41,7 @@ void zen_ConstantPoolBuilder_delete(zen_ConstantPoolBuilder_t* builder) {
 
     int32_t size = jtk_ArrayList_getSize(builder->m_entries);
     int32_t i;
-    for (i = 0; i < size; i++) {
+    for (i = 1; i < size; i++) {
         /* Retrieve the constant pool entry to destroy during this iteration. */
         zen_ConstantPoolEntry_t* entry = (zen_ConstantPoolEntry_t*)jtk_ArrayList_getValue(
             builder->m_entries, i);
@@ -120,7 +122,7 @@ int32_t zen_ConstantPoolBuilder_getClassEntryIndexEx(
      */
     int32_t i;
     int32_t result = -1;
-    for (i = 0; i < size; i++) {
+    for (i = 1; i < size; i++) {
         /* Retrieve the constant pool entry to test during this iteration. */
         zen_ConstantPoolEntry_t* entry = (zen_ConstantPoolEntry_t*)jtk_ArrayList_getValue(
             builder->m_entries, i);
@@ -239,7 +241,7 @@ int32_t zen_ConstantPoolBuilder_getFieldEntryIndexEx(
      */
     int32_t i;
     int32_t result = -1;
-    for (i = 0; i < size; i++) {
+    for (i = 1; i < size; i++) {
         /* Retrieve the constant pool entry to test during this iteration. */
         zen_ConstantPoolEntry_t* entry = (zen_ConstantPoolEntry_t*)jtk_ArrayList_getValue(
             builder->m_entries, i);
@@ -370,7 +372,7 @@ int32_t zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
      */
     int32_t i;
     int32_t result = -1;
-    for (i = 0; i < size; i++) {
+    for (i = 1; i < size; i++) {
         /* Retrieve the constant pool entry to test during this iteration. */
         zen_ConstantPoolEntry_t* entry = (zen_ConstantPoolEntry_t*)jtk_ArrayList_getValue(
             builder->m_entries, i);
@@ -448,7 +450,7 @@ int32_t zen_ConstantPoolBuilder_getIntegerEntryIndex(
      */
     int32_t i;
     int32_t result = -1;
-    for (i = 0; i < size; i++) {
+    for (i = 1; i < size; i++) {
         /* Retrieve the constant pool entry to test during this iteration. */
         zen_ConstantPoolEntry_t* entry = (zen_ConstantPoolEntry_t*)jtk_ArrayList_getValue(
             builder->m_entries, i);
@@ -521,7 +523,7 @@ int32_t zen_ConstantPoolBuilder_getLongEntryIndex(
      */
     int32_t i;
     int32_t result = -1;
-    for (i = 0; i < size; i++) {
+    for (i = 1; i < size; i++) {
         /* Retrieve the constant pool entry to test during this iteration. */
         zen_ConstantPoolEntry_t* entry = (zen_ConstantPoolEntry_t*)jtk_ArrayList_getValue(
             builder->m_entries, i);
@@ -608,7 +610,7 @@ int32_t zen_ConstantPoolBuilder_getStringEntryIndexEx(
      */
     int32_t i;
     int32_t result = -1;
-    for (i = 0; i < size; i++) {
+    for (i = 1; i < size; i++) {
         /* Retrieve the constant pool entry to test during this iteration. */
         zen_ConstantPoolEntry_t* entry = (zen_ConstantPoolEntry_t*)jtk_ArrayList_getValue(
             builder->m_entries, i);
@@ -682,7 +684,7 @@ int32_t zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
      */
     int32_t i;
     int32_t result = -1;
-    for (i = 0; i < size; i++) {
+    for (i = 1; i < size; i++) {
         /* Retrieve the constant pool entry to test during this iteration. */
         zen_ConstantPoolEntry_t* entry = (zen_ConstantPoolEntry_t*)jtk_ArrayList_getValue(
             builder->m_entries, i);
