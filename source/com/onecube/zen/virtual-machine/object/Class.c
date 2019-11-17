@@ -24,11 +24,10 @@
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolClass.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolUtf8.h>
 
-
 #warning "Move this function to String.c"
 
-jtk_CString_t* jtk_CString_append(jtk_CString_t* string1, jtk_CString_t* string2) {
-    return jtk_CString_newFromJoinEx(string1->m_value, string1->m_size,
+jtk_String_t* jtk_String_append(jtk_String_t* string1, jtk_String_t* string2) {
+    return jtk_String_newFromJoinEx(string1->m_value, string1->m_size,
         string2->m_value, string2->m_size);
 }
 
@@ -63,10 +62,10 @@ void zen_Class_delete(zen_Class_t* class0) {
     while (jtk_Iterator_hasNext(functionIterator)) {
         jtk_HashMapEntry_t* entry =
             (jtk_HashMapEntry_t*)jtk_Iterator_getNext(functionIterator);
-        jtk_CString_t* key = (jtk_CString_t*)jtk_HashMapEntry_getKey(entry);
+        jtk_String_t* key = (jtk_String_t*)jtk_HashMapEntry_getKey(entry);
         zen_Function_t* value = (zen_Function_t*)jtk_HashMapEntry_getValue(entry);
         
-        jtk_CString_delete(key);
+        jtk_String_delete(key);
         zen_Function_delete(value);
     }
     jtk_Iterator_delete(functionIterator);
@@ -76,18 +75,18 @@ void zen_Class_delete(zen_Class_t* class0) {
     while (jtk_Iterator_hasNext(fieldIterator)) {
         jtk_HashMapEntry_t* entry =
             (jtk_HashMapEntry_t*)jtk_Iterator_getNext(fieldIterator);
-        // jtk_CString_t* key = (jtk_CString_t*)jtk_HashMapEntry_getKey(entry);
+        // jtk_String_t* key = (jtk_String_t*)jtk_HashMapEntry_getKey(entry);
         zen_Field_t* value = (zen_Field_t*)jtk_HashMapEntry_getValue(entry);
         
         // Do not delete field keys because they belong to the Field class.
-        // jtk_CString_delete(key);
+        // jtk_String_delete(key);
         zen_Field_delete(value);
     }
     jtk_Iterator_delete(fieldIterator);
     
     jtk_HashMap_delete(class0->m_functions);
     jtk_HashMap_delete(class0->m_fields);
-    jtk_CString_delete(class0->m_descriptor);
+    jtk_String_delete(class0->m_descriptor);
     jtk_Memory_deallocate(class0);
 }
 
@@ -99,21 +98,21 @@ zen_EntityFile_t* zen_Class_getEntityFile(zen_Class_t* class0) {
 
 // Function
 
-zen_Function_t* zen_Class_getStaticFunction(zen_Class_t* class0, jtk_CString_t* name,
-    jtk_CString_t* descriptor) {
-    jtk_CString_t* key = jtk_CString_append(name, descriptor);
+zen_Function_t* zen_Class_getStaticFunction(zen_Class_t* class0, jtk_String_t* name,
+    jtk_String_t* descriptor) {
+    jtk_String_t* key = jtk_String_append(name, descriptor);
     zen_Function_t* function = jtk_HashMap_getValue(class0->m_functions, key);
-    jtk_CString_delete(key);
+    jtk_String_delete(key);
     
     // TODO: Filter for static function.
     return function;
 }
 
-zen_Function_t* zen_Class_getInstanceFunction(zen_Class_t* class0, jtk_CString_t* name,
-    jtk_CString_t* descriptor) {
-    jtk_CString_t* key = jtk_CString_append(name, descriptor);
+zen_Function_t* zen_Class_getInstanceFunction(zen_Class_t* class0, jtk_String_t* name,
+    jtk_String_t* descriptor) {
+    jtk_String_t* key = jtk_String_append(name, descriptor);
     zen_Function_t* function = jtk_HashMap_getValue(class0->m_functions, key);
-    jtk_CString_delete(key);
+    jtk_String_delete(key);
     
     // TODO: Filter for instance function.
     return function;
@@ -125,7 +124,7 @@ void zen_Class_initialize(zen_Class_t* class0, zen_EntityFile_t* entityFile) {
     jtk_Assert_assertObject(class0, "The specified class is null.");
     jtk_Assert_assertObject(entityFile, "The specified entity file is null.");
 
-    zen_ClassEntity_t* entity = (zen_ClassEntity_t*)entityFile->m_entity;
+    zen_Entity_t* entity = &entityFile->m_entity;
     zen_ConstantPool_t* constantPool = entityFile->m_constantPool;
 
     zen_ConstantPoolClass_t* classEntry =
@@ -133,7 +132,7 @@ void zen_Class_initialize(zen_Class_t* class0, zen_EntityFile_t* entityFile) {
     zen_ConstantPoolUtf8_t* descriptorEntry =
         (zen_ConstantPoolUtf8_t*)constantPool->m_entries[classEntry->m_nameIndex];
 
-    class0->m_descriptor = jtk_CString_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
+    class0->m_descriptor = jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
 
     int32_t i;
     int32_t fieldCount = entity->m_fieldCount;
@@ -149,7 +148,7 @@ void zen_Class_initialize(zen_Class_t* class0, zen_EntityFile_t* entityFile) {
         zen_FunctionEntity_t* functionEntity = (zen_FunctionEntity_t*)entity->m_functions[j];
         zen_Function_t* function = zen_Function_newFromFunctionEntity(class0, functionEntity);
 
-        jtk_CString_t* key = jtk_CString_append(function->m_name, function->m_descriptor);
+        jtk_String_t* key = jtk_String_append(function->m_name, function->m_descriptor);
         jtk_HashMap_put(class0->m_functions, key, function);
     }
 }
