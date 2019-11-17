@@ -22,7 +22,7 @@
 #include <com/onecube/zen/virtual-machine/ExceptionManager.h>
 
 void zen_print(jtk_Array_t* arguments) {
-    jtk_CString_t* format = (jtk_CString_t*)jtk_Array_getValue(arguments, 0);
+    jtk_String_t* format = (jtk_String_t*)jtk_Array_getValue(arguments, 0);
     fwrite(format->m_value, 1, format->m_size, stdout);
     fflush(stdout);
 }
@@ -97,7 +97,7 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
 
     zen_NativeFunction_t* printNativeFunction = zen_NativeFunction_new(zen_print);
 
-    jtk_CString_t* key = jtk_CString_newEx("printv/(zen.core.String)@(zen.core.String)", 42);
+    jtk_String_t* key = jtk_String_newEx("printv/(zen.core.String)@(zen.core.String)", 42);
     jtk_HashMap_put(virtualMachine->m_nativeFunctions, key, printNativeFunction);
 
     // TODO: Unload native functions
@@ -109,10 +109,10 @@ void zen_VirtualMachine_unloadLibraries(zen_VirtualMachine_t* virtualMachine) {
     jtk_Iterator_t* entryIterator = jtk_HashMap_getEntryIterator(virtualMachine->m_nativeFunctions);
     while (jtk_Iterator_hasNext(entryIterator)) {
         jtk_HashMapEntry_t* entry = (jtk_HashMapEntry_t*)jtk_Iterator_getNext(entryIterator);
-        jtk_CString_t* key = (jtk_CString_t*)jtk_HashMapEntry_getKey(entry);
+        jtk_String_t* key = (jtk_String_t*)jtk_HashMapEntry_getKey(entry);
         zen_NativeFunction_t* value = (zen_NativeFunction_t*)jtk_HashMapEntry_getValue(entry);
 
-        jtk_CString_delete(key);
+        jtk_String_delete(key);
         zen_NativeFunction_delete(value);
     }
 }
@@ -204,16 +204,16 @@ void zen_VirtualMachine_handleException(zen_VirtualMachine_t* virtualMachine) {
 /* Native Function */
 
 zen_NativeFunction_t* zen_VirtualMachine_getNativeFunction(
-    zen_VirtualMachine_t* virtualMachine, jtk_CString_t* name,
-    jtk_CString_t* descriptor) {
+    zen_VirtualMachine_t* virtualMachine, jtk_String_t* name,
+    jtk_String_t* descriptor) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
     jtk_Assert_assertObject(name, "The specified name is null.");
     jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
 
-    jtk_CString_t* key = jtk_CString_append(name, descriptor);
+    jtk_String_t* key = jtk_String_append(name, descriptor);
     zen_NativeFunction_t* result = (zen_NativeFunction_t*)jtk_HashMap_getValue(
         virtualMachine->m_nativeFunctions, key);
-    jtk_CString_delete(key);
+    jtk_String_delete(key);
 
     return result;
 }

@@ -36,3 +36,8 @@ void zen_StackTrace_enter0(const char* file, const char* function) {
 void zen_StackTrace_exit0(const char* file, const char* function) {
     fprintf(stdout, "[exit] %s(%s)\n", function, file);
 }
+
+
+double sqrt(double x) {
+    return 0;
+}

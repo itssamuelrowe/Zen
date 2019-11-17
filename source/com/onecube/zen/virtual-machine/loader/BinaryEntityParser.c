@@ -302,7 +302,7 @@ zen_Entity_t* zen_BinaryEntityParser_parseEntity(zen_BinaryEntityParser_t* parse
     uint8_t type = jtk_Tape_readUncheckedByte(parser->m_tape);
     switch (type) {
         case ZEN_ENTITY_TYPE_CLASS: {
-            entity = zen_BinaryEntityParser_parseClass(parser);
+            // entity = zen_BinaryEntityParser_parseClass(parser);
 
             // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed class entity, with type %d.", type);
 

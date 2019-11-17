@@ -33,8 +33,8 @@ zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
     zen_ConstantPoolUtf8_t* descriptorEntry = constantPool->m_entries[functionEntity->m_descriptorIndex];
 
     zen_Function_t* function = jtk_Memory_allocate(zen_Function_t, 1);
-    function->m_name = jtk_CString_newEx(nameEntry->m_bytes, nameEntry->m_length);
-    function->m_descriptor = jtk_CString_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
+    function->m_name = jtk_String_newEx(nameEntry->m_bytes, nameEntry->m_length);
+    function->m_descriptor = jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
     function->m_class = class0;
     function->m_flags = 0;
     function->m_functionEntity = functionEntity;
@@ -45,8 +45,8 @@ zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
 // Destructor
 
 void zen_Function_delete(zen_Function_t* function) {
-    jtk_CString_delete(function->m_name);
-    jtk_CString_delete(function->m_descriptor);
+    jtk_String_delete(function->m_name);
+    jtk_String_delete(function->m_descriptor);
     jtk_Memory_deallocate(function);
 }
 
@@ -58,13 +58,13 @@ zen_Class_t* zen_Function_getClass(zen_Function_t* function) {
 
 // Descriptor
 
-jtk_CString_t* zen_Function_getDescriptor(zen_Function_t* function) {
+jtk_String_t* zen_Function_getDescriptor(zen_Function_t* function) {
     return function->m_descriptor;
 }
 
 // Name
 
-jtk_CString_t* zen_Function_getName(zen_Function_t* function) {
+jtk_String_t* zen_Function_getName(zen_Function_t* function) {
     return function->m_name;
 }
 

@@ -44,8 +44,8 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
 
     const uint8_t* mainClassDescriptor = "Test";
     const uint8_t* stringClassDescriptor = "zen.core.String";
-    jtk_CString_t* mainFunctionIdentifier = jtk_CString_newEx("main", 4);
-    jtk_CString_t* mainFunctionSignature = jtk_CString_newEx("v/@(zen.core.String)", 20);
+    jtk_String_t* mainFunctionIdentifier = jtk_String_newEx("main", 4);
+    jtk_String_t* mainFunctionSignature = jtk_String_newEx("v/@(zen.core.String)", 20);
 
     /* The configuration of the virtual machine is stored in an instance of
      * jtk_VirtualMachineConfiguration_t.
@@ -119,8 +119,8 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
     /* Wait for other threds to complete and tear down the virtual machine. */
     zen_VirtualMachine_shutDown(virtualMachine);
     
-    jtk_CString_delete(mainFunctionSignature);
-    jtk_CString_delete(mainFunctionIdentifier);
+    jtk_String_delete(mainFunctionSignature);
+    jtk_String_delete(mainFunctionIdentifier);
 
     /* Destroy the virtual machine and its configuration. Objects allocated
      * via the VirtualMachine class are automatically collected by the garbage
