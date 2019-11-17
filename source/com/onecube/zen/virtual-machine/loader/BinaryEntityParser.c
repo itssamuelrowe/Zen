@@ -93,8 +93,9 @@ zen_EntityFile_t* zen_BinaryEntityParser_parseEntityFile(zen_BinaryEntityParser_
             /* Make sure that the major and minor version numbers are recognized by
              * the binary entity parser.
              */
-            if ((majorVersion <= ZEN_BINARY_ENTITY_FORMAT_MAJOR_VERSION) &&
-                (minorVersion <= ZEN_BINARY_ENTITY_FORMAT_MINOR_VERSION)) {
+            if ((majorVersion < ZEN_BINARY_ENTITY_FORMAT_MAJOR_VERSION) ||
+                ((majorVersion == ZEN_BINARY_ENTITY_FORMAT_MAJOR_VERSION) &&
+                 (minorVersion <= ZEN_BINARY_ENTITY_FORMAT_MINOR_VERSION))) {
                 // uint32_t size = jtk_Tape_readUncheckedInteger(parser->m_tape);
                 // entityFile->m_size = size;
 

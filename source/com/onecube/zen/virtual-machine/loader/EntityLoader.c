@@ -283,8 +283,7 @@ zen_EntityFile_t* zen_EntityLoader_loadEntityFromHandle(zen_EntityLoader_t* load
 
         zen_BinaryEntityParser_t* parser = zen_BinaryEntityParser_new(
             loader->m_attributeParseRules, input->m_values, input->m_size);
-        result = zen_BinaryEntityParser_parse(parser, 
-inputStream);
+        result = zen_BinaryEntityParser_parse(parser, inputStream);
 
         zen_BinaryEntityParser_delete(parser);
         jtk_Array_delete(input);
