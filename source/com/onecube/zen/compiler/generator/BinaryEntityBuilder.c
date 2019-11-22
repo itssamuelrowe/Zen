@@ -117,8 +117,10 @@ zen_DataChannel_t* zen_BinaryEntityBuilder_getActiveChannel(zen_BinaryEntityBuil
     /* NOTE: As of now, the active channel is located at zeroth index.
      * However, in the future this behavior may be subjected to change.
      */
-    return jtk_ArrayList_isEmpty(builder->m_channels) || (builder->m_activeChannelIndex < 0)?
-        NULL : jtk_ArrayList_getValue(builder->m_channels, 0);
+    // return jtk_ArrayList_isEmpty(builder->m_channels) || (builder->m_activeChannelIndex < 0)?
+    //    NULL : jtk_ArrayList_getValue(builder->m_channels, 0);
+    
+    return jtk_ArrayList_getValue(builder->m_channels, builder->m_activeChannelIndex);
 }
 
 void zen_BinaryEntityBuilder_setActiveChannelIndex(zen_BinaryEntityBuilder_t* builder,

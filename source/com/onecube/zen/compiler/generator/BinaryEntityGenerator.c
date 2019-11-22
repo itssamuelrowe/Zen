@@ -56,7 +56,6 @@ zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_newEx(
     generator->m_fields = jtk_ArrayList_new();
     generator->m_functions = jtk_ArrayList_new();
 
-    generator->m_instructions = zen_BinaryEntityBuilder_new();
     generator->m_maxStackSize = 0;
     generator->m_localVariableCount = 0;
     generator->m_exceptionHandlerSites = jtk_ArrayList_new();
@@ -319,7 +318,7 @@ void zen_BinaryEntityGenerator_delete(zen_BinaryEntityGenerator_t* generator) {
     }
     jtk_ArrayList_delete(generator->m_exceptionHandlerSites);
 
-    zen_BinaryEntityBuilder_delete(generator->m_instructions);
+    zen_BinaryEntityBuilder_delete(generator->m_builder);
 
     int32_t fieldCount = jtk_ArrayList_getSize(generator->m_fields);
     int32_t fieldIndex;
@@ -345,7 +344,6 @@ void zen_BinaryEntityGenerator_delete(zen_BinaryEntityGenerator_t* generator) {
     zen_ConstantPoolBuilder_delete(generator->m_constantPoolBuilder);
     zen_Memory_deallocate(generator->m_entityFile);
 
-    zen_BinaryEntityBuilder_delete(generator->m_builder);
     zen_ASTListener_delete(generator->m_astListener);
     jtk_Memory_deallocate(generator);
 }
@@ -403,6 +401,10 @@ void zen_BinaryEntityGenerator_onEnterCompilationUnit(zen_ASTListener_t* astList
     zen_Scope_t* scope = zen_ASTAnnotations_get(generator->m_scopes, node);
     /* Activate the scope associated with the current AST node. */
     zen_SymbolTable_setCurrentScope(generator->m_symbolTable, scope);
+    
+    /* Push a data channel, where the bytes generated will be written. */
+    int32_t primaryChannelIndex = zen_BinaryEntityBuilder_addChannel(generator->m_builder);
+    zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_builder, primaryChannelIndex);
 }
 
 void zen_BinaryEntityGenerator_onExitCompilationUnit(zen_ASTListener_t* astListener,
@@ -419,8 +421,8 @@ void zen_BinaryEntityGenerator_onExitCompilationUnit(zen_ASTListener_t* astListe
     zen_SymbolTable_invalidateCurrentScope(generator->m_symbolTable);
 
     /* Push a data channel, where the bytes generated will be written. */
-    int32_t primaryChannelIndex = zen_BinaryEntityBuilder_addChannel(generator->m_builder);
-    zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_builder, primaryChannelIndex);
+    // int32_t primaryChannelIndex = zen_BinaryEntityBuilder_addChannel(generator->m_builder);
+    // zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_builder, primaryChannelIndex);
 }
 
 #include <stdio.h>
@@ -456,7 +458,11 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
      * can now be built.
      */
     int32_t entryCount = zen_ConstantPoolBuilder_countEntries(generator->m_constantPoolBuilder);
-    zen_BinaryEntityBuilder_writeConstantPoolHeader(generator->m_builder, entryCount);
+    /* The constant pool builder counts the null entry at the beginning, too.
+     * However, the virtual machine's binary entity parser implicitly recognizes
+     * first entry. Therefore, subtract the constant pool entry count by one.
+     */
+    zen_BinaryEntityBuilder_writeConstantPoolHeader(generator->m_builder, entryCount - 1);
     int32_t i;
     for (i = 1; i < entryCount; i++) {
         zen_ConstantPoolEntry_t* entry = zen_ConstantPoolBuilder_getEntry(generator->m_constantPoolBuilder, i);
@@ -695,7 +701,7 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
      * function/initializer were written.
      */
     zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(
-        generator->m_instructions->m_channels, 0);
+        generator->m_builder->m_channels, 0);
     /* Retrieve the bytes that were written on the data channel. */
     uint8_t* bytes = zen_DataChannel_getBytes(channel);
     /* Retrieve the number of bytes that were written on the data channel. */
@@ -778,15 +784,12 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
     zen_Scope_t* scope = zen_ASTAnnotations_get(generator->m_scopes, node);
     zen_SymbolTable_setCurrentScope(generator->m_symbolTable, scope);
 
-#warning "TODO: Remove the line condition below."
-    if (generator->m_instructions->m_channels->m_size == 0) {
-        int32_t instructionChannelIndex = zen_BinaryEntityBuilder_addChannel(generator->m_instructions);
-        zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_instructions, instructionChannelIndex);
-    }
+    int32_t instructionChannelIndex = zen_BinaryEntityBuilder_addChannel(generator->m_builder);
+    zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_builder, instructionChannelIndex);
 
     // TODO: Remove the following statement. Make sure that the instruction
     // length is never zero.
-    zen_BinaryEntityBuilder_emitNop(generator->m_instructions);
+    zen_BinaryEntityBuilder_emitNop(generator->m_builder);
 }
 
 /* The format of a function descriptor is shown below:
@@ -876,8 +879,7 @@ zen_InstructionAttribute_t* zen_BinaryEntityGenerator_makeInstructionAttribute(
     /* Retrieve the data channel on which the instructions of the
      * function/initializer were written.
      */
-    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(
-        generator->m_instructions->m_channels, 0);
+    zen_DataChannel_t* channel = zen_BinaryEntityBuilder_getActiveChannel(generator->m_builder);
     /* Retrieve the bytes that were written on the data channel. */
     uint8_t* instructionBytes = zen_DataChannel_getBytes(channel);
 
@@ -2301,6 +2303,18 @@ void zen_BinaryEntityGenerator_onExitFunctionDeclaration(
             exceptionHandlerSite->m_startIndex, exceptionHandlerSite->m_stopIndex,
             exceptionHandlerSite->m_handlerIndex, exceptionHandlerSite->m_exceptionClassIndex);
     }
+    
+    // Here, we assume that the channels are added and removed as if they were
+    // stored in a stack. The primary channel is assumed to be at zeroth index.
+    zen_DataChannel_t* instructionChannel = zen_BinaryEntityBuilder_getActiveChannel(generator->m_builder);
+    zen_DataChannel_t* primaryChannel = zen_BinaryEntityBuilder_getChannel(generator->m_builder, 0);
+    zen_DataChannel_appendChannel(primaryChannel, instructionChannel);
+    
+    int32_t instructionChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(generator->m_builder);
+    zen_BinaryEntityBuilder_removeChannel(generator->m_builder, instructionChannelIndex);
+    
+#warning "TODO: Implement a stack like behaviour to alter active channel."
+    zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_builder, 0);
 }
 
 // functionParameters
@@ -2366,7 +2380,7 @@ void zen_BinaryEntityGenerator_onEnterEmptyStatement(zen_ASTListener_t* astListe
         (zen_BinaryEntityGenerator_t*)astListener->m_context;
 
     /* Emit the nop instruction. */
-    zen_BinaryEntityBuilder_emitNop(generator->m_instructions);
+    zen_BinaryEntityBuilder_emitNop(generator->m_builder);
 
     /* Log the emission of the nop instruction. */
     printf("[debug] Emitted nop\n");
@@ -2589,9 +2603,9 @@ void zen_BinaryEntityGenerator_onExitAssertStatement(zen_ASTListener_t* astListe
     zen_AssertStatementContext_t* context = (zen_AssertStatementContext_t*)node->m_context;
 
     int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
-         generator->m_instructions);
+         generator->m_builder);
     zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
-         generator->m_instructions, parentChannelIndex);
+         generator->m_builder, parentChannelIndex);
 
     uint8_t* className = "Unknown"; // TODO: Get the name of the current class!
     int32_t classNameSize = 7;
@@ -2637,13 +2651,13 @@ void zen_BinaryEntityGenerator_onExitAssertStatement(zen_ASTListener_t* astListe
         constructorName, constructorNameSize);
 
     /* Emit the load_static_field instruction. */
-    zen_BinaryEntityBuilder_emitLoadStaticField(generator->m_instructions,
+    zen_BinaryEntityBuilder_emitLoadStaticField(generator->m_builder,
         assertionEnabledIndex);
     /* Log the emission of the load_static_field instruction. */
     printf("[debug] Emitted load_static_field %d\n", assertionEnabledIndex);
 
     /* Emit the jump_eq0_i instruction. */
-    zen_BinaryEntityBuilder_emitJumpEqual0Integer(generator->m_instructions, 0);
+    zen_BinaryEntityBuilder_emitJumpEqual0Integer(generator->m_builder, 0);
     /* Log the emission of the jump_eq0_i instruction. */
     printf("[debug] Emitted jump_eq0_i 0 (dummy index)\n");
 
@@ -2658,13 +2672,13 @@ void zen_BinaryEntityGenerator_onExitAssertStatement(zen_ASTListener_t* astListe
     /* Invoke the Boolean#getValue() function to retrieve the primitive equivalent
      * of the resulting object.
      */
-    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions,
+    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_builder,
         getValueIndex);
     /* Log the emission of the invoke_special instruction. */
     printf("[debug] Emitted invoke_virtual %d\n", getValueIndex);
 
     /* Emit the jump_ne0_i instruction. */
-    zen_BinaryEntityBuilder_emitJumpNotEqual0Integer(generator->m_instructions, 0);
+    zen_BinaryEntityBuilder_emitJumpNotEqual0Integer(generator->m_builder, 0);
     /* Log the emission of the jump_ne0_i instruction. */
     printf("[debug] Emitted jump_ne0_i 0 (dummy index)\n");
 
@@ -2683,23 +2697,23 @@ void zen_BinaryEntityGenerator_onExitAssertStatement(zen_ASTListener_t* astListe
     }
 
     /* Create an instance of the AssertionError class. */
-    zen_BinaryEntityBuilder_emitNew(generator->m_instructions, assertionErrorClassIndex);
+    zen_BinaryEntityBuilder_emitNew(generator->m_builder, assertionErrorClassIndex);
     /* Log the emission of the new instruction. */
     printf("[debug] Emitted new %d\n", assertionErrorClassIndex);
 
     /* Duplicate the reference of the newly created exception. */
-    zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+    zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
     /* Log the emission of the duplicate instruction. */
     printf("[debug] Emitted duplicate\n");
 
     /* Invoke the constructor to initialize the new exception instance. */
-    zen_BinaryEntityBuilder_emitInvokeSpecial(generator->m_instructions,
+    zen_BinaryEntityBuilder_emitInvokeSpecial(generator->m_builder,
         constructorIndex);
     /* Log the emission of the invoke_special instruction. */
     printf("[debug] Emitted invoke_special %d\n", constructorIndex);
 
     /* Throw the newly created exception. */
-    zen_BinaryEntityBuilder_emitThrow(generator->m_instructions);
+    zen_BinaryEntityBuilder_emitThrow(generator->m_builder);
     /* Log the emission of the throw instruction. */
     printf("[debug] Emitted throw\n");
 
@@ -2742,7 +2756,7 @@ void zen_BinaryEntityGenerator_onExitReturnStatement(zen_ASTListener_t* astListe
         (zen_ReturnStatementContext_t*)node->m_context;
 
     /* Emit the return_a instruction. */
-    zen_BinaryEntityBuilder_emitReturnReference(generator->m_instructions);
+    zen_BinaryEntityBuilder_emitReturnReference(generator->m_builder);
 
     /* Log the emission of the instruction. */
     printf("[debug] Emitted return_a\n");
@@ -2762,7 +2776,7 @@ void zen_BinaryEntityGenerator_onExitThrowStatement(zen_ASTListener_t* astListen
         (zen_ThrowStatementContext_t*)node->m_context;
 
     /* Emit the throw instruction. */
-    zen_BinaryEntityBuilder_emitThrow(generator->m_instructions);
+    zen_BinaryEntityBuilder_emitThrow(generator->m_builder);
 
     /* Log the emission of the instruction. */
     printf("[debug] Emitted throw\n");
@@ -2807,9 +2821,9 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
         getValueNameSize);
 
     int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
-         generator->m_instructions);
+         generator->m_builder);
     zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
-         generator->m_instructions, parentChannelIndex);
+         generator->m_builder, parentChannelIndex);
 
     zen_ASTNode_t* ifClause = context->m_ifClause;
     zen_IfClauseContext_t* ifClauseContext = (zen_IfClauseContext_t*)ifClause->m_context;
@@ -2829,14 +2843,14 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
         /* Invoke the Boolean#getValue() function to retrieve the primitive equivalent
          * of the resulting object.
          */
-        zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions,
+        zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_builder,
             getValueIndex);
 
         /* Log the emission of the invoke_special instruction. */
         printf("[debug] Emitted invoke_virtual %d\n", getValueIndex);
 
         /* Emit the jump_eq0_i instruction. */
-        zen_BinaryEntityBuilder_emitJumpEqual0Integer(generator->m_instructions, 0);
+        zen_BinaryEntityBuilder_emitJumpEqual0Integer(generator->m_builder, 0);
 
         /* Log the emission of the jump_eq0_i instruction. */
         printf("[debug] Emitted jump_eq0_i 0 (dummy index)\n");
@@ -2862,7 +2876,7 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
              * evaluated right now. Therefore, emit the jump instruction with a dummy
              * offset.
              */
-            zen_BinaryEntityBuilder_emitJump(generator->m_instructions, 0);
+            zen_BinaryEntityBuilder_emitJump(generator->m_builder, 0);
 
             /* Log the emission of the jump instruction. */
             printf("[debug] Emitted jump 0 (dummy index)\n");
@@ -2907,7 +2921,7 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
          * the jump offset cannot be evaluated right now. Therefore, emit the
          * jump instruction with a dummy offset.
          */
-        zen_BinaryEntityBuilder_emitJump(generator->m_instructions, 0);
+        zen_BinaryEntityBuilder_emitJump(generator->m_builder, 0);
 
         /* Log the emission of the jump instruction. */
         printf("[debug] Emitted jump 0 (dummy index)\n");
@@ -3012,9 +3026,9 @@ void zen_BinaryEntityGenerator_onExitWhileStatement(zen_ASTListener_t* astListen
         getValueNameSize);
 
     int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
-        generator->m_instructions);
+        generator->m_builder);
     zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
-        generator->m_instructions, parentChannelIndex);
+        generator->m_builder, parentChannelIndex);
     uint16_t loopIndex = zen_DataChannel_getSize(parentChannel);
 
     /* Generate the instructions corresponding to the conditional expression
@@ -3025,14 +3039,14 @@ void zen_BinaryEntityGenerator_onExitWhileStatement(zen_ASTListener_t* astListen
     /* Invoke the Boolean#getValue() function to retrieve the primitive equivalent
      * of the resulting object.
      */
-    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions,
+    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_builder,
         getValueIndex);
 
     /* Log the emission of the invoke_virtual instruction. */
     printf("[debug] Emitted invoke_virtual %d\n", getValueIndex);
 
     /* Emit the jump_eq0_i instruction. */
-    zen_BinaryEntityBuilder_emitJumpEqual0Integer(generator->m_instructions, 0);
+    zen_BinaryEntityBuilder_emitJumpEqual0Integer(generator->m_builder, 0);
 
     /* Log the emission of the jump_eq0_i instruction. */
     printf("[debug] Emitted jump_eq0_i 0 (dummy index)\n");
@@ -3046,7 +3060,7 @@ void zen_BinaryEntityGenerator_onExitWhileStatement(zen_ASTListener_t* astListen
     zen_ASTWalker_walk(astListener, context->m_statementSuite);
 
     /* Generate a jump instruction to loop back to the conditional expression. */
-    zen_BinaryEntityBuilder_emitJump(generator->m_instructions, loopIndex);
+    zen_BinaryEntityBuilder_emitJump(generator->m_builder, loopIndex);
 
     /* Log the emission of the jump instruction. */
     printf("[debug] Emitted jump %d\n", loopIndex);
@@ -3087,9 +3101,9 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
         getIteratorNameSize);
 
     int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
-        generator->m_instructions);
+        generator->m_builder);
     zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
-        generator->m_instructions, parentChannelIndex);
+        generator->m_builder, parentChannelIndex);
 
     const uint8_t* iteratorClassName = "zen/core/Iterator";
     int32_t iteratorClassNameSize = 17;
@@ -3122,7 +3136,7 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
 
     /* Invoke the Iterable#getIterator() function to retrieve the iterator.
      */
-    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions,
+    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_builder,
         getIteratorIndex);
 
     /* Log the emission of the invoke_virtual instruction. */
@@ -3135,7 +3149,7 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
      *
      * TODO: Implement the zen_BinaryEntityGenerator_storeLocalReference() function.
      */
-    zen_BinaryEntityBuilder_emitStoreReference(generator->m_instructions, 0);
+    zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, 0);
 
     /* Log the emission of the store_a instruction. */
     printf("[debug] Emitted store_a %d (dummy index)\n", 0);
@@ -3149,7 +3163,7 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
      *
      * TODO: Implement the zen_BinaryEntityGenerator_loadLocalReference() function.
      */
-    zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+    zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
 
     /* Log the emission of the load_a instruction. */
     printf("[debug] Emitted load_a %d (dummy index)\n", 0);
@@ -3157,13 +3171,13 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
     /* Invoke the Iterator#hasNext() function to determine whether the iterator
      * has more values to return.
      */
-    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions, hasNextIndex);
+    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_builder, hasNextIndex);
 
     /* Log the emission of the invoke_virtual instruction. */
     printf("[debug] Emitted invoke_virtual %d\n", hasNextIndex);
 
     /* Emit the jump_eq0_i instruction. */
-    zen_BinaryEntityBuilder_emitJumpEqual0Integer(generator->m_instructions, 0);
+    zen_BinaryEntityBuilder_emitJumpEqual0Integer(generator->m_builder, 0);
 
     /* Log the emission of the jump_eq0_i instruction. */
     printf("[debug] Emitted jump_eq0_i 0 (dummy index)\n");
@@ -3172,13 +3186,13 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
     int32_t updateIndex = zen_DataChannel_getSize(parentChannel) - 2;
 
     /* Invoke the Iterator#getNext() function to retrieve the next value. */
-    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions, getNextIndex);
+    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_builder, getNextIndex);
 
     /* Log the emission of the invoke_virtual instruction. */
     printf("[debug] Emitted invoke_virtual %d\n", getNextIndex);
 
     /* Store the retrieved value in a local variable. */
-    zen_BinaryEntityBuilder_emitStoreReference(generator->m_instructions, 0);
+    zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, 0);
 
     /* Log the emission of the store_a instruction. */
     printf("[debug] Emitted store_a %d (dummy index)\n", 0);
@@ -3189,7 +3203,7 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
     zen_ASTWalker_walk(astListener, context->m_statementSuite);
 
     /* Generate a jump instruction to loop back to the conditional expression. */
-    zen_BinaryEntityBuilder_emitJump(generator->m_instructions, loopIndex);
+    zen_BinaryEntityBuilder_emitJump(generator->m_builder, loopIndex);
 
     /* Log the emission of the jump instruction. */
     printf("[debug] Emitted jump %d\n", loopIndex);
@@ -3341,9 +3355,9 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
     zen_TryStatementContext_t* context = (zen_TryStatementContext_t*)node->m_context;
 
     int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
-        generator->m_instructions);
+        generator->m_builder);
     zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
-        generator->m_instructions, parentChannelIndex);
+        generator->m_builder, parentChannelIndex);
 
     zen_ASTNode_t* tryClause = context->m_tryClause;
     zen_TryClauseContext_t* tryClauseContext = (zen_TryClauseContext_t*)tryClause->m_context;
@@ -3447,7 +3461,7 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
              *
              * Emit the jump instruction to skip the other clauses.
              */
-            zen_BinaryEntityBuilder_emitJump(generator->m_instructions, 0);
+            zen_BinaryEntityBuilder_emitJump(generator->m_builder, 0);
 
             /* Log the emission of the jump instruction. */
             printf("[debug] Emitted jump 0 (dummy index)\n");
@@ -3464,7 +3478,7 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
             /* The virtual machine pushes the exception that was caught to the
              * operand stack. Store this reference in a local variable.
              */
-            zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+            zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
 
             /* Log the emission of the load_a instruction. */
             printf("[debug] Emitted load_a 0 (dummy index)\n");
@@ -3501,7 +3515,7 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
          *
          * Emit the jump instruction to skip the FC2 section.
          */
-        zen_BinaryEntityBuilder_emitJump(generator->m_instructions, 0);
+        zen_BinaryEntityBuilder_emitJump(generator->m_builder, 0);
 
         /* Log the emission of the jump instruction. */
         printf("[debug] Emitted jump 0 (dummy index)\n");
@@ -3529,7 +3543,7 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
         /* The virtual machine pushes the exception that was caught to the operand
          * stack. Store this reference in a local variable.
          */
-        zen_BinaryEntityBuilder_emitStoreReference(generator->m_instructions, 0);
+        zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, 0);
 
         /* Log the emission of the store_a instruction. */
         printf("[debug] Emitted store_a 0 (dummy index)\n");
@@ -3540,13 +3554,13 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
         zen_ASTWalker_walk(astListener, finallyClauseContext->m_statementSuite);
 
         /* Load the caught exception from the local variable. */
-        zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+        zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
 
         /* Log the emission of the store_a instruction. */
         printf("[debug] Emitted load_a 0 (dummy index)\n");
 
         /* Throw the caught exception again. */
-        zen_BinaryEntityBuilder_emitThrow(generator->m_instructions);
+        zen_BinaryEntityBuilder_emitThrow(generator->m_builder);
 
         /* Log the emission of the throw instruction. */
         printf("[debug] Emitted throw\n");
@@ -3681,9 +3695,9 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
         (zen_SynchronizeStatementContext_t*)node->m_context;
 
     int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
-        generator->m_instructions);
+        generator->m_builder);
     zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
-        generator->m_instructions, parentChannelIndex);
+        generator->m_builder, parentChannelIndex);
 
     const uint8_t* lockClassName = "zen/concurrency/lock/Lock";
     int32_t lockClassNameSize = 25;
@@ -3710,7 +3724,7 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
     zen_ASTWalker_walk(astListener, context->m_expression);
 
     /* Make a duplicate of the resulting lock object. */
-    zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+    zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
 
     /* Log the emission of the duplicate instruction. */
     printf("[debug] Emitted duplicate\n");
@@ -3718,13 +3732,13 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
     /* Store the duplicate reference in a local variable that only the
      * compiler has access to.
      */
-    zen_BinaryEntityBuilder_emitStoreReference(generator->m_instructions, 0);
+    zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, 0);
 
     /* Log the emission of the store_a instruction. */
     printf("[debug] Emitted store_a 0 (dummy index)\n");
 
     /* Invoke the Lock#acquire() function. */
-    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions, acquireIndex);
+    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_builder, acquireIndex);
 
     /* Log the emission of the invoke_virtual instruction. */
     printf("[debug] Emitted invoke_virtual %d\n", acquireIndex);
@@ -3740,13 +3754,13 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
     zen_ASTWalker_walk(astListener, context->m_statementSuite);
 
     /* Load the reference to the lock object from the local variable. */
-    zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+    zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
 
     /* Log the emission of the load_a instruction. */
     printf("[debug] Emitted load_a 0 (dummy index)\n");
 
     /* Invoke the Lock#release() function. */
-    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions, releaseIndex);
+    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_builder, releaseIndex);
 
     /* Log the emission of the invoke_virtual instruction. */
     printf("[debug] Emitted invoke_virtual %d\n", releaseIndex);
@@ -3765,7 +3779,7 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
      * the jump offset cannot be evaluated right now. Therefore, emit the jump
      * instruction with a dummy offset.
      */
-    zen_BinaryEntityBuilder_emitJump(generator->m_instructions, 0);
+    zen_BinaryEntityBuilder_emitJump(generator->m_builder, 0);
 
     /* Log the emission of the jump instruction. */
     printf("[debug] Emitted jump 0 (dummy index)\n");
@@ -3782,19 +3796,19 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
      * stack before the control is passed to the implicit finally clause, thanks
      * to the exception table. Store this reference in a local variable.
      */
-    zen_BinaryEntityBuilder_emitStoreReference(generator->m_instructions, 0);
+    zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, 0);
 
     /* Log the emission of the store_a instruction. */
     printf("[debug] Emitted store_a 0 (dummy index)\n");
 
     /* Load the reference to the lock object from the local variable. */
-    zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+    zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
 
     /* Log the emission of the load_a instruction. */
     printf("[debug] Emitted load_a 0 (dummy index)\n");
 
     /* Invoke the Lock#release() function. */
-    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions, releaseIndex);
+    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_builder, releaseIndex);
 
     /* Log the emission of the invoke_virtual instruction. */
     printf("[debug] Emitted invoke_virtual %d\n", releaseIndex);
@@ -3805,13 +3819,13 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
     int32_t stopIndex2 = zen_DataChannel_getSize(parentChannel);
 
     /* Load the thrown exception from the local variable. */
-    zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+    zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
 
     /* Log the emission of the store_a instruction. */
     printf("[debug] Emitted load_a 0 (dummy index)\n");
 
     /* Throw the exception again. */
-    zen_BinaryEntityBuilder_emitThrow(generator->m_instructions);
+    zen_BinaryEntityBuilder_emitThrow(generator->m_builder);
 
     /* Log the emission of the throw instruction. */
     printf("[debug] Emitted throw\n");
@@ -4116,9 +4130,9 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
         suppressDescriptor, suppressDescriptorSize, suppressName, suppressNameSize);
 
     int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
-         generator->m_instructions);
+         generator->m_builder);
     zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
-         generator->m_instructions, parentChannelIndex);
+         generator->m_builder, parentChannelIndex);
 
     /* Retrieve the the AST node for with parameters rule. */
     zen_ASTNode_t* withParameters = context->m_withParameters;
@@ -4193,7 +4207,7 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
          *
          * TODO: Allocate a local variable!
          */
-        zen_BinaryEntityBuilder_emitStoreReference(generator->m_instructions, resourceIndex);
+        zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, resourceIndex);
         /* Log the emission of the store_a instruction. */
         printf("[debug] Emitted store_a %d\n", resourceIndex);
 
@@ -4230,17 +4244,17 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
         /* Load the resulting object from the local variable we allocated in the
          * previous loop.
          */
-        zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, resourceIndex);
+        zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, resourceIndex);
         /* Log the emission of the load_a instruction. */
         printf("[debug] Emitted load_a %d\n", resourceIndex);
 
         /* Invoke the Closeable#close() function to close the resource. */
-        zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions, closeIndex);
+        zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_builder, closeIndex);
         /* Log the emission of the invoke_virtual instruction. */
         printf("[debug] Emitted invoke_virtual %d\n", closeIndex);
 
         /* Jump to skip FC1-k and FC2-k sections. */
-        zen_BinaryEntityBuilder_emitJump(generator->m_instructions, 0);
+        zen_BinaryEntityBuilder_emitJump(generator->m_builder, 0);
         /* Log the emission of the jump instruction. */
         printf("[debug] Emitted jump 0 (dummy index)\n");
 
@@ -4257,32 +4271,32 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
          * base local variable index for private FC1 local variables), which can
          * be accessed only by the compiler.
          */
-        zen_BinaryEntityBuilder_emitStoreReference(generator->m_instructions,
+        zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder,
             fc1ExceptionIndex);
         /* Log the emission of the store_a instruction. */
         printf("[debug] store_a %d\n", fc1ExceptionIndex);
 
         /* Load the resource object from the local variable Lk. */
-        zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions,
+        zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder,
             resourceIndex);
         /* Log the emission of the load_a instruction. */
         printf("[debug] load_a %d\n", resourceIndex);
 
         /* Invoke the Closeable#close() function to close the resource. */
-        zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions, closeIndex);
+        zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_builder, closeIndex);
         /* Log the emission of the invoke_virtual instruction. */
         printf("[debug] Emitted invoke_virtual %d\n", closeIndex);
 
         int32_t fc1StopIndex = zen_DataChannel_getSize(parentChannel);
 
         /* Load the exception object that was thrown by the core section. */
-        zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions,
+        zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder,
             fc1ExceptionIndex);
         /* Log the emission of the load_a instruction. */
         printf("[debug] Emitted load_a %d\n", fc1ExceptionIndex);
 
         /* Throw the exception again. */
-        zen_BinaryEntityBuilder_emitThrow(generator->m_instructions);
+        zen_BinaryEntityBuilder_emitThrow(generator->m_builder);
         /* Log the emission of the throw instruction. */
         printf("[debug] Emitted throw\n");
 
@@ -4295,7 +4309,7 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
          * local variable index for private FC2 local variables), which can be
          * accessed only by the compiler.
          */
-        zen_BinaryEntityBuilder_emitStoreReference(generator->m_instructions,
+        zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder,
             fc2ExceptionIndex);
         /* Log the emission of the store_a instruction. */
         printf("[debug] store_a %d\n", fc2ExceptionIndex);
@@ -4303,7 +4317,7 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
         /* Load the exception object that was thrown by the core section. In other
          * words, load the object referenced by L[k + x].
          */
-        zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions,
+        zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder,
             fc1ExceptionIndex);
         /* Log the emission of the load_a instruction. */
         printf("[debug] Emitted load_a %d\n", fc1ExceptionIndex);
@@ -4312,7 +4326,7 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
          * function in the FC1 section. In other words, load the object referenced
          * by L[k + y].
          */
-        zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions,
+        zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder,
             fc2ExceptionIndex);
         /* Log the emission of the load_a instruction. */
         printf("[debug] Emitted load_a %d\n", fc2ExceptionIndex);
@@ -4321,20 +4335,20 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
          * by the FC1 section to the exception thrown by the core section.
          * In other words, `L[k + x].suppress(L[k + y])`.
          */
-        zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_instructions, suppressIndex);
+        zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_builder, suppressIndex);
         /* Log the emission of the invoke_virtual instruction. */
         printf("[debug] Emitted invoke_virtual %d\n", suppressIndex);
 
         /* Load the exception object that was thrown by the core section. In
          * other words, load the object referenced by L[k + x].
          */
-        zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions,
+        zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder,
             fc1ExceptionIndex);
         /* Log the emission of the load_a instruction. */
         printf("[debug] Emitted load_a %d\n", fc1ExceptionIndex);
 
         /* Throw the exception again. */
-        zen_BinaryEntityBuilder_emitThrow(generator->m_instructions);
+        zen_BinaryEntityBuilder_emitThrow(generator->m_builder);
         /* Log the emission of the throw instruction. */
         printf("[debug] Emitted throw\n");
 
@@ -5621,7 +5635,7 @@ void zen_BinaryEntityGenerator_invokeEvaluate(zen_BinaryEntityGenerator_t* gener
 
     uint16_t symbolIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
         generator->m_constantPoolBuilder, symbol, symbolSize);
-    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_instructions, symbolIndex);
+    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, symbolIndex);
     printf("[debug] Emitted load_cpr %d\n", symbolIndex);
 
     const uint8_t* kernelClass = "zen/core/ZenKernel";
@@ -5636,7 +5650,7 @@ void zen_BinaryEntityGenerator_invokeEvaluate(zen_BinaryEntityGenerator_t* gener
         evaluateNameSize);
 
     /* Invoke the static function to evaluate the expression. */
-    zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_instructions,
+    zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder,
         evaluateIndex);
 
     /* Log the emission of the invoke_static instruction. */
@@ -5709,7 +5723,7 @@ void zen_BinaryEntityGenerator_loadLong(zen_BinaryEntityGenerator_t* generator,
     switch (value) {
         case 0: {
             /* Emit the push_l0 instruction. */
-            zen_BinaryEntityBuilder_emitPushLong0(generator->m_instructions);
+            zen_BinaryEntityBuilder_emitPushLong0(generator->m_builder);
 
             /* Log the emission of the instruction. */
             printf("[debug] Emitted push_l0\n");
@@ -5719,7 +5733,7 @@ void zen_BinaryEntityGenerator_loadLong(zen_BinaryEntityGenerator_t* generator,
 
         case 1: {
             /* Emit the push_l1 instruction. */
-            zen_BinaryEntityBuilder_emitPushLong1(generator->m_instructions);
+            zen_BinaryEntityBuilder_emitPushLong1(generator->m_builder);
 
             /* Log the emission of the instruction. */
             printf("[debug] Emitted push_l1\n");
@@ -5729,7 +5743,7 @@ void zen_BinaryEntityGenerator_loadLong(zen_BinaryEntityGenerator_t* generator,
 
         case 2: {
             /* Emit the push_l2 instruction. */
-            zen_BinaryEntityBuilder_emitPushLong2(generator->m_instructions);
+            zen_BinaryEntityBuilder_emitPushLong2(generator->m_builder);
 
             /* Log the emission of the instruction. */
             printf("[debug] Emitted push_l2\n");
@@ -5754,13 +5768,13 @@ void zen_BinaryEntityGenerator_loadLong(zen_BinaryEntityGenerator_t* generator,
                 /* Emit the push_i0 instruction in order to provide padding on the operand
                  * stack.
                  */
-                zen_BinaryEntityBuilder_emitPushInteger0(generator->m_instructions);
+                zen_BinaryEntityBuilder_emitPushInteger0(generator->m_builder);
 
                 /* Log the emission of the instruction. */
                 printf("[debug] Emitted push_i0\n");
 
                 /* Emit the push_b instruction. */
-                zen_BinaryEntityBuilder_emitPushByte(generator->m_instructions,
+                zen_BinaryEntityBuilder_emitPushByte(generator->m_builder,
                     value);
 
                 /* Log the emission of the instruction. */
@@ -5770,7 +5784,7 @@ void zen_BinaryEntityGenerator_loadLong(zen_BinaryEntityGenerator_t* generator,
                 /* Emit the push_i0 instruction in order to provide padding on the operand
                  * stack.
                  */
-                zen_BinaryEntityBuilder_emitPushInteger0(generator->m_instructions);
+                zen_BinaryEntityBuilder_emitPushInteger0(generator->m_builder);
 
                 /* Log the emission of the instruction. */
                 printf("[debug] Emitted push_i0\n");
@@ -5786,7 +5800,7 @@ void zen_BinaryEntityGenerator_loadLong(zen_BinaryEntityGenerator_t* generator,
                  * pushed integer. This will be fixed in the future.
                  */
                 /* Emit the push_s instruction. */
-                zen_BinaryEntityBuilder_emitPushShort(generator->m_instructions,
+                zen_BinaryEntityBuilder_emitPushShort(generator->m_builder,
                     value);
 
                 /* Log the emission of the instruction. */
@@ -5808,7 +5822,7 @@ void zen_BinaryEntityGenerator_loadLong(zen_BinaryEntityGenerator_t* generator,
                     generator->m_constantPoolBuilder, value);
 
                 /* Emit the load_cpr instruction. */
-                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_instructions,
+                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
                     longIndex);
 
                 /* Log the emission of the instruction. */
@@ -5823,7 +5837,7 @@ void zen_BinaryEntityGenerator_loadInteger(zen_BinaryEntityGenerator_t* generato
     switch (value) {
         case 0: {
             /* Emit the push_i0 instruction. */
-            zen_BinaryEntityBuilder_emitPushInteger0(generator->m_instructions);
+            zen_BinaryEntityBuilder_emitPushInteger0(generator->m_builder);
 
             /* Log the emission of the instruction. */
             printf("[debug] Emitted push_i0\n");
@@ -5833,7 +5847,7 @@ void zen_BinaryEntityGenerator_loadInteger(zen_BinaryEntityGenerator_t* generato
 
         case 1: {
             /* Emit the push_i1 instruction. */
-            zen_BinaryEntityBuilder_emitPushInteger1(generator->m_instructions);
+            zen_BinaryEntityBuilder_emitPushInteger1(generator->m_builder);
 
             /* Log the emission of the instruction. */
             printf("[debug] Emitted push_i1\n");
@@ -5843,7 +5857,7 @@ void zen_BinaryEntityGenerator_loadInteger(zen_BinaryEntityGenerator_t* generato
 
         case 2: {
             /* Emit the push_i2 instruction. */
-            zen_BinaryEntityBuilder_emitPushInteger2(generator->m_instructions);
+            zen_BinaryEntityBuilder_emitPushInteger2(generator->m_builder);
 
             /* Log the emission of the instruction. */
             printf("[debug] Emitted push_i2\n");
@@ -5853,7 +5867,7 @@ void zen_BinaryEntityGenerator_loadInteger(zen_BinaryEntityGenerator_t* generato
 
         case 3: {
             /* Emit the push_i3 instruction. */
-            zen_BinaryEntityBuilder_emitPushInteger3(generator->m_instructions);
+            zen_BinaryEntityBuilder_emitPushInteger3(generator->m_builder);
 
             /* Log the emission of the instruction. */
             printf("[debug] Emitted push_i3\n");
@@ -5863,7 +5877,7 @@ void zen_BinaryEntityGenerator_loadInteger(zen_BinaryEntityGenerator_t* generato
 
         case 4: {
             /* Emit the push_i4 instruction. */
-            zen_BinaryEntityBuilder_emitPushInteger4(generator->m_instructions);
+            zen_BinaryEntityBuilder_emitPushInteger4(generator->m_builder);
 
             /* Log the emission of the instruction. */
             printf("[debug] Emitted push_i4\n");
@@ -5873,7 +5887,7 @@ void zen_BinaryEntityGenerator_loadInteger(zen_BinaryEntityGenerator_t* generato
 
         case 5: {
             /* Emit the push_i5 instruction. */
-            zen_BinaryEntityBuilder_emitPushInteger5(generator->m_instructions);
+            zen_BinaryEntityBuilder_emitPushInteger5(generator->m_builder);
 
             /* Log the emission of the instruction. */
             printf("[debug] Emitted push_i5\n");
@@ -5894,7 +5908,7 @@ void zen_BinaryEntityGenerator_loadInteger(zen_BinaryEntityGenerator_t* generato
              */
             if ((value >= 6) && (value <= 127)) {
                 /* Emit the push_b instruction. */
-                zen_BinaryEntityBuilder_emitPushByte(generator->m_instructions,
+                zen_BinaryEntityBuilder_emitPushByte(generator->m_builder,
                     value);
 
                 /* Log the emission of the instruction. */
@@ -5912,7 +5926,7 @@ void zen_BinaryEntityGenerator_loadInteger(zen_BinaryEntityGenerator_t* generato
                  * pushed integer. This will be fixed in the future.
                  */
                 /* Emit the push_s instruction. */
-                zen_BinaryEntityBuilder_emitPushShort(generator->m_instructions,
+                zen_BinaryEntityBuilder_emitPushShort(generator->m_builder,
                     value);
 
                 /* Log the emission of the instruction. */
@@ -5934,7 +5948,7 @@ void zen_BinaryEntityGenerator_loadInteger(zen_BinaryEntityGenerator_t* generato
                     generator->m_constantPoolBuilder, value);
 
                 /* Emit the load_cpr instruction. */
-                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_instructions,
+                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
                     integerIndex);
 
                 /* Log the emission of the instruction. */
@@ -6114,20 +6128,20 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                                  * in the same class. Therefore, emit a load reference to the
                                  * this reference.
                                  */
-                                zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+                                zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
 
                                 /* Log the emission of the load_a instruction. */
                                 printf("[debug] Emitted load_a 0\n");
 
                                 /* Load the instance field. */
-                                zen_BinaryEntityBuilder_emitLoadInstanceField(generator->m_instructions, 0);
+                                zen_BinaryEntityBuilder_emitLoadInstanceField(generator->m_builder, 0);
 
                                 /* Log the emission of the load_instance_field instruction. */
                                 printf("[debug] Emitted load_instance_field 0 (dummy index)\n");
                             }
                             else {
                                 /* Load the static field. */
-                                zen_BinaryEntityBuilder_emitLoadStaticField(generator->m_instructions, 0);
+                                zen_BinaryEntityBuilder_emitLoadStaticField(generator->m_builder, 0);
 
                                 /* Log the emission of the load_static_field instruction. */
                                 printf("[debug] Emitted load_static_field 0 (dummy index)\n");
@@ -6142,13 +6156,13 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                                  * in the same class. Therefore, emit a load reference to the
                                  * this reference.
                                  */
-                                zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+                                zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
 
                                 /* Log the emission of the load_a instruction. */
                                 printf("[debug] Emitted load_a 0\n");
 
                                 /* Load the instance field. */
-                                zen_BinaryEntityBuilder_emitLoadInstanceField(generator->m_instructions, 0);
+                                zen_BinaryEntityBuilder_emitLoadInstanceField(generator->m_builder, 0);
 
                                 /* Log the emission of the load_instance_field instruction. */
                                 printf("[debug] Emitted load_instance_field 0 (dummy index)\n");
@@ -6174,7 +6188,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                         }
 
                         /* Emit the load_a instruction. */
-                        zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, index);
+                        zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, index);
 
                         /* Log the emission of the load_a instruction. */
                         printf("[debug] Emitted load_a %d\n", index);
@@ -6237,7 +6251,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
 
             case ZEN_TOKEN_KEYWORD_TRUE: {
                 /* Emit push_i1. In the operand stack, 1 represents true. */
-                zen_BinaryEntityBuilder_emitPushInteger1(generator->m_instructions);
+                zen_BinaryEntityBuilder_emitPushInteger1(generator->m_builder);
 
                 /* Log the emission of the instruction. */
                 printf("[debug] Emitted push_i1\n");
@@ -6247,7 +6261,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
 
             case ZEN_TOKEN_KEYWORD_FALSE: {
                 /* Emit push_i0 instruction. In the operand stack, 0 represents false. */
-                zen_BinaryEntityBuilder_emitPushInteger0(generator->m_instructions);
+                zen_BinaryEntityBuilder_emitPushInteger0(generator->m_builder);
 
                 /* Log the emission of the instruction. */
                 printf("[debug] Emitted push_i0\n");
@@ -6268,7 +6282,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                     generator->m_constantPoolBuilder, token->m_text + 1, token->m_length - 2);
 
                 /* Emit load_cpr instruction. */
-                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_instructions,
+                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
                     stringIndex);
 
                 /* Log the emission of the instruction. */
@@ -6279,7 +6293,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
 
             case ZEN_TOKEN_KEYWORD_NULL: {
                 /* Emit the push_null instruction. */
-                zen_BinaryEntityBuilder_emitPushNull(generator->m_instructions);
+                zen_BinaryEntityBuilder_emitPushNull(generator->m_builder);
 
                 /* Log the emission of the push_null instruction. */
                 printf("[debug] Emitted push_null\n");
@@ -6289,7 +6303,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
 
             case ZEN_TOKEN_KEYWORD_THIS: {
                 /* Emit the load_a instruction. */
-                zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+                zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
 
                 /* Log the emission of the load_a instruction. */
                 printf("[debug] Emitted load_a 0\n");
@@ -6416,7 +6430,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                              * in the same class. Therefore, emit a load reference to the
                              * this reference.
                              */
-                            zen_BinaryEntityBuilder_emitLoadReference(generator->m_instructions, 0);
+                            zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
 
                             /* Log the emission of the load_a instruction. */
                             printf("[debug] Emitted load_a 0\n");
@@ -6430,7 +6444,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                                 primarySymbolToken->m_length);
 
                             /* Push the name of the target function on the operand stack. */
-                            zen_BinaryEntityBuilder_emitLoadCPR(generator->m_instructions,
+                            zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
                                 targetNameIndex);
 
                             int32_t index = dispatch2Index;
@@ -6449,7 +6463,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                                      *
                                      * Emit the new_array_a instruction to create the array.
                                      */
-                                    zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_instructions,
+                                    zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_builder,
                                         objectClassIndex);
 
                                     /* Log the emission of the new_array_a instruction. */
@@ -6462,7 +6476,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                                             expressionsContext->m_expressions, argumentIndex);
 
                                         /* Duplicate the reference to the argument array. */
-                                        zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+                                        zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
 
                                         /* Log the emission of the duplicate instruction. */
                                         printf("[debug] Emitted duplicate\n");
@@ -6474,7 +6488,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                                         zen_ASTWalker_walk(astListener, argument);
 
                                         /* Store the result in the argument array. */
-                                        zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_instructions);
+                                        zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_builder);
 
                                         /* Log the emission of the store_aa instruction. */
                                         printf("[debug] Emitted store_aa\n");
@@ -6488,7 +6502,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                             /* Invoke the ZenKernel.dispatch() function to simulate a function
                              * call.
                              */
-                            zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_instructions, index);
+                            zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, index);
 
                             /* Log the emission of the invoke_static instruction. */
                             printf("[debug] Emitted invoke_static %d\n", index);
@@ -6541,7 +6555,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                      */
 
                     /* Push the name of the target function on the operand stack. */
-                    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_instructions,
+                    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
                         targetNameIndex);
 
                     /* Log the emission of the load_cpr instruction. */
@@ -6563,7 +6577,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                              *
                              * Emit the new_array_a instruction to create the array.
                              */
-                            zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_instructions,
+                            zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_builder,
                                 objectClassIndex);
 
                             /* Log the emission of the new_array_a instruction. */
@@ -6576,7 +6590,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                                     expressionsContext->m_expressions, argumentIndex);
 
                                 /* Duplicate the reference to the argument array. */
-                                zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+                                zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
 
                                 /* Log the emission of the duplicate instruction. */
                                 printf("[debug] Emitted duplicate\n");
@@ -6588,7 +6602,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                                 zen_ASTWalker_walk(astListener, argument);
 
                                 /* Store the result in the argument array. */
-                                zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_instructions);
+                                zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_builder);
 
                                 /* Log the emission of the store_aa instruction. */
                                 printf("[debug] Emitted store_aa\n");
@@ -6601,14 +6615,14 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                     /* Invoke the ZenKernel.dispatch() function to simulate a function
                      * call.
                      */
-                    zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_instructions, index);
+                    zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, index);
 
                     /* Log the emission of the invoke_static instruction. */
                     printf("[debug] Emitted invoke_static %d\n", index);
                 }
                 else {
                     /* Push the name of the field to load on the operand stack. */
-                    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_instructions,
+                    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
                         targetNameIndex);
 
                     /* Log the emission of the load_cpr instruction. */
@@ -6617,7 +6631,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                     /* Invoke the ZenKernel.loadField() function to load the value
                      * stored in a field.
                      */
-                    zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_instructions, loadFieldIndex);
+                    zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, loadFieldIndex);
 
                     /* Log the emission of the invoke_static instruction. */
                     printf("[debug] Emitted invoke_static %d\n", loadFieldIndex);
@@ -6749,7 +6763,7 @@ void zen_BinaryEntityGenerator_onEnterMapExpression(zen_ASTListener_t* astListen
      *
      * Emit the new_array_a instruction to create the temporary key array.
      */
-    zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_instructions,
+    zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_builder,
         objectClassIndex);
 
     /* Log the emission of the new_array_a instruction. */
@@ -6764,7 +6778,7 @@ void zen_BinaryEntityGenerator_onEnterMapExpression(zen_ASTListener_t* astListen
         zen_MapEntryContext_t* mapEntryContext = (zen_MapEntryContext_t*)mapEntry->m_context;
 
         /* Duplicate the reference to the temporary key array. */
-        zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+        zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
 
         /* Log the emission of the duplicate instruction. */
         printf("[debug] Emitted duplicate\n");
@@ -6777,7 +6791,7 @@ void zen_BinaryEntityGenerator_onEnterMapExpression(zen_ASTListener_t* astListen
         zen_ASTWalker_walk(astListener, mapEntryContext->m_keyExpression);
 
         /* Store the result in the temporary key array. */
-        zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_instructions);
+        zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_builder);
 
         /* Log the emission of the store_aa instruction. */
         printf("[debug] Emitted store_aa\n");
@@ -6798,7 +6812,7 @@ void zen_BinaryEntityGenerator_onEnterMapExpression(zen_ASTListener_t* astListen
      *
      * Emit the new_array_a instruction to create the temporary array.
      */
-    zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_instructions,
+    zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_builder,
         objectClassIndex);
 
     /* Log the emission of the new_array_a instruction. */
@@ -6813,7 +6827,7 @@ void zen_BinaryEntityGenerator_onEnterMapExpression(zen_ASTListener_t* astListen
         zen_MapEntryContext_t* mapEntryContext = (zen_MapEntryContext_t*)mapEntry->m_context;
 
         /* Duplicate the reference to the temporary value array. */
-        zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+        zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
 
         /* Log the emission of the duplicate instruction. */
         printf("[debug] Emitted duplicate\n");
@@ -6825,7 +6839,7 @@ void zen_BinaryEntityGenerator_onEnterMapExpression(zen_ASTListener_t* astListen
         zen_ASTWalker_walk(astListener, mapEntryContext->m_valueExpression);
 
         /* Store the result in the temporary value array. */
-        zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_instructions);
+        zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_builder);
 
         /* Log the emission of the store_aa instruction. */
         printf("[debug] Emitted store_aa\n");
@@ -6837,13 +6851,13 @@ void zen_BinaryEntityGenerator_onEnterMapExpression(zen_ASTListener_t* astListen
         generator->m_constantPoolBuilder, hashMapClassName, hashMapClassNameSize);
 
     /* Create an instance of the HashMap class. */
-    zen_BinaryEntityBuilder_emitNew(generator->m_instructions, hashMapClassIndex);
+    zen_BinaryEntityBuilder_emitNew(generator->m_builder, hashMapClassIndex);
 
     /* Log the emission of the new instruction. */
     printf("[debug] Emitted new %d\n", hashMapClassIndex);
 
     /* Duplicate the reference of the newly created map. */
-    zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+    zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
 
     /* Log the emission of the duplicate instruction. */
     printf("[debug] Emitted duplicate\n");
@@ -6858,7 +6872,7 @@ void zen_BinaryEntityGenerator_onEnterMapExpression(zen_ASTListener_t* astListen
         constructorNameSize);
 
     /* Invoke the constructor to initialize the new map instance. */
-    zen_BinaryEntityBuilder_emitInvokeSpecial(generator->m_instructions,
+    zen_BinaryEntityBuilder_emitInvokeSpecial(generator->m_builder,
         hashMapConstructorIndex);
 
     /* Log the emission of the invoke_special instruction. */
@@ -6936,7 +6950,7 @@ void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListe
      *
      * Emit the new_array_a instruction to create the temporary array.
      */
-    zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_instructions,
+    zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_builder,
         objectClassIndex);
 
     /* Log the emission of the new_array_a instruction. */
@@ -6948,7 +6962,7 @@ void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListe
         zen_ASTNode_t* expression = (zen_ASTNode_t*)jtk_ArrayList_getValue(expressionsContext->m_expressions, i);
 
         /* Duplicate the reference to the temporary array. */
-        zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+        zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
 
         /* Log the emission of the duplicate instruction. */
         printf("[debug] Emitted duplicate\n");
@@ -6960,7 +6974,7 @@ void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListe
         zen_ASTWalker_walk(astListener, expression);
 
         /* Store the result in the temporary array. */
-        zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_instructions);
+        zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_builder);
 
         /* Log the emission of the store_aa instruction. */
         printf("[debug] Emitted store_aa\n");
@@ -6972,13 +6986,13 @@ void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListe
         generator->m_constantPoolBuilder, arrayListClassName, arrayListClassNameSize);
 
     /* Create an instance of the ArrayList class. */
-    zen_BinaryEntityBuilder_emitNew(generator->m_instructions, arrayListClassIndex);
+    zen_BinaryEntityBuilder_emitNew(generator->m_builder, arrayListClassIndex);
 
     /* Log the emission of the new instruction. */
     printf("[debug] Emitted new %d\n", arrayListClassIndex);
 
     /* Duplicate the reference of the newly created list. */
-    zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+    zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
 
     /* Log the emission of the duplicate instruction. */
     printf("[debug] Emitted duplicate\n");
@@ -6993,7 +7007,7 @@ void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListe
         constructorNameSize);
 
     /* Invoke the constructor to initialize the new list instance. */
-    zen_BinaryEntityBuilder_emitInvokeSpecial(generator->m_instructions,
+    zen_BinaryEntityBuilder_emitInvokeSpecial(generator->m_builder,
         arrayListConstructorIndex);
 
     /* Log the emission of the invoke_special instruction. */
@@ -7084,13 +7098,13 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
     jtk_CString_delete(typeNameText);
 
     /* Create an instance of the specified class. */
-    zen_BinaryEntityBuilder_emitNew(generator->m_instructions, typeNameIndex);
+    zen_BinaryEntityBuilder_emitNew(generator->m_builder, typeNameIndex);
 
     /* Log the emission of the new instruction. */
     printf("[debug] Emitted new %d\n", typeNameIndex);
 
     /* Duplicate the reference of the newly created instance. */
-    zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+    zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
 
     /* Log the emission of the duplicate instruction. */
     printf("[debug] Emitted duplicate\n");
@@ -7158,7 +7172,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
                 /* Emit the new_array_a instruction to create an array to
                  * represent the variable arguments.
                  */
-                zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_instructions,
+                zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_builder,
                     objectClassIndex);
 
                 /* Log the emission of the new_array_a instruction. */
@@ -7170,7 +7184,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
                         expressionsContext->m_expressions, j);
 
                     /* Duplicate the reference to the variable argument array. */
-                    zen_BinaryEntityBuilder_emitDuplicate(generator->m_instructions);
+                    zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
 
                     /* Log the emission of the duplicate instruction. */
                     printf("[debug] Emitted duplicate\n");
@@ -7184,7 +7198,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
                     zen_ASTWalker_walk(astListener, argument);
 
                     /* Store the result in the variable argument array. */
-                    zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_instructions);
+                    zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_builder);
 
                     /* Log the emission of the store_aa instruction. */
                     printf("[debug] Emitted store_aa\n");
@@ -7206,7 +7220,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
         constructorNameSize);
 
     /* Invoke the constructor to initialize the new instance. */
-    zen_BinaryEntityBuilder_emitInvokeSpecial(generator->m_instructions,
+    zen_BinaryEntityBuilder_emitInvokeSpecial(generator->m_builder,
         constructorIndex);
 
     /* Log the emission of the invoke_special instruction. */
