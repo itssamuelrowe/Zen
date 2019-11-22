@@ -36,7 +36,7 @@ zen_StackFrame_t* zen_StackFrame_new(zen_Function_t* function) {
     zen_Class_t* class0 = function->m_class;
     zen_EntityFile_t* entityFile = class0->m_entityFile;
     zen_FunctionEntity_t* functionEntity = function->m_functionEntity;
-    zen_ConstantPool_t* constantPool = entityFile->m_constantPool;
+    zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
 
     int32_t maxStackSize = 0;
     int32_t localVariableCount = 0;

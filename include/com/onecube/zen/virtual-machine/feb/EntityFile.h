@@ -75,7 +75,7 @@ struct zen_EntityFile_t {
      * The constant pool is a table where references to various constants,
      * identifiers, and other such entries are stored.
      */
-    zen_ConstantPool_t* m_constantPool;
+    zen_ConstantPool_t m_constantPool;
 
     /**
      * The primary binary entity of this binary file.

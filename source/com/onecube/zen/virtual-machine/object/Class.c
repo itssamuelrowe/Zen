@@ -125,7 +125,7 @@ void zen_Class_initialize(zen_Class_t* class0, zen_EntityFile_t* entityFile) {
     jtk_Assert_assertObject(entityFile, "The specified entity file is null.");
 
     zen_Entity_t* entity = &entityFile->m_entity;
-    zen_ConstantPool_t* constantPool = entityFile->m_constantPool;
+    zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
 
     zen_ConstantPoolClass_t* classEntry =
         (zen_ConstantPoolClass_t*)constantPool->m_entries[entity->m_reference];

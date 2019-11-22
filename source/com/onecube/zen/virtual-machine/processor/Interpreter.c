@@ -1539,7 +1539,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 uint16_t index = zen_Interpreter_readShort(interpreter);
 
                 zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
-                zen_ConstantPool_t* constantPool = entityFile->m_constantPool;
+                zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
                 zen_ConstantPoolFunction_t* functionEntry =
                     (zen_ConstantPoolFunction_t*)constantPool->m_entries[index];
                 zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[functionEntry->m_nameIndex];
@@ -2059,7 +2059,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 int32_t index = zen_Interpreter_readByte(interpreter);
 
                 zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
-                zen_ConstantPool_t* constantPool = entityFile->m_constantPool;
+                zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
                 zen_ConstantPoolEntry_t* entry = constantPool->m_entries[index];
                 switch (entry->m_tag) {
                     case ZEN_CONSTANT_POOL_TAG_INTEGER: {

@@ -83,11 +83,11 @@ zen_EntityFile_t* zen_BinaryEntityParser_parseEntityFile(zen_BinaryEntityParser_
 
 /* Parse Constant Pool */
 
-zen_ConstantPool_t* zen_BinaryEntityParser_parseConstantPool(zen_BinaryEntityParser_t* parser);
+void zen_BinaryEntityParser_parseConstantPool(zen_BinaryEntityParser_t* parser);
 
 /* Parse Entity */
 
-zen_Entity_t* zen_BinaryEntityParser_parseEntity(zen_BinaryEntityParser_t* parser);
+void zen_BinaryEntityParser_parseEntity(zen_BinaryEntityParser_t* parser);
 
 /* Parse Attribute Table */
 
