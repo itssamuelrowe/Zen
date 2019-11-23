@@ -725,6 +725,7 @@ void zen_BinaryEntityBuilder_writeInstructionAttribute(
 
     jtk_Arrays_copyEx_b(instructions, instructionCount, 0, channel->m_bytes,
         channel->m_capacity, channel->m_index, instructionCount);
+    channel->m_index += instructionCount;
 }
 
 void zen_BinaryEntityBuilder_writeExceptionTableHeader(zen_BinaryEntityBuilder_t* builder, uint16_t size) {
