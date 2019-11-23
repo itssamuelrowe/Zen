@@ -58,7 +58,9 @@ zen_StackFrame_t* zen_StackFrame_new(zen_Function_t* function) {
         if (jtk_CString_equals(nameEntry->m_bytes, nameEntry->m_length,
             ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION, ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION_SIZE)) {
             instructionAttribute = (zen_InstructionAttribute_t*)attribute;
-            maxStackSize = instructionAttribute->m_maxStackSize;
+            // maxStackSize = instructionAttribute->m_maxStackSize;
+            maxStackSize = 100;
+#warning "The max stack size specified in the binary entity file should be acknowledged."
             localVariableCount = instructionAttribute->m_localVariableCount;
 
             break;

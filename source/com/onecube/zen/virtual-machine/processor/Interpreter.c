@@ -2334,6 +2334,10 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 break;
             }
 
+            case ZEN_BYTE_CODE_NEW_ARRAY_A: { /* new_array_a */
+                break;
+            }
+
             case ZEN_BYTE_CODE_NEW_ARRAY_AN: { /* new_array_an */
                 break;
             }
