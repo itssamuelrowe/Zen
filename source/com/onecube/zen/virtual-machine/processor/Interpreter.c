@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -2335,6 +2335,13 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             }
 
             case ZEN_BYTE_CODE_NEW_ARRAY_A: { /* new_array_a */
+                /* Read the class index from the instruction stream. */
+                uint16_t index = zen_Interpreter_readShort(interpreter);
+                /* Retrieve the size of the array from the operand stack. */
+                uint16_t size = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
+                /* Push the reference of the newly created reference array. */
+                zen_OperandStack_pushReference(currentStackFrame->m_operandStack, NULL);
+
                 break;
             }
 
