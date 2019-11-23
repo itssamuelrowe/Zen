@@ -25,6 +25,7 @@
 #include <com/onecube/zen/compiler/generator/DataChannel.h>
 
 #include <com/onecube/zen/virtual-machine/feb/ByteCode.h>
+#include <com/onecube/zen/virtual-machine/feb/attribute/ExceptionTable.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolEntry.h>
 
 /*******************************************************************************

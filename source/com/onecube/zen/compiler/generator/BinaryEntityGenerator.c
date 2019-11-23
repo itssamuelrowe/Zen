@@ -305,6 +305,8 @@ void zen_BinaryEntityGenerator_delete(zen_BinaryEntityGenerator_t* generator) {
     jtk_Assert_assertObject(generator, "The specified generator is null.");
 
     /* This code here looks so convoluted. Oops! :V */
+
+#warning "TODO: The exception handler sites must be deleted when the associated function entity and instruction attribute are destroyed."
     int32_t exceptionHandlerSiteCount = jtk_ArrayList_getSize(generator->m_exceptionHandlerSites);
     int32_t exceptionHandlerSiteIndex;
     for (exceptionHandlerSiteIndex = 0;
@@ -673,7 +675,8 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
                     instructionAttribute->m_maxStackSize,
                     instructionAttribute->m_localVariableCount,
                     instructionAttribute->m_instructionLength,
-                    instructionAttribute->m_instructions);
+                    instructionAttribute->m_instructions,
+                    &instructionAttribute->m_exceptionTable);
 
                 /* Log the details of the instruction attribute. */
                 printf("[debug] The function has an instruction attribute with the features "
@@ -905,6 +908,22 @@ zen_InstructionAttribute_t* zen_BinaryEntityGenerator_makeInstructionAttribute(
         instructionLength,
         instructions);
 
+    zen_ExceptionTable_t* exceptionTable = &instructionAttribute->m_exceptionTable;
+    exceptionTable->m_size = jtk_ArrayList_getSize(generator->m_exceptionHandlerSites);
+    exceptionTable->m_exceptionHandlerSites = jtk_Memory_allocate(zen_ExceptionHandlerSite_t*,
+        exceptionTable->m_size);
+#warning "TODO: Destroy the memory allocated here."
+
+    int32_t exceptionHandlerSiteIndex;
+    for (exceptionHandlerSiteIndex = 0;
+        exceptionHandlerSiteIndex < exceptionTable->m_size;
+        exceptionHandlerSiteIndex++) {
+        zen_ExceptionHandlerSite_t* exceptionHandlerSite =
+            (zen_ExceptionHandlerSite_t*)jtk_ArrayList_getValue(
+                generator->m_exceptionHandlerSites, exceptionHandlerSiteIndex);
+        exceptionTable->m_exceptionHandlerSites[exceptionHandlerSiteIndex] =
+            exceptionHandlerSite;
+    }
 
     jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
     zen_BinaryEntityDisassember_disassembleInstructions(instructionBytes, instructionLength, builder);
@@ -2263,12 +2282,12 @@ void zen_BinaryEntityGenerator_onExitFunctionDeclaration(
      */
     jtk_String_delete(descriptor);
 
-    zen_InstructionAttribute_t* instructionAttribute =
-        zen_BinaryEntityGenerator_makeInstructionAttribute(generator);
-
     zen_FunctionEntity_t* functionEntity = zen_FunctionEntity_new(flags,
         nameIndex, descriptorIndex);
     zen_AttributeTable_t* attributeTable = &functionEntity->m_attributeTable;
+
+    zen_InstructionAttribute_t* instructionAttribute =
+        zen_BinaryEntityGenerator_makeInstructionAttribute(generator);
 
     attributeTable->m_size = 1;
     attributeTable->m_attributes = zen_Memory_allocate(zen_Attribute_t*, 1);

@@ -711,7 +711,7 @@ void zen_BinaryEntityBuilder_writeInstructionAttributeHeader(
 void zen_BinaryEntityBuilder_writeInstructionAttribute(
     zen_BinaryEntityBuilder_t* builder, uint16_t nameIndex,
     uint32_t length, uint16_t maxStackSize, uint16_t localVariableCount,
-    uint32_t instructionCount, uint8_t* instructions) {
+    uint32_t instructionCount, uint8_t* instructions, zen_ExceptionTable_t* exceptionTable) {
     jtk_Assert_assertObject(builder, "The specified builder is null.");
     jtk_Assert_assertTrue(builder->m_activeChannelIndex >= 0, "Please activate a channel before emitting instructions.");
 
@@ -726,6 +726,32 @@ void zen_BinaryEntityBuilder_writeInstructionAttribute(
     jtk_Arrays_copyEx_b(instructions, instructionCount, 0, channel->m_bytes,
         channel->m_capacity, channel->m_index, instructionCount);
     channel->m_index += instructionCount;
+    
+    int32_t exceptionHandlerSiteCount = exceptionTable->m_size;
+    zen_DataChannel_requestCapacity(channel, 2 + (exceptionHandlerSiteCount * 8));
+    
+    channel->m_bytes[channel->m_index++] = (exceptionHandlerSiteCount & 0x0000FF00) >> 8; // Exception Table Size
+    channel->m_bytes[channel->m_index++] = (exceptionHandlerSiteCount & 0x000000FF);
+    
+    int32_t exceptionHandlerSiteIndex;
+    for (exceptionHandlerSiteIndex = 0;
+        exceptionHandlerSiteIndex < exceptionHandlerSiteCount;
+        exceptionHandlerSiteIndex++) {
+        zen_ExceptionHandlerSite_t* exceptionHandlerSite = (zen_ExceptionHandlerSite_t*)
+            exceptionTable->m_exceptionHandlerSites[exceptionHandlerSiteIndex];
+        
+        channel->m_bytes[channel->m_index++] = (exceptionHandlerSite->m_startIndex & 0x0000FF00) >> 8; // Start Index
+        channel->m_bytes[channel->m_index++] = (exceptionHandlerSite->m_startIndex & 0x000000FF);
+        
+        channel->m_bytes[channel->m_index++] = (exceptionHandlerSite->m_stopIndex & 0x0000FF00) >> 8; // Stop Index
+        channel->m_bytes[channel->m_index++] = (exceptionHandlerSite->m_stopIndex & 0x000000FF);
+        
+        channel->m_bytes[channel->m_index++] = (exceptionHandlerSite->m_handlerIndex & 0x0000FF00) >> 8; // Handler Index
+        channel->m_bytes[channel->m_index++] = (exceptionHandlerSite->m_handlerIndex & 0x000000FF);
+        
+        channel->m_bytes[channel->m_index++] = (exceptionHandlerSite->m_exceptionClassIndex & 0x0000FF00) >> 8; // Exception Class Index
+        channel->m_bytes[channel->m_index++] = (exceptionHandlerSite->m_exceptionClassIndex & 0x000000FF);
+    }
 }
 
 void zen_BinaryEntityBuilder_writeExceptionTableHeader(zen_BinaryEntityBuilder_t* builder, uint16_t size) {
