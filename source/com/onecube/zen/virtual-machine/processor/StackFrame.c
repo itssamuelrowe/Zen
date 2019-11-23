@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,7 +40,7 @@ zen_StackFrame_t* zen_StackFrame_new(zen_Function_t* function) {
 
     int32_t maxStackSize = 0;
     int32_t localVariableCount = 0;
-    
+
     // Check if the function is native or not.
 
     /* Search in a linear fashion for the instruction attribute in the specified
@@ -60,7 +60,7 @@ zen_StackFrame_t* zen_StackFrame_new(zen_Function_t* function) {
             instructionAttribute = (zen_InstructionAttribute_t*)attribute;
             maxStackSize = instructionAttribute->m_maxStackSize;
             localVariableCount = instructionAttribute->m_localVariableCount;
-    
+
             break;
         }
     }
@@ -84,7 +84,7 @@ zen_StackFrame_t* zen_StackFrame_new(zen_Function_t* function) {
 
 void zen_StackFrame_delete(zen_StackFrame_t* stackFrame) {
     jtk_Assert_assertObject(stackFrame, "The specified stack frame is null.");
-    
+
     zen_OperandStack_delete(stackFrame->m_operandStack);
     zen_LocalVariableArray_delete(stackFrame->m_localVariableArray);
     jtk_Memory_deallocate(stackFrame);
@@ -94,7 +94,7 @@ void zen_StackFrame_delete(zen_StackFrame_t* stackFrame) {
 
 zen_Class_t* zen_StackFrame_getClass(zen_StackFrame_t* stackFrame) {
     jtk_Assert_assertObject(stackFrame, "The specified stack frame is null.");
-    
+
     return stackFrame->m_class;
 }
 
@@ -102,7 +102,7 @@ zen_Class_t* zen_StackFrame_getClass(zen_StackFrame_t* stackFrame) {
 
 zen_Function_t* zen_StackFrame_getFunction(zen_StackFrame_t* stackFrame) {
     jtk_Assert_assertObject(stackFrame, "The specified stack frame is null.");
-    
+
     return stackFrame->m_function;
 }
 
@@ -110,7 +110,7 @@ zen_Function_t* zen_StackFrame_getFunction(zen_StackFrame_t* stackFrame) {
 
 zen_LocalVariableArray_t* zen_StackFrame_getLocalVariableArray(zen_StackFrame_t* stackFrame) {
     jtk_Assert_assertObject(stackFrame, "The specified stack frame is null.");
-    
+
     return stackFrame->m_localVariableArray;
 }
 
@@ -118,6 +118,6 @@ zen_LocalVariableArray_t* zen_StackFrame_getLocalVariableArray(zen_StackFrame_t*
 
 zen_OperandStack_t* zen_StackFrame_getOperandStack(zen_StackFrame_t* stackFrame) {
     jtk_Assert_assertObject(stackFrame, "The specified stack frame is null.");
-    
+
     return stackFrame->m_operandStack;
 }
