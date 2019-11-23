@@ -329,6 +329,53 @@ void zen_SymbolDefinitionListener_onExitCompilationUnit(zen_ASTListener_t* astLi
 
 /* functionDeclaration */
 
+uint32_t zen_SymbolDefinitionListener_toModifiers(zen_TokenType_t type) {
+    uint32_t modifiers = 0;
+    switch (type) {
+        case ZEN_TOKEN_KEYWORD_PUBLIC: {
+            modifiers |= ZEN_MODIFIER_PUBLIC;
+            break;
+        }
+
+        case ZEN_TOKEN_KEYWORD_PRIVATE: {
+            modifiers |= ZEN_MODIFIER_PRIVATE;
+            break;
+        }
+
+        /*case ZEN_TOKEN_KEYWORD_PROTECTED: {
+            modifiers |= ZEN_MODIFIER_PROTECTED;
+            break;
+        }
+
+        case ZEN_TOKEN_KEYWORD_ABSTRACT: {
+            modifiers |= ZEN_MODIFIER_ABSTRACT;
+            break;
+        }
+        */
+
+        /* NOTE: Functions in Zen cannot be declared as final. In other words,
+         * a function declared in a superclass can be overriden in a subclass.
+         */
+        /*
+        case ZEN_TOKEN_KEYWORD_FINAL: {
+            modifiers |= ZEN_MODIFIER_FINAL;
+            break;
+        }
+        */
+
+        case ZEN_TOKEN_KEYWORD_STATIC: {
+            modifiers |= ZEN_MODIFIER_STATIC;
+            break;
+        }
+
+        case ZEN_TOKEN_KEYWORD_NATIVE: {
+            modifiers |= ZEN_MODIFIER_NATIVE;
+            break;
+        }
+    }
+    return modifiers;
+}
+
 void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
@@ -372,7 +419,7 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
         if (zen_Scope_isCompilationUnitScope(currentScope) || zen_Scope_isClassScope(currentScope) || zen_Scope_isLocalScope(currentScope)) {
             /* Resolve the identifier within the scope of the compilation unit. */
             zen_Symbol_t* symbol = NULL;
-            
+
             if (zen_Scope_isClassScope(currentScope)) {
                 symbol = zen_Scope_resolve(currentScope, identifierText);
             }
@@ -397,25 +444,14 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
             }
             else {
                 symbol = zen_SymbolDefinitionListener_declareFunction(listener->m_symbolTable, identifier, fixedParameters, variableParameter);
-                
+
                 zen_ClassMemberContext_t* classMemberContext = (zen_ClassMemberContext_t*)node->m_parent->m_context;
                 int32_t modifierCount = jtk_ArrayList_getSize(classMemberContext->m_modifiers);
                 int32_t i;
                 for (i = 0; i < modifierCount; i++) {
                     zen_ASTNode_t* modifier = (zen_ASTNode_t*)jtk_ArrayList_getValue(classMemberContext->m_modifiers, i);
                     zen_Token_t* token = (zen_Token_t*)modifier->m_context;
-                    uint32_t modifiers = 0;
-                    switch (token->m_type) {
-                        case ZEN_TOKEN_KEYWORD_STATIC: {
-                            modifiers |= ZEN_MODIFIER_STATIC;
-                            break;
-                        }
-                        
-                        case ZEN_TOKEN_KEYWORD_NATIVE: {
-                            modifiers |= ZEN_MODIFIER_NATIVE;
-                            break;
-                        }
-                    }
+                    uint32_t modifiers = zen_SymbolDefinitionListener_toModifiers(token->m_type);
                     zen_Symbol_addModifiers(symbol, modifiers, modifier);
                 }
             }
@@ -599,7 +635,7 @@ zen_Symbol_t* zen_SymbolDefinitionListener_declareFunction(zen_SymbolTable_t* sy
     zen_Symbol_t* symbol = zen_FunctionSymbol_getSymbol(functionSymbol);
     /* Define the symbol in the symbol table. */
     zen_SymbolTable_define(symbolTable, symbol);
-    
+
     return symbol;
 }
 
@@ -759,7 +795,7 @@ void zen_SymbolDefinitionListener_onEnterClassDeclaration(
         else {
             qualifiedName = jtk_String_newEx(identifierToken->m_text, identifierToken->m_length);
         }
-        
+
         zen_ClassScope_t* classScope = zen_ClassScope_new(listener->m_symbolTable->m_currentScope);
 
         zen_ClassSymbol_t* classSymbol = zen_ClassSymbol_new(identifier,
