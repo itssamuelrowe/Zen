@@ -401,7 +401,7 @@ void zen_BinaryEntityGenerator_onEnterCompilationUnit(zen_ASTListener_t* astList
     zen_Scope_t* scope = zen_ASTAnnotations_get(generator->m_scopes, node);
     /* Activate the scope associated with the current AST node. */
     zen_SymbolTable_setCurrentScope(generator->m_symbolTable, scope);
-    
+
     /* Push a data channel, where the bytes generated will be written. */
     int32_t primaryChannelIndex = zen_BinaryEntityBuilder_addChannel(generator->m_builder);
     zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_builder, primaryChannelIndex);
@@ -696,23 +696,6 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
         fwrite(channel->m_bytes, channel->m_index, 1, fp);
         fclose(fp);
     }
-
-    /* Retrieve the data channel on which the instructions of the
-     * function/initializer were written.
-     */
-    zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(
-        generator->m_builder->m_channels, 0);
-    /* Retrieve the bytes that were written on the data channel. */
-    uint8_t* bytes = zen_DataChannel_getBytes(channel);
-    /* Retrieve the number of bytes that were written on the data channel. */
-    int32_t size = zen_DataChannel_getSize(channel);
-
-    jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
-
-    zen_BinaryEntityDisassember_disassembleInstructions(bytes, size, builder);
-    printf("%.*s", builder->m_size, builder->m_value);
-
-    jtk_StringBuilder_delete(builder);
 }
 
 // importDeclaration
@@ -921,6 +904,13 @@ zen_InstructionAttribute_t* zen_BinaryEntityGenerator_makeInstructionAttribute(
         localVariableCount,
         instructionLength,
         instructions);
+
+
+    jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+    zen_BinaryEntityDisassember_disassembleInstructions(instructionBytes, instructionLength, builder);
+    printf("%.*s", builder->m_size, builder->m_value);
+    jtk_StringBuilder_delete(builder);
+
     return instructionAttribute;
 }
 
@@ -2303,16 +2293,13 @@ void zen_BinaryEntityGenerator_onExitFunctionDeclaration(
             exceptionHandlerSite->m_startIndex, exceptionHandlerSite->m_stopIndex,
             exceptionHandlerSite->m_handlerIndex, exceptionHandlerSite->m_exceptionClassIndex);
     }
-    
-    // Here, we assume that the channels are added and removed as if they were
-    // stored in a stack. The primary channel is assumed to be at zeroth index.
-    zen_DataChannel_t* instructionChannel = zen_BinaryEntityBuilder_getActiveChannel(generator->m_builder);
-    zen_DataChannel_t* primaryChannel = zen_BinaryEntityBuilder_getChannel(generator->m_builder, 0);
-    zen_DataChannel_appendChannel(primaryChannel, instructionChannel);
-    
+
+    /* Here, we assume that the channels are added and removed as if they were
+     * stored in a stack. The primary channel is assumed to be at zeroth index.
+     */
     int32_t instructionChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(generator->m_builder);
     zen_BinaryEntityBuilder_removeChannel(generator->m_builder, instructionChannelIndex);
-    
+
 #warning "TODO: Implement a stack like behaviour to alter active channel."
     zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_builder, 0);
 }
