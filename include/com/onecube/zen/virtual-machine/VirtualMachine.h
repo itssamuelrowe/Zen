@@ -100,7 +100,7 @@ zen_ObjectArray_t* zen_VirtualMachine_newObjectArray(zen_VirtualMachine_t* conte
 
 /* Static Function */
 
-zen_Function_t* zen_VirtualMachine_getStaticFunction(zen_VirtualMachine_t* context, zen_Class_t* handle, const uint8_t* identifier, const uint8_t* signature);
+zen_Function_t* zen_VirtualMachine_getStaticFunction(zen_VirtualMachine_t* context, zen_Class_t* handle, jtk_String_t* identifier, jtk_String_t* signature);
 void zen_VirtualMachine_invokeStaticFunction(zen_VirtualMachine_t* context, zen_Function_t* function, ...);
 
 /* String */

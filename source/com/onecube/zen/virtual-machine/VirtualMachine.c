@@ -246,7 +246,7 @@ void zen_VirtualMachine_raiseException(zen_VirtualMachine_t* virtualMachine,
 /* Static Function */
 
 zen_Function_t* zen_VirtualMachine_getStaticFunction(zen_VirtualMachine_t* virtualMachine,
-    zen_Class_t* handle, const uint8_t* identifier, const uint8_t* signature) {
+    zen_Class_t* handle, jtk_String_t* identifier, jtk_String_t* signature) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
     jtk_Assert_assertObject(handle, "The specified class is null.");
     jtk_Assert_assertObject(identifier, "The specified identifier is null.");

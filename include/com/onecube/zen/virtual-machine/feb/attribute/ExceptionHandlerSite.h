@@ -66,8 +66,11 @@ struct zen_ExceptionHandlerSite_t {
      *
      * A value of zero is considered a null value. Such a value indicates
      * that the handler site is capable of handling any type of exception.
-     *
      * The reason why constant pool indexes start from 1 is apparent here.
+     *
+     * An alternative design to represent a generic exception handler site
+     * would use the constant pool index of a class entry with the value
+     * "zen.core.Throwable".
      */
     uint16_t m_exceptionClassIndex;
 };

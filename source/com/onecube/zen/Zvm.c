@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ int32_t main(int32_t length, char** arguments) {
     jtk_System_initialize();
     int32_t result = zen_ZenVirtualMachine_main(arguments, length);
     jtk_System_shutdown();
-    
+
     return 0;
 }
 
@@ -43,9 +43,17 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
     int32_t argumentStartIndex = 1;
 
     const uint8_t* mainClassDescriptor = "Test";
-    const uint8_t* stringClassDescriptor = "zen.core.String";
+    const uint8_t* stringClassDescriptor = "(zen/core/String)";
     jtk_String_t* mainFunctionIdentifier = jtk_String_newEx("main", 4);
-    jtk_String_t* mainFunctionSignature = jtk_String_newEx("v/@(zen.core.String)", 20);
+    // jtk_String_t* mainFunctionSignature = jtk_String_newEx("v/@(zen.core.String)", 20);
+    jtk_String_t* mainFunctionSignature = jtk_String_newEx("(zen/core/Object):@(zen/core/Object)", 36);
+
+#warning "TODO: Implement support for both the signatures."
+    /* The virtual machine supports two main function signatures, which are listed
+     * below with decreasing priorities.
+     * - v/@(zen.core.String)
+     * - zen.core.Object/@(zen.core.Object)
+     */
 
     /* The configuration of the virtual machine is stored in an instance of
      * jtk_VirtualMachineConfiguration_t.
@@ -118,7 +126,7 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
 
     /* Wait for other threds to complete and tear down the virtual machine. */
     zen_VirtualMachine_shutDown(virtualMachine);
-    
+
     jtk_String_delete(mainFunctionSignature);
     jtk_String_delete(mainFunctionIdentifier);
 
