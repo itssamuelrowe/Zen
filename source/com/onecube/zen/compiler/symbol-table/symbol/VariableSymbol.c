@@ -29,8 +29,6 @@ zen_VariableSymbol_t* zen_VariableSymbol_new(zen_ASTNode_t* identifier,
     zen_Symbol_t* symbol = zen_Symbol_new(ZEN_SYMBOL_CATEGORY_VARIABLE, identifier, enclosingScope, variableSymbol);
 
     variableSymbol->m_symbol = symbol;
-    variableSymbol->m_modifiers = jtk_ArrayList_new();
-    variableSymbol->m_implicitModifiers = 0;
     variableSymbol->m_index = -1;
 
     return variableSymbol;
@@ -40,7 +38,6 @@ void zen_VariableSymbol_delete(zen_VariableSymbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
     zen_Symbol_delete(symbol->m_symbol);
-    jtk_ArrayList_delete(symbol->m_modifiers);
     jtk_Memory_deallocate(symbol);
 }
 

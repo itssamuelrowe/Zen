@@ -41,10 +41,6 @@ struct zen_EnumerationSymbol_t {
     /* The superclass attribute is updated during the resolution phase. */
     zen_ClassSymbol_t* m_superclass;
 
-    jtk_ArrayList_t* m_explicitModifiers;
-
-    int32_t m_modifiers;
-
     zen_Scope_t* m_enumerationScope;
 };
 

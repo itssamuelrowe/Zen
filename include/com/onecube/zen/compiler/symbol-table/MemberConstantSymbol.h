@@ -33,7 +33,6 @@
  */
 struct zen_MemberConstantSymbol_t {
     zen_Symbol_t* m_symbol;
-    jtk_ArrayList_t* m_modifiers; /* <zen_ASTNode_t*> */
 };
 
 /**

@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,6 +29,8 @@ zen_Symbol_t* zen_Symbol_new(zen_SymbolCategory_t category,
     symbol->m_identifier = identifier;
     symbol->m_enclosingScope = enclosingScope;
     symbol->m_context = context;
+    symbol->m_explicitModifiers = jtk_ArrayList_new();
+    symbol->m_modifiers = 0;
 
     return symbol;
 }
@@ -36,6 +38,7 @@ zen_Symbol_t* zen_Symbol_new(zen_SymbolCategory_t category,
 void zen_Symbol_delete(zen_Symbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
+    jtk_ArrayList_delete(symbol->m_explicitModifiers);
     jtk_Memory_deallocate(symbol);
 }
 
@@ -82,4 +85,28 @@ zen_Scope_t* zen_Symbol_getEnclosingScope(zen_Symbol_t* symbol) {
 
 zen_ASTNode_t* zen_Symbol_getIdentifier(zen_Symbol_t* symbol) {
     return symbol->m_identifier;
+}
+
+/* Modifier */
+
+void zen_Symbol_addExplicitModifiers(zen_Symbol_t* symbol, uint32_t modifiers,
+    zen_ASTNode_t* node) {
+    jtk_Assert_assertObject(symbol, "The specified symbol is null.");
+
+    if (node != NULL) {
+        jtk_ArrayList_add(symbol->m_explicitModifiers, node);
+    }
+    symbol->m_modifiers |= modifiers;
+}
+
+void zen_Symbol_addModifiers(zen_Symbol_t* symbol, uint32_t modifiers) {
+    jtk_Assert_assertObject(symbol, "The specified symbol is null.");
+
+    symbol->m_modifiers |= modifiers;
+}
+
+bool zen_Symbol_hasModifiers(zen_Symbol_t* symbol, uint32_t modifiers) {
+    jtk_Assert_assertObject(symbol, "The specified symbol is null.");
+
+    return (symbol->m_modifiers & modifiers) == modifiers;
 }

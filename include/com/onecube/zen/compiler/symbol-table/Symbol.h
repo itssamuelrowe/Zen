@@ -38,6 +38,8 @@ struct zen_Symbol_t {
     zen_ASTNode_t* m_identifier;
     zen_Scope_t* m_enclosingScope;
     void* m_context;
+    jtk_ArrayList_t* m_explicitModifiers;
+    uint32_t m_modifiers;
 };
 
 /**

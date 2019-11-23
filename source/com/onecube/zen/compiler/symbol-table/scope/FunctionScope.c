@@ -71,7 +71,7 @@ void zen_FunctionScope_define(zen_FunctionScope_t* scope, zen_Symbol_t* symbol) 
 
     if (zen_Symbol_isConstant(symbol)) {
         zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
-        if (zen_ConstantSymbol_hasModifier(constantSymbol, ZEN_MODIFIER_VARIABLE_PARAMETER)) {
+        if (zen_Symbol_hasModifiers(constantSymbol, ZEN_MODIFIER_VARIABLE_PARAMETER)) {
             if (scope->m_variableParameter != NULL) {
                 fprintf(stderr, "[internal error] Declaring multiple variable parameters in the same function scope.");
             }

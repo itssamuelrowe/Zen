@@ -433,8 +433,8 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
         }
         else {
             zen_ConstantSymbol_t* constantSymbol = zen_ConstantSymbol_new(variableParameter, symbolTable->m_currentScope);
-            zen_ConstantSymbol_addModifier(constantSymbol, ZEN_MODIFIER_VARIABLE_PARAMETER, NULL);
             symbol = zen_ConstantSymbol_getSymbol(constantSymbol);
+            zen_Symbol_addModifiers(symbol, ZEN_MODIFIER_VARIABLE_PARAMETER);
             zen_SymbolTable_define(listener->m_symbolTable, symbol);
         }
     }

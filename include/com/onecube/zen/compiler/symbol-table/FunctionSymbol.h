@@ -38,7 +38,6 @@ struct zen_FunctionSymbol_t {
     zen_Symbol_t* m_symbol;
     /* Signatures are destroyed by the destructor. */
     jtk_ArrayList_t* m_signatures; /* <zen_FunctionSignature_t*> */
-    jtk_ArrayList_t* m_modifiers; /* <zen_ASTNode_t*> */
     int32_t m_parameterThreshold;
 };
 

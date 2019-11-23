@@ -29,7 +29,6 @@ zen_FunctionSymbol_t* zen_FunctionSymbol_new(zen_ASTNode_t* identifier, zen_Scop
 
     functionSymbol->m_symbol = symbol;
     functionSymbol->m_signatures = jtk_ArrayList_new();
-    functionSymbol->m_modifiers = jtk_ArrayList_new();
     functionSymbol->m_parameterThreshold = -1;
 
     return functionSymbol;
@@ -46,7 +45,6 @@ void zen_FunctionSymbol_delete(zen_FunctionSymbol_t* symbol) {
         zen_FunctionSignature_delete(signature);
     }
     jtk_ArrayList_delete(symbol->m_signatures);
-    jtk_ArrayList_delete(symbol->m_modifiers);
     jtk_Memory_deallocate(symbol);
 }
 
@@ -75,7 +73,8 @@ bool zen_FunctionSymbol_hasParameterThreshold(zen_FunctionSymbol_t* symbol) {
     return symbol->m_parameterThreshold != -1;
 }
 
-void zen_FunctionSymbol_setParameterThreshold(zen_FunctionSymbol_t* symbol, int32_t parameterThreshold) {
+void zen_FunctionSymbol_setParameterThreshold(zen_FunctionSymbol_t* symbol,
+    int32_t parameterThreshold) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
     symbol->m_parameterThreshold = parameterThreshold;

@@ -30,8 +30,6 @@ zen_EnumerationSymbol_t* zen_EnumerationSymbol_new(zen_ASTNode_t* identifier,
 
     enumerationSymbol->m_symbol = symbol;
     enumerationSymbol->m_superclass = NULL;
-    enumerationSymbol->m_explicitModifiers = jtk_ArrayList_new();
-    enumerationSymbol->m_modifiers = 0;
     enumerationSymbol->m_enumerationScope = enumerationScope;
 
     return enumerationSymbol;
@@ -41,7 +39,6 @@ void zen_EnumerationSymbol_delete(zen_EnumerationSymbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
     zen_Symbol_delete(symbol->m_symbol);
-    jtk_ArrayList_delete(symbol->m_explicitModifiers);
     jtk_Memory_deallocate(symbol);
 }
 
@@ -61,20 +58,4 @@ zen_Symbol_t* zen_EnumerationSymbol_getSymbol(zen_EnumerationSymbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
     return symbol->m_symbol;
-}
-
-void zen_EnumerationSymbol_addModifier(zen_EnumerationSymbol_t* symbol, zen_Modifier_t modifier,
-    zen_ASTNode_t* node) {
-    jtk_Assert_assertObject(symbol, "The specified symbol is null.");
-
-    if (node != NULL) {
-        jtk_ArrayList_add(symbol->m_explicitModifiers, node);
-    }
-    symbol->m_modifiers |= (int32_t)modifier;
-}
-
-bool zen_EnumerationSymbol_hasModifier(zen_EnumerationSymbol_t* symbol, zen_Modifier_t modifier) {
-    jtk_Assert_assertObject(symbol, "The specified symbol is null.");
-
-    return (symbol->m_modifiers & (int32_t)modifier) != 0;
 }
