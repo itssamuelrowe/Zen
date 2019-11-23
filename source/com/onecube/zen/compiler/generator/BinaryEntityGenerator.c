@@ -2265,8 +2265,12 @@ void zen_BinaryEntityGenerator_onExitFunctionDeclaration(
     bool constructor = zen_Token_getType(identifierToken) == ZEN_TOKEN_KEYWORD_NEW;
     jtk_String_t* descriptor = zen_BinaryEntityGenerator_getDescriptorEx(generator,
         context->m_functionParameters, constructor);
+    
+    uint8_t* temporary = jtk_CString_newWithSize(identifierToken->m_text, identifierToken->m_length);
+    zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, temporary);
+    jtk_Memory_deallocate(temporary);
 
-    uint16_t flags = 0;
+    uint16_t flags = symbol->m_modifiers;
     uint16_t nameIndex = constructor?
         zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
             generator->m_constantPoolBuilder, "<constructor>", 13) :

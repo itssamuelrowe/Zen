@@ -372,6 +372,7 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
         if (zen_Scope_isCompilationUnitScope(currentScope) || zen_Scope_isClassScope(currentScope) || zen_Scope_isLocalScope(currentScope)) {
             /* Resolve the identifier within the scope of the compilation unit. */
             zen_Symbol_t* symbol = NULL;
+            
             if (zen_Scope_isClassScope(currentScope)) {
                 symbol = zen_Scope_resolve(currentScope, identifierText);
             }
@@ -395,7 +396,28 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
                 }
             }
             else {
-                zen_SymbolDefinitionListener_declareFunction(listener->m_symbolTable, identifier, fixedParameters, variableParameter);
+                symbol = zen_SymbolDefinitionListener_declareFunction(listener->m_symbolTable, identifier, fixedParameters, variableParameter);
+                
+                zen_ClassMemberContext_t* classMemberContext = (zen_ClassMemberContext_t*)node->m_parent->m_context;
+                int32_t modifierCount = jtk_ArrayList_getSize(classMemberContext->m_modifiers);
+                int32_t i;
+                for (i = 0; i < modifierCount; i++) {
+                    zen_ASTNode_t* modifier = (zen_ASTNode_t*)jtk_ArrayList_getValue(classMemberContext->m_modifiers, i);
+                    zen_Token_t* token = (zen_Token_t*)modifier->m_context;
+                    uint32_t modifiers = 0;
+                    switch (token->m_type) {
+                        case ZEN_TOKEN_KEYWORD_STATIC: {
+                            modifiers |= ZEN_MODIFIER_STATIC;
+                            break;
+                        }
+                        
+                        case ZEN_TOKEN_KEYWORD_NATIVE: {
+                            modifiers |= ZEN_MODIFIER_NATIVE;
+                            break;
+                        }
+                    }
+                    zen_Symbol_addModifiers(symbol, modifiers, modifier);
+                }
             }
         }
         else {
@@ -557,7 +579,7 @@ void zen_SymbolDefinitionListener_declareOverloadedFunction(zen_FunctionSymbol_t
     }
 }
 
-void zen_SymbolDefinitionListener_declareFunction(zen_SymbolTable_t* symbolTable,
+zen_Symbol_t* zen_SymbolDefinitionListener_declareFunction(zen_SymbolTable_t* symbolTable,
     zen_ASTNode_t* identifier, jtk_ArrayList_t* fixedParameters,
     zen_ASTNode_t* variableParameter) {
     /* Create a member function symbol to store in the symbol table. */
@@ -577,6 +599,8 @@ void zen_SymbolDefinitionListener_declareFunction(zen_SymbolTable_t* symbolTable
     zen_Symbol_t* symbol = zen_FunctionSymbol_getSymbol(functionSymbol);
     /* Define the symbol in the symbol table. */
     zen_SymbolTable_define(symbolTable, symbol);
+    
+    return symbol;
 }
 
 void zen_SymbolDefinitionListener_onEnterStatementSuite(
