@@ -766,7 +766,7 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
 
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_FunctionDeclarationContext_t* context = (zen_FunctionDeclarationContext_t*)node->m_context;
-
+    
     zen_Scope_t* scope = zen_ASTAnnotations_get(generator->m_scopes, node);
     zen_SymbolTable_setCurrentScope(generator->m_symbolTable, scope);
 
@@ -2321,6 +2321,14 @@ void zen_BinaryEntityGenerator_onExitFunctionDeclaration(
 
 #warning "TODO: Implement a stack like behaviour to alter active channel."
     zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_builder, 0);
+    
+    /* Reset the counters used for tracking certain properties of the function
+     * being declared.
+     */
+    generator->m_maxStackSize = 0;
+    generator->m_localVariableCount = 0;
+    /* The exception handler sites are destroyed when the entity file is destroyed. */
+    jtk_ArrayList_clear(generator->m_exceptionHandlerSites);
 }
 
 // functionParameters
