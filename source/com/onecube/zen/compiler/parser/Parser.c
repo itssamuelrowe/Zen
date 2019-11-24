@@ -2044,11 +2044,23 @@ void zen_Parser_classMember(zen_Parser_t* parser, zen_ASTNode_t* node) {
     zen_StackTrace_exit();
 }
 
+/*
+ * classMemberModifier
+ * :    'static'
+ * |    'native'
+ * |    'abstract'
+ * |    'public'
+ * |    'private'
+ * |    'secret'
+ * ;
+ */
 bool zen_Parser_isClassMemberModifier(zen_TokenType_t type) {
     return (type == ZEN_TOKEN_KEYWORD_STATIC) ||
            (type == ZEN_TOKEN_KEYWORD_NATIVE) ||
+           (type == ZEN_TOKEN_KEYWORD_ABSTRACT) ||
            (type == ZEN_TOKEN_KEYWORD_PUBLIC) ||
-           (type == ZEN_TOKEN_KEYWORD_PRIVATE);
+           (type == ZEN_TOKEN_KEYWORD_PRIVATE) ||
+           (type == ZEN_TOKEN_KEYWORD_SECRET);
 }
 
 /*
