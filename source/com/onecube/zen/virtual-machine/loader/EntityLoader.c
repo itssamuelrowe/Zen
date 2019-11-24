@@ -129,7 +129,7 @@ bool zen_EntityLoader_addDirectory_s(zen_EntityLoader_t* loader, jtk_String_t* d
 
 // Find Entity
 
-zen_EntityFile_t* zen_EntityLoader_findEntity(zen_EntityLoader_t* loader, const uint8_t* descriptor) {
+zen_EntityFile_t* zen_EntityLoader_findEntity(zen_EntityLoader_t* loader, jtk_String_t* descriptor) {
     jtk_Assert_assertObject(loader, "The specified entity loader is null.");
     jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
 
@@ -144,13 +144,11 @@ zen_EntityFile_t* zen_EntityLoader_findEntity(zen_EntityLoader_t* loader, const 
 // Get Entity
 
 zen_EntityFile_t* zen_EntityLoader_getEntity(zen_EntityLoader_t* loader,
-    const uint8_t* descriptor) {
+    jtk_String_t* descriptor) {
     jtk_Assert_assertObject(loader, "The specified entity loader is null.");
     jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
 
-    jtk_String_t* string = jtk_String_new(descriptor);
-    zen_EntityFile_t* entity = (zen_EntityFile_t*)jtk_HashMap_getValue(loader->m_entities, string);
-    jtk_String_delete(string);
+    zen_EntityFile_t* entity = (zen_EntityFile_t*)jtk_HashMap_getValue(loader->m_entities, descriptor);
     
     return entity;
 }
@@ -158,7 +156,7 @@ zen_EntityFile_t* zen_EntityLoader_getEntity(zen_EntityLoader_t* loader,
 // Load Entity
 
 zen_EntityFile_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader,
-    const uint8_t* descriptor) {
+    jtk_String_t* descriptor) {
     jtk_Assert_assertObject(loader, "The specified entity loader is null.");
     jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
 
@@ -167,7 +165,7 @@ zen_EntityFile_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader,
     /* Question. Why is joining two strings so complicated?! */
     // const uint8_t* strings[] = { descriptor, ".feb" };
     // jtk_String_t* entityName = jtk_String_newFromJoinEx(strings, 2);
-    jtk_String_t* entityName = jtk_String_newFromJoin(descriptor, ".feb");
+    jtk_String_t* entityName = jtk_String_newFromJoinEx(descriptor->m_value, descriptor->m_size, ".feb", 4);
     jtk_Path_t* entityFile = jtk_Path_newFromStringEx(entityName->m_value, entityName->m_size);
     jtk_String_delete(entityName);
 
@@ -204,7 +202,7 @@ zen_EntityFile_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader,
                          * ** After a few minutes **
                          * Damn it! Let's go implement that String class! -_-
                          */
-                        jtk_String_t* entityDescriptor = jtk_String_new(descriptor);
+                        jtk_String_t* entityDescriptor = jtk_String_clone(descriptor);
 
                         jtk_HashMap_put(loader->m_entities, entityDescriptor, result);
                     }

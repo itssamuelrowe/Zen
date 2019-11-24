@@ -3696,7 +3696,7 @@ enum zen_ByteCode_t {
      * [Arguments]
      * type
      *     The type represents the component type of the array. Please refer
-     *     the documentation of `zen_PrimitiveType_t` for more information.
+     *     the documentation of `zen_Type_t` for more information.
      *
      * [Operand Stack]
      * Before

@@ -62,8 +62,11 @@ void zen_ClassLoader_delete(zen_ClassLoader_t* classLoader);
 
 // Class
 
+zen_Class_t* zen_ClassLoader_findClassEx(zen_ClassLoader_t* classLoader,
+    const uint8_t* descriptor, int32_t size);
+    
 zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
-    const uint8_t* descriptor);
+    jtk_String_t* descriptor);
 
 // Load
 

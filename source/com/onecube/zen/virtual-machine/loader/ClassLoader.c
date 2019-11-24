@@ -62,12 +62,12 @@ void zen_ClassLoader_delete(zen_ClassLoader_t* classLoader) {
 
 // Class
 
-zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
-    const uint8_t* descriptor) {
+zen_Class_t* zen_ClassLoader_findClassEx(zen_ClassLoader_t* classLoader,
+    const uint8_t* descriptor, int32_t size) {
     jtk_Assert_assertObject(classLoader, "The specified class loader is null.");
 
     bool destroyDescriptorString = true;
-    jtk_String_t* descriptorString = jtk_String_new(descriptor);
+    jtk_String_t* descriptorString = jtk_String_newEx(descriptor, size);
     zen_Class_t* class0 = (zen_Class_t*)jtk_HashMap_getValue(classLoader->m_classes,
         descriptorString);
 
@@ -76,7 +76,7 @@ zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
      */
     if (class0 == NULL) {
         zen_EntityFile_t* entityFile = zen_EntityLoader_findEntity(
-            classLoader->m_entityLoader, descriptor);
+            classLoader->m_entityLoader, descriptorString);
 
         /* An entity file was found. Convert it to a class. */
         if (entityFile != NULL) {
@@ -88,6 +88,30 @@ zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
 
     if (destroyDescriptorString) {
         jtk_String_delete(descriptorString);
+    }
+
+    return class0;
+}
+
+zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
+    jtk_String_t* descriptor) {
+    jtk_Assert_assertObject(classLoader, "The specified class loader is null.");
+
+    zen_Class_t* class0 = (zen_Class_t*)jtk_HashMap_getValue(classLoader->m_classes,
+        descriptor);
+
+    /* The class with the specified descriptor was not found. Try to load it from
+     * the entity loader.
+     */
+    if (class0 == NULL) {
+        zen_EntityFile_t* entityFile = zen_EntityLoader_findEntity(
+            classLoader->m_entityLoader, descriptor);
+
+        /* An entity file was found. Convert it to a class. */
+        if (entityFile != NULL) {
+            class0 = zen_ClassLoader_loadFromEntityFile(classLoader,
+                jtk_String_clone(descriptor), entityFile);
+        }
     }
 
     return class0;

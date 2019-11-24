@@ -84,7 +84,8 @@ void zen_VirtualMachine_delete(zen_VirtualMachine_t* virtualMachine);
 
 /* Class */
 
-zen_Class_t* zen_VirtualMachine_getClass(zen_VirtualMachine_t* context, const uint8_t* descriptor);
+zen_Class_t* zen_VirtualMachine_getClass(zen_VirtualMachine_t* context, jtk_String_t* descriptor);
+zen_Class_t* zen_VirtualMachine_getClassEx(zen_VirtualMachine_t* context, const uint8_t* descriptor, int32_t size);
 
 /* Clear */
 

@@ -71,5 +71,5 @@ jtk_String_t* zen_Function_getName(zen_Function_t* function) {
 // Native
 
 bool zen_Function_isNative(zen_Function_t* function) {
-    return (function->m_functionEntity->m_flags & ZEN_ENTITY_FLAG_NATIVE) != 0;
+    return (function->m_functionEntity->m_flags & (1 << 7)) != 0;
 }

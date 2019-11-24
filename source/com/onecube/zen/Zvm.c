@@ -42,7 +42,7 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
     int32_t argumentCount = length - 1;
     int32_t argumentStartIndex = 1;
 
-    const uint8_t* mainClassDescriptor = "Test";
+    jtk_String_t* mainClassDescriptor = jtk_String_newEx("Test", 4);
     const uint8_t* stringClassDescriptor = "(zen/core/String)";
     jtk_String_t* mainFunctionIdentifier = jtk_String_newEx("main", 4);
     // jtk_String_t* mainFunctionSignature = jtk_String_newEx("v/@(zen.core.String)", 20);
@@ -136,6 +136,8 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
      */
     zen_VirtualMachine_delete(virtualMachine);
     zen_VirtualMachineConfiguration_delete(configuration);
+    
+    jtk_String_delete(mainClassDescriptor);
 
     return 0;
 }

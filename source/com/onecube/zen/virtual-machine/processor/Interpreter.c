@@ -1543,15 +1543,19 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     (zen_ConstantPoolFunction_t*)constantPool->m_entries[index];
                 zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[functionEntry->m_nameIndex];
                 zen_ConstantPoolUtf8_t* descriptorEntry = constantPool->m_entries[functionEntry->m_descriptorIndex];
+                zen_ConstantPoolClass_t* classEntry = constantPool->m_entries[functionEntry->m_classIndex];
+                zen_ConstantPoolUtf8_t* classNameEntry = constantPool->m_entries[classEntry->m_nameIndex];
+                
+                jtk_String_t* classDescriptor = jtk_String_newEx(classNameEntry->m_bytes, classNameEntry->m_length);
+                zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine, classDescriptor);
+                jtk_String_delete(classDescriptor);
 
-                jtk_String_t* name = jtk_String_newEx(nameEntry->m_bytes, nameEntry->m_length);
-                jtk_String_t* descriptor = jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
-
-                zen_Function_t* function = zen_Class_getStaticFunction(currentStackFrame->m_class,
-                    name, descriptor);
-
-                jtk_String_delete(name);
-                jtk_String_delete(descriptor);
+                jtk_String_t* functionName = jtk_String_newEx(nameEntry->m_bytes, nameEntry->m_length);
+                jtk_String_t* functionDescriptor = jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
+                zen_Function_t* function = zen_Class_getStaticFunction(targetClass,
+                    functionName, functionDescriptor);
+                jtk_String_delete(functionDescriptor);
+                jtk_String_delete(functionName);
 
                 if (function != NULL) {
                     // zen_Interpreter_handleClassInitialization(interpreter, class0);
@@ -2352,9 +2356,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Read the class index from the instruction stream. */
                 uint16_t index = zen_Interpreter_readShort(interpreter);
                 /* Retrieve the size of the array from the operand stack. */
-                uint16_t size = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
+                int32_t size = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
                 /* TODO: Create a new reference array. */
-                void* result = NULL;
+                void* result = jtk_Array_new(size);
                 /* Push the reference of the newly created reference array. */
                 zen_OperandStack_pushReference(currentStackFrame->m_operandStack, result);
 
@@ -3324,6 +3328,19 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             }
 
             case ZEN_BYTE_CODE_STORE_AA: { /* store_aa */
+                /* Retrieve the value from the operand stack. */
+                uintptr_t value = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+                /* Retrieve the index from the operand stack. */
+                int32_t index = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
+                /* Retrieve the array from the operand stack. */
+                jtk_Array_t* array = (jtk_Array_t*)zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+                /* Update the value at the specified index. */
+                jtk_Array_setValue(array, index, value);
+
+                /* Log debugging information for assistance in debugging the interpreter. */
+                printf("[debug] Executed instruction `store_aa` (value = 0x%X, index = %d, array = 0x%X, operand stack = %d)\n",
+                    value, index, array, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+
                 break;
             }
 

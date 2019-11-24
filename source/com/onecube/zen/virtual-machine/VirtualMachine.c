@@ -76,7 +76,7 @@ zen_VirtualMachine_t* zen_VirtualMachine_getContext(zen_VirtualMachine_t* virtua
 /* Class */
 
 zen_Class_t* zen_VirtualMachine_getClass(zen_VirtualMachine_t* virtualMachine,
-    const uint8_t* descriptor) {
+    jtk_String_t* descriptor) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
     jtk_Assert_assertObject(descriptor, "The specified class descriptor is null.");
 
@@ -125,53 +125,53 @@ void zen_VirtualMachine_raiseClassNotFoundException(zen_VirtualMachine_t* virtua
     jtk_Assert_assertObject(reason, "The specified class descriptor is null.");
 
     /* Find the `ClassNotFoundException` class. */
-    const uint8_t* descriptor = "zen.core.ClassNotFoundException";
+    // const uint8_t* descriptor = "zen.core.ClassNotFoundException";
 
-    zen_Class_t* handle = NULL;
+    // zen_Class_t* handle = NULL;
 
     // zen_EntityLoader_findClass(entityLoader, descriptor);
-    zen_EntityLoader_findEntity(virtualMachine->m_entityLoader, descriptor);
+    // zen_EntityLoader_findEntity(virtualMachine->m_entityLoader, descriptor);
 
     /* The message of the exception. */
-    zen_Object_t* message = zen_VirtualMachine_newString(virtualMachine, reason);
+    // zen_Object_t* message = zen_VirtualMachine_newString(virtualMachine, reason);
 
     /* The descriptor of the constructor which will initializer the exception
      * object.
      */
-    const uint8_t* constructor = "(Czen.core.String;)";
+    // const uint8_t* constructor = "(Czen.core.String;)";
 
     /* Create an instance of the `zen.core.ClassNotFoundException` class. */
-    zen_Object_t* exception = zen_VirtualMachine_newObject(virtualMachine, descriptor, constructor, message);
+    // zen_Object_t* exception = zen_VirtualMachine_newObject(virtualMachine, descriptor, constructor, message);
 
     /* Throw the exception. */
-    zen_VirtualMachine_raiseException(virtualMachine, exception);
+    // zen_VirtualMachine_raiseException(virtualMachine, exception);
 }
 
 void zen_VirtualMachine_raiseFunctionNotFoundException(zen_VirtualMachine_t* virtualMachine,
     const uint8_t* identifier, const uint8_t* reason) {
-    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
-    jtk_Assert_assertObject(reason, "The specified class descriptor is null.");
+    // jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+    // jtk_Assert_assertObject(reason, "The specified class descriptor is null.");
 
     /* Find the `FunctionNotFoundException` class. */
-    const uint8_t* descriptor = "zen.core.FunctionNotFoundException";
-    zen_Class_t* handle = NULL;
+    // const uint8_t* descriptor = "zen.core.FunctionNotFoundException";
+    // zen_Class_t* handle = NULL;
 
     // zen_EntityLoader_findClass(entityLoader, descriptor);
-    zen_EntityLoader_findEntity(virtualMachine->m_entityLoader, descriptor);
+    // zen_EntityLoader_findEntity(virtualMachine->m_entityLoader, descriptor);
 
     /* The message of the exception. */
-    zen_Object_t* message = zen_VirtualMachine_newString(virtualMachine, reason);
+    // zen_Object_t* message = zen_VirtualMachine_newString(virtualMachine, reason);
 
     /* The descriptor of the constructor which will initializer the exception
      * object.
      */
-    const uint8_t* constructor = "(Czen.core.String;)";
+    // const uint8_t* constructor = "(Czen.core.String;)";
 
     /* Create an instance of the `zen.core.ClassNotFoundException` class. */
-    zen_Object_t* exception = zen_VirtualMachine_newObject(virtualMachine, descriptor, constructor, message);
+    // zen_Object_t* exception = zen_VirtualMachine_newObject(virtualMachine, descriptor, constructor, message);
 
     /* Throw the exception. */
-    zen_VirtualMachine_raiseException(virtualMachine, exception);
+    // zen_VirtualMachine_raiseException(virtualMachine, exception);
 }
 
 /* Clear */

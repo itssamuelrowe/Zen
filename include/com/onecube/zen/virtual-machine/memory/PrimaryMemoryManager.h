@@ -50,11 +50,11 @@ void zen_PrimaryMemoryManager_delete(zen_PrimaryMemoryManager_t* primaryMemoryMa
 /* Allocate */
 
 uint8_t* zen_PrimaryMemoryManager_allocateRawPrimitiveArray(
-    zen_PrimaryMemoryManager_t* primaryMemoryManager, zen_PrimitiveType_t type,
+    zen_PrimaryMemoryManager_t* primaryMemoryManager, zen_Type_t type,
     int32_t length);
 
 uint8_t* zen_PrimaryMemoryManager_allocatePrimitiveArray(
-    zen_PrimaryMemoryManager_t* primaryMemoryManager, zen_PrimitiveType_t type,
+    zen_PrimaryMemoryManager_t* primaryMemoryManager, zen_Type_t type,
     int32_t length);
 
 uint8_t* zen_PrimaryMemoryManager_allocateBooleanArray(
