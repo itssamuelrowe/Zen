@@ -19,6 +19,8 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_MODIFIER_H
 #define COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_MODIFIER_H
 
+#include <com/onecube/zen/Configuration.h>
+
 /*******************************************************************************
  * Modifier                                                                    *
  *******************************************************************************/
@@ -58,5 +60,7 @@ enum zen_Modifier_t {
  * @memberof Modifier
  */
 typedef enum zen_Modifier_t zen_Modifier_t;
+
+
 
 #endif /* COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_MODIFIER_H */

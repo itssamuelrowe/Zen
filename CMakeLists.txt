@@ -72,6 +72,7 @@ set (
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/lexer/LexerError.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/lexer/Token.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/lexer/TokenStream.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/lexer/TokenType.c
 
     # Parser
 
@@ -84,6 +85,7 @@ set (
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/SymbolDefinitionListener.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/SymbolResolutionListener.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/SymbolTable.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/Modifier.c
 
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/scope/ClassScope.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/scope/CompilationUnitScope.c

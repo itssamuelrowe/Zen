@@ -135,7 +135,7 @@ void zen_Parser_componentDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node);
 /**
  * @memberof Parser
  */
-void zen_Parser_functionDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node);
+void zen_Parser_functionDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node, uint32_t modifiers);
 
 /**
  * @memberof Parser

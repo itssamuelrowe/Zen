@@ -329,52 +329,6 @@ void zen_SymbolDefinitionListener_onExitCompilationUnit(zen_ASTListener_t* astLi
 
 /* functionDeclaration */
 
-uint32_t zen_SymbolDefinitionListener_toModifiers(zen_TokenType_t type) {
-    uint32_t modifiers = 0;
-    switch (type) {
-        case ZEN_TOKEN_KEYWORD_PUBLIC: {
-            modifiers |= ZEN_MODIFIER_PUBLIC;
-            break;
-        }
-
-        case ZEN_TOKEN_KEYWORD_PRIVATE: {
-            modifiers |= ZEN_MODIFIER_PRIVATE;
-            break;
-        }
-
-        case ZEN_TOKEN_KEYWORD_SECRET: {
-            modifiers |= ZEN_MODIFIER_SECRET;
-            break;
-        }
-
-        case ZEN_TOKEN_KEYWORD_ABSTRACT: {
-            modifiers |= ZEN_MODIFIER_ABSTRACT;
-            break;
-        }
-
-        /* NOTE: Functions in Zen cannot be declared as final. In other words,
-         * a function declared in a superclass cannot be overriden in a subclass.
-         */
-        /*
-        case ZEN_TOKEN_KEYWORD_FINAL: {
-            modifiers |= ZEN_MODIFIER_FINAL;
-            break;
-        }
-        */
-
-        case ZEN_TOKEN_KEYWORD_STATIC: {
-            modifiers |= ZEN_MODIFIER_STATIC;
-            break;
-        }
-
-        case ZEN_TOKEN_KEYWORD_NATIVE: {
-            modifiers |= ZEN_MODIFIER_NATIVE;
-            break;
-        }
-    }
-    return modifiers;
-}
-
 void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
@@ -450,7 +404,7 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
                 for (i = 0; i < modifierCount; i++) {
                     zen_ASTNode_t* modifier = (zen_ASTNode_t*)jtk_ArrayList_getValue(classMemberContext->m_modifiers, i);
                     zen_Token_t* token = (zen_Token_t*)modifier->m_context;
-                    uint32_t modifiers = zen_SymbolDefinitionListener_toModifiers(token->m_type);
+                    uint32_t modifiers = zen_TokenType_toModifiers(token->m_type);
                     zen_Symbol_addModifiers(symbol, modifiers, modifier);
                 }
             }

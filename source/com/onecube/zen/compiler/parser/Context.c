@@ -337,11 +337,11 @@ void zen_FunctionDeclarationContext_getChildren(zen_FunctionDeclarationContext_t
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_add(children, context->m_identifier);
+    jtk_ArrayList_addPredicatively(children, context->m_identifier, jtk_Object_isNotNull);
     if (context->m_functionParameters != NULL) {
         jtk_ArrayList_add(children, context->m_functionParameters);
     }
-    jtk_ArrayList_add(children, context->m_functionBody);
+    jtk_ArrayList_addPredicatively(children, context->m_functionBody, jtk_Object_isNotNull);
 }
 
 /*******************************************************************************

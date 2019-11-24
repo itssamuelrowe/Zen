@@ -304,7 +304,7 @@ void zen_Parser_compilationUnit(zen_Parser_t* parser, zen_ASTNode_t* node) {
             case ZEN_TOKEN_KEYWORD_FUNCTION: {
 				zen_ASTNode_t* functionDeclaration = zen_ASTNode_new(node);
                 declarationPair->m_rightElement = functionDeclaration;
-				zen_Parser_functionDeclaration(parser, functionDeclaration);
+				zen_Parser_functionDeclaration(parser, functionDeclaration, 0);
                 break;
             }
 
@@ -597,7 +597,7 @@ void zen_Parser_componentDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) 
         case ZEN_TOKEN_KEYWORD_FUNCTION: {
             zen_ASTNode_t* functionDeclaration = zen_ASTNode_new(node);
             context->m_component = functionDeclaration;
-            zen_Parser_functionDeclaration(parser, functionDeclaration);
+            zen_Parser_functionDeclaration(parser, functionDeclaration, 0);
             break;
         }
 
@@ -626,16 +626,17 @@ void zen_Parser_componentDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) 
 
 /*
  * functionDeclaration
- * :    'function' functionIdentifier functionParameters? functionBody
+ * :    'function' functionIdentifier functionParameters? (functionBody | NEWLINE)
  * ;
  *
  * functionIdentifier
  * :    IDENTIFIER
- * |    'static'
+ * // |    'static'
  * |    'new'
  * ;
  */
-void zen_Parser_functionDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
+void zen_Parser_functionDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node,
+    uint32_t modifiers) {
     zen_StackTrace_enter();
 
 	zen_FunctionDeclarationContext_t* context = zen_FunctionDeclarationContext_new(node);
@@ -645,7 +646,7 @@ void zen_Parser_functionDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
     switch (zen_TokenStream_la(parser->m_tokens, 1)) {
         case ZEN_TOKEN_IDENTIFIER:
         case ZEN_TOKEN_KEYWORD_NEW:
-        case ZEN_TOKEN_KEYWORD_STATIC: {
+        /* case ZEN_TOKEN_KEYWORD_STATIC: */ {
             zen_Token_t* identifierOrKeyword = zen_TokenStream_lt(parser->m_tokens, 1);
             context->m_identifier = zen_Parser_newTerminalNode(node, identifierOrKeyword);
             zen_TokenStream_consume(parser->m_tokens);
@@ -669,9 +670,14 @@ void zen_Parser_functionDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_Parser_functionParameters(parser, functionParameters);
     }
 
-	zen_ASTNode_t* functionBody = zen_ASTNode_new(node);
-	context->m_functionBody = functionBody;
-	zen_Parser_functionBody(parser, functionBody);
+    if (!zen_Modifier_hasNative(modifiers) && !zen_Modifier_hasAbstract(modifiers)) {
+        zen_ASTNode_t* functionBody = zen_ASTNode_new(node);
+        context->m_functionBody = functionBody;
+        zen_Parser_functionBody(parser, functionBody);
+    }
+    else {
+        zen_Parser_match(parser, ZEN_TOKEN_NEWLINE);
+    }
 
     zen_StackTrace_exit();
 }
@@ -1221,8 +1227,8 @@ void zen_Parser_throwStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * |    tryStatement
  * |    synchronizeStatement
  * |    withStatement
- * |    functionDeclaration
- * |    classDeclaration
+ * // |    functionDeclaration
+ * // |    classDeclaration
  * ;
  */
 void zen_Parser_compoundStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
@@ -1268,7 +1274,7 @@ void zen_Parser_compoundStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
 			break;
 		}
 
-		case ZEN_TOKEN_KEYWORD_FUNCTION: {
+		/*case ZEN_TOKEN_KEYWORD_FUNCTION: {
 			zen_ASTNode_t* functionDeclaration = zen_ASTNode_new(node);
             context->m_statement = functionDeclaration;
 			zen_Parser_functionDeclaration(parser, functionDeclaration);
@@ -1281,6 +1287,7 @@ void zen_Parser_compoundStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
 			zen_Parser_classDeclaration(parser, classDeclaration);
 			break;
 		}
+        */
 
         /* NOTE: Enumerations are invalid within the scope of a function.
          * 1. Increases the complexity of the program. After all, we are
@@ -1973,11 +1980,14 @@ void zen_Parser_classMember(zen_Parser_t* parser, zen_ASTNode_t* node) {
 
     zen_ClassMemberContext_t* context = zen_ClassMemberContext_new(node);
 
+    uint32_t modifiers = 0;
     while (zen_Parser_isClassMemberModifier(zen_TokenStream_la(parser->m_tokens, 1))) {
         zen_Token_t* modifierToken = zen_TokenStream_lt(parser->m_tokens, 1);
         zen_ASTNode_t* modifier = zen_Parser_newTerminalNode(node, modifierToken);
         jtk_ArrayList_add(context->m_modifiers, modifier);
         zen_TokenStream_consume(parser->m_tokens);
+
+        modifiers |= zen_TokenType_toModifiers(modifierToken->m_type);
     }
 
     switch (zen_TokenStream_la(parser->m_tokens, 1)) {
@@ -2006,7 +2016,7 @@ void zen_Parser_classMember(zen_Parser_t* parser, zen_ASTNode_t* node) {
         case ZEN_TOKEN_KEYWORD_FUNCTION: {
             zen_ASTNode_t* functionDeclaration = zen_ASTNode_new(node);
             context->m_declaration = functionDeclaration;
-            zen_Parser_functionDeclaration(parser, functionDeclaration);
+            zen_Parser_functionDeclaration(parser, functionDeclaration, modifiers);
 
             break;
         }
