@@ -1099,8 +1099,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 else {
                     currentStackFrame->m_ip += 2;
 
-                    printf("[debug] Operand is %d, expected 0. Branch ignored.",
-                        operand);
+                    printf("[debug] Operand is %d, expected 0. Branch ignored.", operand);
                 }
 
 
@@ -2067,6 +2066,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         int32_t value = zen_ConstantPoolInteger_getValue(constantPoolInteger);
                         zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, value);
 
+                        printf("[debug] Executed instruction `load_cpr` (index = %d, result = '%d', operand stack = %d)\n",
+                            index, value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+
                         break;
                     }
 
@@ -2074,6 +2076,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         zen_ConstantPoolLong_t* constantPoolLong = (zen_ConstantPoolLong_t*)entry;
                         int64_t value = zen_ConstantPoolLong_getValue(constantPoolLong);
                         zen_OperandStack_pushLong(currentStackFrame->m_operandStack, value);
+
+                        printf("[debug] Executed instruction `load_cpr` (index = %d, result = '%l', operand stack = %d)\n",
+                            index, value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                         break;
                     }
@@ -2083,6 +2088,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         float value = zen_ConstantPoolFloat_getValue(constantPoolFloat);
                         zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, value);
 
+                        printf("[debug] Executed instruction `load_cpr` (index = %d, result = '%f', operand stack = %d)\n",
+                            index, value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+
                         break;
                     }
 
@@ -2090,6 +2098,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         zen_ConstantPoolDouble_t* constantPoolDouble = (zen_ConstantPoolDouble_t*)entry;
                         double value = zen_ConstantPoolDouble_getValue(constantPoolDouble);
                         zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, value);
+
+                        printf("[debug] Executed instruction `load_cpr` (index = %d, result = '%f', operand stack = %d)\n",
+                            index, value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                         break;
                     }
@@ -2100,6 +2111,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                             (zen_ConstantPoolString_t*)constantPool->m_entries[constantPoolString->m_stringIndex];
                         jtk_String_t* value = jtk_String_newEx(constantPoolUtf8->m_bytes, constantPoolUtf8->m_length);
                         zen_OperandStack_pushReference(currentStackFrame->m_operandStack, value);
+
+                        printf("[debug] Executed instruction `load_cpr` (index = %d, result = '%.*s', operand stack = %d)\n",
+                            index, value->m_size, value->m_value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                         break;
                     }
@@ -2339,8 +2353,14 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 uint16_t index = zen_Interpreter_readShort(interpreter);
                 /* Retrieve the size of the array from the operand stack. */
                 uint16_t size = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
+                /* TODO: Create a new reference array. */
+                void* result = NULL;
                 /* Push the reference of the newly created reference array. */
-                zen_OperandStack_pushReference(currentStackFrame->m_operandStack, NULL);
+                zen_OperandStack_pushReference(currentStackFrame->m_operandStack, result);
+
+                /* Log debugging information for assistance in debugging the interpreter. */
+                printf("[debug] Executed instruction `new_array_a` (index = %d, size = %d, result = 0x%X, operand stack = %d)\n",
+                    index, size, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
             }
@@ -2379,7 +2399,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Push an integer value of 0, which represents the null reference,
                  * on the operand stack.
                  */
-                zen_OperandStack_pushReference(currentStackFrame->m_operandStack, NULL);
+                zen_OperandStack_pushReference(currentStackFrame->m_operandStack, ZEN_INTERPRETER_NULL_REFERENCE);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
                 printf("[debug] Executed instruction `push_null` (operand stack = %d)\n",
