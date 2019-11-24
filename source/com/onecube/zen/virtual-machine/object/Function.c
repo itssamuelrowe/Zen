@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,12 +39,150 @@ zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
     function->m_flags = 0;
     function->m_functionEntity = functionEntity;
 
+    // type, startIndex
+    int32_t returnType = ZEN_TYPE_VOID;
+    int32_t parameterCount = 0;
+    int32_t i;
+    /* The following function descriptor parser is a naive implementation.
+     * It assumes that the given function descriptor is not malformed.
+     * The purpose of this parser is to simply extract relevant information
+     * as quickly as possible.
+     */
+    for (i = 0; i < descriptorEntry->m_length; i++) {
+        switch (descriptorEntry->m_bytes[i]) {
+            /* When an array type is encountered, skip all the '@' symbols. The
+             * base type of the array will be counted as the parameter.
+             */
+            case '@': {
+                continue;
+            }
+
+            /* When the colon symbol is encountered, ignore it. */
+            case ':': {
+                /* Do not count the return type as a parameter. */
+                parameterCount--;
+                break;
+            }
+
+            case '(': {
+                while (descriptorEntry->m_bytes[++i] != ')');
+                parameterCount++;
+                break;
+            }
+
+            case 'z':
+            case 'b':
+            case 'c':
+            case 's':
+            case 'i':
+            case 'l':
+            case 'f':
+            case 'd':
+            case 'v': {
+                parameterCount++;
+                break;
+            }
+
+            default: {
+                printf("[error] Malformed function descriptor '%.*s'\n",
+                    descriptorEntry->m_length, descriptorEntry->m_bytes);
+            }
+        }
+    }
+
+    zen_Type_t returnType;
+    int32_t* parameters = jtk_Memory_allocate(int32_t, parameterCount * 2);
+    zen_Type_t type;
+    for (i = 0; i < descriptorEntry->m_length; i++) {
+        int32_t startIndex = i;
+        switch (descriptorEntry->m_bytes[i]) {
+            case '@': {
+                type = ZEN_TYPE_ARRAY;
+                while (descriptorEntry->m_bytes[++i] == '@');
+                if (descriptorEntry->m_bytes[i] == '(') {
+                    while (descriptorEntry->m_bytes[++i] != ')');
+                }
+                break;
+            }
+            
+            case 'z': {
+                type = ZEN_TYPE_BOOLEAN;
+                break;
+            }
+
+            case 'b': {
+                type = ZEN_TYPE_INTEGER_8;
+                break;
+            }
+
+            case 'c': {
+                type = ZEN_TYPE_CHARACTER;
+                break;
+            }
+
+            case 's': {
+                type = ZEN_TYPE_INTEGER_16;
+                break;
+            }
+
+            case 'i': {
+                type = ZEN_TYPE_INTEGER_32;
+                break;
+            }
+
+            case 'l': {
+                type = ZEN_TYPE_INTEGER_64;
+                break;
+            }
+
+            case 'f': {
+                type = ZEN_TYPE_DECIMAL_32;
+                break;
+            }
+
+            case 'd': {
+                type = ZEN_TYPE_DECIMAL_64;
+                break;
+            }
+
+            case 'v': {
+                type = ZEN_TYPE_VOID;
+                break;
+            }
+
+            case '(': {
+                type = ZEN_TYPE_REFERENCE;
+                while (descriptorEntry->m_bytes[++i] != ')');
+                break;
+            }
+
+            default: {
+
+            }
+        }
+        if (i == 0) {
+            /* Skip the colon after the return type. */
+            returnType = type;
+            i++;
+        }
+        else {
+            int32_t index = i * 2;
+            parameters[index] = type;
+            parameters[index + 1] = i;
+        }
+    }
+    
+    function->m_returnType = returnType;
+    function->m_parameterCount = parameterCount;
+    function->m_parameters = parameters;
+
     return function;
 }
 
 // Destructor
 
 void zen_Function_delete(zen_Function_t* function) {
+    jtk_Memory_deallocate(function->m_parameters);
     jtk_String_delete(function->m_name);
     jtk_String_delete(function->m_descriptor);
     jtk_Memory_deallocate(function);
