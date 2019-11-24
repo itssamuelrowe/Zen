@@ -32,17 +32,17 @@
 struct zen_ConstantPoolUtf8_t {
 
     /**
-     * The type of the constant pool entry.
+The type of the constant pool entry.
      */
     uint8_t m_tag;
 
     /**
-     * The number of bytes the {@code m_bytes} array occupies.
+The number of bytes the {@code m_bytes} array occupies.
      */
     uint16_t m_length;
 
     /**
-     * The bytes contained in the string, encoded in UTF-8.
+The bytes contained in the string, encoded in UTF-8.
      */
     uint8_t* m_bytes;
 };

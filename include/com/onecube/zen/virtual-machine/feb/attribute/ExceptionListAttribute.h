@@ -37,15 +37,15 @@
  */
 struct zen_ExceptionListAttribute_t {
     /**
-     * The number of exception types the associated function or constructor
-     * throws.
+The number of exception types the associated function or constructor
+throws.
      */
     uint16_t m_numberOfExceptions;
     
     /**
-     * An array of indexes into the constant pool. Each index must be a valid
-     * index within the boundaries of the constant pool. Further, the entry at
-     * the specified index should be a `ConstantPoolClass` instance.
+An array of indexes into the constant pool. Each index must be a valid
+index within the boundaries of the constant pool. Further, the entry at
+the specified index should be a `ConstantPoolClass` instance.
      */
     uint16_t* m_classIndexes;
 };

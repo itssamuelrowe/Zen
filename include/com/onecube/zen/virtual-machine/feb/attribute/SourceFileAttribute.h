@@ -37,10 +37,10 @@
 struct zen_SourceFileAttribute_t {
     
     /**
-     * A valid index into the constant pool. The entry at the specified index
-     * should be a `ConstantPoolUtf8` instance, which contains the path of
-     * the source file. Further, the value does not hold any special meaning
-     * to the virtual machine.
+A valid index into the constant pool. The entry at the specified index
+should be a `ConstantPoolUtf8` instance, which contains the path of
+the source file. Further, the value does not hold any special meaning
+to the virtual machine.
      */
     uint16_t m_pathIndex;
 };

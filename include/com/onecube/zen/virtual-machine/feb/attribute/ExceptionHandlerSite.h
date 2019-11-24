@@ -37,37 +37,37 @@
  */
 struct zen_ExceptionHandlerSite_t {
     /**
-     * A valid index into the instructions array, which indicates the starting
-     * index of the range where the exception handler is active.
-     * It is inclusive.
+A valid index into the instructions array, which indicates the starting
+index of the range where the exception handler is active.
+It is inclusive.
      *
-     * The instructions array is located in the code attribute.
+The instructions array is located in the code attribute.
      */
     uint16_t m_startIndex;
 
     /**
-     * A valid index into the instructions array, which indicates the stopping
-     * index of the range where the exception handler is active.
-     * It is inclusive.
+A valid index into the instructions array, which indicates the stopping
+index of the range where the exception handler is active.
+It is inclusive.
      *
-     * The instructions array is located in the code attribute.
+The instructions array is located in the code attribute.
      */
     uint16_t m_stopIndex;
 
     /**
-     * A valid index into the instructions array. It indicates the starting
-     * index of the implementation of the exception handler.
+A valid index into the instructions array. It indicates the starting
+index of the implementation of the exception handler.
      */
     uint16_t m_handlerIndex;
 
     /**
-     * A valid index into the constant pool. The entry at this index should
-     * be an instance of the zen_ConstantPoolClass_t structure.
+A valid index into the constant pool. The entry at this index should
+be an instance of the zen_ConstantPoolClass_t structure.
      *
-     * A value of zero is considered a null value. Such a value indicates
-     * that the handler site is capable of handling any type of exception.
+A value of zero is considered a null value. Such a value indicates
+that the handler site is capable of handling any type of exception.
      *
-     * The reason why constant pool indexes start from 1 is apparent here.
+The reason why constant pool indexes start from 1 is apparent here.
      */
     uint16_t m_exceptionClassIndex;
 };

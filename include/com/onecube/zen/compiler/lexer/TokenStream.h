@@ -39,32 +39,32 @@
 struct zen_TokenStream_t {
 
     /**
-     * The lexer which recognizes and produces tokens on this
-     * stream.
+The lexer which recognizes and produces tokens on this
+stream.
      */
     zen_Lexer_t* m_lexer;
 
     /**
-     * The list of all the tokens recognized by the lexer so
-     * far. It is considered a complete view of the input source
-     * once the lexer recognizes the end-of-stream token.
+The list of all the tokens recognized by the lexer so
+far. It is considered a complete view of the input source
+once the lexer recognizes the end-of-stream token.
      */
     jtk_ArrayList_t* m_tokens;
 
     /**
-     * The index of the current token.
+The index of the current token.
      */
     int32_t m_p;
 
     /**
-     * Determines whether the end-of-stream token has been
-     * produced by the lexer.
+Determines whether the end-of-stream token has been
+produced by the lexer.
      */
     bool m_hitEndOfStream;
     
     /**
-     * The channel on which the token stream filters tokens
-     * from.
+The channel on which the token stream filters tokens
+from.
      */
     zen_TokenChannel_t m_channel;
 };

@@ -35,19 +35,19 @@
 struct zen_FieldEntity_t {
 
     /**
-     * A mask of flags which denote various properties of this entity.
+A mask of flags which denote various properties of this entity.
      */
     uint16_t m_flags;
     
     /**
-     * A valid index into the constant pool table. The entry at this index is
-     * an UTF-8 entry which represents the name of this field.
+A valid index into the constant pool table. The entry at this index is
+an UTF-8 entry which represents the name of this field.
      */
     uint16_t m_nameIndex;
 
     /**
-     * A valid index into the constant pool table. The entry at this index is
-     * an UTF-8 entry which represents the descriptor of this field.
+A valid index into the constant pool table. The entry at this index is
+an UTF-8 entry which represents the descriptor of this field.
      */
     uint16_t m_descriptorIndex;
     

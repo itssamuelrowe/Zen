@@ -35,12 +35,12 @@
 struct zen_InclusiveOrExpressionContext_t {
     zen_ASTNode_t* m_node;
     /**
-     * The expression on the left of the operator.
+The expression on the left of the operator.
      */
     zen_ASTNode_t* m_exclusiveOrExpression;
 
     /**
-     * The list of exclusiveOrExpressions on the right of the operator.
+The list of exclusiveOrExpressions on the right of the operator.
      */
     jtk_ArrayList_t* m_exclusiveOrExpressions;
 };

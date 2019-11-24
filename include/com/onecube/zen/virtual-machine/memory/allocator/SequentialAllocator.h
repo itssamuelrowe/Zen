@@ -63,32 +63,32 @@
 struct zen_SequentialAllocator_t {
     
     /**
-     * A pointer to the start of the memory chunk assigned to this sequential
-     * allocator.
+A pointer to the start of the memory chunk assigned to this sequential
+allocator.
      *
-     * Note that, using integers to represent addresses may work against
-     * portablity. Therefore, we use 8-bit integer pointers to represent the
-     * address; the compiler takes care of the addresses for us.
+Note that, using integers to represent addresses may work against
+portablity. Therefore, we use 8-bit integer pointers to represent the
+address; the compiler takes care of the addresses for us.
      */
     uint8_t* m_start;
     
     /**
-     * A pointer to the end of the memory chunk assigned to this sequential
-     * allocator. As mentioned above, it helps the allocator identify memory
-     * exhaustion.
+A pointer to the end of the memory chunk assigned to this sequential
+allocator. As mentioned above, it helps the allocator identify memory
+exhaustion.
      *
-     * Note that, using integers to represent addresses may work against
-     * portablity. Therefore, we use 8-bit integer pointers to represent the
-     * address; the compiler takes care of the addresses for us.
+Note that, using integers to represent addresses may work against
+portablity. Therefore, we use 8-bit integer pointers to represent the
+address; the compiler takes care of the addresses for us.
      */
     uint8_t* m_limit;
     
     /**
-     * A pointer to the start of the region where the next allocation may occur.
-     * It is also known as the bump pointer.
+A pointer to the start of the region where the next allocation may occur.
+It is also known as the bump pointer.
      *
-     * Initially, it is points to the start of the memory chunk assigned to
-     * this allocator.
+Initially, it is points to the start of the memory chunk assigned to
+this allocator.
      */
     uint8_t* m_free;
     

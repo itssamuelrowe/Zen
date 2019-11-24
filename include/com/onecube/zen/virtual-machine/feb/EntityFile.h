@@ -46,42 +46,42 @@
 struct zen_EntityFile_t {
 
     /**
-     * Represents the magic number which identifies the Binary Entity Format (FEB).
-     * It has the value 0xFEB72000.
+Represents the magic number which identifies the Binary Entity Format (FEB).
+It has the value 0xFEB72000.
      */
     uint32_t m_magicNumber;
 
     /**
-     * Represents the version of the Binary Entity Format (FEB) with which
-     * the binary file is encoded.
+Represents the version of the Binary Entity Format (FEB) with which
+the binary file is encoded.
      */
     zen_FebVersion_t m_version;
 
     /**
-     * The size of the stream followed by this attribute. This helps virtual
-     * machines allocate a single buffer to represent the whole entity hierarchy.
+The size of the stream followed by this attribute. This helps virtual
+machines allocate a single buffer to represent the whole entity hierarchy.
      *
-     * Further, writing an entity to a stream will simply require copying the bytes
-     * of the buffer in a linear fashion.
+Further, writing an entity to a stream will simply require copying the bytes
+of the buffer in a linear fashion.
      */
     // uint32_t m_size;
 
     /**
-     * A mask of flags which denote various properties of this entity file.
+A mask of flags which denote various properties of this entity file.
      */
     uint16_t m_flags;
 
     /**
-     * The constant pool is a table where references to various constants,
-     * identifiers, and other such entries are stored.
+The constant pool is a table where references to various constants,
+identifiers, and other such entries are stored.
      */
     zen_ConstantPool_t* m_constantPool;
 
     /**
-     * The primary binary entity of this binary file.
+The primary binary entity of this binary file.
      *
-     * Every binary file contains the definition of a single entity: class,
-     * interface, annotation, or enumeration. It is known as the primary entity.
+Every binary file contains the definition of a single entity: class,
+interface, annotation, or enumeration. It is known as the primary entity.
      */
     zen_Entity_t m_entity;
 };

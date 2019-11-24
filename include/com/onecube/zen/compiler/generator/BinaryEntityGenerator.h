@@ -55,7 +55,7 @@ struct zen_BinaryEntityGenerator_t {
     zen_ASTNode_t* m_compilationUnit;
     
     /**
-     * The output stream where the generated binary entity will be written to.
+The output stream where the generated binary entity will be written to.
      */
     jtk_OutputStream_t* m_outputStream;
     
@@ -66,43 +66,43 @@ struct zen_BinaryEntityGenerator_t {
     jtk_ArrayList_t* m_functions;
     
     /* The following attributes are used to generate the instruction attribute.
-     * Unfortunately, these fields are overwritten when multiple functions are being
-     * declared simultaneously. For example, this situation may arise in nested
-     * functions such as lambdas. A simple solution would be to refactor these
-     * fields to another structure, say FunctionContext. Then the structure can
-     * be stored in a hash map or stack contingent on the design of the code
-     * generator.
+Unfortunately, these fields are overwritten when multiple functions are being
+declared simultaneously. For example, this situation may arise in nested
+functions such as lambdas. A simple solution would be to refactor these
+fields to another structure, say FunctionContext. Then the structure can
+be stored in a hash map or stack contingent on the design of the code
+generator.
      */
     
     // TODO: Rename this class!
     /**
-     * The builder holds the channels where the instructions of the function
-     * are written as they are generated.
+The builder holds the channels where the instructions of the function
+are written as they are generated.
      */
     zen_BinaryEntityBuilder_t* m_instructions;
     
     /**
-     * The maximum number of operands the operand stack can store.
-     * A simple way to count this is to increment this field whenever
-     * a push_* instruction is generated.
+The maximum number of operands the operand stack can store.
+A simple way to count this is to increment this field whenever
+a push_* instruction is generated.
      *
-     * TODO: In the future, please make sure that this field does not exceed
-     * the bounds of `uint16_t`.
+TODO: In the future, please make sure that this field does not exceed
+the bounds of `uint16_t`.
      *
      */
     uint16_t m_maxStackSize;
     
     /**
-     * The total number of local variables declared within the function being
-     * declared.
+The total number of local variables declared within the function being
+declared.
      *
-     * A simple way to count this is to increment this field whenever
-     * a variable is declared within a function scope.
+A simple way to count this is to increment this field whenever
+a variable is declared within a function scope.
      */
     int32_t m_localVariableCount;
     
     /**
-     * The list of exception handler sites within the function being declared.
+The list of exception handler sites within the function being declared.
      */
     jtk_ArrayList_t* m_exceptionHandlerSites;
 };

@@ -38,12 +38,12 @@ struct zen_LogicalAndExpressionContext_t {
     zen_ASTNode_t* m_node;
 
     /**
-     * The inclusiveOrExpression node on the left side of the operator.
+The inclusiveOrExpression node on the left side of the operator.
      */
     zen_ASTNode_t* m_inclusiveOrExpression;
 
     /**
-     * The inclusiveOrExpression nodes on the right side of the operator.
+The inclusiveOrExpression nodes on the right side of the operator.
      */
     jtk_ArrayList_t* m_inclusiveOrExpressions;
 };

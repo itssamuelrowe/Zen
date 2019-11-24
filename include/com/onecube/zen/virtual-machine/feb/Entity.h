@@ -32,29 +32,29 @@
 struct zen_Entity_t {
 
     /**
-     * The tag byte which determines the type of this entity.
+The tag byte which determines the type of this entity.
      */
     uint8_t m_type;
 
     /**
-     * A mask of flags which denote various properties of this entity.
+A mask of flags which denote various properties of this entity.
      */
     uint16_t m_flags;
 
     /**
-     * A valid index into the constant pool table. The entry at this index
-     * should be a {@code ConstantPoolClass} which represents this entity.
+A valid index into the constant pool table. The entry at this index
+should be a {@code ConstantPoolClass} which represents this entity.
      */
     uint16_t m_reference;
 
     /*
-     * The body of this entity is follows. Contingent on the tag byte, the treatement
-     * of the body may vary. Please refer to the documentation of various entities
-     * for further information.
+The body of this entity is follows. Contingent on the tag byte, the treatement
+of the body may vary. Please refer to the documentation of various entities
+for further information.
      */
     
     /**
-     * The number of super-classes.
+The number of super-classes.
      */
     uint16_t m_superclassCount;
 

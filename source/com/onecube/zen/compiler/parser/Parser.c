@@ -3056,8 +3056,7 @@ bool zen_Parser_isLiteral(zen_TokenType_t type) {
         case ZEN_TOKEN_KEYWORD_TRUE:
         case ZEN_TOKEN_KEYWORD_FALSE:
         case ZEN_TOKEN_STRING_LITERAL:
-        case ZEN_TOKEN_KEYWORD_NULL:
-        case ZEN_TOKEN_KEYWORD_UNDEFINED: {
+        case ZEN_TOKEN_KEYWORD_NULL: {
             result = true;
             break;
         }

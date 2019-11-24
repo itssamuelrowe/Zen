@@ -134,7 +134,7 @@ uint8_t zen_Lexer_literalNames[][25] = {
 
     { 'a', 'n', 'd', '\0' },
     { 'f', 'o', 'r', '\0' },
-    { 'n', 'a', 'n', '\0' },
+    /* { 'n', 'a', 'n', '\0' }, */
     { 'n', 'e', 'w', '\0' },
     { 't', 'r', 'y', '\0' },
     { 'v', 'a', 'r', '\0' },
@@ -161,18 +161,18 @@ uint8_t zen_Lexer_literalNames[][25] = {
     { 'n', 'a', 't', 'i', 'v', 'e', '\0' },
     { 'p', 'u', 'b', 'l', 'i', 'c', '\0' },
     { 'r', 'e', 't', 'u', 'r', 'n', '\0' },
+    { 's', 'e', 'c', 'r', 'e', 't', '\0' },
     { 's', 't', 'a', 't', 'i', 'c', '\0' },
-    { 's', 'w', 'i', 't', 'c', 'h', '\0' },
+    /* { 's', 'w', 'i', 't', 'c', 'h', '\0' }, */
 
-    { 'd', 'e', 'f', 'a', 'u', 'l', 't', '\0' },
+    { 'a', 'b','s', 't', 'r', 'a', 'c', 't', '\0' },
+    /* { 'd', 'e', 'f', 'a', 'u', 'l', 't', '\0' }, */
     { 'f', 'i', 'n', 'a', 'l', 'l', 'y', '\0' },
-    { 'p', 'a', 'c', 'k', 'a', 'g', 'e', '\0' },
+    /* { 'p', 'a', 'c', 'k', 'a', 'g', 'e', '\0' }, */
     { 'p', 'r', 'i', 'v', 'a', 't', 'e', '\0' },
 
     { 'c', 'o', 'n', 't', 'i', 'n', 'u', 'e', '\0' },
     { 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', '\0' },
-
-    { 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', '\0' },
 
     { 's', 'y', 'n', 'c', 'h', 'r', 'o', 'n', 'i', 'z', 'e', '\0' },
 
@@ -1486,7 +1486,9 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                         uint8_t* text = jtk_StringBuilder_toCString(lexer->m_text);
                         int32_t length = lexer->m_index - lexer->m_startIndex;
 
-                        /* TODO: Find a better solution.
+                        /* TODO: Find a better solution. Given we have access to a sorted
+                         * list of keywords, a good idea would be to implement a binary
+                         * search here.
                          *
                          * Another solution, would be to use a hash map with token
                          * text as key and token type as values. This is obviously
@@ -1529,10 +1531,10 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                 }
                                 else if (jtk_CString_equals(text, length, zen_Lexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_FOR], 3)) {
                                     lexer->m_type = ZEN_TOKEN_KEYWORD_FOR;
-                                }
+                                }/*
                                 else if (jtk_CString_equals(text, length, zen_Lexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_NAN], 3)) {
                                     lexer->m_type = ZEN_TOKEN_KEYWORD_NAN;
-                                }
+                                }*/
                                 else if (jtk_CString_equals(text, length, zen_Lexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_NEW], 3)) {
                                     lexer->m_type = ZEN_TOKEN_KEYWORD_NEW;
                                 }
@@ -1614,25 +1616,31 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                 else if (jtk_CString_equals(text, length, zen_Lexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_RETURN], 6)) {
                                     lexer->m_type = ZEN_TOKEN_KEYWORD_RETURN;
                                 }
+                                else if (jtk_CString_equals(text, length, zen_Lexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_SECRET], 6)) {
+                                    lexer->m_type = ZEN_TOKEN_KEYWORD_SECRET;
+                                }
                                 else if (jtk_CString_equals(text, length, zen_Lexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_STATIC], 6)) {
                                     lexer->m_type = ZEN_TOKEN_KEYWORD_STATIC;
-                                }
+                                }/*
                                 else if (jtk_CString_equals(text, length, zen_Lexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_SWITCH], 6)) {
                                     lexer->m_type = ZEN_TOKEN_KEYWORD_SWITCH;
-                                }
+                                }*/
                                 break;
                             }
 
                             case 7 : {
-                                if (jtk_CString_equals(text, length, zen_Lexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_DEFAULT], 7)) {
+                                if (jtk_CString_equals(text, length, zen_Lexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_ABSTRACT], 7)) {
+                                    lexer->m_type = ZEN_TOKEN_KEYWORD_ABSTRACT;
+                                }/*
+                                else if (jtk_CString_equals(text, length, zen_Lexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_DEFAULT], 7)) {
                                     lexer->m_type = ZEN_TOKEN_KEYWORD_DEFAULT;
-                                }
+                                }*/
                                 else if (jtk_CString_equals(text, length, zen_Lexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_FINALLY], 7)) {
                                     lexer->m_type = ZEN_TOKEN_KEYWORD_FINALLY;
-                                }
+                                }/*
                                 else if (jtk_CString_equals(text, length, zen_Lexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_PACKAGE], 7)) {
                                     lexer->m_type = ZEN_TOKEN_KEYWORD_PACKAGE;
-                                }
+                                }*/
                                 else if (jtk_CString_equals(text, length, zen_Lexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_PRIVATE], 7)) {
                                     lexer->m_type = ZEN_TOKEN_KEYWORD_PRIVATE;
                                 }
@@ -1645,13 +1653,6 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                 }
                                 else if (jtk_CString_equals(text, length, zen_Lexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_FUNCTION], 8)) {
                                     lexer->m_type = ZEN_TOKEN_KEYWORD_FUNCTION;
-                                }
-                                break;
-                            }
-
-                            case 9: {
-                                if (jtk_CString_equals(text, length, zen_Lexer_literalNames[(int32_t)ZEN_TOKEN_KEYWORD_UNDEFINED], 9)) {
-                                    lexer->m_type = ZEN_TOKEN_KEYWORD_UNDEFINED;
                                 }
                                 break;
                             }

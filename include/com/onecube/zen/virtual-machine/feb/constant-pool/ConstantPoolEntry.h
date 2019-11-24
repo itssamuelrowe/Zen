@@ -34,7 +34,7 @@
 struct zen_ConstantPoolEntry_t {
 
     /**
-     * The type of the constant pool entry.
+The type of the constant pool entry.
      */
     uint8_t m_tag;
 };
