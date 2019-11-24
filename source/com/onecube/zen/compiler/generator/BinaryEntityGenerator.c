@@ -6359,8 +6359,9 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
         invoke2Descriptor, invoke2DescriptorSize, invokeName,
         invokeNameSize);
 
-    const uint8_t* invokeStaticDescriptor = "(zen/core/Object):(zen/core/Class)(zen/core/String)";
-    int32_t invokeStaticDescriptorSize = 51;
+    // const uint8_t* invokeStaticDescriptor = "(zen/core/Object):(zen/core/Class)(zen/core/String)";
+    const uint8_t* invokeStaticDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)";
+    int32_t invokeStaticDescriptorSize = 52;
     const uint8_t* invokeStaticName = "invokeStatic";
     int32_t invokeStaticNameSize = 12;
     uint16_t invokeStaticIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
@@ -6368,8 +6369,9 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
         invokeStaticDescriptor, invokeStaticDescriptorSize, invokeStaticName,
         invokeStaticNameSize);
 
-    const uint8_t* invokeStatic2Descriptor = "(zen/core/Object):(zen/core/Class)(zen/core/String)@(zen/core/Object)";
-    int32_t invokeStatic2DescriptorSize = 69;
+    // const uint8_t* invokeStatic2Descriptor = "(zen/core/Object):(zen/core/Class)(zen/core/String)@(zen/core/Object)";
+    const uint8_t* invokeStatic2Descriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)";
+    int32_t invokeStatic2DescriptorSize = 70;
     uint16_t invokeStatic2Index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
         generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
         invokeStatic2Descriptor, invokeStatic2DescriptorSize, invokeStaticName,
