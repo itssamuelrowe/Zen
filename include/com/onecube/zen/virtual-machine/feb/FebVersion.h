@@ -33,18 +33,18 @@
  */
 struct zen_FebVersion_t {
     /**
-The major version of the Binary Entity Format (FEB) in which the entity
-is encoded. Symbolically, 'M' represents the major version and 'm' represents
-the minor version. Thus, 'M.m' represents the FEB version which may be
-subjected to lexicographic comparision.
+     * The major version of the Binary Entity Format (FEB) in which the entity
+     * is encoded. Symbolically, 'M' represents the major version and 'm' represents
+     * the minor version. Thus, 'M.m' represents the FEB version which may be
+     * subjected to lexicographic comparision.
      */
     uint16_t m_majorVersion;
 
     /**
-The minor version of the Binary Entity Format (FEB) in which the entity
-is encoded. Symbolically, 'M' represents the major version and 'm' represents
-the minor version. Thus, 'M.m' represents the FEB version which may be
-subjected to lexicographic comparision.
+     * The minor version of the Binary Entity Format (FEB) in which the entity
+     * is encoded. Symbolically, 'M' represents the major version and 'm' represents
+     * the minor version. Thus, 'M.m' represents the FEB version which may be
+     * subjected to lexicographic comparision.
      */
     uint16_t m_minorVersion;
 };

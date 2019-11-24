@@ -54,106 +54,106 @@ typedef struct zen_ErrorHandler_t zen_ErrorHandler_t;
 struct zen_Lexer_t {
 
     /**
-The input stream of characters.
+     * The input stream of characters.
      */
     jtk_InputStream_t* m_inputStream;
 
     /**
-The character at LA(1), this field is always updated
-by zen_Lexer_consume(...).
+     * The character at LA(1), this field is always updated
+     * by zen_Lexer_consume(...).
      */
     int32_t m_la1;
 
     /**
-The input cursor under which the current look ahead
-character is located.
+     * The input cursor under which the current look ahead
+     * character is located.
      */
     int32_t m_index;
 
     /**
-The zero based line number at which the lexer is currently
-reading.
+     * The zero based line number at which the lexer is currently
+     * reading.
      */
     int32_t m_line;
 
     /**
-The zero based column index within the line, where the
-lexer is currently reading.
+     * The zero based column index within the line, where the
+     * lexer is currently reading.
      */
     int32_t m_column;
 
     /**
-The starting index of the current token in the input
-stream, inclusive.
+     * The starting index of the current token in the input
+     * stream, inclusive.
      */
     int32_t m_startIndex;
 
     /**
-The zero based line number at which the current
-token begins, inclusive.
+     * The zero based line number at which the current
+     * token begins, inclusive.
      */
     int32_t m_startLine;
 
     /**
-The zero based column at which the current token
-begins. It is always relative to the starting line.
+     * The zero based column at which the current token
+     * begins. It is always relative to the starting line.
      */
     int32_t m_startColumn;
 
     /**
-Determines whether the lexer has reached the end of
-the input stream.
+     * Determines whether the lexer has reached the end of
+     * the input stream.
      */
     int32_t m_hitEndOfStream:1;
 
     /**
-The token that was most recently emitted.
+     * The token that was most recently emitted.
      */
     zen_Token_t* m_token;
 
     /**
-The channel on which the next recognized
-token will be created on.
+     * The channel on which the next recognized
+     * token will be created on.
      */
     zen_TokenChannel_t  m_channel;
 
     /**
-The text consumed so far to recognize the next
-token.
+     * The text consumed so far to recognize the next
+     * token.
      */
     jtk_StringBuilder_t* m_text;
 
     /**
-The token type of the next recognized token.
+     * The token type of the next recognized token.
      */
     zen_TokenType_t m_type;
 
     /**
-A buffer to store emitted tokens.
+     * A buffer to store emitted tokens.
      *
-A single call to zen_Lexer_nextToken() may result in
-emission of multiple tokens. Therefore, the lexer
-buffers up tokens.
+     * A single call to zen_Lexer_nextToken() may result in
+     * emission of multiple tokens. Therefore, the lexer
+     * buffers up tokens.
      */
     jtk_ArrayQueue_t* m_tokens;
 
     /**
-A stack that stores indentation depths.
+     * A stack that stores indentation depths.
      */
     jtk_ArrayStack_t* m_indentations;
 
     /**
-The number of opening square brackets, angle brackets,
-braces, or parenthesis the lexer has encountered without
-corresponding closing square brackets, angle brackets,
-braces, or parenthesis, irrespectively.
+     * The number of opening square brackets, angle brackets,
+     * braces, or parenthesis the lexer has encountered without
+     * corresponding closing square brackets, angle brackets,
+     * braces, or parenthesis, irrespectively.
      *
-NOTE: The lexer disables emission of indentation,
-      dedentation, and newline tokens when the
-      enclosure counter is greater than one. Which
-      means presence of unmatched square brackets,
-      angle brackets, braces, or parenthesis results
-      in undefined lexical behaviour.
+     * NOTE: The lexer disables emission of indentation,
+     *       dedentation, and newline tokens when the
+     *       enclosure counter is greater than one. Which
+     *       means presence of unmatched square brackets,
+     *       angle brackets, braces, or parenthesis results
+     *       in undefined lexical behaviour.
      */
     int32_t m_enclosures;
     

@@ -34,17 +34,17 @@
 struct zen_ConstantPoolClass_t {
     
     /**
-The type of the constant pool entry.
+     * The type of the constant pool entry.
      */
     uint8_t m_tag;
 
     /**
-A valid index into the constant pool. The entry at this index is an
-UTF-8 entry which represents the encoded name of a class.
+     * A valid index into the constant pool. The entry at this index is an
+     * UTF-8 entry which represents the encoded name of a class.
      *
-NOTE: An array class name should consist of the encoded component class
-      name along with its dimensions. Further, the dimensions are limited
-      to 255, inclusively.
+     * NOTE: An array class name should consist of the encoded component class
+     *       name along with its dimensions. Further, the dimensions are limited
+     *       to 255, inclusively.
      */
     uint16_t m_nameIndex;
 };

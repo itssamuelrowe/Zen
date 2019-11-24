@@ -55,20 +55,20 @@
 struct zen_EntityLoader_t {
 
     /**
-The list of directories where the loader looks for the definitions
-of entities.
+     * The list of directories where the loader looks for the definitions
+     * of entities.
      */
     jtk_DoublyLinkedList_t* m_directories;
 
     uint32_t m_flags;
 
     /**
-The parser that contructs an entity from a binary input stream.
+     * The parser that contructs an entity from a binary input stream.
      */
     zen_BinaryEntityParser_t* m_parser;
 
     /**
-Cache to store entities loaded previously.
+     * Cache to store entities loaded previously.
      */
     jtk_HashMap_t* m_entities;
     

@@ -35,7 +35,7 @@ enum zen_Modifier_t {
 
     ZEN_MODIFIER_PRIVATE = 1 << 1,
 
-    ZEN_MODIFIER_PROTECTED = 1 << 2,
+    ZEN_MODIFIER_SECRET = 1 << 2,
 
     ZEN_MODIFIER_SYNTHETIC = 1 << 3,
 

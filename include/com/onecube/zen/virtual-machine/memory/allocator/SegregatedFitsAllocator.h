@@ -95,30 +95,30 @@
 struct zen_SegregatedFitsAllocator_t {
 
     /**
-It is in the range [8, 32]. For example, for an allocator with a balance
-factor of 8, there are 8 size classes. By default, the implementation uses
-a balance factor of 16. Which gives us the 16 size classes ranging from
-8 to 128.
+     * It is in the range [8, 32]. For example, for an allocator with a balance
+     * factor of 8, there are 8 size classes. By default, the implementation uses
+     * a balance factor of 16. Which gives us the 16 size classes ranging from
+     * 8 to 128.
      *
- 8 + (8 * 0) = 8
- 8 + (8 * 1) = 16
- 8 + (8 * 2) = 24
- 8 + (8 * 3) = 32
- 8 + (8 * 4) = 40
- 8 + (8 * 5) = 48
- 8 + (8 * 6) = 56
- 8 + (8 * 7) = 64
- 8 + (8 * 8) = 72
- 8 + (8 * 9) = 80
- 8 + (8 * 10) = 88
- 8 + (8 * 11) = 96
- 8 + (8 * 12) = 104
- 8 + (8 * 13) = 112
- 8 + (8 * 14) = 120
- 8 + (8 * 15) = 128
+     *  8 + (8 * 0) = 8
+     *  8 + (8 * 1) = 16
+     *  8 + (8 * 2) = 24
+     *  8 + (8 * 3) = 32
+     *  8 + (8 * 4) = 40
+     *  8 + (8 * 5) = 48
+     *  8 + (8 * 6) = 56
+     *  8 + (8 * 7) = 64
+     *  8 + (8 * 8) = 72
+     *  8 + (8 * 9) = 80
+     *  8 + (8 * 10) = 88
+     *  8 + (8 * 11) = 96
+     *  8 + (8 * 12) = 104
+     *  8 + (8 * 13) = 112
+     *  8 + (8 * 14) = 120
+     *  8 + (8 * 15) = 128
      *
-Large balance factors may result in adverse effects. However, I have
-made no efforts to verify this statement.
+     * Large balance factors may result in adverse effects. However, I have
+     * made no efforts to verify this statement.
      */
     int8_t m_balanceFactor;
 

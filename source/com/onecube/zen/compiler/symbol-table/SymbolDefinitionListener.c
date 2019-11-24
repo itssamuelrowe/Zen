@@ -342,8 +342,8 @@ uint32_t zen_SymbolDefinitionListener_toModifiers(zen_TokenType_t type) {
             break;
         }
 
-        /*case ZEN_TOKEN_KEYWORD_PROTECTED: {
-            modifiers |= ZEN_MODIFIER_PROTECTED;
+        case ZEN_TOKEN_KEYWORD_SECRET: {
+            modifiers |= ZEN_MODIFIER_SECRET;
             break;
         }
 
@@ -351,10 +351,9 @@ uint32_t zen_SymbolDefinitionListener_toModifiers(zen_TokenType_t type) {
             modifiers |= ZEN_MODIFIER_ABSTRACT;
             break;
         }
-        */
 
         /* NOTE: Functions in Zen cannot be declared as final. In other words,
-         * a function declared in a superclass can be overriden in a subclass.
+         * a function declared in a superclass cannot be overriden in a subclass.
          */
         /*
         case ZEN_TOKEN_KEYWORD_FINAL: {

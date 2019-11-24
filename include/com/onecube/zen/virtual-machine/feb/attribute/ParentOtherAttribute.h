@@ -36,8 +36,8 @@
 struct zen_ParentOtherAttribute_t {
     
     /**
-A valid index into the constant pool. The entry at the specified index
-should be a `ConstantPoolClass` instance.
+     * A valid index into the constant pool. The entry at the specified index
+     * should be a `ConstantPoolClass` instance.
      */
     uint16_t m_classIndex;
 };

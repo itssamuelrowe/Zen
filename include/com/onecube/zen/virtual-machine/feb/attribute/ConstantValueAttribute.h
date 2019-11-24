@@ -35,13 +35,13 @@
 struct zen_ConstantValueAttribute_t {
 
     /**
-A valid index into the constant pool table. The entry at this index
-is a constant value. The appropriate entry types are:
-    ZEN_CONSTANT_POOL_TAG_LONG           long
-    ZEN_CONSTANT_POOL_TAG_FLOAT          float
-    ZEN_CONSTANT_POOL_TAG_DOUBLE         double
-    ZEN_CONSTANT_POOL_TAG_INTEGER        int, short, char, byte, boolean
-    ZEN_CONSTANT_POOL_TAG_STRING         String
+     * A valid index into the constant pool table. The entry at this index
+     * is a constant value. The appropriate entry types are:
+     *     ZEN_CONSTANT_POOL_TAG_LONG           long
+     *     ZEN_CONSTANT_POOL_TAG_FLOAT          float
+     *     ZEN_CONSTANT_POOL_TAG_DOUBLE         double
+     *     ZEN_CONSTANT_POOL_TAG_INTEGER        int, short, char, byte, boolean
+     *     ZEN_CONSTANT_POOL_TAG_STRING         String
      */
     uint16_t m_valueIndex;
 };

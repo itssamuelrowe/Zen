@@ -34,13 +34,13 @@
  */
 struct zen_AttributeTable_t {
     /**
-The number of additional attributes of this entity.
+     * The number of additional attributes of this entity.
      */
     uint16_t m_size;
 
     /**
-The additional attributes of this entity, each represented by the
-{@code zen_Attribute_t} structure.
+     * The additional attributes of this entity, each represented by the
+     * {@code zen_Attribute_t} structure.
      */
     zen_Attribute_t** m_attributes;
 };

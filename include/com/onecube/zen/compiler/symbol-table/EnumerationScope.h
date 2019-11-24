@@ -37,7 +37,7 @@ struct zen_EnumerationScope_t {
     zen_Scope_t* m_scope;
 
     /**
-TODO: Use OrderedMap here.
+     * TODO: Use OrderedMap here.
      */
     jtk_HashMap_t* m_enumerates;
 

@@ -34,17 +34,17 @@
 struct zen_ConstantPoolLong_t {
 
     /**
-The type of the constant pool entry.
+     * The type of the constant pool entry.
      */
     uint8_t m_tag;
 
     /**
-The high bytes of the long integer.
+     * The high bytes of the long integer.
      */
     uint32_t m_highBytes;
 
     /**
-The low bytes of the long integer.
+     * The low bytes of the long integer.
      */
     uint32_t m_lowBytes;
 };

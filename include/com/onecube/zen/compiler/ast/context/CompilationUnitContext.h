@@ -36,7 +36,7 @@
  */
 struct zen_CompilationUnitContext_t {
     /**
-The node which represents this rule context within the AST.
+     * The node which represents this rule context within the AST.
      */
     zen_ASTNode_t* m_node;
 	jtk_ArrayList_t* m_importDeclarations; /* <zen_ASTNode_t*> */

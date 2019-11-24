@@ -34,14 +34,14 @@
 struct zen_EnumerateEntity_t {
 
     /**
-A valid index into the constant pool table. The entry at this index is
-an UTF-8 entry which represents the name of this field.
+     * A valid index into the constant pool table. The entry at this index is
+     * an UTF-8 entry which represents the name of this field.
      */
     uint16_t m_nameIndex;
 
     /**
-A valid index into the constant pool table. The entry at this index is
-an UTF-8 entry which represents the descriptor of this field.
+     * A valid index into the constant pool table. The entry at this index is
+     * an UTF-8 entry which represents the descriptor of this field.
      */
     uint16_t m_descriptorIndex;
 };

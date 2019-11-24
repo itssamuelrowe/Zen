@@ -34,16 +34,16 @@
 struct zen_ConstantPoolFloat_t {
 
     /**
-The type of the constant pool entry.
+     * The type of the constant pool entry.
      */
     uint8_t m_tag;
 
     /**
-The value of the float constant. The bytes are stored in the
-big-endian order.
+     * The value of the float constant. The bytes are stored in the
+     * big-endian order.
      *
-The floating value is encoded in IEEE 754 floating-point single format.
-The bits
+     * The floating value is encoded in IEEE 754 floating-point single format.
+     * The bits
      */
     uint32_t m_bytes;
 };

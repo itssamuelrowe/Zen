@@ -41,36 +41,36 @@
 struct zen_ConstantPool_t {
 
     /*
-The constant pool entries are represented via structures. From the
-implementers perspective, this design is convenient. On the downside,
-the construction of a constant pool at runtime equals the product of
-the number of entries and the allocation time for each entry.
+     * The constant pool entries are represented via structures. From the
+     * implementers perspective, this design is convenient. On the downside,
+     * the construction of a constant pool at runtime equals the product of
+     * the number of entries and the allocation time for each entry.
      *
-An economic design would represent the entries as an array of bytes.
-In the former design, the allocation time can be reduced greatly if all
-the constant pool entries are allocated at once as a byte array.
-Later, appropriate chunks of memory can be divided amongst the entries
-via casting as pointers to structures.
+     * An economic design would represent the entries as an array of bytes.
+     * In the former design, the allocation time can be reduced greatly if all
+     * the constant pool entries are allocated at once as a byte array.
+     * Later, appropriate chunks of memory can be divided amongst the entries
+     * via casting as pointers to structures.
      *
-The first four bytes in a constant pool determine the total number of
-bytes occupied by the entries.
+     * The first four bytes in a constant pool determine the total number of
+     * bytes occupied by the entries.
      *
-TODO: As of now, the implementation follows only the former design.
+     * TODO: As of now, the implementation follows only the former design.
      */
     // uint32_t m_length;
 
     /**
-The number of entries in the constant pool table.
+     * The number of entries in the constant pool table.
      */
     uint16_t m_size;
 
     /**
-The tags of the constant pool entries.
+     * The tags of the constant pool entries.
      */
     // uint8_t* m_tags;
 
     /**
-The various entries stored in the constant pool table.
+     * The various entries stored in the constant pool table.
      */
     zen_ConstantPoolEntry_t** m_entries;
 };

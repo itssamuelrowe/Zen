@@ -37,9 +37,9 @@
 struct zen_StatementSuiteContext_t {
     zen_ASTNode_t* m_node;
     /* In order to help the users read code easily, the simple statements were
-removed from statement suites. Previously, a statement suite was either
-a simple statement or a block consisting of a newline at the begining,
-indentation and dedentation.
+     * removed from statement suites. Previously, a statement suite was either
+     * a simple statement or a block consisting of a newline at the begining,
+     * indentation and dedentation.
      */
     // zen_ASTNode_t* m_simpleStatement;
     jtk_ArrayList_t* m_statements;

@@ -35,8 +35,8 @@
 struct zen_ParentFunctionAttribute_t {
     
     /**
-A valid index into the constant pool. The entry at the specified index
-should be a `ConstantPoolFunction` instance.
+     * A valid index into the constant pool. The entry at the specified index
+     * should be a `ConstantPoolFunction` instance.
      */
     uint16_t m_functionIndex;
 };
