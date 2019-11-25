@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@
 // Saturday, February 24, 2018
 
 #include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/ClassScope.h>
 
 /*******************************************************************************
  * ClassSymbol                                                                 *
@@ -32,6 +33,9 @@ zen_ClassSymbol_t* zen_ClassSymbol_new(zen_ASTNode_t* identifier,
     classSymbol->m_superClasses = jtk_ArrayList_new();
     classSymbol->m_classScope = classScope;
     classSymbol->m_qualifiedName = jtk_String_clone(qualifiedName);
+
+    zen_ClassScope_t* classScope0 = (zen_ClassScope_t*)enclosingScope->m_context;
+    classScope0->m_classSymbol = symbol;
 
     return classSymbol;
 }

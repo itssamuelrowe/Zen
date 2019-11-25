@@ -37,7 +37,10 @@ zen_ClassScope_t* zen_ClassScope_new(zen_Scope_t* enclosingScope) {
     classScope->m_scope = scope;
     classScope->m_symbols = jtk_HashMap_new(jtk_CStringObjectAdapter_getInstance(), NULL);
     classScope->m_classSymbol = NULL;
-#warning "classScope->m_classSymbol must be set by the ClassSymbol class."
+    /* NOTE:
+     * classScope->m_classSymbol must be set by the ClassSymbol class.
+     * This is really messed up! :(
+     */
 
     return classScope;
 }

@@ -6460,7 +6460,26 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                     else if (zen_Symbol_isFunction(primarySymbol)) {
                         zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)primarySymbol->m_context;
                         int32_t index = invokeStaticIndex;
-                        if (!zen_Modifier_hasStatic(primarySymbol->m_modifiers)) {
+                        if (zen_Modifier_hasStatic(primarySymbol->m_modifiers)) {
+                            // NOTE: I am assuming that only class members can be declared as static.
+                            zen_Scope_t* enclosingScope = primarySymbol->m_enclosingScope;
+                            zen_ClassScope_t* classScope = (zen_ClassScope_t*)enclosingScope->m_context;
+                            zen_Symbol_t* classSymbol = classScope->m_classSymbol;
+                            zen_ASTNode_t* identifier = classSymbol->m_identifier;
+                            zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+                            
+                            uint16_t identifierIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
+                                generator->m_constantPoolBuilder, identifierToken->m_text,
+                                identifierToken->m_length);
+                                
+                            // TODO: Should retrieve a constant pool index to a class entry.
+                            zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
+
+                            /* Log the emission of the load_cpr instruction. */
+                            printf("[debug] Emitted load_cpr %d\n", identifierIndex);
+
+                        }
+                        else {
                             /* The "this" reference is always stored at the zeroth position
                              * in the local variable array. Further, we assume that the
                              * class member and the expression being processed appear in
