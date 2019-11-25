@@ -1559,18 +1559,17 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
                 if (function != NULL) {
                     // zen_Interpreter_handleClassInitialization(interpreter, class0);
-
-                    void* argument1 = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
-                    void* argument0 = !zen_OperandStack_isEmpty(currentStackFrame->m_operandStack)?
-                        zen_OperandStack_popReference(currentStackFrame->m_operandStack) : NULL;
-
-                    jtk_Array_t* arguments = jtk_Array_new(2);
-                    jtk_Array_setValue(arguments, 0, argument0);
-                    jtk_Array_setValue(arguments, 1, argument1);
-
-                    zen_Interpreter_invokeStaticFunction(interpreter, function, arguments);
-
-                    jtk_Array_delete(arguments);
+                    int32_t parameterCount = function->m_parameterCount;
+                    if (function->m_parameterCount > 0) {
+                        jtk_Array_t* arguments = jtk_Array_new(parameterCount);
+                        int32_t parameterIndex;
+                        for (parameterIndex = parameterCount - 1; parameterIndex >= 0; parameterIndex--) {
+                            void* argument = (void*)zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+                            jtk_Array_setValue(arguments, parameterIndex, argument);
+                        }
+                        zen_Interpreter_invokeStaticFunction(interpreter, function, arguments);
+                        jtk_Array_delete(arguments);
+                    }
                 }
                 else {
                     /* TODO: Throw an instance of the UnknownFunctionException class. */
@@ -3538,10 +3537,12 @@ void zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interpreter,
             interpreter->m_virtualMachine, function->m_name, function->m_descriptor);
 
         if (nativeFunction != NULL) {
-            nativeFunction->m_invoke(arguments);
+            nativeFunction->m_invoke(interpreter->m_virtualMachine, arguments);
         }
         else {
-            // ERROR: Unknown native function.
+            printf("[error] Unknown native function (name=%.*s, descriptor=%.*s)\n",
+                function->m_name->m_size, function->m_name->m_value,
+                function->m_descriptor->m_size, function->m_descriptor->m_value);
         }
     }
     else {

@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,14 +17,39 @@
 // Friday, June 08, 2018
 
 #include <jtk/core/VariableArguments.h>
+#include <jtk/core/StringBuilder.h>
 #include <com/onecube/zen/virtual-machine/VirtualMachine.h>
 #include <com/onecube/zen/virtual-machine/loader/EntityLoader.h>
 #include <com/onecube/zen/virtual-machine/ExceptionManager.h>
 
-void zen_print(jtk_Array_t* arguments) {
+void zen_print(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
     jtk_String_t* format = (jtk_String_t*)jtk_Array_getValue(arguments, 0);
     fwrite(format->m_value, 1, format->m_size, stdout);
+    puts("");
     fflush(stdout);
+}
+
+void zen_ZenKernel_invokeStatic(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    jtk_String_t* entity = (jtk_String_t*)jtk_Array_getValue(arguments, 0);
+    jtk_String_t* targetFunctionName = (jtk_String_t*)jtk_Array_getValue(arguments, 1);
+    jtk_Array_t* targetArguments = (jtk_Array_t*)jtk_Array_getValue(arguments, 2);
+    jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+    jtk_StringBuilder_append_z(builder, "(zen/core/Object):", 18);
+    int32_t i;
+    int32_t parameterCount = jtk_Array_getSize(targetArguments);
+    for (i = 0; i < parameterCount; i++) {
+        jtk_StringBuilder_append_z(builder, "(zen/core/Object)", 17);
+    }
+    jtk_String_t* targetFunctionDescriptor = jtk_StringBuilder_toString(builder);
+
+    zen_Class_t* targetClass = zen_VirtualMachine_getClass(virtualMachine,
+        entity);
+    zen_Function_t* targetFunction = zen_VirtualMachine_getStaticFunction(virtualMachine,
+        targetClass, targetFunctionName, targetFunctionDescriptor);
+    
+    zen_Interpreter_invokeStaticFunction(virtualMachine->m_interpreter, targetFunction,
+        targetArguments);
 }
 
 /*******************************************************************************
@@ -95,10 +120,13 @@ zen_Class_t* zen_VirtualMachine_getClass(zen_VirtualMachine_t* virtualMachine,
 void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachine) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
 
-    zen_NativeFunction_t* printNativeFunction = zen_NativeFunction_new(zen_print);
+    zen_NativeFunction_t* printFunction = zen_NativeFunction_new(zen_print);
+    jtk_String_t* printKey = jtk_String_newEx("print(zen/core/Object):(zen/core/Object)", 40);
+    jtk_HashMap_put(virtualMachine->m_nativeFunctions, printKey, printFunction);
 
-    jtk_String_t* key = jtk_String_newEx("printv/(zen.core.String)@(zen.core.String)", 42);
-    jtk_HashMap_put(virtualMachine->m_nativeFunctions, key, printNativeFunction);
+    zen_NativeFunction_t* invokeStaticFunction = zen_NativeFunction_new(zen_ZenKernel_invokeStatic);
+    jtk_String_t* invokeStaticKey = jtk_String_newEx("invokeStatic(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)", 82);
+    jtk_HashMap_put(virtualMachine->m_nativeFunctions, invokeStaticKey, invokeStaticFunction);
 
     // TODO: Unload native functions
 }
