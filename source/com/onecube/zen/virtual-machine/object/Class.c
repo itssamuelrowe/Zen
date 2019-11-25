@@ -134,7 +134,7 @@ void zen_Class_initialize(zen_Class_t* class0, zen_EntityFile_t* entityFile) {
         (zen_ConstantPoolUtf8_t*)constantPool->m_entries[classEntry->m_nameIndex];
         */
 
-    class0->m_descriptor = NULL; // jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
+    class0->m_descriptor = jtk_String_newEx("<unknown>", 9); // jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
 
     int32_t i;
     int32_t fieldCount = entity->m_fieldCount;
