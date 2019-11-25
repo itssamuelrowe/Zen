@@ -40,7 +40,6 @@ zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
     function->m_functionEntity = functionEntity;
 
     // type, startIndex
-    int32_t returnType = ZEN_TYPE_VOID;
     int32_t parameterCount = 0;
     int32_t i;
     /* The following function descriptor parser is a naive implementation.
@@ -61,7 +60,7 @@ zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
             case ':': {
                 /* Do not count the return type as a parameter. */
                 parameterCount--;
-                break;
+                continue;
             }
 
             case '(': {
@@ -93,11 +92,15 @@ zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
     zen_Type_t returnType;
     int32_t* parameters = jtk_Memory_allocate(int32_t, parameterCount * 2);
     zen_Type_t type;
-    for (i = 0; i < descriptorEntry->m_length; i++) {
+    int32_t parameterIndex;
+    for (i = 0, parameterIndex = -1;
+        (i < descriptorEntry->m_length) && (parameterIndex < parameterCount);
+        i++, parameterIndex++) {
         int32_t startIndex = i;
         switch (descriptorEntry->m_bytes[i]) {
             case '@': {
-                type = ZEN_TYPE_ARRAY;
+                /* Arrays are also considered as reference types. */
+                type = ZEN_TYPE_REFERENCE;
                 while (descriptorEntry->m_bytes[++i] == '@');
                 if (descriptorEntry->m_bytes[i] == '(') {
                     while (descriptorEntry->m_bytes[++i] != ')');
@@ -160,15 +163,15 @@ zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
 
             }
         }
-        if (i == 0) {
+        if (parameterIndex < 0) {
             /* Skip the colon after the return type. */
             returnType = type;
             i++;
         }
         else {
-            int32_t index = i * 2;
+            int32_t index = parameterIndex * 2;
             parameters[index] = type;
-            parameters[index + 1] = i;
+            parameters[index + 1] = startIndex;
         }
     }
     

@@ -23,6 +23,7 @@
 
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/virtual-machine/feb/FunctionEntity.h>
+#include <com/onecube/zen/virtual-machine/feb/Type.h>
 
 // Forward References
 
@@ -44,6 +45,9 @@ struct zen_Function_t {
     uint16_t m_flags;
     zen_Class_t* m_class;
     zen_FunctionEntity_t* m_functionEntity;
+    zen_Type_t m_returnType;
+    int32_t* m_parameters;
+    int32_t m_parameterCount;
 };
 
 /**
