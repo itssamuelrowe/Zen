@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -74,5 +74,9 @@ zen_StackFrame_t* zen_InvocationStack_popStackFrame(zen_InvocationStack_t* invoc
     jtk_Assert_assertTrue(!jtk_DoublyLinkedList_isEmpty(invocationStack->m_stackFrames),
         "The specified invocation stack is empty.");
 
-    return (zen_StackFrame_t*)jtk_DoublyLinkedList_getFirst(invocationStack->m_stackFrames);
+    zen_StackFrame_t* currentStackFrame =
+        (zen_StackFrame_t*)jtk_DoublyLinkedList_getFirst(invocationStack->m_stackFrames);
+    jtk_DoublyLinkedList_removeFirst(invocationStack->m_stackFrames);
+
+    return currentStackFrame;
 }

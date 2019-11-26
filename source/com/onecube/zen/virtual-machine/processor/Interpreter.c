@@ -1575,6 +1575,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     /* TODO: Throw an instance of the UnknownFunctionException class. */
                 }
 
+                /* Log debugging information for assistance in debugging the interpreter. */
+                printf("[debug] Executed instruction `invoke_static` (index = %d, operand stack = %d)\n",
+                    index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
                 break;
             }
 
@@ -1585,7 +1588,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 currentStackFrame->m_ip += offset - 3;
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                printf("[debug] Executed instruction `jump` (offset = %d)\n",
+                printf("[debug] Executed instruction `jump` (offset = %d, operand stack = %d)\n",
                     offset);
 
                 break;
@@ -3548,6 +3551,9 @@ void zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interpreter,
     else {
         zen_Interpreter_interpret(interpreter);
     }
+    
+    zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+    zen_StackFrame_delete(stackFrame);
 }
 
 void zen_Interpreter_invokeStaticFunctionEx(zen_Interpreter_t* interpreter,
