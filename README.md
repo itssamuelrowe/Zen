@@ -2,6 +2,9 @@
 
 Zen is a general purpose programming language designed to build simple, reliable and efficient programs.
 
+Visit the [official website](https://itssamuelrowe.github.io/zen-website/) to learn
+more about the language, tools, getting started, and more.
+
 This repository contains the reference implementation of the Zen compiler.
 Please explore the following links to find other relevant resources.
  * [PulsarVM](https://github.com/itssamuelrowe/PulsarVM)

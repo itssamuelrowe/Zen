@@ -4655,7 +4655,12 @@ void zen_BinaryEntityGenerator_onExitExpression(zen_ASTListener_t* astListener, 
 
 // How to differentiate between function calls
 
-/*
+/* The left hand side of an assignment may take the following forms:
+ * - local variable
+ * - local class member variable
+ * - local class member using 'this' reference
+ * - super class member
+ * - super class member using 'super' reference
  *    ...
  *    invoke_virtual #function_descriptor_index
  *    store_a #x
