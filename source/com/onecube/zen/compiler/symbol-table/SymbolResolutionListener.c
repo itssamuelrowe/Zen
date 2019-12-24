@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,81 @@
 #include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolResolutionListener.h>
+
+/*
+ * The following text describes a naive algorithm that I developed to analyze
+ * if the left-value evaluates to a placeholder. I am not sure if the algorithm
+ * described here already exists. If it does not, I would like to call it
+ * the "Placeholder-Value AST Annotation Method". Further, please let me know
+ * if there is a better way to do this.
+ *
+ * A placeholder is a location where a reference can be stored, it may be a local
+ * variable or a local class member, or an object's attribute. A placeholder
+ * is commonly referred to as lvalue, a value that can be the target of an
+ * assignment. The "l" stands for "left", as in the left hand side of the
+ * assignment operator.
+ *
+ * A consequent is a consequence of any expression, such as, function invocation,
+ * variable/constant reference, addition, subtraction, multiplication, and so on.
+ * It may produce either a placeholder or a value. A consequent is generally
+ * known as rvalue, a result that is produced by an expression that appears on
+ * the right hand side of the assignment operator. The "r" stands for "right",
+ * as in the right hand side of the assignment operator. Henceforth in this text,
+ * I use consequent and rvalue interchangeably, unless specified
+ * otherwise.
+ *
+ * The expression `x = (y = 5)` can be represented with the following abstract
+ * syntax tree (AST).
+ *
+ *   =V
+ *  / \
+ * xP  =V
+ *    / \
+ *   yP  5V
+ *
+ * Here, V and P are annotations that imply consequent and placeholder, respectively.
+ *
+ * 1. Consider a variable `label`, which is initialized to 'unknown'.
+ * 2. Walk down the abstract syntax tree with an inorder depth first
+ *    fashion.
+ * 3. At any given node, if the term produces a consequent, the label is marked
+ *    as 'consequent'.
+ * 4. At any given node, if the term produces a placholder, the label is marked
+ *    as 'placholder'. Since the definition of consequent cleary indicates that
+ *    a consequent is a superset of the placeholder, all the terms can be
+ *    labelled as 'consequent'. However, this behavior is not desirable. Therefore,
+ *    the 'placholder' label has more priority. For example, `x`, a variable
+ *    reference is always labelled as placeholder, even if it appears on the
+ *    right hand side of an equation.
+ * 5. After every node in the expression's AST is visited, the label contained
+ *    by the `label` variable determines the nature of the expression.
+ *
+ * It should be noted that, certain a priori information is needed to handle
+ * special situations. For example, the algorithm cannot differentiate between
+ * a member attribute access expression and a member function invocation, if the
+ * design of the AST is inherently unfavorable to the algorithm. In such cases,
+ * special supervision is required.
+ *
+ * The efficiency of the algorithm can be drastically improved without visiting
+ * every node in the AST, provided that the annotation is required only to
+ * determine if an expression evaluates to placeholder or a consequent.
+ * Only the root nodes of the expressions need to be inspected!
+ *
+ * Consider the following AST, with all its nodes annotated.
+ *   =V
+ *  / \
+ * xP  =V
+ *    / \
+ *   yP  5V
+ *
+ * To determine if the left hand expression is a placeholder and the right hand
+ * side expression is a consequent, the following annotation is satisfactory.
+ *   =
+ *  / \
+ * xP  =V
+ *    / \
+ *   y   5
+ */
 
 zen_SymbolResolutionListener_t* zen_SymbolResolutionListener_new(zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes) {
     zen_SymbolResolutionListener_t* listener = zen_Memory_allocate(zen_SymbolResolutionListener_t, 1);
@@ -296,10 +371,10 @@ void zen_SymbolResolutionListener_onEnterPrimaryExpression(zen_ASTListener_t* as
         if (zen_Token_getType(identifierToken) == ZEN_TOKEN_IDENTIFIER) {
             const uint8_t* identifierText = zen_Token_getText(identifierToken);
             zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
-            
+
             if (symbol != NULL) {
                 zen_Scope_t* scope = zen_Symbol_getEnclosingScope(symbol);
-                
+
                 if (zen_Scope_isLocalScope(scope)) {
                     zen_Token_t* symbolToken = (zen_Token_t*)symbol->m_identifier->m_context;
                     if (identifierToken->m_startIndex <= symbolToken->m_startIndex) {

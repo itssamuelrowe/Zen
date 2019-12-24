@@ -2252,7 +2252,6 @@ bool zen_Parser_isExpressionFollow(zen_TokenType_t type) {
  * assignmentExpression
  * :	conditionalExpression (assignmentOperator assignmentExpression)?
  * ;
- *
  */
 void zen_Parser_assignmentExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
     zen_StackTrace_enter();

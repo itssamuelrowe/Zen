@@ -4669,69 +4669,127 @@ void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* as
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_AssignmentExpressionContext_t* context = (zen_AssignmentExpressionContext_t*)node->m_context;
 
-    /* The resolution phase ensures that the expression on the left hand
-     * side of the assignment operator evaluates to an identifier or
-     * field access.
-     */
-    // jtk_ArrayList_t* children = jtk_ArrayList_new();
-    // zen_ASTHelper_getFilteredTokens(context->m_conditionalExpression, children, ZEN_TOKEN_IDENTIFIER);
+    zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, identifierText);
+    if (zen_Symbol_isVariable(symbol)) {
+        int32_t targetIndex;
+        bool localVariable = false;
 
-    /* The following line is valid when zen_ASTHelper_getFilteredTerminalNodes() function
-     * is invoked instead of zen_ASTHelper_getFilteredTokens().
-     */
-    // zen_ASTNode_t* identifier = (zen_ASTNode_t*)jtk_ArrayList_getValue(children, 0);
-    // zen_Token_t* identifierToken = (zen_Token_t*)jtk_ArrayList_getValue(children, 0);
-    // const uint8_t* identifierText = zen_Token_getText(identifierToken);
-
-    // zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, identifierText);
-    // if (zen_Symbol_isVariable(symbol)) {
-       //  int32_t targetIndex;
-        // bool localVariable = false;
-
-        // zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(symbol);
-        // if (zen_Scope_isClassScope(enclosingScope)) {
-           //  targetIndex = zen_BinaryEntityGenerator_findFieldDescriptorIndex(generator, children);
-        // }
-        // else {
-           /* int32_t size = jtk_ArrayList_getSize(children);
-            if (size == 1) {
-                targetIndex = zen_BinaryEntityGenerator_findLocalVariableIndex(generator, identifierText);
-                localVariable = true;
-            }
-            else {
-                targetIndex = zen_BinaryEntityGenerator_findFieldDescriptorIndex(generator, children);
-            }
+        zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(symbol);
+        if (zen_Scope_isClassScope(enclosingScope)) {
+           // targetIndex = ;// Retreive the field descriptor index.
         }
-
-        zen_BinaryEntityGenerator_emitLoadReference(generator, targetIndex);
+        else {
+            // targetIndex = ; // Retrieve the index into the local variable array.
+        }
 
         zen_ASTNode_t* assignmentOperator = context->m_assignmentOperator;
         zen_Token_t* operatorToken = (zen_Token_t*)assignmentOperator->m_context;
-        switch (operatorToken->m_type) {
-            case ZEN_TOKEN_EQUAL: {
-                break;
-            }
+        if (operatorToken->m_type != ZEN_TOKEN_EQUAL) {
+            zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, targetIndex);
+            
+            /* The values of symbol and symbolSize are the only arbitrary variables
+             * when invoking the zen_BinaryEntityGenerator_invokeEvaluate() function.
+             * Therefore, instead of rewriting the invocation expression multiple
+             * times, I have factored it out.
+             */
+            uint8_t* symbol = NULL;
+            int32_t symbolSize = 1;
+            switch (operatorToken->m_type) {
+                case ZEN_AMPERSAND_EQUAL: {
+                    /* The kernel should find a function annotated with the Operator
+                     * annotation that handles the '&' symbol.
+                     */
+                    symbol = "&";
+                    break;
+                }
+                
+                case ZEN_ASTERISK_EQUAL: {
+                    /* The kernel should find a function annotated with the Operator
+                     * annotation that handles the '*' symbol.
+                     */
+                    symbol = "*"
+                    break;
+                }
 
-            case ZEN_TOKEN_PLUS_EQUAL: {
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, "Czen.base.Object;plusOperator(Czen.base.Object;)Czen.base.Object;");
-                break;
-            }
+                case ZEN_TOKEN_PLUS_EQUAL: {
+                    /* The kernel should find a function annotated with the Operator
+                     * annotation that handles the '+' symbol.
+                     */
+                    symbol = "+";
+                    break;
+                }
 
-            case ZEN_TOKEN_DASH_EQUAL: {
-                zen_BinaryEntityGenerator_emitInvokeVirtual(generator, "Czen.base.Object;minusOperator(Czen.base.Object;)Czen.base.Object;");
-                break;
+                case ZEN_TOKEN_DASH_EQUAL: {
+                    /* The kernel should find a function annotated with the Operator
+                     * annotation that handles the '-' symbol.
+                     */
+                    symbol = "-";
+                    break;
+                }
+                
+                case ZEN_FORWARD_SLASH_EQUAL: {
+                    /* The kernel should find a function annotated with the Operator
+                     * annotation that handles the '/' symbol.
+                     */
+                    symbol = "/";
+                    break;
+                }
+                
+                case ZEN_LEFT_ANGLE_BRACKET_2_EQUAL: {
+                    /* The kernel should find a function annotated with the Operator
+                     * annotation that handles the '<<' symbol.
+                     */
+                    symbol = "<<";
+                    break;
+                }
+                
+                case ZEN_RIGHT_ANGLE_BRACKET_3_EQUAL: {
+                    /* The kernel should find a function annotated with the Operator
+                     * annotation that handles the '>>>' symbol.
+                     */
+                    symbol = ">>>";
+                    break;
+                }
+                
+                case ZEN_RIGHT_ANGLE_BRACKET_2_EQUAL: {
+                    /* The kernel should find a function annotated with the Operator
+                     * annotation that handles the '>>' symbol.
+                     */
+                    symbol = ">>";
+                    break;
+                }
+                
+                case VERTICAL_BAR_EQUAL: {
+                    /* The kernel should find a function annotated with the Operator
+                     * annotation that handles the '|' symbol.
+                     */
+                    symbol = "|";
+                    break;
+                }
+                
+                case CARET_EQUAL : {
+                    /* The kernel should find a function annotated with the Operator
+                     * annotation that handles the '^' symbol.
+                     */
+                    symbol = "^";
+                }
+                
+                default: {
+                    /* The generator should not reach this code! */
+                    printf("[internal error] Control should not reach here.\n");
+                }
             }
-
-            default: {
-                // [internal error]
-            }
+            
+            /* Generate the instructions corresponding to invoking the
+             * ZenKernel.evaluate() function. Since, Zen is dynamically typed
+             * the compiler cannot determine the type of the operands. Therefore,
+             * the addition and subtraction operations are delegated to
+             * functions annotated with the Operator annotation.
+             */
+            zen_BinaryEntityGenerator_invokeEvaluate(generator, symbol, symbolSize);
         }
 
-        void** state = zen_Memory_allocate(void*, ZEN_ASSIGNMENT_EXPRESSION_STATE_SIZE);
-        state[ZEN_ASSIGNMENT_EXPRESSION_STATE_TARGET_INDEX] = (void*)targetIndex;
-        state[ZEN_ASSIGNMENT_EXPRESSION_STATE_LOCAL_VARIABLE] = (void*)localVariable;
-        zen_ASTAnnotations_put(generator->m_annotations, node, state);
-
+        zen_BinaryEntityGenerator_emitStoreReference(generator->m_builder, targetIndex); 
     }
     else if (zen_Symbol_isConstant(symbol)) {
         // error: Constant cannot be assigned
@@ -5422,7 +5480,7 @@ void zen_BinaryEntityGenerator_onExitAdditiveExpression(zen_ASTListener_t* astLi
 
             default: {
                 /* The generator should not reach this code! */
-                printf("[error] Control should not reach here.\n");
+                printf("[internal error] Control should not reach here.\n");
             }
         }
 
@@ -6141,8 +6199,6 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                 if (zen_Symbol_isVariable(symbol) || zen_Symbol_isConstant(symbol)) {
                     if (zen_Scope_isClassScope(enclosingScope)) {
                         if (zen_Symbol_isVariable(symbol)) {
-                            // TODO: Move modifierNodes, explicitModifiers, and implicitModifiers to zen_Symbol_t class.
-
                             zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)symbol->m_context;
                             if (true /* !zen_VariableSymbol_isStatic(variableSymbol)) */) {
                                 /* The this reference is always stored at the zeroth position
