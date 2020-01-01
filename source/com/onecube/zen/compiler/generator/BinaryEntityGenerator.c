@@ -378,7 +378,7 @@ void zen_BinaryEntityGenerator_reset(zen_BinaryEntityGenerator_t* generator,
 
 void zen_BinaryEntityGenerator_onVisitErrorNode(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
-    fprintf(stderr, "[warning] Cannot generate binary entity on erroneous AST.");
+    fprintf(stderr, "[warning] Cannot resolve symbols on erroneous AST.\n");
 }
 
 void zen_BinaryEntityGenerator_onVisitTerminal(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
@@ -4525,8 +4525,6 @@ void zen_BinaryEntityGenerator_onExitClassDeclaration(zen_ASTListener_t* astList
     /* Invalidate the current scope in the symbol table. */
     zen_SymbolTable_invalidateCurrentScope(generator->m_symbolTable);
 
-
-
     /* Write the number of fields in this class. *
     zen_BinaryEntityBuilder_writeFieldCount(generator->m_builder, generator->m_fieldCount);
 
@@ -4665,120 +4663,121 @@ void zen_BinaryEntityGenerator_onExitExpression(zen_ASTListener_t* astListener, 
  *    invoke_virtual #function_descriptor_index
  *    store_a #x
  */
-void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    zen_AssignmentExpressionContext_t* context = (zen_AssignmentExpressionContext_t*)node->m_context;
+void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+    // zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    // zen_AssignmentExpressionContext_t* context = (zen_AssignmentExpressionContext_t*)node->m_context;
 
-    zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, identifierText);
-    if (zen_Symbol_isVariable(symbol)) {
-        int32_t targetIndex;
-        bool localVariable = false;
+    // zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, identifierText);
+    // if (zen_Symbol_isVariable(symbol)) {
+        // int32_t targetIndex;
+        // bool localVariable = false;
 
-        zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(symbol);
-        if (zen_Scope_isClassScope(enclosingScope)) {
+        // zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(symbol);
+        // if (zen_Scope_isClassScope(enclosingScope)) {
            // targetIndex = ;// Retreive the field descriptor index.
-        }
-        else {
+//         }
+   //      else {
             // targetIndex = ; // Retrieve the index into the local variable array.
-        }
+      //   }
 
-        zen_ASTNode_t* assignmentOperator = context->m_assignmentOperator;
-        zen_Token_t* operatorToken = (zen_Token_t*)assignmentOperator->m_context;
-        if (operatorToken->m_type != ZEN_TOKEN_EQUAL) {
-            zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, targetIndex);
+        // zen_ASTNode_t* assignmentOperator = context->m_assignmentOperator;
+        // zen_Token_t* operatorToken = (zen_Token_t*)assignmentOperator->m_context;
+        // if (operatorToken->m_type != ZEN_TOKEN_EQUAL) {
+           //  zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, targetIndex);
             
             /* The values of symbol and symbolSize are the only arbitrary variables
              * when invoking the zen_BinaryEntityGenerator_invokeEvaluate() function.
              * Therefore, instead of rewriting the invocation expression multiple
              * times, I have factored it out.
              */
-            uint8_t* symbol = NULL;
-            int32_t symbolSize = 1;
-            switch (operatorToken->m_type) {
-                case ZEN_AMPERSAND_EQUAL: {
+            // uint8_t* symbol = NULL;
+            // int32_t symbolSize = 1;
+            // switch (operatorToken->m_type) {
+               //  case ZEN_AMPERSAND_EQUAL: {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '&' symbol.
                      */
-                    symbol = "&";
-                    break;
-                }
+                  //   symbol = "&";
+                    // break;
+                // }
                 
-                case ZEN_ASTERISK_EQUAL: {
+                // case ZEN_ASTERISK_EQUAL: {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '*' symbol.
                      */
-                    symbol = "*"
-                    break;
-                }
+                   //  symbol = "*"
+                    // break;
+                // }
 
-                case ZEN_TOKEN_PLUS_EQUAL: {
+                // case ZEN_TOKEN_PLUS_EQUAL: {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '+' symbol.
                      */
-                    symbol = "+";
-                    break;
-                }
+                   //  symbol = "+";
+                    // break;
+                // }
 
-                case ZEN_TOKEN_DASH_EQUAL: {
+                // case ZEN_TOKEN_DASH_EQUAL: {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '-' symbol.
                      */
-                    symbol = "-";
-                    break;
-                }
+                   //  symbol = "-";
+                    // break;
+                // }
                 
-                case ZEN_FORWARD_SLASH_EQUAL: {
+                // case ZEN_FORWARD_SLASH_EQUAL: {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '/' symbol.
                      */
-                    symbol = "/";
-                    break;
-                }
+                   //  symbol = "/";
+                    // break;
+                // }
                 
-                case ZEN_LEFT_ANGLE_BRACKET_2_EQUAL: {
+                // case ZEN_LEFT_ANGLE_BRACKET_2_EQUAL: {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '<<' symbol.
                      */
-                    symbol = "<<";
-                    break;
-                }
+                   //  symbol = "<<";
+                    // break;
+                // }
                 
-                case ZEN_RIGHT_ANGLE_BRACKET_3_EQUAL: {
+                // case ZEN_RIGHT_ANGLE_BRACKET_3_EQUAL: {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '>>>' symbol.
                      */
-                    symbol = ">>>";
-                    break;
-                }
+                    // symbol = ">>>";
+                    // break;
+                // }
                 
-                case ZEN_RIGHT_ANGLE_BRACKET_2_EQUAL: {
+                // case ZEN_RIGHT_ANGLE_BRACKET_2_EQUAL: {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '>>' symbol.
                      */
-                    symbol = ">>";
-                    break;
-                }
+                   //  symbol = ">>";
+                    // break;
+                // }
                 
-                case VERTICAL_BAR_EQUAL: {
+                // case VERTICAL_BAR_EQUAL: {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '|' symbol.
                      */
-                    symbol = "|";
-                    break;
-                }
+                    // symbol = "|";
+                    // break;
+                // }
                 
-                case CARET_EQUAL : {
+                // case CARET_EQUAL : {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '^' symbol.
                      */
-                    symbol = "^";
-                }
+                    // symbol = "^";
+                // }
                 
-                default: {
+                // default: {
                     /* The generator should not reach this code! */
-                    printf("[internal error] Control should not reach here.\n");
-                }
-            }
+                    // printf("[internal error] Control should not reach here.\n");
+                // }
+            // }
             
             /* Generate the instructions corresponding to invoking the
              * ZenKernel.evaluate() function. Since, Zen is dynamically typed
@@ -4786,17 +4785,17 @@ void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* as
              * the addition and subtraction operations are delegated to
              * functions annotated with the Operator annotation.
              */
-            zen_BinaryEntityGenerator_invokeEvaluate(generator, symbol, symbolSize);
-        }
+            // zen_BinaryEntityGenerator_invokeEvaluate(generator, symbol, symbolSize);
+        // }
 
-        zen_BinaryEntityGenerator_emitStoreReference(generator->m_builder, targetIndex); 
-    }
-    else if (zen_Symbol_isConstant(symbol)) {
+        // zen_BinaryEntityGenerator_emitStoreReference(generator->m_builder, targetIndex); 
+    // }
+    // else if (zen_Symbol_isConstant(symbol)) {
         // error: Constant cannot be assigned
-    }
-    else {
+    // }
+    // else {
         // error: LHS is not variable
-    }*/
+    // }
 
     // jtk_ArrayList_delete(children);
 }

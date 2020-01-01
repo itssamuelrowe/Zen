@@ -17,7 +17,6 @@
 // Sunday, March 11, 2018
 
 #include <jtk/collection/stack/LinkedStack.h>
-
 #include <com/onecube/zen/compiler/lexer/Token.h>
 #include <com/onecube/zen/compiler/ast/context/Context.h>
 #include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
@@ -99,6 +98,16 @@
  *   y   5
  */
 
+enum zen_ExpressionAnnotation_t {
+    ZEN_EXPRESSION_ANNOTATION_UNKNOWN,
+    ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER,
+    ZEN_EXPRESSION_ANNOTATION_VALUE
+};
+
+typedef enum zen_ExpressionAnnotation_t zen_ExpressionAnnotation_t;
+
+zen_ExpressionAnnotation_t label = ZEN_EXPRESSION_ANNOTATION_UNKNOWN;
+
 zen_SymbolResolutionListener_t* zen_SymbolResolutionListener_new(zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes) {
     zen_SymbolResolutionListener_t* listener = zen_Memory_allocate(zen_SymbolResolutionListener_t, 1);
     listener->m_astListener = zen_ASTListener_newWithContext(listener);
@@ -106,15 +115,240 @@ zen_SymbolResolutionListener_t* zen_SymbolResolutionListener_new(zen_SymbolTable
     listener->m_scopes = scopes;
 
     zen_ASTListener_t* astListener = listener->m_astListener;
+
+    astListener->m_onVisitErrorNode = zen_SymbolResolutionListener_onVisitErrorNode;
+    astListener->m_onVisitTerminal = zen_SymbolResolutionListener_onVisitTerminal;
+
+    astListener->m_onEnterEveryRule = zen_SymbolResolutionListener_onEnterEveryRule;
+    astListener->m_onExitEveryRule = zen_SymbolResolutionListener_onExitEveryRule;
+
     astListener->m_onEnterCompilationUnit = zen_SymbolResolutionListener_onEnterCompilationUnit;
     astListener->m_onExitCompilationUnit = zen_SymbolResolutionListener_onExitCompilationUnit;
-    astListener->m_onEnterClassDeclaration = zen_SymbolResolutionListener_onEnterClassDeclaration;
-    astListener->m_onExitClassDeclaration = zen_SymbolResolutionListener_onExitClassDeclaration;
+
+    astListener->m_onEnterImportDeclaration = zen_SymbolResolutionListener_onEnterImportDeclaration;
+    astListener->m_onExitImportDeclaration = zen_SymbolResolutionListener_onExitImportDeclaration;
+
+    astListener->m_onEnterAnnotatedComponentDeclaration = zen_SymbolResolutionListener_onEnterAnnotatedComponentDeclaration;
+    astListener->m_onExitAnnotatedComponentDeclaration = zen_SymbolResolutionListener_onExitAnnotatedComponentDeclaration;
+
+    astListener->m_onEnterAnnotations = zen_SymbolResolutionListener_onEnterAnnotations;
+    astListener->m_onExitAnnotations = zen_SymbolResolutionListener_onExitAnnotations;
+
+    astListener->m_onEnterAnnotation = zen_SymbolResolutionListener_onEnterAnnotation;
+    astListener->m_onExitAnnotation = zen_SymbolResolutionListener_onExitAnnotation;
+
+    astListener->m_onEnterAnnotationType = zen_SymbolResolutionListener_onEnterAnnotationType;
+    astListener->m_onExitAnnotationType = zen_SymbolResolutionListener_onExitAnnotationType;
+
+    astListener->m_onEnterAnnotationAttribute = zen_SymbolResolutionListener_onEnterAnnotationAttribute;
+    astListener->m_onExitAnnotationAttribute = zen_SymbolResolutionListener_onExitAnnotationAttribute;
+
+    astListener->m_onEnterComponentDeclaration = zen_SymbolResolutionListener_onEnterComponentDeclaration;
+    astListener->m_onExitComponentDeclaration = zen_SymbolResolutionListener_onExitComponentDeclaration;
+
     astListener->m_onEnterFunctionDeclaration = zen_SymbolResolutionListener_onEnterFunctionDeclaration;
     astListener->m_onExitFunctionDeclaration = zen_SymbolResolutionListener_onExitFunctionDeclaration;
+
+    astListener->m_onEnterFunctionParameters = zen_SymbolResolutionListener_onEnterFunctionParameters;
+    astListener->m_onExitFunctionParameters = zen_SymbolResolutionListener_onExitFunctionParameters;
+
+    astListener->m_onEnterFunctionBody = zen_SymbolResolutionListener_onEnterFunctionBody;
+    astListener->m_onExitFunctionBody = zen_SymbolResolutionListener_onExitFunctionBody;
+
     astListener->m_onEnterStatementSuite = zen_SymbolResolutionListener_onEnterStatementSuite;
     astListener->m_onExitStatementSuite = zen_SymbolResolutionListener_onExitStatementSuite;
+
+    astListener->m_onEnterSimpleStatement = zen_SymbolResolutionListener_onEnterSimpleStatement;
+    astListener->m_onExitSimpleStatement = zen_SymbolResolutionListener_onExitSimpleStatement;
+
+    astListener->m_onEnterStatement = zen_SymbolResolutionListener_onEnterStatement;
+    astListener->m_onExitStatement = zen_SymbolResolutionListener_onExitStatement;
+
+    astListener->m_onEnterEmptyStatement = zen_SymbolResolutionListener_onEnterEmptyStatement;
+    astListener->m_onExitEmptyStatement = zen_SymbolResolutionListener_onExitEmptyStatement;
+
+    astListener->m_onEnterVariableDeclaration = zen_SymbolResolutionListener_onEnterVariableDeclaration;
+    astListener->m_onExitVariableDeclaration = zen_SymbolResolutionListener_onExitVariableDeclaration;
+
+    astListener->m_onEnterVariableDeclarator = zen_SymbolResolutionListener_onEnterVariableDeclarator;
+    astListener->m_onExitVariableDeclarator = zen_SymbolResolutionListener_onExitVariableDeclarator;
+
+    astListener->m_onEnterConstantDeclaration = zen_SymbolResolutionListener_onEnterConstantDeclaration;
+    astListener->m_onExitConstantDeclaration = zen_SymbolResolutionListener_onExitConstantDeclaration;
+
+    astListener->m_onEnterConstantDeclarator = zen_SymbolResolutionListener_onEnterConstantDeclarator;
+    astListener->m_onExitConstantDeclarator = zen_SymbolResolutionListener_onExitConstantDeclarator;
+
+    astListener->m_onEnterAssertStatement = zen_SymbolResolutionListener_onEnterAssertStatement;
+    astListener->m_onExitAssertStatement = zen_SymbolResolutionListener_onExitAssertStatement;
+
+    astListener->m_onEnterBreakStatement = zen_SymbolResolutionListener_onEnterBreakStatement;
+    astListener->m_onExitBreakStatement = zen_SymbolResolutionListener_onExitBreakStatement;
+
+    astListener->m_onEnterContinueStatement = zen_SymbolResolutionListener_onEnterContinueStatement;
+    astListener->m_onExitContinueStatement = zen_SymbolResolutionListener_onExitContinueStatement;
+
+    astListener->m_onEnterReturnStatement = zen_SymbolResolutionListener_onEnterReturnStatement;
+    astListener->m_onExitReturnStatement = zen_SymbolResolutionListener_onExitReturnStatement;
+
+    astListener->m_onEnterThrowStatement = zen_SymbolResolutionListener_onEnterThrowStatement;
+    astListener->m_onExitThrowStatement = zen_SymbolResolutionListener_onExitThrowStatement;
+
+    astListener->m_onEnterCompoundStatement = zen_SymbolResolutionListener_onEnterCompoundStatement;
+    astListener->m_onExitCompoundStatement = zen_SymbolResolutionListener_onExitCompoundStatement;
+
+    astListener->m_onEnterIfStatement = zen_SymbolResolutionListener_onEnterIfStatement;
+    astListener->m_onExitIfStatement = zen_SymbolResolutionListener_onExitIfStatement;
+
+    astListener->m_onEnterIfClause = zen_SymbolResolutionListener_onEnterIfClause;
+    astListener->m_onExitIfClause = zen_SymbolResolutionListener_onExitIfClause;
+
+    astListener->m_onEnterElseIfClause = zen_SymbolResolutionListener_onEnterElseIfClause;
+    astListener->m_onExitElseIfClause = zen_SymbolResolutionListener_onExitElseIfClause;
+
+    astListener->m_onEnterElseClause = zen_SymbolResolutionListener_onEnterElseClause;
+    astListener->m_onExitElseClause = zen_SymbolResolutionListener_onExitElseClause;
+
+    astListener->m_onEnterIterativeStatement = zen_SymbolResolutionListener_onEnterIterativeStatement;
+    astListener->m_onExitIterativeStatement = zen_SymbolResolutionListener_onExitIterativeStatement;
+
+    astListener->m_onEnterLabelClause = zen_SymbolResolutionListener_onEnterLabel;
+    astListener->m_onExitLabelClause = zen_SymbolResolutionListener_onExitLabel;
+
+    astListener->m_onEnterWhileStatement = zen_SymbolResolutionListener_onEnterWhileStatement;
+    astListener->m_onExitWhileStatement = zen_SymbolResolutionListener_onExitWhileStatement;
+
+    astListener->m_onEnterForStatement = zen_SymbolResolutionListener_onEnterForStatement;
+    astListener->m_onExitForStatement = zen_SymbolResolutionListener_onExitForStatement;
+
+    astListener->m_onEnterForParameter = zen_SymbolResolutionListener_onEnterForParameters;
+    astListener->m_onExitForParameter = zen_SymbolResolutionListener_onExitForParameters;
+
+    astListener->m_onEnterTryStatement = zen_SymbolResolutionListener_onEnterTryStatement;
+    astListener->m_onExitTryStatement = zen_SymbolResolutionListener_onExitTryStatement;
+
+    astListener->m_onEnterTryClause = zen_SymbolResolutionListener_onEnterTryClause;
+    astListener->m_onExitTryClause = zen_SymbolResolutionListener_onExitTryClause;
+
+    astListener->m_onEnterCatchClause = zen_SymbolResolutionListener_onEnterCatchClause;
+    astListener->m_onExitCatchClause = zen_SymbolResolutionListener_onExitCatchClause;
+
+    astListener->m_onEnterCatchFilter = zen_SymbolResolutionListener_onEnterCatchFilter;
+    astListener->m_onExitCatchFilter = zen_SymbolResolutionListener_onExitCatchFilter;
+
+    astListener->m_onEnterFinallyClause = zen_SymbolResolutionListener_onEnterFinallyClause;
+    astListener->m_onExitFinallyClause = zen_SymbolResolutionListener_onExitFinallyClause;
+
+    astListener->m_onEnterSynchronizeStatement = zen_SymbolResolutionListener_onEnterSynchronizeStatement;
+    astListener->m_onExitSynchronizeStatement = zen_SymbolResolutionListener_onExitSynchronizeStatement;
+
+    astListener->m_onEnterWithStatement = zen_SymbolResolutionListener_onEnterWithStatement;
+    astListener->m_onExitWithStatement = zen_SymbolResolutionListener_onExitWithStatement;
+
+    astListener->m_onEnterClassDeclaration = zen_SymbolResolutionListener_onEnterClassDeclaration;
+    astListener->m_onExitClassDeclaration = zen_SymbolResolutionListener_onExitClassDeclaration;
+
+    astListener->m_onEnterClassExtendsClause = zen_SymbolResolutionListener_onEnterClassExtendsClause;
+    astListener->m_onExitClassExtendsClause = zen_SymbolResolutionListener_onExitClassExtendsClause;
+
+    astListener->m_onEnterClassSuite = zen_SymbolResolutionListener_onEnterClassSuite;
+    astListener->m_onExitClassSuite = zen_SymbolResolutionListener_onExitClassSuite;
+
+    astListener->m_onEnterClassMember = zen_SymbolResolutionListener_onEnterClassMember;
+    astListener->m_onExitClassMember = zen_SymbolResolutionListener_onExitClassMember;
+
+    // astListener->m_onEnterConstructorDeclaration = zen_SymbolResolutionListener_onEnterConstructorDeclaration;
+    // astListener->m_onExitConstructorDeclaration = zen_SymbolResolutionListener_onExitConstructorDeclaration;
+
+    astListener->m_onEnterEnumerationDeclaration = zen_SymbolResolutionListener_onEnterEnumerationDeclaration;
+    astListener->m_onExitEnumerationDeclaration = zen_SymbolResolutionListener_onExitEnumerationDeclaration;
+
+    astListener->m_onEnterEnumerationBaseClause = zen_SymbolResolutionListener_onEnterEnumrationBaseClass;
+    astListener->m_onExitEnumerationBaseClause = zen_SymbolResolutionListener_onExitEnumerationBaseClause;
+
+    astListener->m_onEnterEnumerationSuite = zen_SymbolResolutionListener_onEnterEnumerationSuite;
+    astListener->m_onExitEnumerationSuite = zen_SymbolResolutionListener_onExitEnumerationSuite;
+
+    astListener->m_onEnterEnumerate = zen_SymbolResolutionListener_onEnterEnumerate;
+    astListener->m_onExitEnumerate = zen_SymbolResolutionListener_onExitEnumerate;
+
+    astListener->m_onEnterExpressions = zen_SymbolResolutionListener_onEnterExpressions;
+    astListener->m_onExitExpressions = zen_SymbolResolutionListener_onExitExpressions;
+
+    astListener->m_onEnterExpression = zen_SymbolResolutionListener_onEnterExpression;
+    astListener->m_onExitExpression = zen_SymbolResolutionListener_onExitExpression;
+
+    astListener->m_onEnterAssignmentExpression = zen_SymbolResolutionListener_onEnterAssignmentExpression;
+    astListener->m_onExitAssignmentExpression = zen_SymbolResolutionListener_onExitAssignmentExpression;
+
+    astListener->m_onEnterConditionalExpression = zen_SymbolResolutionListener_onEnterConditionalExpression;
+    astListener->m_onExitConditionalExpression = zen_SymbolResolutionListener_onExitConditionalExpression;
+
+    astListener->m_onEnterLogicalOrExpression = zen_SymbolResolutionListener_onEnterLogicalOrExpression;
+    astListener->m_onExitLogicalOrExpression = zen_SymbolResolutionListener_onExitLogicalOrExpression;
+
+    astListener->m_onEnterLogicalAndExpression = zen_SymbolResolutionListener_onEnterLogicalAndExpression;
+    astListener->m_onExitLogicalAndExpression = zen_SymbolResolutionListener_onExitLogicalAndExpression;
+
+    astListener->m_onEnterInclusiveOrExpression = zen_SymbolResolutionListener_onEnterInclusiveOrExpression;
+    astListener->m_onExitInclusiveOrExpression = zen_SymbolResolutionListener_onExitInclusiveOrExpression;
+
+    astListener->m_onEnterExclusiveOrExpression = zen_SymbolResolutionListener_onEnterExclusiveOrExpression;
+    astListener->m_onExitExclusiveOrExpression = zen_SymbolResolutionListener_onExitExclusiveOrExpression;
+
+    astListener->m_onEnterAndExpression = zen_SymbolResolutionListener_onEnterAndExpression;
+    astListener->m_onExitAndExpression = zen_SymbolResolutionListener_onExitAndExpression;
+
+    astListener->m_onEnterEqualityExpression = zen_SymbolResolutionListener_onEnterEqualityExpression;
+    astListener->m_onExitEqualityExpression = zen_SymbolResolutionListener_onExitEqualityExpression;
+
+    astListener->m_onEnterRelationalExpression = zen_SymbolResolutionListener_onEnterRelationalExpression;
+    astListener->m_onExitRelationalExpression = zen_SymbolResolutionListener_onExitRelationalExpression;
+
+    astListener->m_onEnterShiftExpression = zen_SymbolResolutionListener_onEnterShiftExpression;
+    astListener->m_onExitShiftExpression = zen_SymbolResolutionListener_onExitShiftExpression;
+
+    astListener->m_onEnterAdditiveExpression = zen_SymbolResolutionListener_onEnterAdditiveExpression;
+    astListener->m_onExitAdditiveExpression = zen_SymbolResolutionListener_onExitAdditiveExpression;
+
+    astListener->m_onEnterMultiplicativeExpression = zen_SymbolResolutionListener_onEnterMultiplicativeExpression;
+    astListener->m_onExitMultiplicativeExpression = zen_SymbolResolutionListener_onExitMultiplicativeExpression;
+
+    astListener->m_onEnterUnaryExpression = zen_SymbolResolutionListener_onEnterUnaryExpression;
+    astListener->m_onExitUnaryExpression = zen_SymbolResolutionListener_onExitUnaryExpression;
+
+    astListener->m_onEnterPostfixExpression = zen_SymbolResolutionListener_onEnterPostfixExpression;
+    astListener->m_onExitPostfixExpression = zen_SymbolResolutionListener_onExitPostfixExpression;
+
+    astListener->m_onEnterSubscript = zen_SymbolResolutionListener_onEnterSubscript;
+    astListener->m_onExitSubscript = zen_SymbolResolutionListener_onExitSubscript;
+
+    astListener->m_onEnterFunctionArguments = zen_SymbolResolutionListener_onEnterFunctionArguments;
+    astListener->m_onExitFunctionArguments = zen_SymbolResolutionListener_onExitFunctionArguments;
+
+    astListener->m_onEnterMemberAccess = zen_SymbolResolutionListener_onEnterMemberAccess;
+    astListener->m_onExitMemberAccess = zen_SymbolResolutionListener_onExitMemberAccess;
+
+    astListener->m_onEnterPostfixOperator = zen_SymbolResolutionListener_onEnterPostfixOperator;
+    astListener->m_onExitPostfixOperator = zen_SymbolResolutionListener_onExitPostfixOperator;
+
     astListener->m_onEnterPrimaryExpression = zen_SymbolResolutionListener_onEnterPrimaryExpression;
+    astListener->m_onExitPrimaryExpression = zen_SymbolResolutionListener_onExitPrimaryExpression;
+
+    astListener->m_onEnterMapExpression = zen_SymbolResolutionListener_onEnterMapExpression;
+    astListener->m_onExitMapExpression = zen_SymbolResolutionListener_onExitMapExpression;
+
+    astListener->m_onEnterMapEntries = zen_SymbolResolutionListener_onEnterMapEntries;
+    astListener->m_onExitMapEntries = zen_SymbolResolutionListener_onExitMapEntries;
+
+    astListener->m_onEnterMapEntry = zen_SymbolResolutionListener_onEnterMapEntry;
+    astListener->m_onExitMapEntry = zen_SymbolResolutionListener_onExitMapEntry;
+
+    astListener->m_onEnterListExpression = zen_SymbolResolutionListener_onEnterListExpression;
+    astListener->m_onExitListExpression = zen_SymbolResolutionListener_onExitListExpression;
+
+    astListener->m_onEnterNewExpression = zen_SymbolResolutionListener_onEnterNewExpression;
+    astListener->m_onExitNewExpression = zen_SymbolResolutionListener_onExitNewExpression;
 
     return listener;
 }
@@ -129,6 +363,22 @@ void zen_SymbolResolutionListener_delete(zen_SymbolResolutionListener_t* listene
 zen_ASTListener_t* zen_SymbolResolutionListener_getASTListener(zen_SymbolResolutionListener_t* listener) {
     jtk_Assert_assertObject(listener, "The specified listener is null.");
     return listener->m_astListener;
+}
+
+// Event Handlers
+
+void zen_SymbolResolutionListener_onVisitErrorNode(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+    fprintf(stderr, "[warning] Cannot resolve symbols on erroneous AST.\n");
+}
+
+void zen_SymbolResolutionListener_onVisitTerminal(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onEnterEveryRule(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitEveryRule(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
 }
 
 /* compilationUnit */
@@ -150,6 +400,62 @@ void zen_SymbolResolutionListener_onExitCompilationUnit(zen_ASTListener_t* astLi
 
     zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
     zen_SymbolTable_invalidateCurrentScope(listener->m_symbolTable);
+}
+
+// importDeclaration
+
+void zen_SymbolResolutionListener_onEnterImportDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitImportDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// annotatedComponentDeclaration
+
+void zen_SymbolResolutionListener_onEnterAnnotatedComponentDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitAnnotatedComponentDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// annotations
+
+void zen_SymbolResolutionListener_onEnterAnnotations(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitAnnotations(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// annotation
+
+void zen_SymbolResolutionListener_onEnterAnnotation(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitAnnotation(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// annotationType
+
+void zen_SymbolResolutionListener_onEnterAnnotationType(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitAnnotationType(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// annotationAttribute
+
+void zen_SymbolResolutionListener_onEnterAnnotationAttribute(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitAnnotationAttribute(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// componentDeclaration
+
+void zen_SymbolResolutionListener_onEnterComponentDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitComponentDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
 }
 
 void zen_SymbolResolutionListener_onEnterFunctionDeclaration(
@@ -287,6 +593,22 @@ void zen_SymbolResolutionListener_onExitFunctionDeclaration(
     zen_SymbolTable_invalidateCurrentScope(listener->m_symbolTable);
 }
 
+// functionParameters
+
+void zen_SymbolResolutionListener_onEnterFunctionParameters(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitFunctionParameters(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// functionBody
+
+void zen_SymbolResolutionListener_onEnterFunctionBody(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitFunctionBody(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
 void zen_SymbolResolutionListener_onEnterStatementSuite(
     zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
@@ -307,6 +629,282 @@ void zen_SymbolResolutionListener_onExitStatementSuite(
 
     zen_SymbolTable_invalidateCurrentScope(listener->m_symbolTable);
 }
+
+// simpleStatement
+
+void zen_SymbolResolutionListener_onEnterSimpleStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitSimpleStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// statement
+
+void zen_SymbolResolutionListener_onEnterStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// emptyStatement
+
+void zen_SymbolResolutionListener_onEnterEmptyStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitEmptyStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// variableDeclaration
+
+void zen_SymbolResolutionListener_onEnterVariableDeclaration(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitVariableDeclaration(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// variableDeclarator
+
+void zen_SymbolResolutionListener_onEnterVariableDeclarator(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitVariableDeclarator(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// constantDeclaration
+
+void zen_SymbolResolutionListener_onEnterConstantDeclaration(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitConstantDeclaration(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// constantDeclarator
+
+void zen_SymbolResolutionListener_onEnterConstantDeclarator(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitConstantDeclarator(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// assertStatement
+
+void zen_SymbolResolutionListener_onEnterAssertStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitAssertStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onEnterBreakStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// breakStatement
+
+void zen_SymbolResolutionListener_onExitBreakStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// continueStatement
+
+void zen_SymbolResolutionListener_onEnterContinueStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitContinueStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// returnStatement
+
+void zen_SymbolResolutionListener_onEnterReturnStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitReturnStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// throwStatement
+
+void zen_SymbolResolutionListener_onEnterThrowStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitThrowStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// compoundStatement
+
+void zen_SymbolResolutionListener_onEnterCompoundStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitCompoundStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// ifStatement
+
+void zen_SymbolResolutionListener_onEnterIfStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitIfStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// ifClause
+
+void zen_SymbolResolutionListener_onEnterIfClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitIfClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// elseIfClause
+
+void zen_SymbolResolutionListener_onEnterElseIfClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitElseIfClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// elseClause
+
+void zen_SymbolResolutionListener_onEnterElseClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitElseClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// iterativeStatement
+
+void zen_SymbolResolutionListener_onEnterIterativeStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitIterativeStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// label
+
+void zen_SymbolResolutionListener_onEnterLabel(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitLabel(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// whileStatement
+
+void zen_SymbolResolutionListener_onEnterWhileStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitWhileStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// forStatement
+
+void zen_SymbolResolutionListener_onEnterForStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitForStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// forParameters
+
+void zen_SymbolResolutionListener_onEnterForParameters(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitForParameters(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// tryStatement
+
+void zen_SymbolResolutionListener_onEnterTryStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitTryStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// tryClause
+
+void zen_SymbolResolutionListener_onEnterTryClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitTryClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// catchClause
+
+void zen_SymbolResolutionListener_onEnterCatchClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitCatchClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// catchFilter
+
+void zen_SymbolResolutionListener_onEnterCatchFilter(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitCatchFilter(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// finallyClause
+
+void zen_SymbolResolutionListener_onEnterFinallyClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitFinallyClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// synchronizeStatement
+
+void zen_SymbolResolutionListener_onEnterSynchronizeStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitSynchronizeStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// withStatement
+
+void zen_SymbolResolutionListener_onEnterWithStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+    jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
+    jtk_Assert_assertObject(node, "The specified AST node is null.");
+}
+
+void zen_SymbolResolutionListener_onExitWithStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+    jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
+    jtk_Assert_assertObject(node, "The specified AST node is null.");
+}
+
+
+
+
+// classDeclaration
 
 void zen_SymbolResolutionListener_onEnterClassDeclaration(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
@@ -361,6 +959,261 @@ void zen_SymbolResolutionListener_onExitClassDeclaration(zen_ASTListener_t* astL
     zen_SymbolTable_invalidateCurrentScope(listener->m_symbolTable);
 }
 
+// classExtends
+
+void zen_SymbolResolutionListener_onEnterClassExtendsClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitClassExtendsClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// classSuite
+
+void zen_SymbolResolutionListener_onEnterClassSuite(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitClassSuite(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// classMember
+
+void zen_SymbolResolutionListener_onEnterClassMember(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitClassMember(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// void zen_SymbolResolutionListener_onEnterConstructorDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+// }
+
+// void zen_SymbolResolutionListener_onExitConstructorDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+// }
+
+// enumerationDeclaration
+
+void zen_SymbolResolutionListener_onEnterEnumerationDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitEnumerationDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// enumerationBaseClass
+
+void zen_SymbolResolutionListener_onEnterEnumrationBaseClass(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitEnumerationBaseClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// enumerationSuite
+
+void zen_SymbolResolutionListener_onEnterEnumerationSuite(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitEnumerationSuite(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// enumerate
+
+void zen_SymbolResolutionListener_onEnterEnumerate(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitEnumerate(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// expressions
+
+void zen_SymbolResolutionListener_onEnterExpressions(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitExpressions(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// expression
+
+void zen_SymbolResolutionListener_onEnterExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// assignmentExpression
+
+void zen_SymbolResolutionListener_onEnterAssignmentExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    zen_AssignmentExpressionContext_t* context = (zen_AssignmentExpressionContext_t*)node->m_context;
+}
+
+void zen_SymbolResolutionListener_onExitAssignmentExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// conditionalExpression
+
+void zen_SymbolResolutionListener_onEnterConditionalExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitConditionalExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// logicalOrExpression
+
+void zen_SymbolResolutionListener_onEnterLogicalOrExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitLogicalOrExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// logicalAndExpression
+
+void zen_SymbolResolutionListener_onEnterLogicalAndExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitLogicalAndExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// inclusiveOrExpression
+
+void zen_SymbolResolutionListener_onEnterInclusiveOrExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitInclusiveOrExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// exclusiveOrExpression
+
+void zen_SymbolResolutionListener_onEnterExclusiveOrExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitExclusiveOrExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// andExpression
+
+void zen_SymbolResolutionListener_onEnterAndExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitAndExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// equalityExpression
+
+void zen_SymbolResolutionListener_onEnterEqualityExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitEqualityExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// relationalExpression
+
+void zen_SymbolResolutionListener_onEnterRelationalExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitRelationalExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// shiftExpression
+
+void zen_SymbolResolutionListener_onEnterShiftExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitShiftExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// additiveExpression
+
+void zen_SymbolResolutionListener_onEnterAdditiveExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitAdditiveExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// multiplicativeExpression
+
+void zen_SymbolResolutionListener_onEnterMultiplicativeExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitMultiplicativeExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// unaryExpression
+
+void zen_SymbolResolutionListener_onEnterUnaryExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitUnaryExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// postfixExpression
+
+void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onEnterPostfixExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// subscript
+
+void zen_SymbolResolutionListener_onEnterSubscript(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitSubscript(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// functionArguments
+
+void zen_SymbolResolutionListener_onEnterFunctionArguments(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitFunctionArguments(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// memberAccess
+
+void zen_SymbolResolutionListener_onEnterMemberAccess(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitMemberAccess(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// postfixOperator
+
+void zen_SymbolResolutionListener_onEnterPostfixOperator(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitPostfixOperator(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// Primary Expression
+
 void zen_SymbolResolutionListener_onEnterPrimaryExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
     zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
@@ -387,4 +1240,52 @@ void zen_SymbolResolutionListener_onEnterPrimaryExpression(zen_ASTListener_t* as
             }
         }
     }
+}
+
+void zen_SymbolResolutionListener_onExitPrimaryExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onEnterMapExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitMapExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// mapEntries
+
+void zen_SymbolResolutionListener_onEnterMapEntries(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitMapEntries(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// mapEntry
+
+void zen_SymbolResolutionListener_onEnterMapEntry(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitMapEntry(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+}
+
+// listExpression
+
+void zen_SymbolResolutionListener_onEnterListExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitListExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+// New Expression
+
+void zen_SymbolResolutionListener_onEnterNewExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onExitNewExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
