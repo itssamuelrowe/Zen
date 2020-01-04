@@ -2759,17 +2759,20 @@ bool zen_Parser_isUnaryExpressionFollow(zen_TokenType_t type) {
  * |    '-'
  * |    '~'
  * |    '!'
- * |    '++'
- * |    '--'
+ * // |    '++'
+ * // |    '--'
  * ;
  */
 bool zen_Parser_isUnaryOperator(zen_TokenType_t type) {
     return (type == ZEN_TOKEN_PLUS) ||
            (type == ZEN_TOKEN_DASH) ||
            (type == ZEN_TOKEN_TILDE) ||
-           (type == ZEN_TOKEN_EXCLAMATION_MARK) ||
+           (type == ZEN_TOKEN_EXCLAMATION_MARK);
+           /*
+           ||
            (type == ZEN_TOKEN_PLUS_2) ||
            (type == ZEN_TOKEN_DASH_2);
+           */
 }
 
 /*

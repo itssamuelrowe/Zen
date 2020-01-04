@@ -70,3 +70,20 @@ uint32_t zen_TokenType_toModifiers(zen_TokenType_t type) {
     }
     return modifiers;
 }
+
+// Assignment Operator
+
+bool zen_TokenType_isAssignmentOperator(zen_TokenType_t type) {
+    return (type == ZEN_TOKEN_EQUAL) ||
+           (type == ZEN_TOKEN_MODULUS_EQUAL) ||
+           (type == ZEN_TOKEN_AMPERSAND_EQUAL) ||
+           (type == ZEN_TOKEN_ASTERISK_2_EQUAL) ||
+           (type == ZEN_TOKEN_ASTERISK_EQUAL) ||
+           (type == ZEN_TOKEN_PLUS_EQUAL) ||
+           (type == ZEN_TOKEN_DASH_EQUAL) ||
+           (type == ZEN_TOKEN_LEFT_ANGLE_BRACKET_2_EQUAL) ||
+           (type == ZEN_TOKEN_LEFT_ANGLE_BRACKET_2_EQUAL) ||
+           (type == ZEN_TOKEN_RIGHT_ANGLE_BRACKET_3_EQUAL) ||
+           (type == ZEN_TOKEN_RIGHT_ANGLE_BRACKET_2_EQUAL) ||
+           (type == ZEN_TOKEN_VERTICAL_BAR_EQUAL);
+}

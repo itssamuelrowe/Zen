@@ -901,9 +901,6 @@ void zen_SymbolResolutionListener_onExitWithStatement(zen_ASTListener_t* astList
     jtk_Assert_assertObject(node, "The specified AST node is null.");
 }
 
-
-
-
 // classDeclaration
 
 void zen_SymbolResolutionListener_onEnterClassDeclaration(zen_ASTListener_t* astListener,
@@ -1040,157 +1037,453 @@ void zen_SymbolResolutionListener_onExitExpression(zen_ASTListener_t* astListene
 
 // assignmentExpression
 
-void zen_SymbolResolutionListener_onEnterAssignmentExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onExitAssignmentExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
-    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
     zen_AssignmentExpressionContext_t* context = (zen_AssignmentExpressionContext_t*)node->m_context;
+
+    zen_ASTNode_t* assignmentOperator = context->m_assignmentOperator;
+    if (assignmentOperator != NULL) {
+        zen_Token_t* assignmentOperatorToken = assignmentOperator->m_context;
+        zen_TokenType_t assignmentOperatorType = assignmentOperatorToken->m_type;
+        if (zen_TokenType_isAssignmentOperator(assignmentOperatorType)) {
+            zen_ASTWalker_walk(astListener, context->m_conditionalExpression);
+            if (label == ZEN_EXPRESSION_ANNOTATION_VALUE) {
+                fprintf(stderr, "[error] The specified left value is invalid.\n");
+            }
+            else {
+                /* Do not walk through the assignment expression when the left value
+                 * is invalid.
+                 */
+                zen_ASTWalker_walk(astListener, context->m_assignmentExpression);
+            }
+
+            zen_ASTListener_skipChildren(astListener);
+        }
+    }
 }
 
-void zen_SymbolResolutionListener_onExitAssignmentExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onEnterAssignmentExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
 }
 
 // conditionalExpression
 
-void zen_SymbolResolutionListener_onEnterConditionalExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onExitConditionalExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_ConditionalExpressionContext_t* context = (zen_ConditionalExpressionContext_t*)node->m_context;
+
+    if (context->m_thenExpression != NULL) {
+        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+    }
 }
 
-void zen_SymbolResolutionListener_onExitConditionalExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onEnterConditionalExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
 }
 
 // logicalOrExpression
 
-void zen_SymbolResolutionListener_onEnterLogicalOrExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onExitLogicalOrExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_LogicalOrExpressionContext_t* context = (zen_LogicalOrExpressionContext_t*)node->m_context;
+
+    if (!jtk_ArrayList_isEmpty(context->m_logicalAndExpressions)) {
+        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+    }
 }
 
-void zen_SymbolResolutionListener_onExitLogicalOrExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onEnterLogicalOrExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
 }
 
 // logicalAndExpression
 
-void zen_SymbolResolutionListener_onEnterLogicalAndExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onExitLogicalAndExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_LogicalAndExpressionContext_t* context = (zen_LogicalAndExpressionContext_t*)node->m_context;
+
+    if (!jtk_ArrayList_isEmpty(context->m_inclusiveOrExpressions)) {
+        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+    }
 }
 
-void zen_SymbolResolutionListener_onExitLogicalAndExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onEnterLogicalAndExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
 }
 
 // inclusiveOrExpression
 
-void zen_SymbolResolutionListener_onEnterInclusiveOrExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onExitInclusiveOrExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_InclusiveOrExpressionContext_t* context = (zen_InclusiveOrExpressionContext_t*)node->m_context;
+
+    if (!jtk_ArrayList_isEmpty(context->m_exclusiveOrExpressions)) {
+        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+    }
 }
 
-void zen_SymbolResolutionListener_onExitInclusiveOrExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onEnterInclusiveOrExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
 }
 
 // exclusiveOrExpression
 
-void zen_SymbolResolutionListener_onEnterExclusiveOrExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onExitExclusiveOrExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_ExclusiveOrExpressionContext_t* context = (zen_ExclusiveOrExpressionContext_t*)node->m_context;
+
+    if (!jtk_ArrayList_isEmpty(context->m_andExpressions)) {
+        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+    }
 }
 
-void zen_SymbolResolutionListener_onExitExclusiveOrExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onEnterExclusiveOrExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
 }
 
 // andExpression
 
-void zen_SymbolResolutionListener_onEnterAndExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onExitAndExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_AndExpressionContext_t* context = (zen_AndExpressionContext_t*)node->m_context;
+
+    if (!jtk_ArrayList_isEmpty(context->m_equalityExpressions)) {
+        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+    }
 }
 
-void zen_SymbolResolutionListener_onExitAndExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onEnterAndExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
 }
 
 // equalityExpression
 
-void zen_SymbolResolutionListener_onEnterEqualityExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onExitEqualityExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_EqualityExpressionContext_t* context = (zen_EqualityExpressionContext_t*)node->m_context;
+
+    if (!jtk_ArrayList_isEmpty(context->m_relationalExpressions)) {
+        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+    }
 }
 
-void zen_SymbolResolutionListener_onExitEqualityExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onEnterEqualityExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
 }
 
 // relationalExpression
 
-void zen_SymbolResolutionListener_onEnterRelationalExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onExitRelationalExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_RelationalExpressionContext_t* context = (zen_RelationalExpressionContext_t*)node->m_context;
+
+    if (!jtk_ArrayList_isEmpty(context->m_shiftExpressions)) {
+        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+    }
 }
 
-void zen_SymbolResolutionListener_onExitRelationalExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onEnterRelationalExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
 }
 
 // shiftExpression
 
-void zen_SymbolResolutionListener_onEnterShiftExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onExitShiftExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_ShiftExpressionContext_t* context = (zen_ShiftExpressionContext_t*)node->m_context;
+
+    if (!jtk_ArrayList_isEmpty(context->m_additiveExpressions)) {
+        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+    }
 }
 
-void zen_SymbolResolutionListener_onExitShiftExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onEnterShiftExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
 }
 
 // additiveExpression
 
-void zen_SymbolResolutionListener_onEnterAdditiveExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onExitAdditiveExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_AdditiveExpressionContext_t* context = (zen_AdditiveExpressionContext_t*)node->m_context;
+
+    if (!jtk_ArrayList_isEmpty(context->m_multiplicativeExpressions)) {
+        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+    }
 }
 
-void zen_SymbolResolutionListener_onExitAdditiveExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onEnterAdditiveExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
 }
 
 // multiplicativeExpression
 
-void zen_SymbolResolutionListener_onEnterMultiplicativeExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onExitMultiplicativeExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_MultiplicativeExpressionContext_t* context = (zen_MultiplicativeExpressionContext_t*)node->m_context;
+
+    if (!jtk_ArrayList_isEmpty(context->m_unaryExpressions)) {
+        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+    }
 }
 
-void zen_SymbolResolutionListener_onExitMultiplicativeExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onEnterMultiplicativeExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
 }
 
 // unaryExpression
 
-void zen_SymbolResolutionListener_onEnterUnaryExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onExitUnaryExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_UnaryExpressionContext_t* context = (zen_UnaryExpressionContext_t*)node->m_context;
+
+    if (context->m_unaryOperator != NULL) {
+        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+    }
 }
 
-void zen_SymbolResolutionListener_onExitUnaryExpression(zen_ASTListener_t* astListener,
+void zen_SymbolResolutionListener_onEnterUnaryExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
 }
 
 // postfixExpression
 
-void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {
-}
-
 void zen_SymbolResolutionListener_onEnterPostfixExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_PostfixExpressionContext_t* context = (zen_PostfixExpressionContext_t*)node->m_context;
+
+    /* The normal behaviour of the AST walker causes the listener to
+     * visit the AST in an undesirable fashion. Therefore, we partially
+     * switch from the listener to visitor design pattern. The AST walker
+     * can be guided to switch to this mode via zen_ASTListener_skipChildren()
+     * function which causes the AST walker to skip iterating over the children
+     * nodes.
+     */
+    zen_ASTListener_skipChildren(astListener);
+}
+
+void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_PostfixExpressionContext_t* context = (zen_PostfixExpressionContext_t*)node->m_context;
+    zen_ASTNode_t* primaryExpression = context->m_primaryExpression;
+    zen_PrimaryExpressionContext_t* primaryExpressionContext = (zen_PrimaryExpressionContext_t*)primaryExpression->m_context;
+
+    zen_Symbol_t* primarySymbol = NULL;
+    int32_t postfixPartCount = jtk_ArrayList_getSize(context->m_postfixParts);
+
+    zen_ASTNode_t* expression = primaryExpressionContext->m_expression;
+    /* Check if the primary expression is a literal or an identifier. */
+    if (zen_ASTNode_isTerminal(expression)) {
+        /* Retrieve the token that the primary expression represents. */
+        zen_Token_t* token = (zen_Token_t*)expression->m_context;
+
+        switch (zen_Token_getType(token)) {
+            case ZEN_TOKEN_IDENTIFIER: {
+                /* Retrieve the string equivalent to the identifier node. */
+                int32_t identifierSize;
+                uint8_t* identifierText = zen_ASTNode_toCString(expression, &identifierSize);
+
+                /* Resolve the symbol in the symbol table. */
+                zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
+                
+                zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(symbol);
+                if (zen_Symbol_isVariable(symbol) || zen_Symbol_isConstant(symbol)) {
+                    /* Annotate the AST node as placeholder. */
+                    label = ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER;
+                }
+                else {
+                    /* Pass the reference to the symbol to the next phase. */
+                    primarySymbol = symbol;
+                }
+                
+                break;
+            }
+
+            case ZEN_TOKEN_INTEGER_LITERAL:
+            case ZEN_TOKEN_STRING_LITERAL:
+            case ZEN_TOKEN_KEYWORD_NULL:
+            case ZEN_TOKEN_KEYWORD_FALSE:
+            case ZEN_TOKEN_KEYWORD_THIS:
+            case ZEN_TOKEN_KEYWORD_TRUE: {
+
+                /* Annotate the AST node as value. */
+                label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+
+                break;
+            }
+        }
+    }
+    else if ((expression->m_type == ZEN_AST_NODE_TYPE_MAP_EXPRESSION) ||
+        (expression->m_type == ZEN_AST_NODE_TYPE_LIST_EXPRESSION) ||
+        (expression->m_type == ZEN_AST_NODE_TYPE_EXPRESSION)) {
+        /* Annotate the AST node as value. */
+        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+    }
+
+    int32_t i;
+    for (i = 0; i < postfixPartCount; i++) {
+        zen_ASTNode_t* postfixPart = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+            context->m_postfixParts, i);
+        zen_ASTNodeType_t type = zen_ASTNode_getType(postfixPart);
+
+        switch (type) {
+            case ZEN_AST_NODE_TYPE_SUBSCRIPT: {
+                /* Annotate the AST node as placeholder. */
+                label = ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER;
+
+                zen_SubscriptContext_t* subscriptContext = (zen_SubscriptContext_t*)postfixPart->m_context;
+
+                /* Visit the index expression node and analyze. */
+                zen_ASTWalker_walk(astListener, subscriptContext->m_expression);
+
+                /* The normal behaviour of the AST walker causes the listener to
+                 * visit the index in an undesirable fashion. Therefore, we partially
+                 * switch from the listener to visitor design pattern. The AST walker
+                 * can be guided to switch to this mode via zen_ASTListener_skipChildren()
+                 * function which causes the AST walker to skip iterating over the children
+                 * nodes.
+                 */
+                zen_ASTListener_skipChildren(astListener);
+
+                break;
+            }
+
+            case ZEN_AST_NODE_TYPE_FUNCTION_ARGUMENTS: {
+                /* Annotate the AST node as value. */
+                label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+
+                zen_FunctionArgumentsContext_t* functionArgumentsContext =
+                    (zen_FunctionArgumentsContext_t*)postfixPart->m_context;
+
+                if (i == 0) {
+                    if (primarySymbol == NULL) {
+                        printf("[error] Variable treated as function.\n");
+                    }
+                    else if (zen_Symbol_isFunction(primarySymbol)) {
+                        zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)primarySymbol->m_context;
+                        zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
+                        if (expressions != NULL) {
+                            zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
+                            int32_t argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
+                            if (argumentCount > 0) {
+                                int32_t argumentIndex;
+                                for (argumentIndex = 0; argumentIndex < argumentCount; argumentIndex++) {
+                                    /* Retrieve the expression for the current argument. */
+                                    zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+                                        expressionsContext->m_expressions, argumentIndex);
+
+                                    /* Visit the expression node and analyze. */
+                                    zen_ASTWalker_walk(astListener, argument);
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        printf("[error] Trying to invoke a non-function entity.\n");
+                    }
+                }
+                else {
+                    printf("[internal error] Control should not reach here.\n");
+                }
+
+                break;
+            }
+
+            case ZEN_AST_NODE_TYPE_MEMBER_ACCESS: {
+                zen_MemberAccessContext_t* memberAccessContext =
+                    (zen_MemberAccessContext_t*)postfixPart->m_context;
+                zen_ASTNode_t* identifier = memberAccessContext->m_identifier;
+                zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+
+                zen_ASTNode_t* functionArguments = NULL;
+
+                /* Annotate the AST node as placeholder. */
+                label = ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER;
+                
+                if ((i + 1) < postfixPartCount) {
+                    zen_ASTNode_t* nextPostfixPart = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+                        context->m_postfixParts, i + 1);
+                    zen_ASTNodeType_t nextPostfixPartType = zen_ASTNode_getType(nextPostfixPart);
+                    if (nextPostfixPartType == ZEN_AST_NODE_TYPE_FUNCTION_ARGUMENTS) {
+                        functionArguments = nextPostfixPart;
+                        i++;
+                    }
+                }
+
+                if (functionArguments != NULL) {
+                    /* Annotate the AST node as placeholder. */
+                    label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+                    
+                    zen_FunctionArgumentsContext_t* functionArgumentsContext =
+                        (zen_FunctionArgumentsContext_t*)functionArguments->m_context;
+
+                    zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
+                    if (expressions != NULL) {
+                        zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
+                        int32_t argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
+                        if (argumentCount > 0) {
+                            int32_t argumentIndex;
+                            for (argumentIndex = 0; argumentIndex < argumentCount; argumentIndex++) {
+                                /* Retrieve the expression for the current argument. */
+                                zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+                                    expressionsContext->m_expressions, argumentIndex);
+
+                                /* Visit the expression node and generate the relevant instructions. */
+                                zen_ASTWalker_walk(astListener, argument);
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+
+            /*
+            case ZEN_AST_NODE_TYPE_POSTFIX_OPERATOR: {
+
+                break;
+            }
+            */
+
+            default: {
+                printf("[error] Invalid AST node type %d encountered.\n", type);
+            }
+        }
+    }
 }
 
 // subscript
 
-void zen_SymbolResolutionListener_onEnterSubscript(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_SymbolResolutionListener_onEnterSubscript(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_ExpressionContext_t* context = (zen_ExpressionContext_t*)node->m_context;
+
+    // label = ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER;
 }
 
-void zen_SymbolResolutionListener_onExitSubscript(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_SymbolResolutionListener_onExitSubscript(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // functionArguments
 
-void zen_SymbolResolutionListener_onEnterFunctionArguments(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_SymbolResolutionListener_onEnterFunctionArguments(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 void zen_SymbolResolutionListener_onExitFunctionArguments(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
@@ -1216,6 +1509,7 @@ void zen_SymbolResolutionListener_onExitPostfixOperator(zen_ASTListener_t* astLi
 
 void zen_SymbolResolutionListener_onEnterPrimaryExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+        /*
     zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
     zen_PrimaryExpressionContext_t* primaryExpressionContext = (zen_PrimaryExpressionContext_t*)node->m_context;
 
@@ -1240,6 +1534,7 @@ void zen_SymbolResolutionListener_onEnterPrimaryExpression(zen_ASTListener_t* as
             }
         }
     }
+    */
 }
 
 void zen_SymbolResolutionListener_onExitPrimaryExpression(zen_ASTListener_t* astListener,
