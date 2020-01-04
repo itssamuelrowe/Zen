@@ -1056,21 +1056,17 @@ void zen_SymbolResolutionListener_onEnterAssignmentExpression(zen_ASTListener_t*
 
     zen_ASTNode_t* assignmentOperator = context->m_assignmentOperator;
     if (assignmentOperator != NULL) {
-        zen_Token_t* assignmentOperatorToken = assignmentOperator->m_context;
-        zen_TokenType_t assignmentOperatorType = assignmentOperatorToken->m_type;
-        if (zen_TokenType_isAssignmentOperator(assignmentOperatorType)) {
-            zen_ASTWalker_walk(astListener, context->m_conditionalExpression);
-            if (listener->m_label == ZEN_EXPRESSION_ANNOTATION_VALUE) {
-                fprintf(stderr, "[error] The specified left value is invalid.\n");
-            }
-            else {
-                /* Do not walk through the assignment expression when the left value
-                 * is invalid.
-                 */
-                zen_ASTWalker_walk(astListener, context->m_assignmentExpression);
-            }
-            zen_ASTListener_skipChildren(astListener);
+        zen_ASTWalker_walk(astListener, context->m_conditionalExpression);
+        if (listener->m_label == ZEN_EXPRESSION_ANNOTATION_VALUE) {
+            fprintf(stderr, "[error] The specified left value is invalid.\n");
         }
+        else {
+            /* Do not walk through the assignment expression when the left value
+             * is invalid.
+             */
+            zen_ASTWalker_walk(astListener, context->m_assignmentExpression);
+        }
+        zen_ASTListener_skipChildren(astListener);
     }
 }
 

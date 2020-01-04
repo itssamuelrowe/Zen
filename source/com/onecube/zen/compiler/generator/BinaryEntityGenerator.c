@@ -4651,6 +4651,8 @@ void zen_BinaryEntityGenerator_onExitExpression(zen_ASTListener_t* astListener, 
 
 // assignmentExpression
 
+bool lhs = false;
+
 // How to differentiate between function calls
 
 /* The left hand side of an assignment may take the following forms:
@@ -4665,11 +4667,23 @@ void zen_BinaryEntityGenerator_onExitExpression(zen_ASTListener_t* astListener, 
  *    ...
  *    invoke_virtual #function_descriptor_index
  *    store_a #x
+ *
+ * NOTE: The binary entity generator assumes that the left values were verified
+ * to be valid in the previous phases of the compiler.
  */
 void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
-    // zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    // zen_AssignmentExpressionContext_t* context = (zen_AssignmentExpressionContext_t*)node->m_context;
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    zen_AssignmentExpressionContext_t* context = (zen_AssignmentExpressionContext_t*)node->m_context;
+
+    zen_ASTNode_t* assignmentOperator = context->m_assignmentOperator;
+    if (assignmentOperator != NULL) {
+        lhs = true;
+        zen_ASTWalker_walk(astListener, context->m_conditionalExpression);
+        lhs = false;
+        zen_ASTWalker_walk(astListener, context->m_assignmentExpression);
+        zen_ASTListener_skipChildren(astListener);
+    }
 
     // zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, identifierText);
     // if (zen_Symbol_isVariable(symbol)) {
@@ -4688,7 +4702,7 @@ void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* as
         // zen_Token_t* operatorToken = (zen_Token_t*)assignmentOperator->m_context;
         // if (operatorToken->m_type != ZEN_TOKEN_EQUAL) {
            //  zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, targetIndex);
-            
+
             /* The values of symbol and symbolSize are the only arbitrary variables
              * when invoking the zen_BinaryEntityGenerator_invokeEvaluate() function.
              * Therefore, instead of rewriting the invocation expression multiple
@@ -4704,7 +4718,7 @@ void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* as
                   //   symbol = "&";
                     // break;
                 // }
-                
+
                 // case ZEN_ASTERISK_EQUAL: {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '*' symbol.
@@ -4728,7 +4742,7 @@ void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* as
                    //  symbol = "-";
                     // break;
                 // }
-                
+
                 // case ZEN_FORWARD_SLASH_EQUAL: {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '/' symbol.
@@ -4736,7 +4750,7 @@ void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* as
                    //  symbol = "/";
                     // break;
                 // }
-                
+
                 // case ZEN_LEFT_ANGLE_BRACKET_2_EQUAL: {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '<<' symbol.
@@ -4744,7 +4758,7 @@ void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* as
                    //  symbol = "<<";
                     // break;
                 // }
-                
+
                 // case ZEN_RIGHT_ANGLE_BRACKET_3_EQUAL: {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '>>>' symbol.
@@ -4752,7 +4766,7 @@ void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* as
                     // symbol = ">>>";
                     // break;
                 // }
-                
+
                 // case ZEN_RIGHT_ANGLE_BRACKET_2_EQUAL: {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '>>' symbol.
@@ -4760,7 +4774,7 @@ void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* as
                    //  symbol = ">>";
                     // break;
                 // }
-                
+
                 // case VERTICAL_BAR_EQUAL: {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '|' symbol.
@@ -4768,20 +4782,20 @@ void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* as
                     // symbol = "|";
                     // break;
                 // }
-                
+
                 // case CARET_EQUAL : {
                     /* The kernel should find a function annotated with the Operator
                      * annotation that handles the '^' symbol.
                      */
                     // symbol = "^";
                 // }
-                
+
                 // default: {
                     /* The generator should not reach this code! */
                     // printf("[internal error] Control should not reach here.\n");
                 // }
             // }
-            
+
             /* Generate the instructions corresponding to invoking the
              * ZenKernel.evaluate() function. Since, Zen is dynamically typed
              * the compiler cannot determine the type of the operands. Therefore,
@@ -4791,7 +4805,7 @@ void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* as
             // zen_BinaryEntityGenerator_invokeEvaluate(generator, symbol, symbolSize);
         // }
 
-        // zen_BinaryEntityGenerator_emitStoreReference(generator->m_builder, targetIndex); 
+        // zen_BinaryEntityGenerator_emitStoreReference(generator->m_builder, targetIndex);
     // }
     // else if (zen_Symbol_isConstant(symbol)) {
         // error: Constant cannot be assigned
@@ -6080,87 +6094,9 @@ void zen_BinaryEntityGenerator_loadInteger(zen_BinaryEntityGenerator_t* generato
  * instructions as if the code was written in the latter form.
  */
 
-/*
- * The generation is divided into two categories:
- *  i. Only the primary expression is present.
- *  ii. The primary expression along with the postfix parts are present.
- *
- * ALGORITHM FOR GENERATION WHEN ONLY THE PRIMARY EXPRESSION IS PRESENT
- *
- * 1. For an identifier
- *    a. Resolve the symbol for with the given identifier.
- *    b. If there are not postfix parts and the symbol is local and variable/constant,
- *       then generate the load_a instruction.
- *    c. If the symbol is a class member and variable or constant, then
- *       generate load_instance_field or load_static_field instruction depending
- *       on the type of the member.
- *    d. If the symbol is a class, enumeration, or annotation and there are no
- *       postfix parts then generate the load_cpr instruction.
- *       Otherwise, pass the reference of the symbol to the next phase, whose
- *       algorithm is described below.
- *    e. If the symbol is a function and there are no postfix parts then generate
- *       the load_cpr instruction. Otherwise, pass the reference of the symbol
- *       to the next phase, whose algorithm is described below.
- *    f. For all other symbols, print an error message that the previous phases
- *       have malfunctioned.
- *
- * 2. For literals
- *    a. For an integer value, generate one of the following instructions depending on
- *       value: load_cpr, push_b, push_s, push_i*, and push_l*.
- *    b. For a floating-point value, generate one of the following instructions
- *       depending on the value: load_cpr, push_f*, and push_d*.
- *    c. For a string value, generate the load_cpr instruction.
- *    d. For true and false literals generate push_i1 and push_i0, respectively.
- *    e. For null literal, generate the push_null instruction.
- *
- * 3. For expressions enclosed in parenthesis, simply walk through the expressions
- *    tree.
- *
- * 4. For map and list expressions, please refer to the algorithms documented with
- *    their respective generators.
- *
- * 5. For this keyword, load the reference from the zeroth position in the local
- *    variable array.
- *
- * ALGORITHM FOR GENERATION WHEN BOTH THE PRIMARY EXPRESSION AND THE POSTFIX PARTS
- * ARE PRESENT
- *
- * 1. The subscript operator requires an object that implements the operator
- *    on the operand stack, which becomes the first operand. Therefore,
- *    generate the instructions corresponding to the primary expression and the
- *    postfix parts prior to the current postfix part. The second operand should
- *    be evaluated by walking over the tree of the expression specified inside
- *    the square brackets. After which, the ZenKernel.evaluate(operand1, operand2, '[]')
- *    call should be made.
- * 2. For function arguments
- *    a. If function arguments is the very first postfix part, then use the
- *       function symbol resolved in the previous phase. Generate instructions
- *       to invoke the ZenKernel.dispatch() function to simulate the function
- *       call.
- *    b. When function arguments postfix part occurs at a position other than the
- *       beginning of the list of postfix parts, it is processed along with the
- *       member access postfix part.
- *    In any case, the generator walks through each expression that constitutes
- *    a function argument generating instructions. The arguments are processed
- *    from left to right.
- * 3. For member access postfix parts, the subsequent postfix part is checked to
- *    see if it is a function arguments postfix part. If true, the algorithm
- *    generates instructions to invoke the ZenKernel.dispatch() function to
- *    simulate the function call.
- *    However, if the subsequent postfix part is not a function arguments postfix
- *    part, then either the load_static_field or  the load_instance_field instruction
- *    is generated.
- *    It should be noted that the identifiers in the member access are not resolved
- *    for their declaration in the symbol table. They are intended to be verified
- *    at runtime due to the dynamic nature of Zen.
- */
-void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {
-    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    zen_PostfixExpressionContext_t* context = (zen_PostfixExpressionContext_t*)node->m_context;
-    zen_ASTNode_t* primaryExpression = context->m_primaryExpression;
-    zen_PrimaryExpressionContext_t* primaryExpressionContext = (zen_PrimaryExpressionContext_t*)primaryExpression->m_context;
-
+void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
+    zen_ASTListener_t* astListener, zen_BinaryEntityGenerator_t* generator,
+    zen_PostfixExpressionContext_t* context, zen_PrimaryExpressionContext_t* primaryExpressionContext) {
     zen_ASTNode_t* expression = primaryExpressionContext->m_expression;
 
     zen_Symbol_t* primarySymbol = NULL;
@@ -6534,11 +6470,11 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                             zen_Symbol_t* classSymbol = classScope->m_classSymbol;
                             zen_ASTNode_t* identifier = classSymbol->m_identifier;
                             zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
-                            
+
                             uint16_t identifierIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
                                 generator->m_constantPoolBuilder, identifierToken->m_text,
                                 identifierToken->m_length);
-                                
+
                             // TODO: Should retrieve a constant pool index to a class entry.
                             zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
 
@@ -6773,6 +6709,730 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
     }
 }
 
+void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
+    zen_ASTListener_t* astListener, zen_BinaryEntityGenerator_t* generator,
+    zen_PostfixExpressionContext_t* context,
+    zen_PrimaryExpressionContext_t* primaryExpressionContext) {
+    zen_ASTNode_t* expression = primaryExpressionContext->m_expression;
+
+    zen_Symbol_t* primarySymbol = NULL;
+    int32_t postfixPartCount = jtk_ArrayList_getSize(context->m_postfixParts);
+
+    /* Load a variable or a constant. */
+    if (zen_ASTNode_isTerminal(expression)) {
+        /* Retrieve the token that the primary expression represents. */
+        zen_Token_t* token = (zen_Token_t*)expression->m_context;
+
+        switch (zen_Token_getType(token)) {
+            case ZEN_TOKEN_IDENTIFIER: {
+                /* Retrieve the string equivalent to the identifier node. */
+                int32_t identifierSize;
+                uint8_t* identifierText = zen_ASTNode_toCString(expression, &identifierSize);
+
+                /* Resolve the symbol in the symbol table. */
+                zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, identifierText);
+                /* Pass the reference to the symbol to the next phase. */
+                primarySymbol = symbol;
+
+                break;
+            }
+
+            case ZEN_TOKEN_INTEGER_LITERAL: {
+                uint8_t* integerText = zen_Token_getText(token);
+                int32_t actualIntegerLength = zen_Token_getLength(token);
+                int32_t integerLength = actualIntegerLength;
+
+                int32_t radix = 10;
+                if (integerLength > 2) {
+                    if ((integerText[0] == '0') && ((integerText[0] == 'x') || (integerText[0] == 'X'))) {
+                        radix = 16;
+                        integerText += 2;
+                        integerLength -= 2;
+                    }
+                    else if ((integerText[0] == '0') && ((integerText[0] == 'b') || (integerText[0] == 'B'))) {
+                        radix = 2;
+                        integerText += 2;
+                        integerLength -= 2;
+                    }
+                    else if ((integerText[0] == '0') && ((integerText[0] == 'c') || (integerText[0] == 'C'))) {
+                        /* TODO: Octal integer literals begin with 0c or 0C according
+                         * to the logic written here. Therefore, please modify the
+                         * lexer accordingly.
+                         */
+
+                        radix = 8;
+                        integerText += 2;
+                        integerLength -= 2;
+                    }
+                }
+
+                bool longLiteral = (integerText[actualIntegerLength - 1] == 'L') ||
+                    (integerText[actualIntegerLength - 1] == 'l');
+
+                if (longLiteral) {
+                    integerLength--;
+                }
+
+                int64_t value = zen_Long_convert(integerText, integerLength, radix);
+
+                if (longLiteral) {
+                    zen_BinaryEntityGenerator_loadLong(generator, value);
+                }
+                else {
+                    zen_BinaryEntityGenerator_loadInteger(generator, value);
+                }
+
+                break;
+            }
+
+            case ZEN_TOKEN_KEYWORD_TRUE: {
+                /* Emit push_i1. In the operand stack, 1 represents true. */
+                zen_BinaryEntityBuilder_emitPushInteger1(generator->m_builder);
+
+                /* Log the emission of the instruction. */
+                printf("[debug] Emitted push_i1\n");
+
+                break;
+            }
+
+            case ZEN_TOKEN_KEYWORD_FALSE: {
+                /* Emit push_i0 instruction. In the operand stack, 0 represents false. */
+                zen_BinaryEntityBuilder_emitPushInteger0(generator->m_builder);
+
+                /* Log the emission of the instruction. */
+                printf("[debug] Emitted push_i0\n");
+
+                break;
+            }
+
+            case ZEN_TOKEN_STRING_LITERAL: {
+                /* Retrieve a valid index into the constant pool. The entry at
+                 * this index is a constant pool string. The token text encloses
+                 * the content within double quotes. Therefore, the first quote
+                 * is skipped using pointer arithmetic and the last quote
+                 * is skipped by subtracting 1 from the length of the text.
+                 * Another 1 is subtracted from the text length because the first
+                 * quote was skipped.
+                 */
+                uint8_t stringIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
+                    generator->m_constantPoolBuilder, token->m_text + 1, token->m_length - 2);
+
+                /* Emit load_cpr instruction. */
+                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
+                    stringIndex);
+
+                /* Log the emission of the instruction. */
+                printf("[debug] Emitted load_cpr %d\n", stringIndex);
+
+                break;
+            }
+
+            case ZEN_TOKEN_KEYWORD_NULL: {
+                /* Emit the push_null instruction. */
+                zen_BinaryEntityBuilder_emitPushNull(generator->m_builder);
+
+                /* Log the emission of the push_null instruction. */
+                printf("[debug] Emitted push_null\n");
+
+                break;
+            }
+
+            case ZEN_TOKEN_KEYWORD_THIS: {
+                /* Emit the load_a instruction. */
+                zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
+
+                /* Log the emission of the load_a instruction. */
+                printf("[debug] Emitted load_a 0\n");
+
+                break;
+            }
+        }
+    }
+    else if ((expression->m_type == ZEN_AST_NODE_TYPE_MAP_EXPRESSION) ||
+        (expression->m_type == ZEN_AST_NODE_TYPE_LIST_EXPRESSION) ||
+        (expression->m_type == ZEN_AST_NODE_TYPE_EXPRESSION)) {
+        zen_ASTWalker_walk(astListener, expression);
+    }
+    else {
+        // Error: What node do we have here?
+    }
+
+    const uint8_t* objectClassName = "zen.core.Object";
+    int32_t objectClassNameSize = 15;
+    uint16_t objectClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
+        generator->m_constantPoolBuilder, objectClassName, objectClassNameSize);
+
+    const uint8_t* kernelClassName = "zen/core/ZenKernel";
+    int32_t kernelClassNameSize = 18;
+    const uint8_t* storeFieldDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/String)(zen/core/Object)";
+    int32_t storeFieldDescriptorSize = 69;
+    const uint8_t* storeFieldName = "storeField";
+    int32_t storeFieldNameSize = 10;
+    uint16_t storeFieldIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
+        storeFieldDescriptor, storeFieldDescriptorSize, storeFieldName,
+        storeFieldNameSize);
+
+    const uint8_t* storeClassFieldDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/String)(zen/core/Object)";
+    int32_t storeClassFieldDescriptorSize = 69;
+    const uint8_t* storeClassFieldName = "storeClassField";
+    int32_t storeClassFieldNameSize = 15;
+    uint16_t storeClassFieldIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
+        storeClassFieldDescriptor, storeClassFieldDescriptorSize, storeClassFieldName,
+        storeClassFieldNameSize);
+
+    const uint8_t* invokeDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/String)";
+    int32_t invokeDescriptorSize = 52;
+    const uint8_t* invokeName = "invoke";
+    int32_t invokeNameSize = 6;
+    uint16_t invokeIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
+        invokeDescriptor, invokeDescriptorSize, invokeName,
+        invokeNameSize);
+
+    const uint8_t* invoke2Descriptor = "(zen/core/Object):(zen/core/Object)(zen/core/String)@(zen/core/Object)";
+    int32_t invoke2DescriptorSize = 70;
+    uint16_t invoke2Index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
+        invoke2Descriptor, invoke2DescriptorSize, invokeName,
+        invokeNameSize);
+
+    // const uint8_t* invokeStaticDescriptor = "(zen/core/Object):(zen/core/Class)(zen/core/String)";
+    const uint8_t* invokeStaticDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)";
+    int32_t invokeStaticDescriptorSize = 52;
+    const uint8_t* invokeStaticName = "invokeStatic";
+    int32_t invokeStaticNameSize = 12;
+    uint16_t invokeStaticIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
+        invokeStaticDescriptor, invokeStaticDescriptorSize, invokeStaticName,
+        invokeStaticNameSize);
+
+    // const uint8_t* invokeStatic2Descriptor = "(zen/core/Object):(zen/core/Class)(zen/core/String)@(zen/core/Object)";
+    const uint8_t* invokeStatic2Descriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)";
+    int32_t invokeStatic2DescriptorSize = 70;
+    uint16_t invokeStatic2Index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
+        invokeStatic2Descriptor, invokeStatic2DescriptorSize, invokeStaticName,
+        invokeStaticNameSize);
+
+    const uint8_t* loadFieldDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/String)";
+    int32_t loadFieldDescriptorSize = 52;
+    const uint8_t* loadFieldName = "loadField";
+    int32_t loadFieldNameSize = 9;
+    uint16_t loadFieldIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
+        loadFieldDescriptor, loadFieldDescriptorSize, loadFieldName,
+        loadFieldNameSize);
+
+    if (postfixPartCount == 0) {
+        if (zen_Symbol_isVariable(primarySymbol) || zen_Symbol_isConstant(primarySymbol)) {
+            zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(primarySymbol);
+            if (zen_Scope_isClassScope(enclosingScope)) {
+                bool instance = false;
+                if (zen_Symbol_isVariable(primarySymbol)) {
+                    zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)primarySymbol->m_context;
+                    instance = true; /* !zen_VariableSymbol_isStatic(variableSymbol)) */
+                }
+                else {
+                    zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)primarySymbol->m_context;
+                    instance = true; /* !zen_ConstantSymbol_isStatic(constantSymbol)) */
+                }
+
+                zen_ASTNode_t* identifier = primarySymbol->m_identifier;
+                zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+                uint16_t identifierIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
+                    generator->m_constantPoolBuilder, identifierToken->m_text,
+                    identifierToken->m_length);
+
+                if (instance) {
+                    /* The this reference is always stored at the zeroth position
+                     * in the local variable array. Further, we assume that the
+                     * class member and the expression being processed appear in
+                     * in the same class. Therefore, emit a load reference to the
+                     * this reference.
+                     */
+                    zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
+
+                    /* Log the emission of the load_a instruction. */
+                    printf("[debug] Emitted load_a 0\n");
+
+                    /* Load the name of the field. */
+                    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
+
+                    /* Log the emission of the load_cpr instruction. */
+                    printf("[debug] Emitted load_cpr %d\n", identifierIndex);
+
+                    /* Invoke the ZenKernel.storeField() function to update
+                     * the field.
+                     */
+                    zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, storeFieldIndex);
+
+                    /* Log the emission of the invoke_static instruction. */
+                    printf("[debug] Emitted invoke_static %d\n", storeFieldIndex);
+                }
+                else {
+                    /* Emit the `load_cpr` instruction to load the reference of the
+                     * class to which the static field belongs.
+                     */
+                    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, 0);
+
+                    /* Log the emission of the load_cpr instruction. */
+                    printf("[debug] Emitted load_cpr 0 (dummy)\n");
+
+                    /* Load the name of the field. */
+                    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
+
+                    /* Log the emission of the load_cpr instruction. */
+                    printf("[debug] Emitted load_cpr %d\n", identifierIndex);
+
+                    /* Invoke the ZenKernel.storeField() function to update
+                     * the field.
+                     */
+                    zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, storeFieldIndex);
+
+                    /* Log the emission of the invoke_static instruction. */
+                    printf("[debug] Emitted invoke_static %d\n", storeFieldIndex);
+                }
+            }
+            else if (zen_Scope_isLocalScope(enclosingScope)) {
+                int32_t index = -1;
+                if (zen_Symbol_isVariable(primarySymbol)) {
+                    zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)primarySymbol->m_context;
+                    index = variableSymbol->m_index;
+                }
+                else {
+                    zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)primarySymbol->m_context;
+                    index = constantSymbol->m_index;
+                }
+
+                /* Emit the store_a instruction. */
+                zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, index);
+
+                /* Log the emission of the store_a instruction. */
+                printf("[debug] Emitted store_a %d\n", index);
+            }
+        }
+    }
+    else {
+        int32_t i;
+        for (i = 0; i < postfixPartCount; i++) {
+            zen_ASTNode_t* postfixPart = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+                context->m_postfixParts, i);
+            zen_ASTNodeType_t type = zen_ASTNode_getType(postfixPart);
+
+            /* When code written in a statically typed ZVM language is integrated
+             * with code written in a dynamically typed ZVM language, such as Zen,
+             * special care should be taken. The operand stack is vulnerable to
+             * pollution. For example, assume the following function written in a
+             * hypothetical ZVM language that is statically typed.
+             *
+             * int getIndex()
+             *     ...
+             *
+             * Now, consider the following code written in Zen.
+             *
+             * function main(...arguments)
+             *     var index = getIndex()
+             *     index += 1
+             *
+             * When getIndex() function is invoked from Zen, the primitive value
+             * is passed around the code. The compound assignment operator causes
+             * the invocation of ZenEnvironment.invokeOperator(...) against a primitive
+             * value, given the operand stack does not store the type of its entries.
+             * Therefore, the compiler of the dynamically typed language should take
+             * care of wrapping and unwrapping primitive values to their corresponding
+             * wrapper class objects.
+             */
+            switch (type) {
+                case ZEN_AST_NODE_TYPE_SUBSCRIPT: {
+                    zen_SubscriptContext_t* subscriptContext = (zen_SubscriptContext_t*)postfixPart->m_context;
+
+                    /* Visit the index expression node and generate the relevant
+                     * instructions.
+                     */
+                    zen_ASTWalker_walk(astListener, subscriptContext->m_expression);
+
+                    /* Generate the instructions corresponding to invoking the
+                     * ZenKernel.evaluate() function.
+                     */
+                    if (i + 1 < postfixPartCount) {
+                        zen_BinaryEntityGenerator_invokeEvaluate(generator, "[]", 2);
+                    }
+                    else {
+                        zen_BinaryEntityGenerator_invokeEvaluate(generator, "[]=", 3);
+                    }
+
+                    /* The normal behaviour of the AST walker causes the generator to
+                     * emit instructions in an undesirable fashion. Therefore, we partially
+                     * switch from the listener to visitor design pattern. The AST walker
+                     * can be guided to switch to this mode via zen_ASTListener_skipChildren()
+                     * function which causes the AST walker to skip iterating over the children
+                     * nodes.
+                     */
+                    zen_ASTListener_skipChildren(astListener);
+
+                    break;
+                }
+
+                case ZEN_AST_NODE_TYPE_FUNCTION_ARGUMENTS: {
+                    zen_FunctionArgumentsContext_t* functionArgumentsContext =
+                        (zen_FunctionArgumentsContext_t*)postfixPart->m_context;
+
+                    if (i == 0) {
+                        if (zen_Symbol_isFunction(primarySymbol)) {
+                            zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)primarySymbol->m_context;
+                            int32_t index = invokeStaticIndex;
+                            if (zen_Modifier_hasStatic(primarySymbol->m_modifiers)) {
+                                // NOTE: I am assuming that only class members can be declared as static.
+                                zen_Scope_t* enclosingScope = primarySymbol->m_enclosingScope;
+                                zen_ClassScope_t* classScope = (zen_ClassScope_t*)enclosingScope->m_context;
+                                zen_Symbol_t* classSymbol = classScope->m_classSymbol;
+                                zen_ASTNode_t* identifier = classSymbol->m_identifier;
+                                zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+
+                                uint16_t identifierIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
+                                    generator->m_constantPoolBuilder, identifierToken->m_text,
+                                    identifierToken->m_length);
+
+                                // TODO: Should retrieve a constant pool index to a class entry.
+                                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
+
+                                /* Log the emission of the load_cpr instruction. */
+                                printf("[debug] Emitted load_cpr %d\n", identifierIndex);
+
+                            }
+                            else {
+                                /* The "this" reference is always stored at the zeroth position
+                                 * in the local variable array. Further, we assume that the
+                                 * class member and the expression being processed appear in
+                                 * in the same class. Therefore, emit a load reference to the
+                                 * this reference.
+                                 */
+                                zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
+
+                                /* Log the emission of the load_a instruction. */
+                                printf("[debug] Emitted load_a 0\n");
+
+                                index = invokeIndex;
+                            }
+
+                            zen_ASTNode_t* primarySymbolIdentifier = primarySymbol->m_identifier;
+                            zen_Token_t* primarySymbolToken = (zen_Token_t*)primarySymbolIdentifier->m_context;
+
+                            /* The name of the function to invoke. */
+                            int32_t targetNameIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
+                                generator->m_constantPoolBuilder, primarySymbolToken->m_text,
+                                primarySymbolToken->m_length);
+
+                            /* Push the name of the target function on the operand stack. */
+                            zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
+                                targetNameIndex);
+
+                            zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
+                            if (expressions != NULL) {
+                                zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
+                                int32_t argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
+                                if (argumentCount > 0) {
+                                    /* Push the size of the list onto the operand stack. */
+                                    zen_BinaryEntityGenerator_loadInteger(generator, argumentCount);
+
+                                    /* In Zen, function invocations are simulated using the ZenKerenel.dispatch()
+                                     * function. It requires the arguments of the function invocation in an array.
+                                     * Therefore, create an array and fill it with the arguments.
+                                     *
+                                     * Emit the new_array_a instruction to create the array.
+                                     */
+                                    zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_builder,
+                                        objectClassIndex);
+
+                                    /* Log the emission of the new_array_a instruction. */
+                                    printf("[debug] Emitted new_array_a %d\n", objectClassIndex);
+
+                                    int32_t argumentIndex;
+                                    for (argumentIndex = 0; argumentIndex < argumentCount; argumentIndex++) {
+                                        /* Retrieve the expression for the current argument. */
+                                        zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+                                            expressionsContext->m_expressions, argumentIndex);
+
+                                        /* Duplicate the reference to the argument array. */
+                                        zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
+
+                                        /* Log the emission of the duplicate instruction. */
+                                        printf("[debug] Emitted duplicate\n");
+
+                                        /* Push the index at which the result of the expression will be stored. */
+                                        zen_BinaryEntityGenerator_loadInteger(generator, i);
+
+                                        /* Visit the expression node and generate the relevant instructions. */
+                                        zen_ASTWalker_walk(astListener, argument);
+
+                                        /* Store the result in the argument array. */
+                                        zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_builder);
+
+                                        /* Log the emission of the store_aa instruction. */
+                                        printf("[debug] Emitted store_aa\n");
+
+                                    }
+
+                                    index = !zen_Modifier_hasStatic(primarySymbol->m_modifiers)?
+                                        invoke2Index : invokeStatic2Index;
+                                }
+                            }
+
+                            /* Invoke the ZenKernel.dispatch() function to simulate a function
+                             * call.
+                             */
+                            zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, index);
+
+                            /* Log the emission of the invoke_static instruction. */
+                            printf("[debug] Emitted invoke_static %d\n", index);
+                        }
+                        else {
+                            printf("[internal error] Trying to invoke a non-function entity. The phases prior to the code generation must have malfunctioned.\n");
+                        }
+                    }
+                    else {
+                        printf("[internal error] Control should not reach here.\n");
+                    }
+
+                    break;
+                }
+
+                case ZEN_AST_NODE_TYPE_MEMBER_ACCESS: {
+                    zen_MemberAccessContext_t* memberAccessContext =
+                        (zen_MemberAccessContext_t*)postfixPart->m_context;
+                    zen_ASTNode_t* identifier = memberAccessContext->m_identifier;
+                    zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+
+                    /* The name of the function/field to invoke/load. */
+                    int32_t targetNameIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
+                    generator->m_constantPoolBuilder, identifierToken->m_text,
+                    identifierToken->m_length);
+
+                    if ((i + 1) < postfixPartCount) {
+                        zen_ASTNode_t* nextPostfixPart = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+                            context->m_postfixParts, i + 1);
+                        zen_ASTNodeType_t nextPostfixPartType = zen_ASTNode_getType(nextPostfixPart);
+
+                        if (nextPostfixPartType == ZEN_AST_NODE_TYPE_FUNCTION_ARGUMENTS) {
+                            zen_ASTNode_t* functionArguments = nextPostfixPart;
+                            i++;
+
+                            zen_FunctionArgumentsContext_t* functionArgumentsContext =
+                                (zen_FunctionArgumentsContext_t*)functionArguments->m_context;
+
+                            /* A static function invocation can occur only if the function arguments
+                             * postfix part occurs at the zeroth position. This behavior is a direct
+                             * result of Zen not supporting nested classes.
+                             */
+
+                            /* Push the name of the target function on the operand stack. */
+                            zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
+                                targetNameIndex);
+
+                            /* Log the emission of the load_cpr instruction. */
+                            printf("[debug] Emitted load_cpr %d\n", targetNameIndex);
+
+                            int32_t index = invoke2Index;
+
+                            zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
+                            if (expressions != NULL) {
+                                zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
+                                int32_t argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
+                                if (argumentCount > 0) {
+                                    /* Push the size of the list onto the operand stack. */
+                                    zen_BinaryEntityGenerator_loadInteger(generator, argumentCount);
+
+                                    /* In Zen, function invocations are simulated using the ZenKerenel.dispatch()
+                                     * function. It requires the arguments of the function invocation in an array.
+                                     * Therefore, create an array and fill it with the arguments.
+                                     *
+                                     * Emit the new_array_a instruction to create the array.
+                                     */
+                                    zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_builder,
+                                        objectClassIndex);
+
+                                    /* Log the emission of the new_array_a instruction. */
+                                    printf("[debug] Emitted new_array_a %d\n", objectClassIndex);
+
+                                    int32_t argumentIndex;
+                                    for (argumentIndex = 0; argumentIndex < argumentCount; argumentIndex++) {
+                                        /* Retrieve the expression for the current argument. */
+                                        zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+                                            expressionsContext->m_expressions, argumentIndex);
+
+                                        /* Duplicate the reference to the argument array. */
+                                        zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
+
+                                        /* Log the emission of the duplicate instruction. */
+                                        printf("[debug] Emitted duplicate\n");
+
+                                        /* Push the index at which the result of the expression will be stored. */
+                                        zen_BinaryEntityGenerator_loadInteger(generator, i);
+
+                                        /* Visit the expression node and generate the relevant instructions. */
+                                        zen_ASTWalker_walk(astListener, argument);
+
+                                        /* Store the result in the argument array. */
+                                        zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_builder);
+
+                                        /* Log the emission of the store_aa instruction. */
+                                        printf("[debug] Emitted store_aa\n");
+                                    }
+
+                                    index = invokeIndex;
+                                }
+                            }
+
+                            /* Invoke the ZenKernel.dispatch() function to simulate a function
+                             * call.
+                             */
+                            zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, index);
+
+                            /* Log the emission of the invoke_static instruction. */
+                            printf("[debug] Emitted invoke_static %d\n", index);
+                        }
+                        else {
+                            // TODO: Handle static field loads
+
+                            /* Push the name of the field to load on the operand stack. */
+                            zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
+                                targetNameIndex);
+
+                            /* Log the emission of the load_cpr instruction. */
+                            printf("[debug] Emitted load_cpr %d\n", targetNameIndex);
+
+                            /* Invoke the ZenKernel.loadField() function to load the value
+                             * stored in a field.
+                             */
+                            zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, loadFieldIndex);
+
+                            /* Log the emission of the invoke_static instruction. */
+                            printf("[debug] Emitted invoke_static %d\n", loadFieldIndex);
+                        }
+                    }
+                    else {
+                        // TODO: Handle static field loads
+
+                        /* Push the name of the field to load on the operand stack. */
+                        zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
+                            targetNameIndex);
+
+                        /* Log the emission of the load_cpr instruction. */
+                        printf("[debug] Emitted load_cpr %d\n", targetNameIndex);
+
+                        /* Invoke the ZenKernel.storeField() function to update the value
+                         * of the field.
+                         */
+                        zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, storeFieldIndex);
+
+                        /* Log the emission of the invoke_static instruction. */
+                        printf("[debug] Emitted invoke_static %d\n", storeFieldIndex);
+                    }
+
+                    break;
+                }
+
+                default: {
+                    printf("[error] Invalid AST node type %d encountered.\n", type);
+                }
+            }
+        }
+    }
+}
+
+/*
+ * The generation is divided into two categories:
+ *  i. Only the primary expression is present.
+ *  ii. The primary expression along with the postfix parts are present.
+ *
+ * ALGORITHM FOR GENERATION WHEN ONLY THE PRIMARY EXPRESSION IS PRESENT
+ *
+ * 1. For an identifier
+ *    a. Resolve the symbol for with the given identifier.
+ *    b. If there are not postfix parts and the symbol is local and variable/constant,
+ *       then generate the load_a instruction.
+ *    c. If the symbol is a class member and variable or constant, then
+ *       generate load_instance_field or load_static_field instruction depending
+ *       on the type of the member.
+ *    d. If the symbol is a class, enumeration, or annotation and there are no
+ *       postfix parts then generate the load_cpr instruction.
+ *       Otherwise, pass the reference of the symbol to the next phase, whose
+ *       algorithm is described below.
+ *    e. If the symbol is a function and there are no postfix parts then generate
+ *       the load_cpr instruction. Otherwise, pass the reference of the symbol
+ *       to the next phase, whose algorithm is described below.
+ *    f. For all other symbols, print an error message that the previous phases
+ *       have malfunctioned.
+ *
+ * 2. For literals
+ *    a. For an integer value, generate one of the following instructions depending on
+ *       value: load_cpr, push_b, push_s, push_i*, and push_l*.
+ *    b. For a floating-point value, generate one of the following instructions
+ *       depending on the value: load_cpr, push_f*, and push_d*.
+ *    c. For a string value, generate the load_cpr instruction.
+ *    d. For true and false literals generate push_i1 and push_i0, respectively.
+ *    e. For null literal, generate the push_null instruction.
+ *
+ * 3. For expressions enclosed in parenthesis, simply walk through the expressions
+ *    tree.
+ *
+ * 4. For map and list expressions, please refer to the algorithms documented with
+ *    their respective generators.
+ *
+ * 5. For this keyword, load the reference from the zeroth position in the local
+ *    variable array.
+ *
+ * ALGORITHM FOR GENERATION WHEN BOTH THE PRIMARY EXPRESSION AND THE POSTFIX PARTS
+ * ARE PRESENT
+ *
+ * 1. The subscript operator requires an object that implements the operator
+ *    on the operand stack, which becomes the first operand. Therefore,
+ *    generate the instructions corresponding to the primary expression and the
+ *    postfix parts prior to the current postfix part. The second operand should
+ *    be evaluated by walking over the tree of the expression specified inside
+ *    the square brackets. After which, the ZenKernel.evaluate(operand1, operand2, '[]')
+ *    call should be made.
+ * 2. For function arguments
+ *    a. If function arguments is the very first postfix part, then use the
+ *       function symbol resolved in the previous phase. Generate instructions
+ *       to invoke the ZenKernel.dispatch() function to simulate the function
+ *       call.
+ *    b. When function arguments postfix part occurs at a position other than the
+ *       beginning of the list of postfix parts, it is processed along with the
+ *       member access postfix part.
+ *    In any case, the generator walks through each expression that constitutes
+ *    a function argument generating instructions. The arguments are processed
+ *    from left to right.
+ * 3. For member access postfix parts, the subsequent postfix part is checked to
+ *    see if it is a function arguments postfix part. If true, the algorithm
+ *    generates instructions to invoke the ZenKernel.dispatch() function to
+ *    simulate the function call.
+ *    However, if the subsequent postfix part is not a function arguments postfix
+ *    part, then either the load_static_field or  the load_instance_field instruction
+ *    is generated.
+ *    It should be noted that the identifiers in the member access are not resolved
+ *    for their declaration in the symbol table. They are intended to be verified
+ *    at runtime due to the dynamic nature of Zen.
+ */
+void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    zen_PostfixExpressionContext_t* context = (zen_PostfixExpressionContext_t*)node->m_context;
+    zen_ASTNode_t* primaryExpression = context->m_primaryExpression;
+    zen_PrimaryExpressionContext_t* primaryExpressionContext = (zen_PrimaryExpressionContext_t*)primaryExpression->m_context;
+
+    if (lhs) {
+        zen_BinaryEntityGenerator_handleLhsPostfixExpression(astListener,
+            generator, context, primaryExpressionContext);
+    }
+    else {
+        zen_BinaryEntityGenerator_handleRhsPostfixExpression(astListener,
+            generator, context, primaryExpressionContext);
+    }
+}
+
 void zen_BinaryEntityGenerator_onEnterPostfixExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
@@ -6821,7 +7481,6 @@ void zen_BinaryEntityGenerator_onExitPostfixOperator(zen_ASTListener_t* astListe
 }
 
 // primaryExpression
-
 
 void zen_BinaryEntityGenerator_onEnterPrimaryExpression(
     zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
