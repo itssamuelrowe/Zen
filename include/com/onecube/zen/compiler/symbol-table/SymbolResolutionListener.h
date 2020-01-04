@@ -21,15 +21,8 @@
 
 #include <com/onecube/zen/compiler/ast/ASTAnnotations.h>
 #include <com/onecube/zen/compiler/ast/ASTListener.h>
+#include <com/onecube/zen/compiler/ast/ExpressionAnnotation.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
-
-enum zen_ExpressionAnnotation_t {
-    ZEN_EXPRESSION_ANNOTATION_UNKNOWN,
-    ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER,
-    ZEN_EXPRESSION_ANNOTATION_VALUE
-};
-
-typedef enum zen_ExpressionAnnotation_t zen_ExpressionAnnotation_t;
 
 /*******************************************************************************
  * SymbolResolutionListener                                                    *

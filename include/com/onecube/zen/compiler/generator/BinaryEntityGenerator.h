@@ -29,6 +29,7 @@
 #include <com/onecube/zen/compiler/ast/ASTListener.h>
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
 #include <com/onecube/zen/compiler/ast/ASTAnnotations.h>
+#include <com/onecube/zen/compiler/ast/ExpressionAnnotation.h>
 #include <com/onecube/zen/compiler/generator/ConstantPoolBuilder.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
 

@@ -4659,6 +4659,9 @@ void zen_BinaryEntityGenerator_onExitExpression(zen_ASTListener_t* astListener, 
  * - local class member using 'this' reference
  * - super class member
  * - super class member using 'super' reference
+ * - instance member variable (where, the instance is an expression)
+ * - static member variable
+ *
  *    ...
  *    invoke_virtual #function_descriptor_index
  *    store_a #x
