@@ -23,6 +23,14 @@
 #include <com/onecube/zen/compiler/ast/ASTListener.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
 
+enum zen_ExpressionAnnotation_t {
+    ZEN_EXPRESSION_ANNOTATION_UNKNOWN,
+    ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER,
+    ZEN_EXPRESSION_ANNOTATION_VALUE
+};
+
+typedef enum zen_ExpressionAnnotation_t zen_ExpressionAnnotation_t;
+
 /*******************************************************************************
  * SymbolResolutionListener                                                    *
  *******************************************************************************/
@@ -37,6 +45,7 @@ struct zen_SymbolResolutionListener_t {
     zen_ASTListener_t* m_astListener;
     zen_SymbolTable_t* m_symbolTable;
     zen_ASTAnnotations_t* m_scopes;
+    zen_ExpressionAnnotation_t m_label;
 };
 
 /**

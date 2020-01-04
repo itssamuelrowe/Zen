@@ -98,21 +98,12 @@
  *   y   5
  */
 
-enum zen_ExpressionAnnotation_t {
-    ZEN_EXPRESSION_ANNOTATION_UNKNOWN,
-    ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER,
-    ZEN_EXPRESSION_ANNOTATION_VALUE
-};
-
-typedef enum zen_ExpressionAnnotation_t zen_ExpressionAnnotation_t;
-
-zen_ExpressionAnnotation_t label = ZEN_EXPRESSION_ANNOTATION_UNKNOWN;
-
 zen_SymbolResolutionListener_t* zen_SymbolResolutionListener_new(zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes) {
     zen_SymbolResolutionListener_t* listener = zen_Memory_allocate(zen_SymbolResolutionListener_t, 1);
     listener->m_astListener = zen_ASTListener_newWithContext(listener);
     listener->m_symbolTable = symbolTable;
     listener->m_scopes = scopes;
+    listener->m_label = ZEN_EXPRESSION_ANNOTATION_UNKNOWN;
 
     zen_ASTListener_t* astListener = listener->m_astListener;
 
@@ -795,7 +786,7 @@ void zen_SymbolResolutionListener_onEnterIterativeStatement(zen_ASTListener_t* a
 void zen_SymbolResolutionListener_onExitIterativeStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
 }
 
-// label
+// listener->m_label
 
 void zen_SymbolResolutionListener_onEnterLabel(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
@@ -1048,7 +1039,7 @@ void zen_SymbolResolutionListener_onExitAssignmentExpression(zen_ASTListener_t* 
         zen_TokenType_t assignmentOperatorType = assignmentOperatorToken->m_type;
         if (zen_TokenType_isAssignmentOperator(assignmentOperatorType)) {
             zen_ASTWalker_walk(astListener, context->m_conditionalExpression);
-            if (label == ZEN_EXPRESSION_ANNOTATION_VALUE) {
+            if (listener->m_label == ZEN_EXPRESSION_ANNOTATION_VALUE) {
                 fprintf(stderr, "[error] The specified left value is invalid.\n");
             }
             else {
@@ -1075,7 +1066,7 @@ void zen_SymbolResolutionListener_onExitConditionalExpression(zen_ASTListener_t*
     zen_ConditionalExpressionContext_t* context = (zen_ConditionalExpressionContext_t*)node->m_context;
 
     if (context->m_thenExpression != NULL) {
-        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+        listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
     }
 }
 
@@ -1091,7 +1082,7 @@ void zen_SymbolResolutionListener_onExitLogicalOrExpression(zen_ASTListener_t* a
     zen_LogicalOrExpressionContext_t* context = (zen_LogicalOrExpressionContext_t*)node->m_context;
 
     if (!jtk_ArrayList_isEmpty(context->m_logicalAndExpressions)) {
-        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+        listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
     }
 }
 
@@ -1107,7 +1098,7 @@ void zen_SymbolResolutionListener_onExitLogicalAndExpression(zen_ASTListener_t* 
     zen_LogicalAndExpressionContext_t* context = (zen_LogicalAndExpressionContext_t*)node->m_context;
 
     if (!jtk_ArrayList_isEmpty(context->m_inclusiveOrExpressions)) {
-        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+        listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
     }
 }
 
@@ -1123,7 +1114,7 @@ void zen_SymbolResolutionListener_onExitInclusiveOrExpression(zen_ASTListener_t*
     zen_InclusiveOrExpressionContext_t* context = (zen_InclusiveOrExpressionContext_t*)node->m_context;
 
     if (!jtk_ArrayList_isEmpty(context->m_exclusiveOrExpressions)) {
-        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+        listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
     }
 }
 
@@ -1139,7 +1130,7 @@ void zen_SymbolResolutionListener_onExitExclusiveOrExpression(zen_ASTListener_t*
     zen_ExclusiveOrExpressionContext_t* context = (zen_ExclusiveOrExpressionContext_t*)node->m_context;
 
     if (!jtk_ArrayList_isEmpty(context->m_andExpressions)) {
-        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+        listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
     }
 }
 
@@ -1155,7 +1146,7 @@ void zen_SymbolResolutionListener_onExitAndExpression(zen_ASTListener_t* astList
     zen_AndExpressionContext_t* context = (zen_AndExpressionContext_t*)node->m_context;
 
     if (!jtk_ArrayList_isEmpty(context->m_equalityExpressions)) {
-        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+        listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
     }
 }
 
@@ -1171,7 +1162,7 @@ void zen_SymbolResolutionListener_onExitEqualityExpression(zen_ASTListener_t* as
     zen_EqualityExpressionContext_t* context = (zen_EqualityExpressionContext_t*)node->m_context;
 
     if (!jtk_ArrayList_isEmpty(context->m_relationalExpressions)) {
-        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+        listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
     }
 }
 
@@ -1187,7 +1178,7 @@ void zen_SymbolResolutionListener_onExitRelationalExpression(zen_ASTListener_t* 
     zen_RelationalExpressionContext_t* context = (zen_RelationalExpressionContext_t*)node->m_context;
 
     if (!jtk_ArrayList_isEmpty(context->m_shiftExpressions)) {
-        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+        listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
     }
 }
 
@@ -1203,7 +1194,7 @@ void zen_SymbolResolutionListener_onExitShiftExpression(zen_ASTListener_t* astLi
     zen_ShiftExpressionContext_t* context = (zen_ShiftExpressionContext_t*)node->m_context;
 
     if (!jtk_ArrayList_isEmpty(context->m_additiveExpressions)) {
-        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+        listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
     }
 }
 
@@ -1219,7 +1210,7 @@ void zen_SymbolResolutionListener_onExitAdditiveExpression(zen_ASTListener_t* as
     zen_AdditiveExpressionContext_t* context = (zen_AdditiveExpressionContext_t*)node->m_context;
 
     if (!jtk_ArrayList_isEmpty(context->m_multiplicativeExpressions)) {
-        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+        listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
     }
 }
 
@@ -1235,7 +1226,7 @@ void zen_SymbolResolutionListener_onExitMultiplicativeExpression(zen_ASTListener
     zen_MultiplicativeExpressionContext_t* context = (zen_MultiplicativeExpressionContext_t*)node->m_context;
 
     if (!jtk_ArrayList_isEmpty(context->m_unaryExpressions)) {
-        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+        listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
     }
 }
 
@@ -1251,7 +1242,7 @@ void zen_SymbolResolutionListener_onExitUnaryExpression(zen_ASTListener_t* astLi
     zen_UnaryExpressionContext_t* context = (zen_UnaryExpressionContext_t*)node->m_context;
 
     if (context->m_unaryOperator != NULL) {
-        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+        listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
     }
 }
 
@@ -1304,7 +1295,7 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
                 zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(symbol);
                 if (zen_Symbol_isVariable(symbol) || zen_Symbol_isConstant(symbol)) {
                     /* Annotate the AST node as placeholder. */
-                    label = ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER;
+                    listener->m_label = ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER;
                 }
                 else {
                     /* Pass the reference to the symbol to the next phase. */
@@ -1322,7 +1313,7 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
             case ZEN_TOKEN_KEYWORD_TRUE: {
 
                 /* Annotate the AST node as value. */
-                label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+                listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
 
                 break;
             }
@@ -1332,7 +1323,7 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
         (expression->m_type == ZEN_AST_NODE_TYPE_LIST_EXPRESSION) ||
         (expression->m_type == ZEN_AST_NODE_TYPE_EXPRESSION)) {
         /* Annotate the AST node as value. */
-        label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+        listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
     }
 
     int32_t i;
@@ -1344,7 +1335,7 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
         switch (type) {
             case ZEN_AST_NODE_TYPE_SUBSCRIPT: {
                 /* Annotate the AST node as placeholder. */
-                label = ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER;
+                listener->m_label = ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER;
 
                 zen_SubscriptContext_t* subscriptContext = (zen_SubscriptContext_t*)postfixPart->m_context;
 
@@ -1365,7 +1356,7 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
 
             case ZEN_AST_NODE_TYPE_FUNCTION_ARGUMENTS: {
                 /* Annotate the AST node as value. */
-                label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+                listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
 
                 zen_FunctionArgumentsContext_t* functionArgumentsContext =
                     (zen_FunctionArgumentsContext_t*)postfixPart->m_context;
@@ -1413,7 +1404,7 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
                 zen_ASTNode_t* functionArguments = NULL;
 
                 /* Annotate the AST node as placeholder. */
-                label = ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER;
+                listener->m_label = ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER;
                 
                 if ((i + 1) < postfixPartCount) {
                     zen_ASTNode_t* nextPostfixPart = (zen_ASTNode_t*)jtk_ArrayList_getValue(
@@ -1427,7 +1418,7 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
 
                 if (functionArguments != NULL) {
                     /* Annotate the AST node as placeholder. */
-                    label = ZEN_EXPRESSION_ANNOTATION_VALUE;
+                    listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
                     
                     zen_FunctionArgumentsContext_t* functionArgumentsContext =
                         (zen_FunctionArgumentsContext_t*)functionArguments->m_context;
@@ -1473,7 +1464,7 @@ void zen_SymbolResolutionListener_onEnterSubscript(zen_ASTListener_t* astListene
     zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
     zen_ExpressionContext_t* context = (zen_ExpressionContext_t*)node->m_context;
 
-    // label = ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER;
+    // listener->m_label = ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER;
 }
 
 void zen_SymbolResolutionListener_onExitSubscript(zen_ASTListener_t* astListener,
