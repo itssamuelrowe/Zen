@@ -6397,8 +6397,12 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
     }
     else if ((expression->m_type == ZEN_AST_NODE_TYPE_MAP_EXPRESSION) ||
         (expression->m_type == ZEN_AST_NODE_TYPE_LIST_EXPRESSION) ||
+        (expression->m_type == ZEN_AST_NODE_TYPE_EXPRESSION) ||
         (expression->m_type == ZEN_AST_NODE_TYPE_EXPRESSION)) {
         zen_ASTWalker_walk(astListener, expression);
+    }
+    else {
+        // Error: What node do we have here?
     }
 
     const uint8_t* kernelClassName = "zen/core/ZenKernel";

@@ -1021,6 +1021,23 @@ void zen_SymbolResolutionListener_onExitExpressions(zen_ASTListener_t* astListen
 
 void zen_SymbolResolutionListener_onEnterExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_ExpressionContext_t* context = (zen_ExpressionContext_t*)node->m_context;
+
+    /* Use the function stack to save the previous label. This is
+     * important in the case of nested assignment expressions. Consider
+     * the expression `x = (y = z)`, if the previous label is unsaved,
+     * the nested assignment expression can alter the label of the outer
+     * assignment expression.
+     */
+    zen_ExpressionAnnotation_t previous = listener->m_label;
+
+    zen_ASTWalker_walk(astListener, context->m_assignmentExpression);
+
+    /* Restore the previous label saved on the function stack. */
+    listener->m_label = previous;
+    
+    zen_ASTListener_skipChildren(astListener);
 }
 
 void zen_SymbolResolutionListener_onExitExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
@@ -1029,6 +1046,10 @@ void zen_SymbolResolutionListener_onExitExpression(zen_ASTListener_t* astListene
 // assignmentExpression
 
 void zen_SymbolResolutionListener_onExitAssignmentExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
+}
+
+void zen_SymbolResolutionListener_onEnterAssignmentExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
     zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
     zen_AssignmentExpressionContext_t* context = (zen_AssignmentExpressionContext_t*)node->m_context;
@@ -1048,14 +1069,9 @@ void zen_SymbolResolutionListener_onExitAssignmentExpression(zen_ASTListener_t* 
                  */
                 zen_ASTWalker_walk(astListener, context->m_assignmentExpression);
             }
-
             zen_ASTListener_skipChildren(astListener);
         }
     }
-}
-
-void zen_SymbolResolutionListener_onEnterAssignmentExpression(zen_ASTListener_t* astListener,
-    zen_ASTNode_t* node) {
 }
 
 // conditionalExpression
@@ -1291,7 +1307,7 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
 
                 /* Resolve the symbol in the symbol table. */
                 zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
-                
+
                 zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(symbol);
                 if (zen_Symbol_isVariable(symbol) || zen_Symbol_isConstant(symbol)) {
                     /* Annotate the AST node as placeholder. */
@@ -1301,7 +1317,7 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
                     /* Pass the reference to the symbol to the next phase. */
                     primarySymbol = symbol;
                 }
-                
+
                 break;
             }
 
@@ -1322,6 +1338,8 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
     else if ((expression->m_type == ZEN_AST_NODE_TYPE_MAP_EXPRESSION) ||
         (expression->m_type == ZEN_AST_NODE_TYPE_LIST_EXPRESSION) ||
         (expression->m_type == ZEN_AST_NODE_TYPE_EXPRESSION)) {
+        zen_ASTWalker_walk(astListener, expression);
+        
         /* Annotate the AST node as value. */
         listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
     }
@@ -1405,7 +1423,7 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
 
                 /* Annotate the AST node as placeholder. */
                 listener->m_label = ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER;
-                
+
                 if ((i + 1) < postfixPartCount) {
                     zen_ASTNode_t* nextPostfixPart = (zen_ASTNode_t*)jtk_ArrayList_getValue(
                         context->m_postfixParts, i + 1);
@@ -1419,7 +1437,7 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
                 if (functionArguments != NULL) {
                     /* Annotate the AST node as placeholder. */
                     listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
-                    
+
                     zen_FunctionArgumentsContext_t* functionArgumentsContext =
                         (zen_FunctionArgumentsContext_t*)functionArguments->m_context;
 
