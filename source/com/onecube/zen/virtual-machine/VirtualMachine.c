@@ -29,6 +29,27 @@ void zen_print(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
     fflush(stdout);
 }
 
+jtk_String_t* zen_String_add(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    jtk_String_t* self = (jtk_String_t*)jtk_Array_getValue(arguments, 0);
+    jtk_String_t* other = (jtk_String_t*)jtk_Array_getValue(arguments, 1);
+    jtk_String_t* result = jtk_String_newFromJoinEx(self->m_value, self->m_size,
+        other->m_value, other->m_size);
+    
+    printf("%.*s\n", result->m_size, result->m_value);
+    
+    return result;
+}
+
+/* TODO: The evaluate function builds a cache of operator-function pairs
+ * as the program runs. This helps in reducing lookup time for mapping operators
+ * to functions.
+ */
+void* zen_ZenKernel_evaluate(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    return zen_String_add(virtualMachine, arguments);
+}
+
 void zen_ZenKernel_invokeStatic(zen_VirtualMachine_t* virtualMachine,
     jtk_Array_t* arguments) {
     jtk_String_t* entity = (jtk_String_t*)jtk_Array_getValue(arguments, 0);
@@ -127,6 +148,10 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     zen_NativeFunction_t* invokeStaticFunction = zen_NativeFunction_new(zen_ZenKernel_invokeStatic);
     jtk_String_t* invokeStaticKey = jtk_String_newEx("invokeStatic(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)", 82);
     jtk_HashMap_put(virtualMachine->m_nativeFunctions, invokeStaticKey, invokeStaticFunction);
+
+    zen_NativeFunction_t* evaluateFunction = zen_NativeFunction_new(zen_ZenKernel_evaluate);
+    jtk_String_t* evaluateKey = jtk_String_newEx("evaluate(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)", 77);
+    jtk_HashMap_put(virtualMachine->m_nativeFunctions, evaluateKey, evaluateFunction);
 
     // TODO: Unload native functions
 }

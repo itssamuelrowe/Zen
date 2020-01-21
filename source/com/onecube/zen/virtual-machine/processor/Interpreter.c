@@ -3532,6 +3532,7 @@ void zen_Interpreter_invokeNativeFunction(zen_Interpreter_t* interpreter,
 void zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interpreter,
     zen_Function_t* function, jtk_Array_t* arguments) {
 
+    zen_StackFrame_t* oldStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
     zen_StackFrame_t* stackFrame = zen_StackFrame_new(function);
     zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
 
@@ -3540,7 +3541,8 @@ void zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interpreter,
             interpreter->m_virtualMachine, function->m_name, function->m_descriptor);
 
         if (nativeFunction != NULL) {
-            nativeFunction->m_invoke(interpreter->m_virtualMachine, arguments);
+            void* result = nativeFunction->m_invoke(interpreter->m_virtualMachine, arguments);
+            zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
         }
         else {
             printf("[error] Unknown native function (name=%.*s, descriptor=%.*s)\n",
