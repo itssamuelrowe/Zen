@@ -667,6 +667,9 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
                 zen_InstructionAttribute_t* instructionAttribute =
                     (zen_InstructionAttribute_t*)attribute;
 
+                // TODO: CHANGE THIS!!!!!!!!!!!!!!!!!!!!!!!!!!
+                instructionAttribute->m_maxStackSize = 100;
+
                 /* Write the instruction attribute for the current function. */
                 zen_BinaryEntityBuilder_writeInstructionAttribute(
                     generator->m_builder,
@@ -4676,12 +4679,18 @@ void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* as
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_AssignmentExpressionContext_t* context = (zen_AssignmentExpressionContext_t*)node->m_context;
 
+    /* I have no idea, but the following statement just fixed a bug magically.
+     * However, it has something to do with which type of code is generated,
+     * the LHS or RHS, for postfix expressions.
+     */
+    lhs = false;
     zen_ASTNode_t* assignmentOperator = context->m_assignmentOperator;
     if (assignmentOperator != NULL) {
-        lhs = true;
-        zen_ASTWalker_walk(astListener, context->m_conditionalExpression);
         lhs = false;
         zen_ASTWalker_walk(astListener, context->m_assignmentExpression);
+        lhs = true;
+        zen_ASTWalker_walk(astListener, context->m_conditionalExpression);
+
         zen_ASTListener_skipChildren(astListener);
     }
 
