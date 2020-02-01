@@ -696,7 +696,7 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
         }
     }
 
-    FILE* fp = fopen("output.feb", "w+");
+    FILE* fp = fopen("/mnt/g/project/pulsar/build/Test.feb", "w+");
     if (fp != NULL) {
         zen_DataChannel_t* channel = jtk_ArrayList_getValue(generator->m_builder->m_channels, 0);
         fwrite(channel->m_bytes, channel->m_index, 1, fp);
@@ -2478,7 +2478,7 @@ void zen_BinaryEntityGenerator_onExitVariableDeclaration(zen_ASTListener_t* astL
                  * was not previously assigned an index.
                  */
                 if (variableSymbol->m_index < 0) {
-                    variableSymbol->m_index = generator->m_localVariableCount++;;
+                    variableSymbol->m_index = generator->m_localVariableCount++;
                 }
             }
             else {
@@ -5746,7 +5746,7 @@ void zen_BinaryEntityGenerator_invokeEvaluate(zen_BinaryEntityGenerator_t* gener
 
     const uint8_t* kernelClass = "zen/core/ZenKernel";
     int32_t kernelClassSize = 18;
-    const uint8_t* evaluateDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/String)";
+    const uint8_t* evaluateDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)";
     int32_t evaluateDescriptorSize = 69;
     const uint8_t* evaluateName = "evaluate";
     int32_t evaluateNameSize = 8;
@@ -5761,7 +5761,6 @@ void zen_BinaryEntityGenerator_invokeEvaluate(zen_BinaryEntityGenerator_t* gener
 
     /* Log the emission of the invoke_static instruction. */
     printf("[debug] Emitted invoke_static %d\n", evaluateIndex);
-
 }
 
 int64_t zen_Long_convert(const uint8_t* text, int32_t length, int32_t radix) {

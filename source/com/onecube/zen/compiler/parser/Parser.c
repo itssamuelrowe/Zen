@@ -224,7 +224,7 @@ zen_Token_t* zen_Parser_matchAndYield(zen_Parser_t* parser, zen_TokenType_t type
 
 /*
  * compilationUnit
- * :	NEWLINE?
+ * :	NEWLINE*
  *      importDeclaration*
  *      annotatedComponentDeclaration*
  *      EOF
@@ -245,7 +245,7 @@ void zen_Parser_compilationUnit(zen_Parser_t* parser, zen_ASTNode_t* node) {
      * function main
      *     ...
      */
-    if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_NEWLINE) {
+    while (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_NEWLINE) {
         /* Consume the newline token. */
         zen_TokenStream_consume(parser->m_tokens);
     }
