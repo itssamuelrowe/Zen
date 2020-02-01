@@ -147,10 +147,12 @@ void zen_AnnotatedComponentDeclarationContext_getChildren(zen_AnnotatedComponent
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    if (context->m_annotations != NULL) {
-        jtk_ArrayList_addAll(children, JTK_COLLECTION_ARRAY_LIST, context->m_annotations);
-    }
+    // if (context->m_annotations != NULL) {
+        // jtk_ArrayList_addAll(children, JTK_COLLECTION_ARRAY_LIST, context->m_annotations);
+    // }
+    
 
+    jtk_ArrayList_addPredicatively(children, context->m_annotations, jtk_Object_isNotNull);
     jtk_ArrayList_add(children, context->m_componentDeclaration);
 }
 
@@ -1586,6 +1588,7 @@ void zen_ClassSuiteContext_getChildren(zen_ClassSuiteContext_t* context,
 zen_ClassMemberContext_t* zen_ClassMemberContext_new(zen_ASTNode_t* node) {
     zen_ClassMemberContext_t* context = zen_Memory_allocate(zen_ClassMemberContext_t, 1);
     context->m_node = node;
+    context->m_annotations = NULL;
     context->m_modifiers = jtk_ArrayList_new();
     context->m_declaration = NULL;
 
@@ -1608,8 +1611,9 @@ void zen_ClassMemberContext_getChildren(zen_ClassMemberContext_t* context,
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
+    jtk_ArrayList_addPredicatively(children, context->m_annotations, jtk_Object_isNotNull);
     jtk_ArrayList_addAll(children, JTK_COLLECTION_ARRAY_LIST, context->m_modifiers);
-    jtk_ArrayList_add(children, context->m_declaration);
+    jtk_ArrayList_addPredicatively(children, context->m_declaration, jtk_Object_isNotNull);
 }
 
 /*******************************************************************************

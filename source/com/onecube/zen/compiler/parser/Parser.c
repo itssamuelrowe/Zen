@@ -387,7 +387,9 @@ void zen_Parser_importDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
 	 * Consume it. The consumed identifier saved for later inspection.
 	 */
     zen_Token_t* identifier = zen_Parser_matchAndYield(parser, ZEN_TOKEN_IDENTIFIER);
-	jtk_ArrayList_add(context->m_identifiers, identifier);
+    zen_ASTNode_t* identifierNode = zen_Parser_newTerminalNode(node, identifier);
+    
+	jtk_ArrayList_add(context->m_identifiers, identifierNode);
 
 	/* Optionally, the user may specify more identifiers (with each identifier
 	 * separated by the '.' token. Therefore, we repeatedly consume the '.' and
@@ -402,8 +404,9 @@ void zen_Parser_importDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
 		/* The consumed identifier is saved for later inspection.
 		 */
         identifier = zen_TokenStream_lt(parser->m_tokens, 1);
+        identifierNode = zen_Parser_newTerminalNode(node, identifier);
         zen_TokenStream_consume(parser->m_tokens);
-		jtk_ArrayList_add(context->m_identifiers, identifier);
+		jtk_ArrayList_add(context->m_identifiers, identifierNode);
     }
 
 	/* Optionally, the user may specify a wildcard; recognized when
@@ -525,7 +528,8 @@ void zen_Parser_annotationType(zen_Parser_t* parser, zen_ASTNode_t* node) {
 
     /* We are expecting an IDENTIFIER token here. */
     zen_Token_t* identifier = zen_Parser_matchAndYield(parser, ZEN_TOKEN_IDENTIFIER);
-    jtk_ArrayList_add(context->m_identifiers, identifier);
+    zen_ASTNode_t* identifierNode = zen_Parser_newTerminalNode(node, identifier);
+    jtk_ArrayList_add(context->m_identifiers, identifierNode);
 
     /* Optionally, the user may specify more identifiers separated
      * by the '.' token.
@@ -538,7 +542,8 @@ void zen_Parser_annotationType(zen_Parser_t* parser, zen_ASTNode_t* node) {
 		 * saved for later inspection.
 		 */
         identifier = zen_Parser_matchAndYield(parser, ZEN_TOKEN_IDENTIFIER);
-        jtk_ArrayList_add(context->m_identifiers, identifier);
+        identifierNode = zen_Parser_newTerminalNode(node, identifier);
+        jtk_ArrayList_add(context->m_identifiers, identifierNode);
     }
 
     zen_StackTrace_exit();
@@ -1953,14 +1958,15 @@ bool zen_Parser_isClassMemberFollow(zen_TokenType_t type) {
            (type == ZEN_TOKEN_KEYWORD_VAR)        || /* classMember -> ... -> variableDeclaration */
            (type == ZEN_TOKEN_KEYWORD_FINAL)      || /* classMember -> ... -> constantDeclaration */
            (type == ZEN_TOKEN_KEYWORD_FUNCTION)   || /* classMember -> ... -> functionDeclaration */
-           // (type == ZEN_TOKEN_IDENTIFIER)         || /* classMember -> ... -> constructorDeclaration */
+           // (type == ZEN_TOKEN_IDENTIFIER)      || /* classMember -> ... -> constructorDeclaration */
            (type == ZEN_TOKEN_KEYWORD_CLASS)      || /* classMember -> ... -> classDeclaration */
-           (type == ZEN_TOKEN_KEYWORD_ENUM);        /* classMember -> ... -> enumerationDeclaration */
+           (type == ZEN_TOKEN_KEYWORD_ENUM)       || /* classMember -> ... -> enumerationDeclaration */
+           (type == ZEN_TOKEN_AT);                   /* classMember -> ... -> annotatedClassMember */
 }
 
 /*
  * classMember
- * :	classMemberModifier* unmodifiedClassMember
+ * :	annotations? classMemberModifier* unmodifiedClassMember
  * ;
  *
  * unmodifiedClassMember
@@ -1979,6 +1985,12 @@ void zen_Parser_classMember(zen_Parser_t* parser, zen_ASTNode_t* node) {
     zen_StackTrace_enter();
 
     zen_ClassMemberContext_t* context = zen_ClassMemberContext_new(node);
+
+    if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_AT) {
+        zen_ASTNode_t* annotations = zen_ASTNode_new(node);
+        context->m_annotations = annotations;
+        zen_Parser_annotations(parser, annotations);
+    }
 
     uint32_t modifiers = 0;
     while (zen_Parser_isClassMemberModifier(zen_TokenStream_la(parser->m_tokens, 1))) {

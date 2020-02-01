@@ -36,6 +36,7 @@
  */
 struct zen_ClassMemberContext_t {
     zen_ASTNode_t* m_node;
+    zen_ASTNode_t* m_annotations;
     jtk_ArrayList_t* m_modifiers; /* <zen_ASTNode_t*> */
     zen_ASTNode_t* m_declaration;
 };
