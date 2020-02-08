@@ -71,6 +71,12 @@ zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* memoryManager,
  */
 void zen_Interpreter_delete(zen_Interpreter_t* interpreter);
 
+/* Invoke Constructor */
+
+void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
+    zen_Object_t* object, zen_Function_t* constructor,
+    jtk_VariableArguments_t arguments);
+    
 /* Invoke Static Function */
 
 void zen_Interpreter_invokeStaticFunctionEx(zen_Interpreter_t* interpreter,

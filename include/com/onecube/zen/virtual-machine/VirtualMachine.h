@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -119,8 +119,23 @@ zen_ExceptionManager_t* zen_VirtualMachine_getExceptionManager(zen_VirtualMachin
 void zen_VirtualMachine_raiseException(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* exception);
 
+/* TODO: Move this to Object.c? */
+int32_t zen_VirtualMachine_identityHash(zen_Object_t* object);
+
+zen_Object_t* zen_VirtualMachine_makeObjectEx(zen_VirtualMachine_t* virtualMachine,
+    zen_Function_t* constructor, jtk_VariableArguments_t arguments);
+
+zen_Object_t* zen_VirtualMachine_makeObject(zen_VirtualMachine_t* virtualMachine,
+    zen_Function_t* constructor, ...);
+
+zen_Object_t* zen_VirtualMachine_newObjectEx(zen_VirtualMachine_t* virtualMachine,
+    const uint8_t* classDescriptor, int32_t classDescriptorSize,
+    const uint8_t* constructorDescriptor, int32_t constructorDescriptorSize,
+    jtk_VariableArguments_t arguments);
+
 zen_Object_t* zen_VirtualMachine_newObject(zen_VirtualMachine_t* virtualMachine,
-    const uint8_t* classDescriptor, const uint8_t* constructorDescriptor, ...);
+    const uint8_t* classDescriptor, int32_t classDescriptorSize,
+    const uint8_t* constructorDescriptor, int32_t constructorDescriptorSize, ...);
 
 void zen_VirtualMachine_raiseFunctionNotFoundException(zen_VirtualMachine_t* virtualMachine,
     const uint8_t* identifier,  const uint8_t* reason);

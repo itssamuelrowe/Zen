@@ -42,6 +42,7 @@ struct zen_Class_t {
     jtk_HashMap_t* m_functions;
     jtk_HashMap_t* m_fields;
     jtk_String_t* m_descriptor;
+    uint32_t m_memoryRequirement;
 };
 
 /**

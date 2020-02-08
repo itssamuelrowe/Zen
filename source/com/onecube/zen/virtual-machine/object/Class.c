@@ -98,6 +98,14 @@ zen_EntityFile_t* zen_Class_getEntityFile(zen_Class_t* class0) {
 
 // Function
 
+zen_Function_t* zen_Class_getConstructor(zen_Class_t* class0,
+    jtk_String_t* descriptor) {
+    jtk_String_t* name = jtk_String_newEx("<initialize>", 12);
+    zen_Function_t* constructor = zen_Class_getStaticFunction(class0, name, descriptor);
+    jtk_String_delete(name);
+    return constructor;
+}
+
 zen_Function_t* zen_Class_getStaticFunction(zen_Class_t* class0, jtk_String_t* name,
     jtk_String_t* descriptor) {
     jtk_String_t* key = jtk_String_append(name, descriptor);

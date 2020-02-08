@@ -3521,6 +3521,14 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
     }
 }
 
+/* Invoke Constructor */
+
+void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
+    zen_Object_t* object, zen_Function_t* constructor,
+    jtk_VariableArguments_t arguments) {
+    printf("A constructor was invoked!\n");
+}
+
 /* Invoke Native */
 
 void zen_Interpreter_invokeNativeFunction(zen_Interpreter_t* interpreter,
