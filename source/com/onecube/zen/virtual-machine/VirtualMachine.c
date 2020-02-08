@@ -273,9 +273,104 @@ zen_NativeFunction_t* zen_VirtualMachine_getNativeFunction(
 
 /* Object */
 
+/**
+ * The layout of the object in memory is shown below.
+ * | Object Header | Object Body |
+ *
+ * The object header is constant, that is, the size is fixed based on the
+ * implementation of the virtual machine. On the other hand, the size of the
+ * object body is variable, contingent on both the implementation and the
+ * fields declared in the class whose instance the object is.
+ *
+ * [Object Header]
+ * struct jtk_ObjectHeader_t {
+ *     uintptr_t m_class;       // Depends on the platform.
+ *     uint32_t m_hashCode;     // 4 bytes
+ * };
+ */
+#define ZEN_OBJECT_HEADER_CLASS_SIZE sizeof (uintptr_t)
+#define ZEN_OBJECT_HEADER_HASH_CODE_SIZE sizeof (uint32_t)
+#define ZEN_OBJECT_HEADER_SIZE ZEN_OBJECT_HEADER_CLASS_SIZE + \
+                               ZEN_OBJECT_HEADER_HASH_CODE_SIZE
+
+int32_t zen_VirtualMachine_identityHash(zen_Object_t* object) {
+#if sizeof (uintptr_t) == 4
+    return (int32_t)object;
+#elif sizeof (uintptr_t) == 8
+    return (int32_t)((uintptr_t)object ^ ((uintptr_t)object >> 32));
+#else
+    return (int32_t)object;
+#endif
+}
+
+zen_Object_t* zen_VirtualMachine_makeObjectEx(zen_VirtualMachine_t* virtualMachine,
+    zen_Function_t* constructor, jtk_VariableArguments_t arguments) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+    jtk_Assert_assertObject(constructor, "The specified constructor is null.");
+    
+    zen_Class_t* class0 = constructor->m_class;
+    /* The allocation should be clean such that all the bits are initialized
+     * to 0.
+     */
+    zen_Object_t* object = jtk_Memory_allocate(uint8_t, ZEN_OBJECT_HEADER_SIZE + class0->m_totalMemoryRequirement);
+    *((uintptr_t*)object + ZEN_OBJECT_HEADER_CLASS_OFFSET) = (uintptr_t)class0;
+    *((uint32_t*)object + ZEN_OBJECT_HEADER_HASH_CODE_OFFSET) = zen_VirtualMachine_identityHash(object);
+    
+    zen_Interpreter_invokeConstructor(virtualMachine->m_interpreter, object,
+        constructor, arguments);
+    
+    /* Chances are an exception may have been thrown in the constructor. Further,
+     * a reference to the object may be stored somewhere by the constructor.
+     * Therefore, the object should not be immediately deallocated. Let the garbage
+     * collector do its job.
+     */
+    
+    return object;
+}
+
+zen_Object_t* zen_VirtualMachine_makeObject(zen_VirtualMachine_t* virtualMachine,
+    zen_Function_t* constructor, ...) {
+    jtk_VariableArguments_t arguments;
+    jtk_VariableArguments_start(arguments);
+    zen_Object_t* result = zen_VirtualMachine_makeObjectEx(virtualMachine,
+        constructor, arguments);
+    jtk_VariableArguments_end(arguments);
+    return result;
+}
+
+zen_Object_t* zen_VirtualMachine_newObjectEx(zen_VirtualMachine_t* virtualMachine,
+    const uint8_t* classDescriptor, int32_t classDescriptorSize,
+    const uint8_t* constructorDescriptor, int32_t constructorDescriptorSize,
+    jtk_VariableArguments_t arguments) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+    jtk_Assert_assertObject(constructor, "The specified constructor is null.");
+    
+    jtk_String_t* classDescriptor0 = jtk_String_newEx(classDescriptor, classDescriptorSize);
+    zen_Class_t* class0 = zen_VirtualMachine_getClass(virtualMachine, classDescriptor0,
+    jtk_String_delete(classDescriptor0);
+    
+    zen_Object_t* result = NULL;
+    if (zen_VirtualMachine_isClear(virtualMachine)) {
+        jtk_String_t* constructorDescriptor0 = jtk_String_newEx(constructorDescriptor, constructorDescriptorSize);
+        zen_Function_t* constructor = zen_Class_getConstructor(class0, constructorDescriptor0);
+        if (zen_VirtualMachine_isClear(virtualMachine)) {
+            
+            result = zen_VirtualMachine_makeObjectEx(virtualMachine, constructor, arguments);
+        }
+    }
+    
+    return result;
+}
+
 zen_Object_t* zen_VirtualMachine_newObject(zen_VirtualMachine_t* virtualMachine,
-    const uint8_t* classDescriptor, const uint8_t* constructorDescriptor, ...) {
-    return NULL;
+    const uint8_t* classDescriptor, int32_t classDescriptorSize,
+    const uint8_t* constructorDescriptor, int32_t constructorDescriptorSize, ..) {
+    jtk_VariableArguments_t arguments;
+    jtk_VariableArguments_start(arguments);
+    zen_Object_t* object = zen_VirtualMachine_newObjectEx(virtualMachine,
+        classDescriptor, classDescriptorSize, arguments);
+    jtk_VariableArguments_end(arguments);
+    return object;
 }
 
 /* Object Array */
