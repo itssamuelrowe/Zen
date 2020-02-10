@@ -29,15 +29,24 @@ void zen_print(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
     fflush(stdout);
 }
 
+void zen_String_initialize(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* self, jtk_VariableArguments_t arguments) {
+    const uint8_t* valueDescriptor = "[b";
+    int32_t valueDescriptorSize = 2;
+    zen_Object_t* value = jtk_VariableArguments_argument(arguments, zen_Object_t*);
+    zen_VirtualMachine_setObjectField(virtualMachine, self, valueDescriptor,
+        valueDescriptorSize, value);
+}
+
 jtk_String_t* zen_String_add(zen_VirtualMachine_t* virtualMachine,
     jtk_Array_t* arguments) {
     jtk_String_t* self = (jtk_String_t*)jtk_Array_getValue(arguments, 0);
     jtk_String_t* other = (jtk_String_t*)jtk_Array_getValue(arguments, 1);
     jtk_String_t* result = jtk_String_newFromJoinEx(self->m_value, self->m_size,
         other->m_value, other->m_size);
-    
+
     printf("%.*s\n", result->m_size, result->m_value);
-    
+
     return result;
 }
 
@@ -68,7 +77,7 @@ void zen_ZenKernel_invokeStatic(zen_VirtualMachine_t* virtualMachine,
         entity);
     zen_Function_t* targetFunction = zen_VirtualMachine_getStaticFunction(virtualMachine,
         targetClass, targetFunctionName, targetFunctionDescriptor);
-    
+
     zen_Interpreter_invokeStaticFunction(virtualMachine->m_interpreter, targetFunction,
         targetArguments);
 }
@@ -311,7 +320,7 @@ zen_Object_t* zen_VirtualMachine_makeObjectEx(zen_VirtualMachine_t* virtualMachi
     zen_Function_t* constructor, jtk_VariableArguments_t arguments) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
     jtk_Assert_assertObject(constructor, "The specified constructor is null.");
-    
+
     zen_Class_t* class0 = constructor->m_class;
     /* The allocation should be clean such that all the bits are initialized
      * to 0.
@@ -319,16 +328,16 @@ zen_Object_t* zen_VirtualMachine_makeObjectEx(zen_VirtualMachine_t* virtualMachi
     zen_Object_t* object = jtk_Memory_allocate(uint8_t, ZEN_OBJECT_HEADER_SIZE + class0->m_memoryRequirement);
     *((uintptr_t*)object + ZEN_OBJECT_HEADER_CLASS_OFFSET) = (uintptr_t)class0;
     *((uint32_t*)object + ZEN_OBJECT_HEADER_HASH_CODE_OFFSET) = zen_VirtualMachine_identityHash(object);
-    
+
     zen_Interpreter_invokeConstructor(virtualMachine->m_interpreter, object,
         constructor, arguments);
-    
+
     /* Chances are an exception may have been thrown in the constructor. Further,
      * a reference to the object may be stored somewhere by the constructor.
      * Therefore, the object should not be immediately deallocated. Let the garbage
      * collector do its job.
      */
-    
+
     return object;
 }
 
@@ -349,21 +358,21 @@ zen_Object_t* zen_VirtualMachine_newObjectEx(zen_VirtualMachine_t* virtualMachin
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
     jtk_Assert_assertObject(classDescriptor, "The specified class descriptor is null.");
     jtk_Assert_assertObject(constructorDescriptor, "The specified constructor descriptor is null.");
-    
+
     jtk_String_t* classDescriptor0 = jtk_String_newEx(classDescriptor, classDescriptorSize);
     zen_Class_t* class0 = zen_VirtualMachine_getClass(virtualMachine, classDescriptor0);
     jtk_String_delete(classDescriptor0);
-    
+
     zen_Object_t* result = NULL;
     if (zen_VirtualMachine_isClear(virtualMachine)) {
         jtk_String_t* constructorDescriptor0 = jtk_String_newEx(constructorDescriptor, constructorDescriptorSize);
         zen_Function_t* constructor = zen_Class_getConstructor(class0, constructorDescriptor0);
         if (zen_VirtualMachine_isClear(virtualMachine)) {
-            
+
             result = zen_VirtualMachine_makeObjectEx(virtualMachine, constructor, arguments);
         }
     }
-    
+
     return result;
 }
 
@@ -386,6 +395,39 @@ zen_ObjectArray_t* zen_VirtualMachine_newObjectArray(zen_VirtualMachine_t* virtu
     return NULL;
 }
 
+zen_ObjectArray_t* zen_VirtualMachine_newByteArray(
+    zen_VirtualMachine_t* virtualMachine, int8_t* bytes, int32_t size) {
+    const uint8_t* arrayDescriptor = "b";
+    int32_t arrayDescriptorSize = 1;
+    
+    return NULL;
+}
+
+/* Field */
+
+void zen_VirtualMachine_setObjectField(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* object, const uint8_t* fieldDescriptor, int32_t fieldDescriptorSize,
+    zen_Object_t* value) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+
+    if (object == NULL) {
+        zen_VirtualMachine_raiseNullReferenceException(virtualMachine);
+    }
+    else {
+        zen_Class_t* class0 = (zen_Class_t*)(object + ZEN_OBJECT_HEADER_CLASS_OFFSET);
+        int32_t offset = ZEN_OBJECT_HEADER_SIZE + zen_Class_findFieldIndex(class0,
+            fieldDescriptor, fieldDescriptorSize);
+        if (offset < 0) {
+            zen_VirtualMachine_raiseUnknownFieldException(virtualMachine, fieldDescriptor,
+                fieldDescriptorSize);
+        }
+        else {
+            // *((zen_Object_t*)(object + offset)) = value;
+            memcpy(object + offset, value, sizeof (zen_Object_t*));
+        }
+    }
+}
+
 /* Raise Exception */
 
 void zen_VirtualMachine_raiseException(zen_VirtualMachine_t* virtualMachine,
@@ -395,6 +437,20 @@ void zen_VirtualMachine_raiseException(zen_VirtualMachine_t* virtualMachine,
 
     zen_ExceptionManager_t* manager = zen_VirtualMachine_getExceptionManager(virtualMachine);
     zen_ExceptionManager_raiseException(manager, exception);
+}
+
+void zen_VirtualMachine_raiseUnknownFieldException(zen_VirtualMachine_t* virtualMachine,
+    const uint8_t* fieldDescriptor, int32_t fieldDescriptorSize) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+    jtk_Assert_assertObject(fieldDescriptor, "The specified field descriptor is null.");
+
+    printf("[error] UnknownFieldException was thrown!\n");
+}
+
+void zen_VirtualMachine_raiseNullReferenceException(zen_VirtualMachine_t* virtualMachine) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+
+    printf("[error] NullReferenceException was thrown!\n");
 }
 
 /* Static Function */

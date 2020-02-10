@@ -31,8 +31,6 @@ jtk_String_t* jtk_String_append(jtk_String_t* string1, jtk_String_t* string2) {
         string2->m_value, string2->m_size);
 }
 
-
-
 /*******************************************************************************
  * Class                                                                       *
  *******************************************************************************/
@@ -94,6 +92,17 @@ void zen_Class_delete(zen_Class_t* class0) {
 
 zen_EntityFile_t* zen_Class_getEntityFile(zen_Class_t* class0) {
     return class0->m_entityFile;
+}
+
+// Field Index
+
+int32_t zen_Class_findFieldIndex(zen_Class_t* class0, const uint8_t* fieldDescriptor,
+    int32_t fieldDescriptorSize) {
+    jtk_Assert_assertObject(class0, "The specified class is null.");
+    jtk_Assert_assertObject(fieldDescriptor, "The specified field descriptor is null.");
+    
+    int32_t result = -1;
+    return result;
 }
 
 // Function

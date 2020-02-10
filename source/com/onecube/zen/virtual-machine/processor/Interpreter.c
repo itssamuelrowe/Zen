@@ -2115,11 +2115,25 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         zen_ConstantPoolString_t* constantPoolString = (zen_ConstantPoolString_t*)entry;
                         zen_ConstantPoolUtf8_t* constantPoolUtf8 =
                             (zen_ConstantPoolString_t*)constantPool->m_entries[constantPoolString->m_stringIndex];
-                        jtk_String_t* value = jtk_String_newEx(constantPoolUtf8->m_bytes, constantPoolUtf8->m_length);
+                        // jtk_String_t* value = jtk_String_newEx(constantPoolUtf8->m_bytes, constantPoolUtf8->m_length);
+                        
+                        const uint8_t* arrayDescriptor = "b";
+                        int32_t arrayDescriptorSize = 1;
+                        zen_Object_t* array = zen_VirtualMachine_newByteArray(interpreter->m_virtualMachine,
+                            constantPoolUtf8->m_bytes, constantPoolUtf8->m_length);
+                            
+                        const uint8_t* stringClassDescriptor = "zen/core/String";
+                        int32_t stringClassDescriptorSize = 15;
+                        const uint8_t* stringConstructorDescriptor = "v/Czen/core/Object;";
+                        int32_t stringConstructorDescriptorSize = 19;
+                        zen_Object_t* value = zen_VirtualMachine_newObject(interpreter->m_virtualMachine,
+                            stringClassDescriptor, stringClassDescriptorSize, stringConstructorDescriptor,
+                            stringConstructorDescriptorSize, array);
+                        
                         zen_OperandStack_pushReference(currentStackFrame->m_operandStack, value);
 
                         printf("[debug] Executed instruction `load_cpr` (index = %d, result = '%.*s', operand stack = %d)\n",
-                            index, value->m_size, value->m_value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+                            index, constantPoolUtf8->m_length, constantPoolUtf8->m_bytes, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                         break;
                     }
