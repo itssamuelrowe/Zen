@@ -151,7 +151,7 @@ zen_ObjectArray_t* zen_VirtualMachine_newByteArray(
         arrayDescriptor, arrayDescriptorSize, constructorDescriptor,
         constructorDescriptorSize);
     uint8_t* values = jtk_Arrays_clone_b(bytes, size);
-    
+
     zen_VirtualMachine_setObjectField(virtualMachine, result, "values", 6, values);
     // TODO: Change setObjectField to setIntegerField!
     zen_VirtualMachine_setObjectField(virtualMachine, result, "size", 4, size);
@@ -161,65 +161,62 @@ zen_ObjectArray_t* zen_VirtualMachine_newByteArray(
 
 /* Field */
 
-void hexDump(const char* desc, const void* addr, const int len) {
-    printf("Dumping object at 0x%X\n", addr);
+void hexDump(const uint8_t* description, void* address, const int length) {
+    printf("Dumping object at 0x%X\n", address);
     int i;
-    unsigned char buff[17];
-    const unsigned char * pc = (const unsigned char *)addr;
+    unsigned char buffer[17];
+    const unsigned char* pc = (const unsigned char *)address;
 
-    // Output description if given.
-    if (desc != NULL)
-        printf ("%s:\n", desc);
-
-    // Length checks.
-
-    if (len == 0) {
-        printf("  ZERO LENGTH\n");
-        return;
-    }
-    else if (len < 0) {
-        printf("  NEGATIVE LENGTH: %d\n", len);
-        return;
+    /* Print the description if given. */
+    if (description != NULL) {
+        printf ("%s:\n", description);
     }
 
-    // Process every byte in the data.
+    if (length == 0) {
+        printf("[warning] The specified object is empty, that is, has zero length.\n");
+    }
+    else if (length < 0) {
+        printf("[error] The specified object has negative length %d!\n", length);
+    }
+    else {
+        /* Process each byte in the specified object. */
+        for (i = 0; i < length; i++) {
+            /* If the current index is a multiple of 16, print new line with line
+             * offset.
+             */
+            if ((i % 16) == 0) {
+                /* Do not print ASCII bufferer for the "zeroth" line. */
+                if (i != 0) {
+                    printf ("  %s\n", buffer);
+                }
 
-    for (i = 0; i < len; i++) {
-        // Multiple of 16 means new line (with line offset).
+                /* Print the offset. */
+                printf (" [%04x] ", i);
+            }
 
-        if ((i % 16) == 0) {
-            // Don't print ASCII buffer for the "zeroth" line.
+            /* Print the hexadecimal code for the current byte. */
+            printf(" %02x", pc[i]);
 
-            if (i != 0)
-                printf ("  %s\n", buff);
-
-            // Output the offset.
-
-            printf ("  %04x ", i);
+            /* Append a printable ASCII character to the buffer. */
+            /* TODO: isprint() may be better. */
+            if ((pc[i] < 0x20) || (pc[i] > 0x7e)) {
+                buffer[i % 16] = '.';
+            }
+            else {
+                buffer[i % 16] = pc[i];
+            }
+            buffer[(i % 16) + 1] = '\0';
         }
 
-        // Now the hex code for the specific character.
-        printf (" %02x", pc[i]);
+        /* Pad the last line if there are lesser than 16 characters. */
+        while ((i % 16) != 0) {
+            printf("   ");
+            i++;
+        }
 
-        // And buffer a printable ASCII character for later.
-
-        if ((pc[i] < 0x20) || (pc[i] > 0x7e)) // isprint() may be better.
-            buff[i % 16] = '.';
-        else
-            buff[i % 16] = pc[i];
-        buff[(i % 16) + 1] = '\0';
+        /* Print the final ASCII representation of the bytes. */
+        printf("  %s\n", buffer);
     }
-
-    // Pad out last line if not exactly 16 characters.
-
-    while ((i % 16) != 0) {
-        printf ("   ");
-        i++;
-    }
-
-    // And print the final ASCII buffer.
-
-    printf ("  %s\n", buff);
 }
 
 void zen_VirtualMachine_setObjectField(zen_VirtualMachine_t* virtualMachine,
@@ -241,9 +238,9 @@ void zen_VirtualMachine_setObjectField(zen_VirtualMachine_t* virtualMachine,
             *((zen_Object_t**)((uint8_t*)object + ZEN_OBJECT_HEADER_SIZE + offset)) = value;
             // memcpy((uint8_t*)object + ZEN_OBJECT_HEADER_SIZE + offset, &value, sizeof (zen_Object_t*));
         }
-        hexDump(NULL, object, class0->m_memoryRequirement + ZEN_OBJECT_HEADER_CLASS_SIZE);
+        // hexDump(NULL, object, class0->m_memoryRequirement + ZEN_OBJECT_HEADER_CLASS_SIZE);
     }
-    
+
 }
 
 zen_Object_t* zen_VirtualMachine_getObjectField(zen_VirtualMachine_t* virtualMachine,
@@ -264,10 +261,9 @@ zen_Object_t* zen_VirtualMachine_getObjectField(zen_VirtualMachine_t* virtualMac
         else {
             result = *((zen_Object_t**)((uint8_t*)object + ZEN_OBJECT_HEADER_SIZE + offset));
         }
-        hexDump(NULL, object, class0->m_memoryRequirement + ZEN_OBJECT_HEADER_CLASS_SIZE);
+        // hexDump(NULL, object, class0->m_memoryRequirement + ZEN_OBJECT_HEADER_CLASS_SIZE);
     }
-    
-    
+
     return result;
 }
 
