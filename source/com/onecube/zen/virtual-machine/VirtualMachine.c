@@ -413,7 +413,7 @@ zen_ObjectArray_t* zen_VirtualMachine_newByteArray(
     const uint8_t* valuesDescriptor = "values";
     int32_t valuesDescriptorSize = 6;
     zen_VirtualMachine_setObjectField(virtualMachine, result, valuesDescriptor,
-        valuesDescriptorSize, value);
+        valuesDescriptorSize, values);
 
     return result;
 }

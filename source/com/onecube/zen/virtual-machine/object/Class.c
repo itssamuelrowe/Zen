@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2020 Samuel Rowe
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,7 +46,7 @@ zen_Class_t* zen_Class_newFromEntityFile(zen_EntityFile_t* entityFile) {
         JTK_HASH_MAP_DEFAULT_CAPACITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
     class0->m_fields = jtk_HashMap_newEx(stringObjectAdapter, NULL,
         JTK_HASH_MAP_DEFAULT_CAPACITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
-    class0->m_memoryRequirement = 8;
+    class0->m_memoryRequirement = 0;
 
     zen_Class_initialize(class0, entityFile);
 
@@ -63,12 +63,12 @@ void zen_Class_delete(zen_Class_t* class0) {
             (jtk_HashMapEntry_t*)jtk_Iterator_getNext(functionIterator);
         jtk_String_t* key = (jtk_String_t*)jtk_HashMapEntry_getKey(entry);
         zen_Function_t* value = (zen_Function_t*)jtk_HashMapEntry_getValue(entry);
-        
+
         jtk_String_delete(key);
         zen_Function_delete(value);
     }
     jtk_Iterator_delete(functionIterator);
-    
+
     // Destroy fields
     jtk_Iterator_t* fieldIterator = jtk_HashMap_getEntryIterator(class0->m_fields);
     while (jtk_Iterator_hasNext(fieldIterator)) {
@@ -76,13 +76,13 @@ void zen_Class_delete(zen_Class_t* class0) {
             (jtk_HashMapEntry_t*)jtk_Iterator_getNext(fieldIterator);
         // jtk_String_t* key = (jtk_String_t*)jtk_HashMapEntry_getKey(entry);
         zen_Field_t* value = (zen_Field_t*)jtk_HashMapEntry_getValue(entry);
-        
+
         // Do not delete field keys because they belong to the Field class.
         // jtk_String_delete(key);
         zen_Field_delete(value);
     }
     jtk_Iterator_delete(fieldIterator);
-    
+
     jtk_HashMap_delete(class0->m_functions);
     jtk_HashMap_delete(class0->m_fields);
     jtk_String_delete(class0->m_descriptor);
@@ -101,7 +101,7 @@ int32_t zen_Class_findFieldIndex(zen_Class_t* class0, const uint8_t* fieldDescri
     int32_t fieldDescriptorSize) {
     jtk_Assert_assertObject(class0, "The specified class is null.");
     jtk_Assert_assertObject(fieldDescriptor, "The specified field descriptor is null.");
-    
+
     int32_t result = 0; // TODO: Implement this function!
     return result;
 }
@@ -121,7 +121,7 @@ zen_Function_t* zen_Class_getStaticFunction(zen_Class_t* class0, jtk_String_t* n
     jtk_String_t* key = jtk_String_append(name, descriptor);
     zen_Function_t* function = jtk_HashMap_getValue(class0->m_functions, key);
     jtk_String_delete(key);
-    
+
     // TODO: Filter for static function.
     return function;
 }
@@ -131,7 +131,7 @@ zen_Function_t* zen_Class_getInstanceFunction(zen_Class_t* class0, jtk_String_t*
     jtk_String_t* key = jtk_String_append(name, descriptor);
     zen_Function_t* function = jtk_HashMap_getValue(class0->m_functions, key);
     jtk_String_delete(key);
-    
+
     // TODO: Filter for instance function.
     return function;
 }
@@ -160,6 +160,43 @@ void zen_Class_initialize(zen_Class_t* class0, zen_EntityFile_t* entityFile) {
         zen_FieldEntity_t* fieldEntity = (zen_FieldEntity_t*)entity->m_fields[i];
         zen_Field_t* field = zen_Field_newFromFieldEntity(class0, fieldEntity);
         jtk_HashMap_put(class0->m_fields, field->m_name, field);
+
+        if (field->m_descriptor->m_size == 1) {
+            switch (field->m_descriptor->m_value[0]) {
+                // TODO: What is the size of a character?
+
+                case 'z':
+                case 'b': {
+                    class0->m_memoryRequirement += 1;
+                    break;
+                }
+
+                case 's': {
+                    class0->m_memoryRequirement += 2;
+                    break;
+                }
+
+                case 'f':
+                case 'i': {
+                    class0->m_memoryRequirement += 4;
+                    break;
+                }
+
+                case 'd':
+                case 'l': {
+                    class0->m_memoryRequirement += 8;
+                    break;
+                }
+
+                default: {
+                    printf("[internal error] Control should not reach here!\n");
+                    break;
+                }
+            }
+        }
+        else {
+            class0->m_memoryRequirement += sizeof (uintptr_t);
+        }
     }
 
     int32_t j;
