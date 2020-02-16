@@ -2134,6 +2134,8 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
                         printf("[debug] Executed instruction `load_cpr` (index = %d, result = '%.*s', operand stack = %d)\n",
                             index, constantPoolUtf8->m_length, constantPoolUtf8->m_bytes, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+                        
+                        printf("String object at 0x%X, array object at 0x%x\n", value, array);
 
                         break;
                     }

@@ -104,7 +104,7 @@ int32_t zen_Class_findFieldOffset(zen_Class_t* class0, const uint8_t* name,
 
     // TODO: Implement this function to find fields in class hierarchies.
     // TODO: Wrap the byte string in a String object, instead of allocating.
-    
+
     jtk_String_t* name0 = jtk_String_newEx(name, nameSize);
     zen_Field_t* field = jtk_HashMap_getValue(class0->m_fields, name0);
     jtk_String_delete(name0);
