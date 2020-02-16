@@ -46,6 +46,7 @@ zen_Class_t* zen_Class_newFromEntityFile(zen_EntityFile_t* entityFile) {
         JTK_HASH_MAP_DEFAULT_CAPACITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
     class0->m_fields = jtk_HashMap_newEx(stringObjectAdapter, NULL,
         JTK_HASH_MAP_DEFAULT_CAPACITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
+    class0->m_memoryRequirement = 8;
 
     zen_Class_initialize(class0, entityFile);
 
@@ -101,7 +102,7 @@ int32_t zen_Class_findFieldIndex(zen_Class_t* class0, const uint8_t* fieldDescri
     jtk_Assert_assertObject(class0, "The specified class is null.");
     jtk_Assert_assertObject(fieldDescriptor, "The specified field descriptor is null.");
     
-    int32_t result = -1;
+    int32_t result = 0; // TODO: Implement this function!
     return result;
 }
 

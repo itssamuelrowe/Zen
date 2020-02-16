@@ -31,8 +31,8 @@ void zen_print(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
 
 void zen_String_initialize(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* self, jtk_VariableArguments_t arguments) {
-    const uint8_t* valueDescriptor = "[b";
-    int32_t valueDescriptorSize = 2;
+    const uint8_t* valueDescriptor = "value";
+    int32_t valueDescriptorSize = 5;
     zen_Object_t* value = jtk_VariableArguments_argument(arguments, zen_Object_t*);
     zen_VirtualMachine_setObjectField(virtualMachine, self, valueDescriptor,
         valueDescriptorSize, value);
@@ -161,6 +161,10 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     zen_NativeFunction_t* evaluateFunction = zen_NativeFunction_new(zen_ZenKernel_evaluate);
     jtk_String_t* evaluateKey = jtk_String_newEx("evaluate(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)", 77);
     jtk_HashMap_put(virtualMachine->m_nativeFunctions, evaluateKey, evaluateFunction);
+
+    zen_NativeFunction_t* stringConstructor = zen_NativeFunction_new(zen_String_initialize);
+    jtk_String_t* stringConstructorKey = jtk_String_newEx("<initialize>v:(zen/core/Object)", 31);
+    jtk_HashMap_put(virtualMachine->m_nativeFunctions, stringConstructorKey, stringConstructor);
 
     // TODO: Unload native functions
 }
@@ -397,10 +401,21 @@ zen_ObjectArray_t* zen_VirtualMachine_newObjectArray(zen_VirtualMachine_t* virtu
 
 zen_ObjectArray_t* zen_VirtualMachine_newByteArray(
     zen_VirtualMachine_t* virtualMachine, int8_t* bytes, int32_t size) {
-    const uint8_t* arrayDescriptor = "b";
-    int32_t arrayDescriptorSize = 1;
+    const uint8_t* arrayDescriptor = "zen/core/Array";
+    int32_t arrayDescriptorSize = 14;
+    const uint8_t* constructorDescriptor = "v:v";
+    int32_t constructorDescriptorSize = 3;
 
-    return NULL;
+    zen_Object_t* result = zen_VirtualMachine_newObject(virtualMachine,
+        arrayDescriptor, arrayDescriptorSize, constructorDescriptor,
+        constructorDescriptorSize);
+    uint8_t* values = jtk_Arrays_copy_b(bytes, size);
+    const uint8_t* valuesDescriptor = "values";
+    int32_t valuesDescriptorSize = 6;
+    zen_VirtualMachine_setObjectField(virtualMachine, result, valuesDescriptor,
+        valuesDescriptorSize, value);
+
+    return result;
 }
 
 /* Field */
@@ -414,16 +429,15 @@ void zen_VirtualMachine_setObjectField(zen_VirtualMachine_t* virtualMachine,
         zen_VirtualMachine_raiseNullReferenceException(virtualMachine);
     }
     else {
-        zen_Class_t* class0 = (zen_Class_t*)(object + ZEN_OBJECT_HEADER_CLASS_OFFSET);
-        int32_t offset = ZEN_OBJECT_HEADER_SIZE + zen_Class_findFieldIndex(class0,
-            fieldDescriptor, fieldDescriptorSize);
+        zen_Class_t* class0 = *((zen_Class_t**)(object + ZEN_OBJECT_HEADER_CLASS_OFFSET));
+        int32_t offset = zen_Class_findFieldIndex(class0, fieldDescriptor, fieldDescriptorSize);
         if (offset < 0) {
             zen_VirtualMachine_raiseUnknownFieldException(virtualMachine, fieldDescriptor,
                 fieldDescriptorSize);
         }
         else {
-            // *((zen_Object_t*)(object + offset)) = value;
-            memcpy(object + offset, value, sizeof (zen_Object_t*));
+            *((zen_Object_t**)(object + ZEN_OBJECT_HEADER_SIZE + offset)) = value;
+            // memcpy(object + ZEN_OBJECT_HEADER_SIZE + offset, value, sizeof (zen_Object_t*));
         }
     }
 }

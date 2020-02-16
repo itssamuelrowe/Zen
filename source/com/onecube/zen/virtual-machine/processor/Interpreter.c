@@ -1545,7 +1545,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_ConstantPoolUtf8_t* descriptorEntry = constantPool->m_entries[functionEntry->m_descriptorIndex];
                 zen_ConstantPoolClass_t* classEntry = constantPool->m_entries[functionEntry->m_classIndex];
                 zen_ConstantPoolUtf8_t* classNameEntry = constantPool->m_entries[classEntry->m_nameIndex];
-                
+
                 jtk_String_t* classDescriptor = jtk_String_newEx(classNameEntry->m_bytes, classNameEntry->m_length);
                 zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine, classDescriptor);
                 jtk_String_delete(classDescriptor);
@@ -2116,12 +2116,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         zen_ConstantPoolUtf8_t* constantPoolUtf8 =
                             (zen_ConstantPoolString_t*)constantPool->m_entries[constantPoolString->m_stringIndex];
                         // jtk_String_t* value = jtk_String_newEx(constantPoolUtf8->m_bytes, constantPoolUtf8->m_length);
-                        
+
                         // const uint8_t* arrayDescriptor = "b";
                         // int32_t arrayDescriptorSize = 1;
                         zen_Object_t* array = zen_VirtualMachine_newByteArray(interpreter->m_virtualMachine,
                             constantPoolUtf8->m_bytes, constantPoolUtf8->m_length);
-                            
+
                         const uint8_t* stringClassDescriptor = "zen/core/String";
                         int32_t stringClassDescriptorSize = 15;
                         const uint8_t* stringConstructorDescriptor = "v:(zen/core/Object)";
@@ -2129,7 +2129,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         zen_Object_t* value = zen_VirtualMachine_newObject(interpreter->m_virtualMachine,
                             stringClassDescriptor, stringClassDescriptorSize, stringConstructorDescriptor,
                             stringConstructorDescriptorSize, array);
-                        
+
                         zen_OperandStack_pushReference(currentStackFrame->m_operandStack, value);
 
                         printf("[debug] Executed instruction `load_cpr` (index = %d, result = '%.*s', operand stack = %d)\n",
@@ -3537,10 +3537,38 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
 /* Invoke Constructor */
 
+typedef void (*zen_NativeFunction_InvokeConstructorFunction_t)(zen_VirtualMachine_t* virtualMachine, zen_Object_t* self, jtk_VariableArguments_t arguments);
+
 void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
     zen_Object_t* object, zen_Function_t* constructor,
     jtk_VariableArguments_t arguments) {
     printf("A constructor was invoked!\n");
+
+    zen_StackFrame_t* oldStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
+    zen_StackFrame_t* stackFrame = zen_StackFrame_new(constructor);
+    zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
+
+    if (zen_Function_isNative(constructor)) {
+        zen_NativeFunction_t* nativeConstructor = zen_VirtualMachine_getNativeFunction(
+            interpreter->m_virtualMachine, constructor->m_name, constructor->m_descriptor);
+
+        if (nativeConstructor != NULL) {
+            zen_NativeFunction_InvokeConstructorFunction_t invokeConstructor =
+                (zen_NativeFunction_InvokeConstructorFunction_t)nativeConstructor->m_invoke;
+            invokeConstructor(interpreter->m_virtualMachine, object, arguments);
+        }
+        else {
+            printf("[error] Unknown native constructor (name=%.*s, descriptor=%.*s)\n",
+                constructor->m_name->m_size, constructor->m_name->m_value,
+                constructor->m_descriptor->m_size, constructor->m_descriptor->m_value);
+        }
+    }
+    else {
+        zen_Interpreter_interpret(interpreter);
+    }
+
+    zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+    zen_StackFrame_delete(stackFrame);
 }
 
 /* Invoke Native */
@@ -3575,7 +3603,7 @@ void zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interpreter,
     else {
         zen_Interpreter_interpret(interpreter);
     }
-    
+
     zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
     zen_StackFrame_delete(stackFrame);
 }
