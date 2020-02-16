@@ -97,13 +97,19 @@ zen_EntityFile_t* zen_Class_getEntityFile(zen_Class_t* class0) {
 
 // Field Index
 
-int32_t zen_Class_findFieldIndex(zen_Class_t* class0, const uint8_t* fieldDescriptor,
-    int32_t fieldDescriptorSize) {
+int32_t zen_Class_findFieldOffset(zen_Class_t* class0, const uint8_t* name,
+    int32_t nameSize) {
     jtk_Assert_assertObject(class0, "The specified class is null.");
-    jtk_Assert_assertObject(fieldDescriptor, "The specified field descriptor is null.");
+    jtk_Assert_assertObject(name, "The specified field name is null.");
 
-    int32_t result = 0; // TODO: Implement this function!
-    return result;
+    // TODO: Implement this function to find fields in class hierarchies.
+    // TODO: Wrap the byte string in a String object, instead of allocating.
+    
+    jtk_String_t* name0 = jtk_String_newEx(name, nameSize);
+    zen_Field_t* field = jtk_HashMap_getValue(class0->m_fields, name0);
+    jtk_String_delete(name0);
+
+    return (field != NULL)? field->m_offset : -1;
 }
 
 // Function
@@ -158,7 +164,12 @@ void zen_Class_initialize(zen_Class_t* class0, zen_EntityFile_t* entityFile) {
     int32_t fieldCount = entity->m_fieldCount;
     for (i = 0; i < fieldCount; i++) {
         zen_FieldEntity_t* fieldEntity = (zen_FieldEntity_t*)entity->m_fields[i];
-        zen_Field_t* field = zen_Field_newFromFieldEntity(class0, fieldEntity);
+        /* Memory requirement should be strictly used to calculate the space
+         * required by the fields of the class. This constraint is placed due
+         * to the usage of m_memoryRequirement in evaluating the offsets of the
+         * fields.
+         */
+        zen_Field_t* field = zen_Field_newFromFieldEntity(class0, fieldEntity, class0->m_memoryRequirement);
         jtk_HashMap_put(class0->m_fields, field->m_name, field);
 
         if (field->m_descriptor->m_size == 1) {

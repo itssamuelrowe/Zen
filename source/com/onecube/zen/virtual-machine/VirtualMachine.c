@@ -430,7 +430,7 @@ void zen_VirtualMachine_setObjectField(zen_VirtualMachine_t* virtualMachine,
     }
     else {
         zen_Class_t* class0 = *((zen_Class_t**)(object + ZEN_OBJECT_HEADER_CLASS_OFFSET));
-        int32_t offset = zen_Class_findFieldIndex(class0, fieldDescriptor, fieldDescriptorSize);
+        int32_t offset = zen_Class_findFieldOffset(class0, fieldDescriptor, fieldDescriptorSize);
         if (offset < 0) {
             zen_VirtualMachine_raiseUnknownFieldException(virtualMachine, fieldDescriptor,
                 fieldDescriptorSize);

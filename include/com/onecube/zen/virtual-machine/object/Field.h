@@ -41,6 +41,7 @@ struct zen_Field_t {
     jtk_String_t* m_name;
     jtk_String_t* m_descriptor;
     zen_Class_t* m_class;
+    int32_t m_offset;
 };
 
 /**
@@ -51,7 +52,7 @@ typedef struct zen_Field_t zen_Field_t;
 // Constructor
 
 zen_Field_t* zen_Field_newFromFieldEntity(zen_Class_t* class0, 
-    zen_FieldEntity_t* fieldEntity);
+    zen_FieldEntity_t* fieldEntity, int32_t offset);
 
 // Destructor
 
