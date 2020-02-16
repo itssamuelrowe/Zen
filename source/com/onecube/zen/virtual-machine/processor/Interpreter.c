@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 OneCube
+ * Copyright 2018-2020 Samuel Rowe
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2117,14 +2117,14 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                             (zen_ConstantPoolString_t*)constantPool->m_entries[constantPoolString->m_stringIndex];
                         // jtk_String_t* value = jtk_String_newEx(constantPoolUtf8->m_bytes, constantPoolUtf8->m_length);
                         
-                        const uint8_t* arrayDescriptor = "b";
-                        int32_t arrayDescriptorSize = 1;
+                        // const uint8_t* arrayDescriptor = "b";
+                        // int32_t arrayDescriptorSize = 1;
                         zen_Object_t* array = zen_VirtualMachine_newByteArray(interpreter->m_virtualMachine,
                             constantPoolUtf8->m_bytes, constantPoolUtf8->m_length);
                             
                         const uint8_t* stringClassDescriptor = "zen/core/String";
                         int32_t stringClassDescriptorSize = 15;
-                        const uint8_t* stringConstructorDescriptor = "v/Czen/core/Object;";
+                        const uint8_t* stringConstructorDescriptor = "v:(zen/core/Object)";
                         int32_t stringConstructorDescriptorSize = 19;
                         zen_Object_t* value = zen_VirtualMachine_newObject(interpreter->m_virtualMachine,
                             stringClassDescriptor, stringClassDescriptorSize, stringConstructorDescriptor,

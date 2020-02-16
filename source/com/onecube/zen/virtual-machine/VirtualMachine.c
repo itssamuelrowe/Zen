@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 OneCube
+ * Copyright 2018-2020 Samuel Rowe
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -325,7 +325,7 @@ zen_Object_t* zen_VirtualMachine_makeObjectEx(zen_VirtualMachine_t* virtualMachi
     /* The allocation should be clean such that all the bits are initialized
      * to 0.
      */
-    zen_Object_t* object = jtk_Memory_allocate(uint8_t, ZEN_OBJECT_HEADER_SIZE + class0->m_memoryRequirement);
+    zen_Object_t* object = calloc(ZEN_OBJECT_HEADER_SIZE + class0->m_memoryRequirement, sizeof (uint8_t));
     *((uintptr_t*)object + ZEN_OBJECT_HEADER_CLASS_OFFSET) = (uintptr_t)class0;
     *((uint32_t*)object + ZEN_OBJECT_HEADER_HASH_CODE_OFFSET) = zen_VirtualMachine_identityHash(object);
 
@@ -399,7 +399,7 @@ zen_ObjectArray_t* zen_VirtualMachine_newByteArray(
     zen_VirtualMachine_t* virtualMachine, int8_t* bytes, int32_t size) {
     const uint8_t* arrayDescriptor = "b";
     int32_t arrayDescriptorSize = 1;
-    
+
     return NULL;
 }
 
