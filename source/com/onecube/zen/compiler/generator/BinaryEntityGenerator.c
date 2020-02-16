@@ -613,10 +613,18 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
         /* Write the field to the data channel. */
         zen_BinaryEntityBuilder_writeField(generator->m_builder, fieldEntity->m_flags,
             fieldEntity->m_nameIndex, fieldEntity->m_descriptorIndex);
+            
+        /* Write the attribute count. */
+        zen_BinaryEntityBuilder_writeAttributeCount(generator->m_builder, fieldEntity->m_attributeTable.m_size);
+
+        // TODO: Write the attribute!
 
         /* Log the details of the field. */
         printf("[debug] A field was written with the features (flags = 0x%X, nameIndex = %d, descriptorIndex = %d).\n",
             fieldEntity->m_flags, fieldEntity->m_nameIndex, fieldEntity->m_descriptorIndex);
+        
+        /* Log the attribute count. */
+        printf("[debug] Field entity has %d attributes.\n", fieldEntity->m_attributeTable.m_size);
     }
 
     /* Retrieve the function count. */
@@ -2276,7 +2284,7 @@ void zen_BinaryEntityGenerator_onExitFunctionDeclaration(
     uint16_t flags = symbol->m_modifiers;
     uint16_t nameIndex = constructor?
         zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
-            generator->m_constantPoolBuilder, "<constructor>", 13) :
+            generator->m_constantPoolBuilder, "<initialize>", 12) :
         zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
             generator->m_constantPoolBuilder, identifierToken->m_text,
             identifierToken->m_length);
