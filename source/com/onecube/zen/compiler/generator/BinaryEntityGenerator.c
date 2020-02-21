@@ -6302,8 +6302,9 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
 
                 const uint8_t* constructorName = "<initialize>";
                 int32_t constructorNameSize = 12;
-                const uint8_t* constructorDescriptor = "v:i";
-                int32_t constructorDescriptorSize = 3;
+                // const uint8_t* constructorDescriptor = "v:i";
+                const uint8_t* constructorDescriptor = "v:(zen/core/Object)";
+                int32_t constructorDescriptorSize = 19;
                 uint16_t constructorIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
                     generator->m_constantPoolBuilder, integerClassName,
                     integerClassNameSize, constructorDescriptor, constructorDescriptorSize,
