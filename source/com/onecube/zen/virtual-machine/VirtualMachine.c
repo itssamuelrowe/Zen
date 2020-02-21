@@ -61,6 +61,18 @@ int32_t zen_VirtualMachine_identityHash(zen_Object_t* object) {
     }
 }
 
+zen_Object_t* zen_VirtualMachine_allocateObject(zen_VirtualMachine_t* virtualMachine,
+    zen_Class_t* class0) {
+    /* The allocation should be clean such that all the bits are initialized
+     * to 0.
+     */
+    zen_Object_t* object = calloc(ZEN_OBJECT_HEADER_SIZE + class0->m_memoryRequirement, sizeof (uint8_t));
+    *((uintptr_t*)object + ZEN_OBJECT_HEADER_CLASS_OFFSET) = (uintptr_t)class0;
+    *((uint32_t*)object + ZEN_OBJECT_HEADER_HASH_CODE_OFFSET) = zen_VirtualMachine_identityHash(object);
+
+    return object;
+}
+
 zen_Object_t* zen_VirtualMachine_makeObjectEx(zen_VirtualMachine_t* virtualMachine,
     zen_Function_t* constructor, jtk_VariableArguments_t arguments) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");

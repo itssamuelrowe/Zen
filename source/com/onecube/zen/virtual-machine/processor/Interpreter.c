@@ -2363,6 +2363,32 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             /* New */
 
             case ZEN_BYTE_CODE_NEW: { /* new */
+                uint16_t index = zen_Interpreter_readShort(interpreter);
+
+                zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
+                zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
+                zen_ConstantPoolClass_t* classEntry =
+                    (zen_ConstantPoolClass_t*)constantPool->m_entries[index];
+                zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[functionEntry->m_nameIndex];
+                
+                jtk_String_t* classDescriptor = jtk_String_newEx(nameEntry->m_bytes, nameEntry->m_length);
+                zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine, classDescriptor);
+                jtk_String_delete(classDescriptor);
+
+                if (targetClass != NULL) {
+                    zen_Object_t* result = zen_VirtualMachine_allocateObject(interpreter->m_virtualMachine,
+                        targetClass);
+                    /* Push the reference of the newly allocated object onto the operand stack. */
+                    zen_OperandStack_pushReference(currentStackFrame->m_operandStack, result);
+                }
+                else {
+                    /* TODO: Throw an instance of the UnknownClassException class. */
+                }
+
+                /* Log debugging information for assistance in debugging the interpreter. */
+                printf("[debug] Executed instruction `new` (index = %d, operand stack = %d)\n",
+                    index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+                
                 break;
             }
 
