@@ -6390,7 +6390,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
     else if ((expression->m_type == ZEN_AST_NODE_TYPE_MAP_EXPRESSION) ||
         (expression->m_type == ZEN_AST_NODE_TYPE_LIST_EXPRESSION) ||
         (expression->m_type == ZEN_AST_NODE_TYPE_EXPRESSION) ||
-        (expression->m_type == ZEN_AST_NODE_TYPE_EXPRESSION)) {
+        (expression->m_type == ZEN_AST_NODE_TYPE_NEW_EXPRESSION)) {
         zen_ASTWalker_walk(astListener, expression);
     }
     else {
@@ -6903,7 +6903,8 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
     }
     else if ((expression->m_type == ZEN_AST_NODE_TYPE_MAP_EXPRESSION) ||
         (expression->m_type == ZEN_AST_NODE_TYPE_LIST_EXPRESSION) ||
-        (expression->m_type == ZEN_AST_NODE_TYPE_EXPRESSION)) {
+        (expression->m_type == ZEN_AST_NODE_TYPE_EXPRESSION) ||
+        (expression->m_type == ZEN_AST_NODE_TYPE_NEW_EXPRESSION)) {
         zen_ASTWalker_walk(astListener, expression);
     }
     else {
@@ -7927,8 +7928,6 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
     /* Retrieve the class entry index for the type name. */
     uint16_t typeNameIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
         generator->m_constantPoolBuilder, typeNameText, typeNameSize);
-    /* Delete the type name text. */
-    jtk_CString_delete(typeNameText);
 
     /* Create an instance of the specified class. */
     zen_BinaryEntityBuilder_emitNew(generator->m_builder, typeNameIndex);
@@ -7944,8 +7943,8 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
 
     zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)constructorSymbol->m_context;
 
-    uint8_t* constructorName = "<constructor>";
-    int32_t constructorNameSize = 13;
+    uint8_t* constructorName = "<initialize>";
+    int32_t constructorNameSize = 12;
     jtk_String_t* constructorDescriptor0 = NULL;
     const uint8_t* constructorDescriptor = "v:v";
     int32_t constructorDescriptorSize = 3;
@@ -8064,7 +8063,11 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
     }
 
     // TODO: Generate arrays when variable parameters are encountered!
-
+    /* Delete the type name text. The typeNameText is used to generate the constructor
+     * entry in the constant pool. Therefore, we delay its destruction.
+     */
+    jtk_CString_delete(typeNameText);
+    
     /* The normal behaviour of the AST walker causes the generator to emit instructions
      * in an undesirable fashion. Therefore, we partially switch from the listener
      * to visitor design pattern. The AST walker can be guided to switch to this

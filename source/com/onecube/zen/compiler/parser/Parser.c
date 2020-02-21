@@ -2965,6 +2965,7 @@ void zen_Parser_postfixOperator(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * |	'(' expression ')'
  * |	mapExpression
  * |	listExpression
+ * |    newExpression
  * ;
  *
  * literal
