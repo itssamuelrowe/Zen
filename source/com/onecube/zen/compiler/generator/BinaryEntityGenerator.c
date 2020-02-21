@@ -2663,6 +2663,7 @@ void zen_BinaryEntityGenerator_onExitAssertStatement(zen_ASTListener_t* astListe
         generator->m_constantPoolBuilder, assertionErrorClassName,
         assertionErrorClassNameSize);
 
+    // TODO: Change <constructor> to <initialize>
     const uint8_t* constructor1Descriptor = "v:@(zen/core/String)";
     int32_t constructor1DescriptorSize = 20;
     const uint8_t* constructorName = "<constructor>";
@@ -2703,7 +2704,7 @@ void zen_BinaryEntityGenerator_onExitAssertStatement(zen_ASTListener_t* astListe
      */
     zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_builder,
         getValueIndex);
-    /* Log the emission of the invoke_special instruction. */
+    /* Log the emission of the invoke_virtual instruction. */
     printf("[debug] Emitted invoke_virtual %d\n", getValueIndex);
 
     /* Emit the jump_ne0_i instruction. */
@@ -6235,6 +6236,24 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
             }
 
             case ZEN_TOKEN_INTEGER_LITERAL: {
+                const uint8_t* integerClassName = "zen/core/Integer";
+                int32_t integerClassNameSize = 16;
+                uint16_t integerClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
+                    generator->m_constantPoolBuilder, integerClassName,
+                    integerClassNameSize);
+
+                /* Emit the new instruction. */
+                zen_BinaryEntityBuilder_emitNew(generator->m_builder, integerClassIndex);
+                
+                /* Log the emission of the new instruction. */
+                printf("[debug] Emitted new %d\n", integerClassIndex);
+                
+                /* Emit the duplicate instruction. */
+                zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
+                
+                /* Log the emission of the duplicate instruction. */
+                printf("[debug] Emitted duplicate\n");
+                
                 uint8_t* integerText = zen_Token_getText(token);
                 int32_t actualIntegerLength = zen_Token_getLength(token);
                 int32_t integerLength = actualIntegerLength;
@@ -6278,6 +6297,23 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                 else {
                     zen_BinaryEntityGenerator_loadInteger(generator, value);
                 }
+                
+                // TODO: Implement integer interning.
+
+                const uint8_t* constructorName = "<initialize>";
+                int32_t constructorNameSize = 12;
+                const uint8_t* constructorDescriptor = "v:i";
+                int32_t constructorDescriptorSize = 3;
+                uint16_t constructorIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+                    generator->m_constantPoolBuilder, integerClassName,
+                    integerClassNameSize, constructorDescriptor, constructorDescriptorSize,
+                    constructorName, constructorNameSize);
+
+                /* Invoke the constructor to initialize the new integer instance. */
+                zen_BinaryEntityBuilder_emitInvokeSpecial(generator->m_builder,
+                    constructorIndex);
+                /* Log the emission of the invoke_special instruction. */
+                printf("[debug] Emitted invoke_special %d\n", constructorIndex);
 
                 break;
             }
