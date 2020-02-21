@@ -3550,9 +3550,17 @@ void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
     zen_StackFrame_t* stackFrame = zen_StackFrame_new(constructor);
     zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
 
+    zen_EntityFile_t* entityFile = constructor->m_class->m_entityFile;
+    zen_Entity_t* entity = &entityFile->m_entity;
+    zen_ConstantPoolUtf8_t* name =
+        (zen_ConstantPoolUtf8_t*)entityFile->m_constantPool.m_entries[
+            entity->m_reference];
+    jtk_String_t* className = jtk_String_newEx(name->m_bytes, name->m_length);
+
     if (zen_Function_isNative(constructor)) {
         zen_NativeFunction_t* nativeConstructor = zen_VirtualMachine_getNativeFunction(
-            interpreter->m_virtualMachine, constructor->m_name, constructor->m_descriptor);
+            interpreter->m_virtualMachine, className, constructor->m_name,
+            constructor->m_descriptor);
 
         if (nativeConstructor != NULL) {
             zen_NativeFunction_InvokeConstructorFunction_t invokeConstructor =
@@ -3560,15 +3568,17 @@ void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
             invokeConstructor(interpreter->m_virtualMachine, object, arguments);
         }
         else {
-            printf("[error] Unknown native constructor (name=%.*s, descriptor=%.*s)\n",
-                constructor->m_name->m_size, constructor->m_name->m_value,
-                constructor->m_descriptor->m_size, constructor->m_descriptor->m_value);
+            printf("[error] Unknown native constructor (class=%.*s, name=%.*s, descriptor=%.*s)\n",
+                className->m_size, className->m_value, constructor->m_name->m_size,
+                constructor->m_name->m_value, constructor->m_descriptor->m_size,
+                constructor->m_descriptor->m_value);
         }
     }
     else {
         zen_Interpreter_interpret(interpreter);
     }
 
+    jtk_String_delete(className);
     zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
     zen_StackFrame_delete(stackFrame);
 }
@@ -3588,18 +3598,26 @@ void zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interpreter,
     zen_StackFrame_t* stackFrame = zen_StackFrame_new(function);
     zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
 
+    zen_EntityFile_t* entityFile = function->m_class->m_entityFile;
+    zen_Entity_t* entity = &entityFile->m_entity;
+    zen_ConstantPoolUtf8_t* name =
+        (zen_ConstantPoolUtf8_t*)entityFile->m_constantPool.m_entries[
+            entity->m_reference];
+    jtk_String_t* className = jtk_String_newEx(name->m_bytes, name->m_length);
+
     if (zen_Function_isNative(function)) {
         zen_NativeFunction_t* nativeFunction = zen_VirtualMachine_getNativeFunction(
-            interpreter->m_virtualMachine, function->m_name, function->m_descriptor);
+            interpreter->m_virtualMachine, className, function->m_name, function->m_descriptor);
 
         if (nativeFunction != NULL) {
             void* result = nativeFunction->m_invoke(interpreter->m_virtualMachine, arguments);
             zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
         }
         else {
-            printf("[error] Unknown native function (name=%.*s, descriptor=%.*s)\n",
-                function->m_name->m_size, function->m_name->m_value,
-                function->m_descriptor->m_size, function->m_descriptor->m_value);
+            printf("[error] Unknown native function (class=%.*s, name=%.*s, descriptor=%.*s)\n",
+                className->m_size, className->m_value, function->m_name->m_size,
+                function->m_name->m_value, function->m_descriptor->m_size,
+                function->m_descriptor->m_value);
         }
     }
     else {

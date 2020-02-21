@@ -500,7 +500,7 @@ jtk_String_t* jtk_String_fromJoinEx(const uint8_t** strings, int32_t* sizes,
     return result;
 }
 
-jtk_NativeFunction_t* zen_VirtualMachine_registerNativeFunction(
+zen_NativeFunction_t* zen_VirtualMachine_registerNativeFunction(
     zen_VirtualMachine_t* virtualMachine, const uint8_t* className,
     int32_t classNameSize, const uint8_t* functionName, int32_t functionNameSize,
     const uint8_t* functionDescriptor, int32_t functionDescriptorSize,
@@ -547,7 +547,7 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     // Object ZenKernel.invokeStatic(Object className, Object functionName, Object ... arguments)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
         "invokeStatic", 12, "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)",
-        70, invokeStaticFunction);
+        70, zen_ZenKernel_invokeStatic);
 
     // Object ZenKernel.evaluate(Object operator, Object operand1, Object operand2)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
@@ -662,13 +662,24 @@ void zen_VirtualMachine_handleException(zen_VirtualMachine_t* virtualMachine) {
 /* Native Function */
 
 zen_NativeFunction_t* zen_VirtualMachine_getNativeFunction(
-    zen_VirtualMachine_t* virtualMachine, jtk_String_t* name,
-    jtk_String_t* descriptor) {
+    zen_VirtualMachine_t* virtualMachine, jtk_String_t* className,
+    jtk_String_t* functionName, jtk_String_t* functionDescriptor) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
-    jtk_Assert_assertObject(name, "The specified name is null.");
-    jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
+    jtk_Assert_assertObject(className, "The specified class name is null.");
+    jtk_Assert_assertObject(functionName, "The specified function name is null.");
+    jtk_Assert_assertObject(functionDescriptor, "The specified function descriptor is null.");
 
-    jtk_String_t* key = jtk_String_append(name, descriptor);
+    const uint8_t* strings[] = {
+        className->m_value,
+        functionName->m_value,
+        functionDescriptor->m_value
+    };
+    int32_t sizes[] = {
+        className->m_size,
+        functionName->m_size,
+        functionDescriptor->m_size
+    };
+    jtk_String_t* key = jtk_String_fromJoin(strings, sizes, 3);
     zen_NativeFunction_t* result = (zen_NativeFunction_t*)jtk_HashMap_getValue(
         virtualMachine->m_nativeFunctions, key);
     jtk_String_delete(key);
