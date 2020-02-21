@@ -165,7 +165,7 @@ void hexDump(const uint8_t* description, void* address, const int length) {
     printf("Dumping object at 0x%X\n", address);
     int i;
     unsigned char buffer[17];
-    const unsigned char* pc = (const unsigned char *)address;
+    const unsigned char* iterator = (const unsigned char *)address;
 
     /* Print the description if given. */
     if (description != NULL) {
@@ -195,15 +195,15 @@ void hexDump(const uint8_t* description, void* address, const int length) {
             }
 
             /* Print the hexadecimal code for the current byte. */
-            printf(" %02x", pc[i]);
+            printf(" %02x", iterator[i]);
 
             /* Append a printable ASCII character to the buffer. */
             /* TODO: isprint() may be better. */
-            if ((pc[i] < 0x20) || (pc[i] > 0x7e)) {
+            if ((iterator[i] < 0x20) || (iterator[i] > 0x7e)) {
                 buffer[i % 16] = '.';
             }
             else {
-                buffer[i % 16] = pc[i];
+                buffer[i % 16] = iterator[i];
             }
             buffer[(i % 16) + 1] = '\0';
         }
@@ -432,24 +432,131 @@ zen_Class_t* zen_VirtualMachine_getClass(zen_VirtualMachine_t* virtualMachine,
 
 /* Load Library */
 
+/* If the specified size is negative for a string entry, that particular string
+ * is considered as null-terminated. The jtk_CString_getSize() function is invoked
+ * against that string to determine its size.
+ *
+ * If a string is null, then the string literal "null" is appended.
+ */
+jtk_String_t* jtk_String_fromJoin(const uint8_t** strings, int32_t* sizes, int32_t count) {
+    jtk_Assert_assertObject(strings, "The specified strings array is null.");
+    jtk_Assert_assertObject(sizes, "The specified sizes array is null.");
+    jtk_Assert_assertTrue(count >= 0, "The specified count is invalid.");
+
+    jtk_String_t* result = NULL;
+
+    if (count == 0) {
+        result = jtk_String_newEx("", 0);
+    }
+    else {
+        jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+        int32_t i;
+        for (i = 0; i < count; i++) {
+            jtk_StringBuilder_appendEx_z(builder, strings[i], sizes[i]);
+        }
+        result = jtk_StringBuilder_toString(builder);
+        jtk_StringBuilder_delete(builder);
+    }
+
+    return result;
+}
+
+/* If the specified size is negative for a string entry, that particular string
+ * is considered as null-terminated. The jtk_CString_getSize() function is invoked
+ * against that string to determine its size.
+ *
+ * If a string is null, then the string literal "null" is appended.
+ *
+ * The prefix, the suffix, and the separator parameters remain unused if the
+ * number strings specified to join is zero.
+ */
+jtk_String_t* jtk_String_fromJoinEx(const uint8_t** strings, int32_t* sizes,
+    int32_t count, const uint8_t* prefix, int32_t prefixSize, const uint8_t* suffix,
+    int32_t suffixSize, const uint8_t* separator, int32_t separatorSize) {
+    jtk_Assert_assertObject(strings, "The specified strings array is null.");
+    jtk_Assert_assertObject(sizes, "The specified sizes array is null.");
+    jtk_Assert_assertTrue(count >= 0, "The specified count is invalid.");
+
+    jtk_String_t* result = NULL;
+
+    if (count == 0) {
+        result = jtk_String_newEx("", 0);
+    }
+    else {
+        jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+        jtk_StringBuilder_appendEx_z(builder, prefix, prefixSize);
+        int32_t i;
+        for (i = 0; i < count; i++) {
+            jtk_StringBuilder_appendEx_z(builder, strings[i], sizes[i]);
+            if (i + 1 < count) {
+                jtk_StringBuilder_appendEx_z(builder, separator, separatorSize);
+            }
+        }
+        jtk_StringBuilder_appendEx_z(builder, suffix, suffixSize);
+        result = jtk_StringBuilder_toString(builder);
+        jtk_StringBuilder_delete(builder);
+    }
+
+    return result;
+}
+
+jtk_NativeFunction_t* zen_VirtualMachine_registerNativeFunction(
+    zen_VirtualMachine_t* virtualMachine, const uint8_t* className,
+    int32_t classNameSize, const uint8_t* functionName, int32_t functionNameSize,
+    const uint8_t* functionDescriptor, int32_t functionDescriptorSize,
+    zen_NativeFunction_InvokeFunction_t function) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+    jtk_Assert_assertObject(className, "The specified class name is null.");
+    jtk_Assert_assertTrue(classNameSize > 0, "The specified class name size is invalid.");
+    jtk_Assert_assertObject(functionName, "The specified function name is null.");
+    jtk_Assert_assertTrue(functionNameSize > 0, "The specified function name size is invalid.");
+    jtk_Assert_assertObject(functionDescriptor, "The specified function descriptor is null.");
+    jtk_Assert_assertTrue(functionDescriptorSize > 0, "The specified function descriptor size is invalid.");
+
+    zen_NativeFunction_t* nativeFunction = zen_NativeFunction_new(function);
+    const uint8_t* strings[] = {
+        className,
+        functionName,
+        functionDescriptor
+    };
+    int32_t sizes[] = {
+        classNameSize,
+        functionNameSize,
+        functionDescriptorSize
+    };
+    jtk_String_t* key = jtk_String_fromJoin(strings, sizes, 3);
+    jtk_HashMap_put(virtualMachine->m_nativeFunctions, key, nativeFunction);
+
+    return nativeFunction;
+}
+
 void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachine) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
 
-    zen_NativeFunction_t* printFunction = zen_NativeFunction_new(zen_print);
-    jtk_String_t* printKey = jtk_String_newEx("print(zen/core/Object):(zen/core/Object)", 40);
-    jtk_HashMap_put(virtualMachine->m_nativeFunctions, printKey, printFunction);
+    /*
+     * TODO: Should we associate native functions with their respective classes?
+     * As of now, only the classes are associated with the native functions.
+     * In other words, there exists a unidirectional relationship between classes
+     * and native functions, with the class owning the native function.
+     */
 
-    zen_NativeFunction_t* invokeStaticFunction = zen_NativeFunction_new(zen_ZenKernel_invokeStatic);
-    jtk_String_t* invokeStaticKey = jtk_String_newEx("invokeStatic(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)", 82);
-    jtk_HashMap_put(virtualMachine->m_nativeFunctions, invokeStaticKey, invokeStaticFunction);
+    // Object Test.print(Object format)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
+        "print", 5, "(zen/core/Object):(zen/core/Object)", 35, zen_print);
 
-    zen_NativeFunction_t* evaluateFunction = zen_NativeFunction_new(zen_ZenKernel_evaluate);
-    jtk_String_t* evaluateKey = jtk_String_newEx("evaluate(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)", 77);
-    jtk_HashMap_put(virtualMachine->m_nativeFunctions, evaluateKey, evaluateFunction);
+    // Object ZenKernel.invokeStatic(Object className, Object functionName, Object ... arguments)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
+        "invokeStatic", 12, "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)",
+        70, invokeStaticFunction);
 
-    zen_NativeFunction_t* stringConstructor = zen_NativeFunction_new(zen_String_initialize);
-    jtk_String_t* stringConstructorKey = jtk_String_newEx("<initialize>v:(zen/core/Object)", 31);
-    jtk_HashMap_put(virtualMachine->m_nativeFunctions, stringConstructorKey, stringConstructor);
+    // Object ZenKernel.evaluate(Object operator, Object operand1, Object operand2)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
+        "evaluate", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)",
+        69, zen_ZenKernel_evaluate);
+
+    // void String.new(value)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "String", 6,
+        "<initialize>", 12, "v:(zen/core/Object)", 19, zen_String_initialize);
 
     // TODO: Unload native functions
 }
