@@ -1490,6 +1490,46 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             /* Invoke */
 
             case ZEN_BYTE_CODE_INVOKE_SPECIAL: { /* invoke_special */
+                uint16_t index = zen_Interpreter_readShort(interpreter);
+
+                zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
+                zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
+                zen_ConstantPoolFunction_t* constructorEntry =
+                    (zen_ConstantPoolFunction_t*)constantPool->m_entries[index];
+                zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[constructorEntry->m_nameIndex];
+                zen_ConstantPoolUtf8_t* descriptorEntry = constantPool->m_entries[constructorEntry->m_descriptorIndex];
+                zen_ConstantPoolClass_t* classEntry = constantPool->m_entries[constructorEntry->m_classIndex];
+                zen_ConstantPoolUtf8_t* classNameEntry = constantPool->m_entries[classEntry->m_nameIndex];
+
+                jtk_String_t* classDescriptor = jtk_String_newEx(classNameEntry->m_bytes, classNameEntry->m_length);
+                zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine, classDescriptor);
+                jtk_String_delete(classDescriptor);
+
+                jtk_String_t* constructorDescriptor = jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);                
+                zen_Function_t* constructor = zen_Class_getConstructor(targetClass, constructorDescriptor);
+                jtk_String_delete(constructorDescriptor);
+
+                if (constructor != NULL) {
+                    int32_t parameterCount = constructor->m_parameterCount;
+                    if (constructor->m_parameterCount > 0) {
+                        jtk_Array_t* arguments = jtk_Array_new(parameterCount);
+                        int32_t parameterIndex;
+                        for (parameterIndex = parameterCount - 1; parameterIndex >= 0; parameterIndex--) {
+                            void* argument = (void*)zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+                            jtk_Array_setValue(arguments, parameterIndex, argument);
+                        }
+                        zen_Interpreter_invokeConstructorX(interpreter, constructor, arguments);
+                        jtk_Array_delete(arguments);
+                    }
+                }
+                else {
+                    /* TODO: Throw an instance of the UnknownFunctionException class. */
+                }
+
+                /* Log debugging information for assistance in debugging the interpreter. */
+                printf("[debug] Executed instruction `invoke_special` (index = %d, operand stack = %d)\n",
+                    index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+                
                 break;
             }
 
@@ -2369,7 +2409,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
                 zen_ConstantPoolClass_t* classEntry =
                     (zen_ConstantPoolClass_t*)constantPool->m_entries[index];
-                zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[functionEntry->m_nameIndex];
+                zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[classEntry->m_nameIndex];
                 
                 jtk_String_t* classDescriptor = jtk_String_newEx(nameEntry->m_bytes, nameEntry->m_length);
                 zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine, classDescriptor);
@@ -3566,6 +3606,48 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 /* Invoke Constructor */
 
 typedef void (*zen_NativeFunction_InvokeConstructorFunction_t)(zen_VirtualMachine_t* virtualMachine, zen_Object_t* self, jtk_VariableArguments_t arguments);
+
+void zen_Interpreter_invokeConstructorX(zen_Interpreter_t* interpreter,
+    zen_Object_t* object, zen_Function_t* constructor,
+    jtk_Array_t* arguments) {
+    printf("A constructor was invoked!\n");
+
+    zen_StackFrame_t* oldStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
+    zen_StackFrame_t* stackFrame = zen_StackFrame_new(constructor);
+    zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
+
+    zen_EntityFile_t* entityFile = constructor->m_class->m_entityFile;
+    zen_Entity_t* entity = &entityFile->m_entity;
+    zen_ConstantPoolUtf8_t* name =
+        (zen_ConstantPoolUtf8_t*)entityFile->m_constantPool.m_entries[
+            entity->m_reference];
+    jtk_String_t* className = jtk_String_newEx(name->m_bytes, name->m_length);
+
+    if (zen_Function_isNative(constructor)) {
+        zen_NativeFunction_t* nativeConstructor = zen_VirtualMachine_getNativeFunction(
+            interpreter->m_virtualMachine, className, constructor->m_name,
+            constructor->m_descriptor);
+
+        if (nativeConstructor != NULL) {
+            zen_NativeFunction_InvokeConstructorFunction_t invokeConstructor =
+                (zen_NativeFunction_InvokeConstructorFunction_t)nativeConstructor->m_invoke;
+            invokeConstructor(interpreter->m_virtualMachine, object, arguments);
+        }
+        else {
+            printf("[error] Unknown native constructor (class=%.*s, name=%.*s, descriptor=%.*s)\n",
+                className->m_size, className->m_value, constructor->m_name->m_size,
+                constructor->m_name->m_value, constructor->m_descriptor->m_size,
+                constructor->m_descriptor->m_value);
+        }
+    }
+    else {
+        zen_Interpreter_interpret(interpreter);
+    }
+
+    jtk_String_delete(className);
+    zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+    zen_StackFrame_delete(stackFrame);
+}
 
 void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
     zen_Object_t* object, zen_Function_t* constructor,

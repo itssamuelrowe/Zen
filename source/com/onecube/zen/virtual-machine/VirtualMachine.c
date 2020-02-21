@@ -306,6 +306,23 @@ void zen_print(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
     fflush(stdout);
 }
 
+void zen_printInteger(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
+    zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    int64_t value = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+        value, "value", 6);
+    printf("%d\n", value);
+    fflush(stdout);
+}
+
+void zen_Integer_initialize(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* self, jtk_Array_t* arguments) {
+    const uint8_t* valueDescriptor = "value";
+    int32_t valueDescriptorSize = 5;
+    zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_VirtualMachine_setObjectField(virtualMachine, self, valueDescriptor,
+        valueDescriptorSize, value);
+}
+
 void zen_String_initialize(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* self, jtk_VariableArguments_t arguments) {
     const uint8_t* valueDescriptor = "value";
@@ -554,7 +571,7 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
 
     // Object Test.print(Object format)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
-        "print", 5, "(zen/core/Object):(zen/core/Object)", 35, zen_print);
+        "print", 5, "(zen/core/Object):(zen/core/Object)", 35, zen_printInteger);
 
     // Object ZenKernel.invokeStatic(Object className, Object functionName, Object ... arguments)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
