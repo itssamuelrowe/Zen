@@ -308,9 +308,9 @@ void zen_print(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
 
 void zen_printInteger(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
     zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
-    int64_t value = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
-        value, "value", 6);
-    printf("%d\n", value);
+    int64_t value0 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+        value, "value", 5);
+    printf("%d\n", value0);
     fflush(stdout);
 }
 
@@ -586,6 +586,10 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     // void String.new(value)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "String", 6,
         "<initialize>", 12, "v:(zen/core/Object)", 19, zen_String_initialize);
+
+    // void Integer.new(value)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+        "<initialize>", 12, "v:(zen/core/Object)", 19, zen_Integer_initialize);
 
     // TODO: Unload native functions
 }

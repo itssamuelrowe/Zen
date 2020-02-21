@@ -1510,6 +1510,8 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 jtk_String_delete(constructorDescriptor);
 
                 if (constructor != NULL) {
+                    // TODO: Invoke the constructor when it accepts no arguments.
+                    
                     int32_t parameterCount = constructor->m_parameterCount;
                     if (constructor->m_parameterCount > 0) {
                         jtk_Array_t* arguments = jtk_Array_new(parameterCount);
@@ -1518,7 +1520,10 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                             void* argument = (void*)zen_OperandStack_popReference(currentStackFrame->m_operandStack);
                             jtk_Array_setValue(arguments, parameterIndex, argument);
                         }
-                        zen_Interpreter_invokeConstructorX(interpreter, constructor, arguments);
+                        
+                        zen_Object_t* object = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+
+                        zen_Interpreter_invokeConstructorX(interpreter, object, constructor, arguments);
                         jtk_Array_delete(arguments);
                     }
                 }
