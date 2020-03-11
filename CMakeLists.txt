@@ -2,15 +2,15 @@
 
 cmake_minimum_required (VERSION 3.4.1)
 
+# Project Name
+
+project (Zen)
+
 # Packages
 
 include(FindPkgConfig)
 
 pkg_search_module(JTK REQUIRED jtk)
-
-# Project Name
-
-project (Zen)
 
 # Project Version Number
 

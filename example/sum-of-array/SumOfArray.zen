@@ -1,0 +1,6 @@
+function main(...arguments)
+    var numbers = array(10, 20, 30, 40, 50)
+    var sum = 0
+    for var i in range(0, numbers.size)
+        sum += numbers[i]
+    print(sum)
