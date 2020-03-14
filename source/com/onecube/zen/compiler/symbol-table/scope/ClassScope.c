@@ -100,7 +100,7 @@ void zen_ClassScope_define(zen_ClassScope_t* scope, zen_Symbol_t* symbol) {
  * 0. We are given a class scope and an identifier.
  * 1. Retrieve the class symbol corresponding to class scope.
  * 2. The super classes of the class symbol are stored in an
- *    n-ary tree. Therefore, create a linked-stack for its traversal.
+ *    tree. Therefore, create a linked-stack for its traversal.
  * 3. Push the class symbol on to the stack.
  * 4. Repeatedly process the elements on the stack.
  * 5. Retrieve the class symbol on top of the stack and remove it.

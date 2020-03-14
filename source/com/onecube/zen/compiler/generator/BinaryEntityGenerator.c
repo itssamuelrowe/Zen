@@ -25,6 +25,7 @@
 #include <com/onecube/zen/compiler/ast/ASTWalker.h>
 #include <com/onecube/zen/compiler/ast/context/Context.h>
 #include <com/onecube/zen/compiler/ast/ASTAnnotation.h>
+#include <com/onecube/zen/compiler/ast/ASTNode.h>
 #include <com/onecube/zen/compiler/ast/ASTHelper.h>
 #include <com/onecube/zen/compiler/lexer/Token.h>
 #include <com/onecube/zen/compiler/lexer/TokenType.h>

@@ -18,6 +18,7 @@
 #define COM_ONECUBE_ZEN_COMPILER_COMPILER_AST_NODE_H
 
 #include <jtk/collection/list/ArrayList.h>
+#include <jtk/core/String.h>
 
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/compiler/ast/ASTNodeType.h>
@@ -138,5 +139,10 @@ bool zen_ASTNode_isTerminal(zen_ASTNode_t* node);
  * @memberof ASTNode
  */
 zen_ASTNodeType_t zen_ASTNode_getType(zen_ASTNode_t* node);
+
+// String
+
+jtk_String_t* zen_ASTNode_toString(zen_ASTNode_t* node);
+uint8_t* zen_ASTNode_toCString(zen_ASTNode_t* node, int32_t* size);
 
 #endif /* COM_ONECUBE_ZEN_COMPILER_COMPILER_AST_NODE_H */

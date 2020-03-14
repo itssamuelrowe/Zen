@@ -17,6 +17,7 @@
 // Saturday, March 10, 2018
 
 #include <com/onecube/zen/compiler/ast/ASTAnnotations.h>
+#include <jtk/core/PointerObjectAdapter.h>
 
 /*******************************************************************************
  * ASTAnnotations                                                              *
@@ -24,7 +25,8 @@
 
 zen_ASTAnnotations_t* zen_ASTAnnotations_new() {
     zen_ASTAnnotations_t* annotations = zen_Memory_allocate(zen_ASTAnnotations_t, 1);
-    annotations->m_map = jtk_HashMap_new(jtk_PointerObjectAdapter_getInstance(), NULL);
+    jtk_ObjectAdapter_t* keyAdapter = jtk_PointerObjectAdapter_getInstance();
+    annotations->m_map = jtk_HashMap_new(keyAdapter, NULL);
 
     return annotations;
 }

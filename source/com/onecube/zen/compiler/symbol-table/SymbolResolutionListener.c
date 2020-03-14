@@ -18,6 +18,8 @@
 
 #include <jtk/collection/stack/LinkedStack.h>
 #include <com/onecube/zen/compiler/lexer/Token.h>
+#include <com/onecube/zen/compiler/ast/ASTNode.h>
+#include <com/onecube/zen/compiler/ast/ASTWalker.h>
 #include <com/onecube/zen/compiler/ast/context/Context.h>
 #include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>

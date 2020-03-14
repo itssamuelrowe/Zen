@@ -248,7 +248,7 @@ void zen_Lexer_delete(zen_Lexer_t* lexer) {
 /* Create Token */
 
 zen_Token_t* zen_Lexer_createToken(zen_Lexer_t* lexer) {
-    int8_t* text = jtk_StringBuilder_toCString(lexer->m_text);
+    uint8_t* text = jtk_CString_newWithSize(lexer->m_text->m_value, lexer->m_text->m_size); // jtk_StringBuilder_toCString(lexer->m_text);
     int32_t length = jtk_StringBuilder_getSize(lexer->m_text);
 
     zen_Token_t* token =
@@ -1483,8 +1483,9 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                             zen_Lexer_consume(lexer);
                         }
 
-                        uint8_t* text = jtk_StringBuilder_toCString(lexer->m_text);
-                        int32_t length = lexer->m_index - lexer->m_startIndex;
+                        printf("%d\n", sizeof (uint8_t*));
+                        uint8_t* text = lexer->m_text->m_value; // jtk_StringBuilder_toCString(lexer->m_text);
+                        int32_t length = lexer->m_text->m_size; // lexer->m_index - lexer->m_startIndex;
 
                         /* TODO: Find a better solution. Given we have access to a sorted
                          * list of keywords, a good idea would be to implement a binary
@@ -1666,7 +1667,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                         }
 
                         /* Destroy the text; not required anymore. */
-                        jtk_CString_delete(text);
+                        // jtk_CString_delete(text);
                     }
                     else if (zen_Lexer_isDecimalDigit(lexer->m_la1)) {
                         /* NOTE: The design for the integer literal was adopted from Java 8's lexer. The actual rules
