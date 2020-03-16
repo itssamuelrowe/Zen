@@ -89,7 +89,7 @@ int32_t zen_ConstantPoolBuilder_getClassEntryIndex(
 int32_t zen_ConstantPoolBuilder_getClassEntryIndexEx(
     zen_ConstantPoolBuilder_t* builder, uint8_t* bytes, int32_t bytesSize);
 
-// Field Entity
+// Field Entry
 
 zen_ConstantPoolField_t* zen_ConstantPoolBuilder_getFieldEntry(
     zen_ConstantPoolBuilder_t* builder, int32_t index);
@@ -103,7 +103,7 @@ int32_t zen_ConstantPoolBuilder_getFieldEntryIndexEx(
     const uint8_t* descriptor, int32_t descriptorSize, const uint8_t* name,
     int32_t nameSize);
 
-// Function Entity
+// Function Entry
 
 zen_ConstantPoolFunction_t* zen_ConstantPoolBuilder_getFunctionEntry(
     zen_ConstantPoolBuilder_t* builder, int32_t index);
@@ -143,5 +143,17 @@ zen_ConstantPoolUtf8_t* zen_ConstantPoolBuilder_getUtf8Entry(
 
 zen_ConstantPoolBuilder_getUtf8EntryIndex(
     zen_ConstantPoolBuilder_t* builder, jtk_String_t* string);
+
+
+// Long Entry
+
+zen_ConstantPoolLong_t* zen_ConstantPoolBuilder_getLongEntry(
+    zen_ConstantPoolBuilder_t* builder, int32_t index);
+
+int32_t zen_ConstantPoolBuilder_getLongEntryIndex(
+    zen_ConstantPoolBuilder_t* builder, int64_t value);
+
+int32_t zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
+    zen_ConstantPoolBuilder_t* builder, uint8_t* bytes, int32_t bytesSize);
 
 #endif /* COM_ONECUBE_ZEN_COMPILER_GENERATOR_CONSTANT_POOL_BUILDER_H */

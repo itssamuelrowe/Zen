@@ -73,19 +73,35 @@ zen_Scope_t* zen_Scope_new(const uint8_t* name, zen_ScopeType_t type,
  */
 void zen_Scope_delete(zen_Scope_t* scope);
 
-// Class Scope
+// Children Symbols
+
+void zen_Scope_getChildrenSymbols(zen_Scope_t* scope, jtk_ArrayList_t* childrenSymbols);
+
+// Context
+
+void* zen_Scope_getContext(zen_Scope_t* scope);
+
+// Scope Type
+
+/**
+ * @memberof Scope
+ */
+bool zen_Scope_isEnumerationScope(zen_Scope_t* scope);
 
 /**
  * @memberof Scope
  */
 bool zen_Scope_isClassScope(zen_Scope_t* scope);
 
-// Compilation Unit
-
 /**
  * @memberof Scope
  */
 bool zen_Scope_isCompilationUnitScope(zen_Scope_t* scope);
+
+/**
+ * @memberof Scope
+ */
+bool zen_Scope_isLocalScope(zen_Scope_t* scope);
 
 // Define
 
@@ -101,13 +117,6 @@ void zen_Scope_define(zen_Scope_t* scope, zen_Symbol_t* symbol);
  */
 zen_Scope_t* zen_Scope_getEnclosingScope(zen_Scope_t* scope);
 
-// Local Scope
-
-/**
- * @memberof Scope
- */
-bool zen_Scope_isLocalScope(zen_Scope_t* scope);
-
 // Name
 
 /**
@@ -121,6 +130,11 @@ const uint8_t* zen_Scope_getName(zen_Scope_t* scope);
  * @memberof Scope
  */
 zen_Symbol_t* zen_Scope_resolve(zen_Scope_t* scope, uint8_t* identifier);
+
+/**
+ * @memberof Scope
+ */
+zen_Scope_t* zen_Scope_resolveQualifiedSymbol(zen_Scope_t* scope, jtk_String_t* name);
 
 // Type
 

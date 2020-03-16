@@ -16,6 +16,9 @@
 
 // Monday, October 07, 2019
 
+#include <jtk/core/CString.h>
+#include <jtk/collection/array/Arrays.h>
+
 #include <com/onecube/zen/compiler/generator/ConstantPoolBuilder.h>
 
 

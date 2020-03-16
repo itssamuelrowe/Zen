@@ -16,11 +16,13 @@
 
 // Friday, March 30, 2018
 
+#include <jtk/core/CString.h>
 #include <jtk/core/Integer.h>
 #include <jtk/core/Long.h>
 #include <jtk/core/VariableArguments.h>
 #include <jtk/core/StringBuilder.h>
 #include <jtk/collection/Pair.h>
+#include <jtk/collection/array/Arrays.h>
 
 #include <com/onecube/zen/compiler/ast/ASTWalker.h>
 #include <com/onecube/zen/compiler/ast/context/Context.h>
@@ -30,10 +32,16 @@
 #include <com/onecube/zen/compiler/lexer/Token.h>
 #include <com/onecube/zen/compiler/lexer/TokenType.h>
 #include <com/onecube/zen/compiler/generator/BinaryEntityBuilder.h>
+#include <com/onecube/zen/compiler/generator/DataChannel.h>
 #include <com/onecube/zen/compiler/symbol-table/Symbol.h>
+#include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/ConstantSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/VariableSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/Scope.h>
+#include <com/onecube/zen/compiler/symbol-table/ClassScope.h>
+#include <com/onecube/zen/compiler/symbol-table/FunctionScope.h>
+#include <com/onecube/zen/compiler/symbol-table/LocalScope.h>
 #include <com/onecube/zen/compiler/generator/BinaryEntityGenerator.h>
 #include <com/onecube/zen/virtual-machine/feb/EntityType.h>
 #include <com/onecube/zen/virtual-machine/feb/attribute/InstructionAttribute.h>

@@ -58,6 +58,10 @@ void zen_DataChannel_appendByte(zen_DataChannel_t* channel, uint8_t byte);
 void zen_DataChannel_appendBytes(zen_DataChannel_t* channel, uint8_t* bytes, int32_t size);
 void zen_DataChannel_appendBytesRange(zen_DataChannel_t* channel, uint8_t* bytes, int32_t size, int32_t startIndex, int32_t stopIndex);
 
+// Bytes
+
+uint8_t* zen_DataChannel_getBytes(zen_DataChannel_t* channel);
+
 // Capacity
 
 void zen_DataChannel_requestCapacity(zen_DataChannel_t* channel, int32_t capacity);
