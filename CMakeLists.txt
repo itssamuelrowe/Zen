@@ -2,15 +2,15 @@
 
 cmake_minimum_required (VERSION 3.4.1)
 
+# Project Name
+
+project (PulsarVM)
+
 # Packages
 
 include(FindPkgConfig)
 
 pkg_search_module(JTK REQUIRED jtk)
-
-# Project Name
-
-project (PulsarVM)
 
 # Project Version Number
 
@@ -131,4 +131,5 @@ message(WARNING ${JTK_CFLAGS})
 add_executable(zvm ${ZEN_COMMON_SOURCE} ${ZEN_VIRTUAL_MACHINE_SOURCE} ${ZEN_VIRTUAL_MACHINE_TOOL_SOURCE})
 target_link_libraries(zvm ${JTK_LIBRARIES})
 target_include_directories(zvm SYSTEM PUBLIC ${JTK_INCLUDE_DIRS})
-target_compile_options(zvm PUBLIC -g -w ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
+# target_compile_options(zvm PUBLIC -g -w ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
+target_compile_options(zvm PUBLIC -g -Wall ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})

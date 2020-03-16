@@ -16,14 +16,16 @@
 
 // Friday, June 08, 2018
 
+#include <jtk/collection/array/Arrays.h>
 #include <jtk/core/VariableArguments.h>
 #include <jtk/core/StringBuilder.h>
-#include <com/onecube/zen/virtual-machine/VirtualMachine.h>
-#include <com/onecube/zen/virtual-machine/loader/EntityLoader.h>
+#include <jtk/core/StringObjectAdapter.h>
+
 #include <com/onecube/zen/virtual-machine/ExceptionManager.h>
-
-
-
+#include <com/onecube/zen/virtual-machine/VirtualMachine.h>
+#include <com/onecube/zen/virtual-machine/processor/Interpreter.h>
+#include <com/onecube/zen/virtual-machine/loader/EntityLoader.h>
+#include <com/onecube/zen/virtual-machine/object/Class.h>
 
 /* Object */
 
@@ -49,6 +51,8 @@
 #define ZEN_OBJECT_HEADER_CLASS_OFFSET 0
 #define ZEN_OBJECT_HEADER_HASH_CODE_OFFSET ZEN_OBJECT_HEADER_CLASS_SIZE
 
+// Identity Hash
+
 int32_t zen_VirtualMachine_identityHash(zen_Object_t* object) {
     if (sizeof (uintptr_t) == 4) {
         return (int32_t)object;
@@ -57,95 +61,153 @@ int32_t zen_VirtualMachine_identityHash(zen_Object_t* object) {
         return (int32_t)((uintptr_t)object ^ ((uintptr_t)object >> 32));
     }
     else {
-        return (int32_t)object;
+        return (int32_t)((uintptr_t)object);
     }
 }
 
-zen_Object_t* zen_VirtualMachine_allocateObject(zen_VirtualMachine_t* virtualMachine,
-    zen_Class_t* class0) {
-    /* The allocation should be clean such that all the bits are initialized
-     * to 0.
-     */
-    zen_Object_t* object = calloc(ZEN_OBJECT_HEADER_SIZE + class0->m_memoryRequirement, sizeof (uint8_t));
-    *((uintptr_t*)object + ZEN_OBJECT_HEADER_CLASS_OFFSET) = (uintptr_t)class0;
-    *((uint32_t*)object + ZEN_OBJECT_HEADER_HASH_CODE_OFFSET) = zen_VirtualMachine_identityHash(object);
+// ** Native Functions **
 
-    return object;
+void zen_print(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
+    zen_Object_t* format = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* array = zen_VirtualMachine_getObjectField(virtualMachine,
+        format, "value", 5);
+    uint8_t* values = (uint8_t*)zen_VirtualMachine_getObjectField(virtualMachine,
+        array, "values", 6);
+    int32_t size = (int32_t)zen_VirtualMachine_getObjectField(virtualMachine,
+        array, "size", 4);
+    fwrite(values, 1, size, stdout);
+    puts("");
+    fflush(stdout);
 }
 
-zen_Object_t* zen_VirtualMachine_makeObjectEx(zen_VirtualMachine_t* virtualMachine,
-    zen_Function_t* constructor, jtk_VariableArguments_t arguments) {
-    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
-    jtk_Assert_assertObject(constructor, "The specified constructor is null.");
-
-    zen_Class_t* class0 = constructor->m_class;
-    /* The allocation should be clean such that all the bits are initialized
-     * to 0.
-     */
-    zen_Object_t* object = calloc(ZEN_OBJECT_HEADER_SIZE + class0->m_memoryRequirement, sizeof (uint8_t));
-    *((uintptr_t*)object + ZEN_OBJECT_HEADER_CLASS_OFFSET) = (uintptr_t)class0;
-    *((uint32_t*)object + ZEN_OBJECT_HEADER_HASH_CODE_OFFSET) = zen_VirtualMachine_identityHash(object);
-
-    zen_Interpreter_invokeConstructor(virtualMachine->m_interpreter, object,
-        constructor, arguments);
-
-    /* Chances are an exception may have been thrown in the constructor. Further,
-     * a reference to the object may be stored somewhere by the constructor.
-     * Therefore, the object should not be immediately deallocated. Let the garbage
-     * collector do its job.
-     */
-
-    return object;
+void zen_printInteger(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
+    zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    int64_t value0 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+        value, "value", 5);
+    printf("%ld\n", value0);
+    fflush(stdout);
 }
 
-zen_Object_t* zen_VirtualMachine_makeObject(zen_VirtualMachine_t* virtualMachine,
-    zen_Function_t* constructor, ...) {
-    jtk_VariableArguments_t arguments;
-    jtk_VariableArguments_start(arguments, constructor);
-    zen_Object_t* result = zen_VirtualMachine_makeObjectEx(virtualMachine,
-        constructor, arguments);
-    jtk_VariableArguments_end(arguments);
-    return result;
+void zen_Integer_initialize(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* self, jtk_Array_t* arguments) {
+    const uint8_t* valueDescriptor = "value";
+    int32_t valueDescriptorSize = 5;
+    zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_VirtualMachine_setObjectField(virtualMachine, self, valueDescriptor,
+        valueDescriptorSize, value);
 }
 
-zen_Object_t* zen_VirtualMachine_newObjectEx(zen_VirtualMachine_t* virtualMachine,
-    const uint8_t* classDescriptor, int32_t classDescriptorSize,
-    const uint8_t* constructorDescriptor, int32_t constructorDescriptorSize,
-    jtk_VariableArguments_t arguments) {
-    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
-    jtk_Assert_assertObject(classDescriptor, "The specified class descriptor is null.");
-    jtk_Assert_assertObject(constructorDescriptor, "The specified constructor descriptor is null.");
+void zen_String_initialize(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* self, jtk_VariableArguments_t arguments) {
+    const uint8_t* valueDescriptor = "value";
+    int32_t valueDescriptorSize = 5;
+    zen_Object_t* value = jtk_VariableArguments_argument(arguments, zen_Object_t*);
+    zen_VirtualMachine_setObjectField(virtualMachine, self, valueDescriptor,
+        valueDescriptorSize, value);
+}
 
-    jtk_String_t* classDescriptor0 = jtk_String_newEx(classDescriptor, classDescriptorSize);
-    zen_Class_t* class0 = zen_VirtualMachine_getClass(virtualMachine, classDescriptor0);
-    jtk_String_delete(classDescriptor0);
+jtk_String_t* zen_String_add(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    jtk_String_t* self = (jtk_String_t*)jtk_Array_getValue(arguments, 0);
+    jtk_String_t* other = (jtk_String_t*)jtk_Array_getValue(arguments, 1);
+    jtk_String_t* result = jtk_String_newFromJoinEx(self->m_value, self->m_size,
+        other->m_value, other->m_size);
 
-    zen_Object_t* result = NULL;
-    if (zen_VirtualMachine_isClear(virtualMachine)) {
-        jtk_String_t* constructorDescriptor0 = jtk_String_newEx(constructorDescriptor, constructorDescriptorSize);
-        zen_Function_t* constructor = zen_Class_getConstructor(class0, constructorDescriptor0);
-        if (zen_VirtualMachine_isClear(virtualMachine)) {
-
-            result = zen_VirtualMachine_makeObjectEx(virtualMachine, constructor, arguments);
-        }
-    }
+    printf("%.*s\n", result->m_size, result->m_value);
 
     return result;
 }
 
-zen_Object_t* zen_VirtualMachine_newObject(zen_VirtualMachine_t* virtualMachine,
-    const uint8_t* classDescriptor, int32_t classDescriptorSize,
-    const uint8_t* constructorDescriptor, int32_t constructorDescriptorSize, ...) {
-    jtk_VariableArguments_t arguments;
-    jtk_VariableArguments_start(arguments, constructorDescriptorSize);
-    zen_Object_t* object = zen_VirtualMachine_newObjectEx(virtualMachine,
-        classDescriptor, classDescriptorSize, constructorDescriptor,
-        constructorDescriptorSize, arguments);
-    jtk_VariableArguments_end(arguments);
-    return object;
+/* TODO: The evaluate function builds a cache of operator-function pairs
+ * as the program runs. This helps in reducing lookup time for mapping operators
+ * to functions.
+ */
+void* zen_ZenKernel_evaluate(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    return zen_String_add(virtualMachine, arguments);
 }
 
-/* Object Array */
+jtk_String_t* zen_ByteArray_toJTKString(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* array) {
+    uint8_t* bytes = zen_VirtualMachine_getObjectField(virtualMachine, array, "values", 6);
+    int32_t size = (int32_t)zen_VirtualMachine_getObjectField(virtualMachine, array, "size", 4);
+    return jtk_String_newEx(bytes, size);
+}
+
+jtk_String_t* zen_String_toJTKString(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* string) {
+    zen_Object_t* value = zen_VirtualMachine_getObjectField(virtualMachine, string, "value", 5);
+    return zen_ByteArray_toJTKString(virtualMachine, value);
+}
+
+void zen_ZenKernel_invokeStatic(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    zen_Object_t* entity = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* targetFunctionName = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    jtk_Array_t* targetArguments = (jtk_Array_t*)jtk_Array_getValue(arguments, 2);
+    jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+    jtk_StringBuilder_appendEx_z(builder, "(zen/core/Object):", 18);
+    int32_t i;
+    int32_t parameterCount = jtk_Array_getSize(targetArguments);
+    for (i = 0; i < parameterCount; i++) {
+        jtk_StringBuilder_appendEx_z(builder, "(zen/core/Object)", 17);
+    }
+
+    jtk_String_t* targetFunctionDescriptor = jtk_StringBuilder_toString(builder);
+    jtk_String_t* entity0 = zen_String_toJTKString(virtualMachine, entity);
+    jtk_String_t* targetFunctionName0 = zen_String_toJTKString(virtualMachine, targetFunctionName);
+
+    zen_Class_t* targetClass = zen_VirtualMachine_getClass(virtualMachine,
+        entity0);
+    zen_Function_t* targetFunction = zen_VirtualMachine_getStaticFunction(virtualMachine,
+        targetClass, targetFunctionName0, targetFunctionDescriptor);
+
+    jtk_String_delete(targetFunctionName0);
+    jtk_String_delete(entity0);
+    jtk_String_delete(targetFunctionDescriptor);
+
+    zen_Interpreter_invokeStaticFunction(virtualMachine->m_interpreter, targetFunction,
+        targetArguments);
+}
+
+/*******************************************************************************
+ * VirtualMachine                                                              *
+ *******************************************************************************/
+
+// Constructor
+
+zen_VirtualMachine_t* zen_VirtualMachine_new(zen_VirtualMachineConfiguration_t* configuration) {
+    jtk_Assert_assertObject(configuration, "The specified virtual machine configuration is null.");
+
+    jtk_ObjectAdapter_t* stringObjectAdapter = jtk_StringObjectAdapter_getInstance();
+    jtk_Iterator_t* entityDirectoryIterator = jtk_ArrayList_getIterator(configuration->m_entityDirectories);
+
+    zen_VirtualMachine_t* virtualMachine = zen_Memory_allocate(zen_VirtualMachine_t, 1);
+    virtualMachine->m_configuration = configuration;
+    virtualMachine->m_entityLoader = zen_EntityLoader_newWithEntityDirectories(entityDirectoryIterator);
+    virtualMachine->m_classLoader = zen_ClassLoader_new(virtualMachine->m_entityLoader);
+    virtualMachine->m_interpreter = zen_Interpreter_new(NULL, virtualMachine, NULL);
+    virtualMachine->m_nativeFunctions = jtk_HashMap_newEx(stringObjectAdapter, NULL,
+        JTK_HASH_MAP_DEFAULT_CAPACITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
+
+    zen_VirtualMachine_loadDefaultLibraries(virtualMachine);
+
+    return virtualMachine;
+}
+
+// Destructor
+
+void zen_VirtualMachine_delete(zen_VirtualMachine_t* virtualMachine) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+
+    zen_VirtualMachine_unloadLibraries(virtualMachine);
+
+    zen_ClassLoader_delete(virtualMachine->m_classLoader);
+    zen_EntityLoader_delete(virtualMachine->m_entityLoader);
+    jtk_Memory_deallocate(virtualMachine);
+}
+
+// Array
 
 zen_ObjectArray_t* zen_VirtualMachine_newObjectArray(zen_VirtualMachine_t* virtualMachine,
     zen_Class_t* class0, int32_t size) {
@@ -171,7 +233,39 @@ zen_ObjectArray_t* zen_VirtualMachine_newByteArray(
     return result;
 }
 
-/* Field */
+// Class
+
+zen_Class_t* zen_VirtualMachine_getClass(zen_VirtualMachine_t* virtualMachine,
+    jtk_String_t* descriptor) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+    jtk_Assert_assertObject(descriptor, "The specified class descriptor is null.");
+
+    zen_Class_t* class0 = zen_ClassLoader_findClass(
+        virtualMachine->m_classLoader, descriptor);
+
+    if (class0 == NULL) {
+        zen_VirtualMachine_raiseClassNotFoundException(virtualMachine, descriptor);
+    }
+
+    return class0;
+}
+
+// Clear
+
+bool zen_VirtualMachine_isClear(zen_VirtualMachine_t* virtualMachine) {
+    return true;
+}
+
+// Entity Loader
+
+zen_EntityLoader_t* zen_VirtualMachine_getEntityLoader(
+    zen_VirtualMachine_t* virtualMachine) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+
+    return virtualMachine->m_entityLoader;
+}
+
+// Field
 
 void hexDump(const uint8_t* description, void* address, const int length) {
     printf("Dumping object at 0x%X\n", address);
@@ -279,285 +373,7 @@ zen_Object_t* zen_VirtualMachine_getObjectField(zen_VirtualMachine_t* virtualMac
     return result;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void zen_print(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
-    zen_Object_t* format = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
-    zen_Object_t* array = zen_VirtualMachine_getObjectField(virtualMachine,
-        format, "value", 5);
-    uint8_t* values = (uint8_t*)zen_VirtualMachine_getObjectField(virtualMachine,
-        array, "values", 6);
-    int32_t size = (int32_t)zen_VirtualMachine_getObjectField(virtualMachine,
-        array, "size", 4);
-    fwrite(values, 1, size, stdout);
-    puts("");
-    fflush(stdout);
-}
-
-void zen_printInteger(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
-    zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
-    int64_t value0 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
-        value, "value", 5);
-    printf("%d\n", value0);
-    fflush(stdout);
-}
-
-void zen_Integer_initialize(zen_VirtualMachine_t* virtualMachine,
-    zen_Object_t* self, jtk_Array_t* arguments) {
-    const uint8_t* valueDescriptor = "value";
-    int32_t valueDescriptorSize = 5;
-    zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
-    zen_VirtualMachine_setObjectField(virtualMachine, self, valueDescriptor,
-        valueDescriptorSize, value);
-}
-
-void zen_String_initialize(zen_VirtualMachine_t* virtualMachine,
-    zen_Object_t* self, jtk_VariableArguments_t arguments) {
-    const uint8_t* valueDescriptor = "value";
-    int32_t valueDescriptorSize = 5;
-    zen_Object_t* value = jtk_VariableArguments_argument(arguments, zen_Object_t*);
-    zen_VirtualMachine_setObjectField(virtualMachine, self, valueDescriptor,
-        valueDescriptorSize, value);
-}
-
-jtk_String_t* zen_String_add(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
-    jtk_String_t* self = (jtk_String_t*)jtk_Array_getValue(arguments, 0);
-    jtk_String_t* other = (jtk_String_t*)jtk_Array_getValue(arguments, 1);
-    jtk_String_t* result = jtk_String_newFromJoinEx(self->m_value, self->m_size,
-        other->m_value, other->m_size);
-
-    printf("%.*s\n", result->m_size, result->m_value);
-
-    return result;
-}
-
-/* TODO: The evaluate function builds a cache of operator-function pairs
- * as the program runs. This helps in reducing lookup time for mapping operators
- * to functions.
- */
-void* zen_ZenKernel_evaluate(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
-    return zen_String_add(virtualMachine, arguments);
-}
-
-jtk_String_t* zen_ByteArray_toJTKString(zen_VirtualMachine_t* virtualMachine,
-    zen_Object_t* array) {
-    uint8_t* bytes = zen_VirtualMachine_getObjectField(virtualMachine, array, "values", 6);
-    int32_t size = (int32_t)zen_VirtualMachine_getObjectField(virtualMachine, array, "size", 4);
-    return jtk_String_newEx(bytes, size);
-}
-
-jtk_String_t* zen_String_toJTKString(zen_VirtualMachine_t* virtualMachine,
-    zen_Object_t* string) {
-    zen_Object_t* value = zen_VirtualMachine_getObjectField(virtualMachine, string, "value", 5);
-    return zen_ByteArray_toJTKString(virtualMachine, value);
-}
-
-void zen_ZenKernel_invokeStatic(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
-    zen_Object_t* entity = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
-    zen_Object_t* targetFunctionName = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
-    jtk_Array_t* targetArguments = (jtk_Array_t*)jtk_Array_getValue(arguments, 2);
-    jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
-    jtk_StringBuilder_append_z(builder, "(zen/core/Object):", 18);
-    int32_t i;
-    int32_t parameterCount = jtk_Array_getSize(targetArguments);
-    for (i = 0; i < parameterCount; i++) {
-        jtk_StringBuilder_append_z(builder, "(zen/core/Object)", 17);
-    }
-
-    jtk_String_t* targetFunctionDescriptor = jtk_StringBuilder_toString(builder);
-    jtk_String_t* entity0 = zen_String_toJTKString(virtualMachine, entity);
-    jtk_String_t* targetFunctionName0 = zen_String_toJTKString(virtualMachine, targetFunctionName);
-
-    zen_Class_t* targetClass = zen_VirtualMachine_getClass(virtualMachine,
-        entity0);
-    zen_Function_t* targetFunction = zen_VirtualMachine_getStaticFunction(virtualMachine,
-        targetClass, targetFunctionName0, targetFunctionDescriptor);
-
-    jtk_String_delete(targetFunctionName0);
-    jtk_String_delete(entity0);
-    jtk_String_delete(targetFunctionDescriptor);
-
-    zen_Interpreter_invokeStaticFunction(virtualMachine->m_interpreter, targetFunction,
-        targetArguments);
-}
-
-/*******************************************************************************
- * VirtualMachine                                                              *
- *******************************************************************************/
-
-/* Constructor */
-
-zen_VirtualMachine_t* zen_VirtualMachine_new(zen_VirtualMachineConfiguration_t* configuration) {
-    jtk_Assert_assertObject(configuration, "The specified virtual machine configuration is null.");
-
-    jtk_ObjectAdapter_t* stringObjectAdapter = jtk_StringObjectAdapter_getInstance();
-    jtk_Iterator_t* entityDirectoryIterator = jtk_ArrayList_getIterator(configuration->m_entityDirectories);
-
-    zen_VirtualMachine_t* virtualMachine = zen_Memory_allocate(zen_VirtualMachine_t, 1);
-    virtualMachine->m_configuration = configuration;
-    virtualMachine->m_entityLoader = zen_EntityLoader_newWithEntityDirectories(entityDirectoryIterator);
-    virtualMachine->m_classLoader = zen_ClassLoader_new(virtualMachine->m_entityLoader);
-    virtualMachine->m_interpreter = zen_Interpreter_new(NULL, virtualMachine, NULL);
-    virtualMachine->m_nativeFunctions = jtk_HashMap_newEx(stringObjectAdapter, NULL,
-        JTK_HASH_MAP_DEFAULT_CAPACITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
-
-    zen_VirtualMachine_loadDefaultLibraries(virtualMachine);
-
-    return virtualMachine;
-}
-
-/* Destructor */
-
-void zen_VirtualMachine_delete(zen_VirtualMachine_t* virtualMachine) {
-    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
-
-    zen_VirtualMachine_unloadLibraries(virtualMachine);
-
-    zen_ClassLoader_delete(virtualMachine->m_classLoader);
-    zen_EntityLoader_delete(virtualMachine->m_entityLoader);
-    jtk_Memory_deallocate(virtualMachine);
-}
-
-/* Context */
-/*
-zen_VirtualMachine_t* zen_VirtualMachine_getContext(zen_VirtualMachine_t* virtualMachine) {
-    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
-
-    return virtualMachine->m_context;
-}
-*/
-
-/* Class */
-
-zen_Class_t* zen_VirtualMachine_getClass(zen_VirtualMachine_t* virtualMachine,
-    jtk_String_t* descriptor) {
-    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
-    jtk_Assert_assertObject(descriptor, "The specified class descriptor is null.");
-
-    zen_Class_t* class0 = zen_ClassLoader_findClass(
-        virtualMachine->m_classLoader, descriptor);
-
-    if (class0 == NULL) {
-        zen_VirtualMachine_raiseClassNotFoundException(virtualMachine, descriptor);
-    }
-
-    return class0;
-}
-
-/* Load Library */
-
-/* If the specified size is negative for a string entry, that particular string
- * is considered as null-terminated. The jtk_CString_getSize() function is invoked
- * against that string to determine its size.
- *
- * If a string is null, then the string literal "null" is appended.
- */
-jtk_String_t* jtk_String_fromJoin(const uint8_t** strings, int32_t* sizes, int32_t count) {
-    jtk_Assert_assertObject(strings, "The specified strings array is null.");
-    jtk_Assert_assertObject(sizes, "The specified sizes array is null.");
-    jtk_Assert_assertTrue(count >= 0, "The specified count is invalid.");
-
-    jtk_String_t* result = NULL;
-
-    if (count == 0) {
-        result = jtk_String_newEx("", 0);
-    }
-    else {
-        jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
-        int32_t i;
-        for (i = 0; i < count; i++) {
-            jtk_StringBuilder_appendEx_z(builder, strings[i], sizes[i]);
-        }
-        result = jtk_StringBuilder_toString(builder);
-        jtk_StringBuilder_delete(builder);
-    }
-
-    return result;
-}
-
-/* If the specified size is negative for a string entry, that particular string
- * is considered as null-terminated. The jtk_CString_getSize() function is invoked
- * against that string to determine its size.
- *
- * If a string is null, then the string literal "null" is appended.
- *
- * The prefix, the suffix, and the separator parameters remain unused if the
- * number strings specified to join is zero.
- */
-jtk_String_t* jtk_String_fromJoinEx(const uint8_t** strings, int32_t* sizes,
-    int32_t count, const uint8_t* prefix, int32_t prefixSize, const uint8_t* suffix,
-    int32_t suffixSize, const uint8_t* separator, int32_t separatorSize) {
-    jtk_Assert_assertObject(strings, "The specified strings array is null.");
-    jtk_Assert_assertObject(sizes, "The specified sizes array is null.");
-    jtk_Assert_assertTrue(count >= 0, "The specified count is invalid.");
-
-    jtk_String_t* result = NULL;
-
-    if (count == 0) {
-        result = jtk_String_newEx("", 0);
-    }
-    else {
-        jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
-        jtk_StringBuilder_appendEx_z(builder, prefix, prefixSize);
-        int32_t i;
-        for (i = 0; i < count; i++) {
-            jtk_StringBuilder_appendEx_z(builder, strings[i], sizes[i]);
-            if (i + 1 < count) {
-                jtk_StringBuilder_appendEx_z(builder, separator, separatorSize);
-            }
-        }
-        jtk_StringBuilder_appendEx_z(builder, suffix, suffixSize);
-        result = jtk_StringBuilder_toString(builder);
-        jtk_StringBuilder_delete(builder);
-    }
-
-    return result;
-}
-
-zen_NativeFunction_t* zen_VirtualMachine_registerNativeFunction(
-    zen_VirtualMachine_t* virtualMachine, const uint8_t* className,
-    int32_t classNameSize, const uint8_t* functionName, int32_t functionNameSize,
-    const uint8_t* functionDescriptor, int32_t functionDescriptorSize,
-    zen_NativeFunction_InvokeFunction_t function) {
-    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
-    jtk_Assert_assertObject(className, "The specified class name is null.");
-    jtk_Assert_assertTrue(classNameSize > 0, "The specified class name size is invalid.");
-    jtk_Assert_assertObject(functionName, "The specified function name is null.");
-    jtk_Assert_assertTrue(functionNameSize > 0, "The specified function name size is invalid.");
-    jtk_Assert_assertObject(functionDescriptor, "The specified function descriptor is null.");
-    jtk_Assert_assertTrue(functionDescriptorSize > 0, "The specified function descriptor size is invalid.");
-
-    zen_NativeFunction_t* nativeFunction = zen_NativeFunction_new(function);
-    const uint8_t* strings[] = {
-        className,
-        functionName,
-        functionDescriptor
-    };
-    int32_t sizes[] = {
-        classNameSize,
-        functionNameSize,
-        functionDescriptorSize
-    };
-    jtk_String_t* key = jtk_String_fromJoin(strings, sizes, 3);
-    jtk_HashMap_put(virtualMachine->m_nativeFunctions, key, nativeFunction);
-
-    return nativeFunction;
-}
+// Libraries
 
 void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachine) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
@@ -608,7 +424,173 @@ void zen_VirtualMachine_unloadLibraries(zen_VirtualMachine_t* virtualMachine) {
     }
 }
 
-/* Raise Exception */
+// Native Function
+
+zen_NativeFunction_t* zen_VirtualMachine_getNativeFunction(
+    zen_VirtualMachine_t* virtualMachine, jtk_String_t* className,
+    jtk_String_t* functionName, jtk_String_t* functionDescriptor) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+    jtk_Assert_assertObject(className, "The specified class name is null.");
+    jtk_Assert_assertObject(functionName, "The specified function name is null.");
+    jtk_Assert_assertObject(functionDescriptor, "The specified function descriptor is null.");
+
+    const uint8_t* strings[] = {
+        className->m_value,
+        functionName->m_value,
+        functionDescriptor->m_value
+    };
+    int32_t sizes[] = {
+        className->m_size,
+        functionName->m_size,
+        functionDescriptor->m_size
+    };
+    jtk_String_t* key = jtk_String_fromJoin(strings, sizes, 3);
+    zen_NativeFunction_t* result = (zen_NativeFunction_t*)jtk_HashMap_getValue(
+        virtualMachine->m_nativeFunctions, key);
+    jtk_String_delete(key);
+
+    return result;
+}
+
+zen_NativeFunction_t* zen_VirtualMachine_registerNativeFunction(
+    zen_VirtualMachine_t* virtualMachine, const uint8_t* className,
+    int32_t classNameSize, const uint8_t* functionName, int32_t functionNameSize,
+    const uint8_t* functionDescriptor, int32_t functionDescriptorSize,
+    zen_NativeFunction_InvokeFunction_t function) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+    jtk_Assert_assertObject(className, "The specified class name is null.");
+    jtk_Assert_assertTrue(classNameSize > 0, "The specified class name size is invalid.");
+    jtk_Assert_assertObject(functionName, "The specified function name is null.");
+    jtk_Assert_assertTrue(functionNameSize > 0, "The specified function name size is invalid.");
+    jtk_Assert_assertObject(functionDescriptor, "The specified function descriptor is null.");
+    jtk_Assert_assertTrue(functionDescriptorSize > 0, "The specified function descriptor size is invalid.");
+
+    zen_NativeFunction_t* nativeFunction = zen_NativeFunction_new(function);
+    const uint8_t* strings[] = {
+        className,
+        functionName,
+        functionDescriptor
+    };
+    int32_t sizes[] = {
+        classNameSize,
+        functionNameSize,
+        functionDescriptorSize
+    };
+    jtk_String_t* key = jtk_String_fromJoin(strings, sizes, 3);
+    jtk_HashMap_put(virtualMachine->m_nativeFunctions, key, nativeFunction);
+
+    return nativeFunction;
+}
+
+// Object
+
+zen_Object_t* zen_VirtualMachine_allocateObject(zen_VirtualMachine_t* virtualMachine,
+    zen_Class_t* class0) {
+    /* The allocation should be clean such that all the bits are initialized
+     * to 0.
+     */
+    zen_Object_t* object = calloc(ZEN_OBJECT_HEADER_SIZE + class0->m_memoryRequirement, sizeof (uint8_t));
+    *((uintptr_t*)object + ZEN_OBJECT_HEADER_CLASS_OFFSET) = (uintptr_t)class0;
+    *((uint32_t*)object + ZEN_OBJECT_HEADER_HASH_CODE_OFFSET) = zen_VirtualMachine_identityHash(object);
+
+    return object;
+}
+
+zen_Object_t* zen_VirtualMachine_makeObjectEx(zen_VirtualMachine_t* virtualMachine,
+    zen_Function_t* constructor, jtk_VariableArguments_t arguments) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+    jtk_Assert_assertObject(constructor, "The specified constructor is null.");
+
+    zen_Class_t* class0 = constructor->m_class;
+    /* The allocation should be clean such that all the bits are initialized
+     * to 0.
+     */
+    zen_Object_t* object = calloc(ZEN_OBJECT_HEADER_SIZE + class0->m_memoryRequirement, sizeof (uint8_t));
+    *((uintptr_t*)object + ZEN_OBJECT_HEADER_CLASS_OFFSET) = (uintptr_t)class0;
+    *((uint32_t*)object + ZEN_OBJECT_HEADER_HASH_CODE_OFFSET) = zen_VirtualMachine_identityHash(object);
+
+    zen_Interpreter_invokeConstructor(virtualMachine->m_interpreter, object,
+        constructor, arguments);
+
+    /* Chances are an exception may have been thrown in the constructor. Further,
+     * a reference to the object may be stored somewhere by the constructor.
+     * Therefore, the object should not be immediately deallocated. Let the garbage
+     * collector do its job.
+     */
+
+    return object;
+}
+
+zen_Object_t* zen_VirtualMachine_makeObject(zen_VirtualMachine_t* virtualMachine,
+    zen_Function_t* constructor, ...) {
+    jtk_VariableArguments_t arguments;
+    jtk_VariableArguments_start(arguments, constructor);
+    zen_Object_t* result = zen_VirtualMachine_makeObjectEx(virtualMachine,
+        constructor, arguments);
+    jtk_VariableArguments_end(arguments);
+    return result;
+}
+
+zen_Object_t* zen_VirtualMachine_newObjectEx(zen_VirtualMachine_t* virtualMachine,
+    const uint8_t* classDescriptor, int32_t classDescriptorSize,
+    const uint8_t* constructorDescriptor, int32_t constructorDescriptorSize,
+    jtk_VariableArguments_t arguments) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+    jtk_Assert_assertObject(classDescriptor, "The specified class descriptor is null.");
+    jtk_Assert_assertObject(constructorDescriptor, "The specified constructor descriptor is null.");
+
+    jtk_String_t* classDescriptor0 = jtk_String_newEx(classDescriptor, classDescriptorSize);
+    zen_Class_t* class0 = zen_VirtualMachine_getClass(virtualMachine, classDescriptor0);
+    jtk_String_delete(classDescriptor0);
+
+    zen_Object_t* result = NULL;
+    if (zen_VirtualMachine_isClear(virtualMachine)) {
+        jtk_String_t* constructorDescriptor0 = jtk_String_newEx(constructorDescriptor, constructorDescriptorSize);
+        zen_Function_t* constructor = zen_Class_getConstructor(class0, constructorDescriptor0);
+        if (zen_VirtualMachine_isClear(virtualMachine)) {
+
+            result = zen_VirtualMachine_makeObjectEx(virtualMachine, constructor, arguments);
+        }
+    }
+
+    return result;
+}
+
+zen_Object_t* zen_VirtualMachine_newObject(zen_VirtualMachine_t* virtualMachine,
+    const uint8_t* classDescriptor, int32_t classDescriptorSize,
+    const uint8_t* constructorDescriptor, int32_t constructorDescriptorSize, ...) {
+    jtk_VariableArguments_t arguments;
+    jtk_VariableArguments_start(arguments, constructorDescriptorSize);
+    zen_Object_t* object = zen_VirtualMachine_newObjectEx(virtualMachine,
+        classDescriptor, classDescriptorSize, constructorDescriptor,
+        constructorDescriptorSize, arguments);
+    jtk_VariableArguments_end(arguments);
+    return object;
+}
+
+// Raise Exception
+
+void zen_VirtualMachine_raiseException(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* exception) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+    jtk_Assert_assertObject(exception, "The specified exception is null.");
+
+    printf("[debug] An exception was raised.\n");
+}
+
+void zen_VirtualMachine_raiseUnknownFieldException(zen_VirtualMachine_t* virtualMachine,
+    const uint8_t* fieldDescriptor, int32_t fieldDescriptorSize) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+    jtk_Assert_assertObject(fieldDescriptor, "The specified field descriptor is null.");
+
+    printf("[error] UnknownFieldException was thrown!\n");
+}
+
+void zen_VirtualMachine_raiseNullReferenceException(zen_VirtualMachine_t* virtualMachine) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+
+    printf("[error] NullReferenceException was thrown!\n");
+}
 
 void zen_VirtualMachine_raiseClassNotFoundException(zen_VirtualMachine_t* virtualMachine,
     const uint8_t* reason) {
@@ -665,87 +647,7 @@ void zen_VirtualMachine_raiseFunctionNotFoundException(zen_VirtualMachine_t* vir
     // zen_VirtualMachine_raiseException(virtualMachine, exception);
 }
 
-/* Clear */
-
-bool zen_VirtualMachine_isClear(zen_VirtualMachine_t* virtualMachine) {
-    zen_ExceptionManager_t* manager = zen_VirtualMachine_getExceptionManager(virtualMachine);
-    return zen_ExceptionManager_isClear(manager);
-}
-
-/* Entity Loader */
-
-zen_EntityLoader_t* zen_VirtualMachine_getEntityLoader(
-    zen_VirtualMachine_t* virtualMachine) {
-    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
-
-    return virtualMachine->m_entityLoader;
-}
-
-/* Exception Manager */
-
-zen_ExceptionManager_t* zen_VirtualMachine_getExceptionManager(zen_VirtualMachine_t* virtualMachine) {
-    return NULL;
-}
-
-/* Handle Exception */
-
-void zen_VirtualMachine_handleException(zen_VirtualMachine_t* virtualMachine) {
-}
-
-/* Native Function */
-
-zen_NativeFunction_t* zen_VirtualMachine_getNativeFunction(
-    zen_VirtualMachine_t* virtualMachine, jtk_String_t* className,
-    jtk_String_t* functionName, jtk_String_t* functionDescriptor) {
-    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
-    jtk_Assert_assertObject(className, "The specified class name is null.");
-    jtk_Assert_assertObject(functionName, "The specified function name is null.");
-    jtk_Assert_assertObject(functionDescriptor, "The specified function descriptor is null.");
-
-    const uint8_t* strings[] = {
-        className->m_value,
-        functionName->m_value,
-        functionDescriptor->m_value
-    };
-    int32_t sizes[] = {
-        className->m_size,
-        functionName->m_size,
-        functionDescriptor->m_size
-    };
-    jtk_String_t* key = jtk_String_fromJoin(strings, sizes, 3);
-    zen_NativeFunction_t* result = (zen_NativeFunction_t*)jtk_HashMap_getValue(
-        virtualMachine->m_nativeFunctions, key);
-    jtk_String_delete(key);
-
-    return result;
-}
-
-/* Raise Exception */
-
-void zen_VirtualMachine_raiseException(zen_VirtualMachine_t* virtualMachine,
-    zen_Object_t* exception) {
-    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
-    jtk_Assert_assertObject(exception, "The specified exception is null.");
-
-    zen_ExceptionManager_t* manager = zen_VirtualMachine_getExceptionManager(virtualMachine);
-    zen_ExceptionManager_raiseException(manager, exception);
-}
-
-void zen_VirtualMachine_raiseUnknownFieldException(zen_VirtualMachine_t* virtualMachine,
-    const uint8_t* fieldDescriptor, int32_t fieldDescriptorSize) {
-    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
-    jtk_Assert_assertObject(fieldDescriptor, "The specified field descriptor is null.");
-
-    printf("[error] UnknownFieldException was thrown!\n");
-}
-
-void zen_VirtualMachine_raiseNullReferenceException(zen_VirtualMachine_t* virtualMachine) {
-    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
-
-    printf("[error] NullReferenceException was thrown!\n");
-}
-
-/* Static Function */
+// Static Function
 
 zen_Function_t* zen_VirtualMachine_getStaticFunction(zen_VirtualMachine_t* virtualMachine,
     zen_Class_t* handle, jtk_String_t* identifier, jtk_String_t* signature) {
@@ -761,6 +663,8 @@ zen_Function_t* zen_VirtualMachine_getStaticFunction(zen_VirtualMachine_t* virtu
     return function;
 }
 
+// Start
+
 void zen_VirtualMachine_start(zen_VirtualMachine_t* virtualMachine,
     zen_Function_t* function, ...) {
     jtk_VariableArguments_t variableArguments;
@@ -772,7 +676,7 @@ void zen_VirtualMachine_start(zen_VirtualMachine_t* virtualMachine,
     jtk_VariableArguments_end(variableArguments);
 }
 
-/* String */
+// String
 
 zen_Object_t* zen_VirtualMachine_getEmptyString(zen_VirtualMachine_t* virtualMachine) {
     return zen_VirtualMachine_newStringFromUtf8(virtualMachine, NULL, 0);
@@ -795,7 +699,7 @@ zen_Object_t* zen_VirtualMachine_newString(zen_VirtualMachine_t* virtualMachine,
     return NULL;
 }
 
-/* Shutdown */
+// Shutdown
 
 void zen_VirtualMachine_shutDown(zen_VirtualMachine_t* virtualMachine) {
     /* In C, the process is terminated if the main thread exits. Therefore, we
@@ -815,11 +719,13 @@ void zen_VirtualMachine_shutDown(zen_VirtualMachine_t* virtualMachine) {
     zen_VirtualMachine_tearDown(virtualMachine);
 }
 
-void zen_VirtualMachine_waitForThreads(zen_VirtualMachine_t* virtualMachine) {
-}
-
 void zen_VirtualMachine_notifyShutDown(zen_VirtualMachine_t* virtualMachine) {
 }
 
 void zen_VirtualMachine_tearDown(zen_VirtualMachine_t* virtualMachine) {
+}
+
+// Thread
+
+void zen_VirtualMachine_waitForThreads(zen_VirtualMachine_t* virtualMachine) {
 }

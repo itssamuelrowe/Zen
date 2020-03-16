@@ -55,19 +55,31 @@ struct zen_VirtualMachine_t {
  */
 typedef struct zen_VirtualMachine_t zen_VirtualMachine_t;
 
-/* Constructor */
+// Identity Hash
+
+int32_t zen_VirtualMachine_identityHash(zen_Object_t* object);
+
+// Constructor
 
 /**
  * @memberof VirtualMachine
  */
 zen_VirtualMachine_t* zen_VirtualMachine_new(zen_VirtualMachineConfiguration_t* configuration);
 
-/* Destructor */
+// Destructor
 
 /**
  * @memberof VirtualMachine
  */
 void zen_VirtualMachine_delete(zen_VirtualMachine_t* virtualMachine);
+
+// Array
+
+zen_ObjectArray_t* zen_VirtualMachine_newObjectArray(zen_VirtualMachine_t* virtualMachine,
+    zen_Class_t* class0, int32_t size);
+
+zen_ObjectArray_t* zen_VirtualMachine_newByteArray(
+    zen_VirtualMachine_t* virtualMachine, int8_t* bytes, int32_t size);
 
 /* Context */
 
@@ -81,46 +93,51 @@ void zen_VirtualMachine_delete(zen_VirtualMachine_t* virtualMachine);
  */
 // zen_VirtualMachineContext_t* zen_VirtualMachine_getContext(zen_VirtualMachine_t* virtualMachine);
 
-
-/* Class */
+// Class
 
 zen_Class_t* zen_VirtualMachine_getClass(zen_VirtualMachine_t* context, jtk_String_t* descriptor);
 zen_Class_t* zen_VirtualMachine_getClassEx(zen_VirtualMachine_t* context, const uint8_t* descriptor, int32_t size);
 
 /* Clear */
 
-bool zen_VirtualMachine_isClear(zen_VirtualMachine_t* context);
+bool zen_VirtualMachine_isClear(zen_VirtualMachine_t* virtualMachine);
 
-/* Handle Exception */
+// Entity Loader
 
-void zen_VirtualMachine_handleException(zen_VirtualMachine_t* context);
+zen_EntityLoader_t* zen_VirtualMachine_getEntityLoader(
+    zen_VirtualMachine_t* virtualMachine);
 
-/* New Object Array */
+// Field
 
-zen_ObjectArray_t* zen_VirtualMachine_newObjectArray(zen_VirtualMachine_t* context, zen_Class_t* class0, int32_t size);
+void zen_VirtualMachine_setObjectField(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* object, const uint8_t* fieldDescriptor, int32_t fieldDescriptorSize,
+    zen_Object_t* value);
 
-/* Static Function */
+zen_Object_t* zen_VirtualMachine_getObjectField(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* object, uint8_t* fieldName, int32_t fieldNameSize);
 
-zen_Function_t* zen_VirtualMachine_getStaticFunction(zen_VirtualMachine_t* context, zen_Class_t* handle, jtk_String_t* identifier, jtk_String_t* signature);
-void zen_VirtualMachine_invokeStaticFunction(zen_VirtualMachine_t* context, zen_Function_t* function, ...);
+// Libraries
 
-/* String */
+void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachine);
 
-zen_Object_t* zen_VirtualMachine_newStringFromUtf8(zen_VirtualMachine_t* context, const uint8_t* string, int32_t length);
+void zen_VirtualMachine_unloadLibraries(zen_VirtualMachine_t* virtualMachine);
 
-zen_EntityLoader_t* zen_VirtualMachine_getEntityLoader(zen_VirtualMachine_t* virtualMachine);
-zen_Object_t* zen_VirtualMachine_newString(zen_VirtualMachine_t* virtualMachine,
-    const uint8_t* string);
+// Native Function
 
-/* Exception Manager */
+zen_NativeFunction_t* zen_VirtualMachine_registerNativeFunction(
+    zen_VirtualMachine_t* virtualMachine, const uint8_t* className,
+    int32_t classNameSize, const uint8_t* functionName, int32_t functionNameSize,
+    const uint8_t* functionDescriptor, int32_t functionDescriptorSize,
+    zen_NativeFunction_InvokeFunction_t function);
 
-zen_ExceptionManager_t* zen_VirtualMachine_getExceptionManager(zen_VirtualMachine_t* virtualMachine);
+zen_NativeFunction_t* zen_VirtualMachine_getNativeFunction(
+    zen_VirtualMachine_t* virtualMachine, jtk_String_t* className,
+    jtk_String_t* functionName, jtk_String_t* functionDescriptor);
 
-void zen_VirtualMachine_raiseException(zen_VirtualMachine_t* virtualMachine,
-    zen_Object_t* exception);
+// Object
 
-/* TODO: Move this to Object.c? */
-int32_t zen_VirtualMachine_identityHash(zen_Object_t* object);
+zen_Object_t* zen_VirtualMachine_allocateObject(zen_VirtualMachine_t* virtualMachine,
+    zen_Class_t* class0);
 
 zen_Object_t* zen_VirtualMachine_makeObjectEx(zen_VirtualMachine_t* virtualMachine,
     zen_Function_t* constructor, jtk_VariableArguments_t arguments);
@@ -137,7 +154,49 @@ zen_Object_t* zen_VirtualMachine_newObject(zen_VirtualMachine_t* virtualMachine,
     const uint8_t* classDescriptor, int32_t classDescriptorSize,
     const uint8_t* constructorDescriptor, int32_t constructorDescriptorSize, ...);
 
+// Raise Exception
+
+void zen_VirtualMachine_raiseException(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* exception);
+
+void zen_VirtualMachine_raiseClassNotFoundException(zen_VirtualMachine_t* virtualMachine,
+    const uint8_t* reason);
+
 void zen_VirtualMachine_raiseFunctionNotFoundException(zen_VirtualMachine_t* virtualMachine,
     const uint8_t* identifier,  const uint8_t* reason);
+
+void zen_VirtualMachine_raiseUnknownFieldException(zen_VirtualMachine_t* virtualMachine,
+    const uint8_t* fieldDescriptor, int32_t fieldDescriptorSize);
+
+void zen_VirtualMachine_raiseNullReferenceException(zen_VirtualMachine_t* virtualMachine);
+
+// Shutdown
+
+void zen_VirtualMachine_shutDown(zen_VirtualMachine_t* virtualMachine);
+void zen_VirtualMachine_notifyShutDown(zen_VirtualMachine_t* virtualMachine);
+void zen_VirtualMachine_tearDown(zen_VirtualMachine_t* virtualMachine);
+
+// Start
+
+void zen_VirtualMachine_start(zen_VirtualMachine_t* virtualMachine,
+    zen_Function_t* function, ...);
+
+// Static Function
+
+zen_Function_t* zen_VirtualMachine_getStaticFunction(zen_VirtualMachine_t* virtualMachine,
+    zen_Class_t* handle, jtk_String_t* identifier, jtk_String_t* signature);
+void zen_VirtualMachine_invokeStaticFunction(zen_VirtualMachine_t* context, zen_Function_t* function, ...);
+
+// String
+
+zen_Object_t* zen_VirtualMachine_getEmptyString(zen_VirtualMachine_t* virtualMachine);
+zen_Object_t* zen_VirtualMachine_newStringFromUtf8(zen_VirtualMachine_t* virtualMachine,
+    const uint8_t* string, int32_t size);
+zen_Object_t* zen_VirtualMachine_newString(zen_VirtualMachine_t* virtualMachine,
+    const uint8_t* string);
+
+// Thread
+
+void zen_VirtualMachine_waitForThreads(zen_VirtualMachine_t* virtualMachine);
 
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_VIRTUAL_MACHINE_H */

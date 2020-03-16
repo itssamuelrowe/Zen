@@ -121,7 +121,8 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
          * caught, the exception handler processes the exception. Usually,
          * exception handlers write to a log file or print to the console.
          */
-        zen_VirtualMachine_handleException(virtualMachine);
+        // zen_VirtualMachine_handleException(virtualMachine);
+        printf("[debug] An exception was thrown.\n");
     }
 
     /* Wait for other threds to complete and tear down the virtual machine. */
