@@ -474,6 +474,7 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
      * first entry. Therefore, subtract the constant pool entry count by one.
      */
     zen_BinaryEntityBuilder_writeConstantPoolHeader(generator->m_builder, entryCount - 1);
+
     int32_t i;
     for (i = 1; i < entryCount; i++) {
         zen_ConstantPoolEntry_t* entry = zen_ConstantPoolBuilder_getEntry(generator->m_constantPoolBuilder, i);
@@ -713,12 +714,25 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
         }
     }
 
-    FILE* fp = fopen("/mnt/g/project/pulsar/build/Test.feb", "w+");
+    zen_ConstantPoolUtf8_t* name = zen_ConstantPoolBuilder_getUtf8Entry(generator->m_constantPoolBuilder, entity->m_reference);
+    jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+    jtk_StringBuilder_appendEx_z(builder, name->m_bytes, name->m_length);
+    jtk_StringBuilder_appendEx_z(builder, ".feb", 4);
+    uint8_t* path = jtk_StringBuilder_toCString(builder);
+    jtk_StringBuilder_delete(builder);
+    
+    FILE* fp = fopen(path, "w+");
     if (fp != NULL) {
         zen_DataChannel_t* channel = jtk_ArrayList_getValue(generator->m_builder->m_channels, 0);
         fwrite(channel->m_bytes, channel->m_index, 1, fp);
         fclose(fp);
+
+        fprintf(stderr, "[info] Successfully generated output file '%s'.\n", path);
     }
+    else {
+        fprintf(stderr, "[error] Failed to create output file '%s'.\n", path);
+    }
+    jtk_CString_delete(path);
 }
 
 // importDeclaration
