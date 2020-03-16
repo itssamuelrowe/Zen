@@ -49,6 +49,8 @@ set (
 set (
     ZEN_COMPILER_SOURCE
 
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/Compiler.c
+
     # Abstract Syntax Tree
 
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/ast/AstAnnotation.c

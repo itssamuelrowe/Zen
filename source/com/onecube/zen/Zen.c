@@ -21,8 +21,10 @@
 #include <jtk/fs/FileInputStream.h>
 #include <jtk/io/BufferedInputStream.h>
 #include <jtk/io/InputStream.h>
+#include <jtk/core/String.h>
 
 #include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/compiler/Compiler.h>
 #include <com/onecube/zen/compiler/lexer/Lexer.h>
 #include <com/onecube/zen/compiler/lexer/LexerError.h>
 #include <com/onecube/zen/compiler/lexer/TokenStream.h>
@@ -152,33 +154,30 @@ void printLexicalErrors(jtk_ArrayList_t* errors) {
     }
 }
 
-int32_t main(int32_t length, char** arguments) {
-    // jtk_Assert_assertTrue(zen_Instruction_verify(), "The instruction set is invalid.");
-
-    jtk_ArrayList_t* inputFiles = jtk_ArrayList_new();
-    bool internalDumpTokens = false;
-    bool internalDumpNodes = false;
-    bool internalFootprint = false;
+bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t length) {
+    jtk_Assert_assertObject(compiler, "The specified compiler is null.");
 
     int32_t i;
     for (i = 1; i < length; i++) {
         if (arguments[i][0] == '-') {
             if (strcmp(arguments[i], "--internal-dump-tokens") == 0) {
-                internalDumpTokens = true;
+                compiler->m_dumpTokens = true;
             }
             else if (strcmp(arguments[i], "--internal-dump-nodes") == 0) {
-                internalDumpNodes = true;
+                compiler->m_dumpNodes = true;
             }
             else if (strcmp(arguments[i], "--internal-footprint") == 0) {
-                internalFootprint = true;
+                compiler->m_footprint = true;
             }
         }
         else {
-            jtk_ArrayList_add(inputFiles, arguments[i]);
+            // jtk_String_t* path = jtk_String_new(arguments[i]);
+            // jtk_ArrayList_add(compiler->m_inputFiles, path);
+            jtk_ArrayList_add(compiler->m_inputFiles, arguments[i]);
         }
     }
 
-    int32_t size = jtk_ArrayList_getSize(inputFiles);
+    int32_t size = jtk_ArrayList_getSize(compiler->m_inputFiles);
     if (size == 0) {
         fprintf(stderr, "[error] Please specify input files.\n");
     }
@@ -186,8 +185,12 @@ int32_t main(int32_t length, char** arguments) {
         int32_t successful = 0;
         int32_t failure = 0;
         for (i = 0; i < size; i++) {
-            const char* path = (const char*)jtk_ArrayList_getValue(inputFiles, i);
+            compiler->m_currentFileIndex = i;
+
+            // jtk_String_t* path = (jtk_String_t*)jtk_ArrayList_getValue(compiler->m_inputFiles, i);
+            const uint8_t* path = (const uint8_t*)jtk_ArrayList_getValue(compiler->m_inputFiles, i);
             if (!jtk_PathHelper_exists(path)) {
+                // fprintf(stderr, "[error] Path '%.*s' does not exist.", path->m_size, path->m_value);
                 fprintf(stderr, "[error] Path '%s' does not exist.", path);
             }
             else {
@@ -198,7 +201,7 @@ int32_t main(int32_t length, char** arguments) {
                 zen_Lexer_t* lexer = zen_Lexer_new(errorHandler, stream);
                 zen_TokenStream_t* tokens = zen_TokenStream_new(lexer, ZEN_TOKEN_CHANNEL_DEFAULT);
 
-                if (internalDumpTokens) {
+                if (compiler->m_dumpTokens) {
                     zen_TokenStream_fill(tokens);
                     printTokens(tokens);
                 }
@@ -212,7 +215,7 @@ int32_t main(int32_t length, char** arguments) {
                     zen_Parser_compilationUnit(parser, compilationUnit);
                     printf("[debug] The syntatical analysis phase is complete.\n");
 
-                    if (internalDumpNodes) {
+                    if (compiler->m_dumpNodes) {
                         zen_ASTPrinter_t* astPrinter = zen_ASTPrinter_new();
                         zen_ASTListener_t* astPrinterASTListener = zen_ASTPrinter_getASTListener(astPrinter);
                         zen_ASTWalker_walk(astPrinterASTListener, compilationUnit);
@@ -272,12 +275,22 @@ int32_t main(int32_t length, char** arguments) {
         }
     }
 
-    jtk_ArrayList_delete(inputFiles);
-
-    if (internalFootprint) {
+    if (compiler->m_footprint) {
         int32_t footprint = zen_Memory_getFootprint();
         printf("Memory Footprint = %.2f KB\n", footprint / 1024.0f);
     }
+}
 
-    return 0;
+bool zen_Compiler_compile(zen_Compiler_t* compiler) {
+    return zen_Compiler_compileEx(compiler, NULL, -1);
+}
+
+int32_t main(int32_t length, char** arguments) {
+    // jtk_Assert_assertTrue(zen_Instruction_verify(), "The instruction set is invalid.");
+
+    zen_Compiler_t* compiler = zen_Compiler_new();
+    bool result = zen_Compiler_compileEx(compiler, arguments, length);
+    zen_Compiler_delete(compiler);
+
+    return result? 0 : 1;
 }

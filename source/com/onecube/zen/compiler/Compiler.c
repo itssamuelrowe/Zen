@@ -16,39 +16,30 @@
 
 // Monday, March 16, 2020
 
-#ifndef COM_ONECUBE_ZEN_COMPILER_COMPILER_H
-#define COM_ONECUBE_ZEN_COMPILER_COMPILER_H
-
-#include <com/onecube/zen/Configuration.h>
-#include <jtk/collection/list/ArrayList.h>
+#include <com/onecube/zen/compiler/Compiler.h>
 
 /******************************************************************************
  * Compiler                                                                   *
  ******************************************************************************/
 
-/**
- * @author Samuel Rowe
- * @since zen 1.0
- */
-struct zen_Compiler_t {
-    bool m_dumpTokens;
-    bool m_dumpNodes;
-    bool m_footprint;
-    jtk_ArrayList_t* m_inputFiles;
-    int32_t m_currentFileIndex;
-};
-
-/**
- * @memberof Compiler
- */
-typedef struct zen_Compiler_t zen_Compiler_t;
-
 // Constructor
 
-zen_Compiler_t* zen_Compiler_new();
+zen_Compiler_t* zen_Compiler_new() {
+    zen_Compiler_t* compiler = jtk_Memory_allocate(zen_Compiler_t, 1);
+    compiler->m_dumpTokens = false;
+    compiler->m_dumpNodes = false;
+    compiler->m_footprint = false;
+    compiler->m_inputFiles = jtk_ArrayList_new();
+    compiler->m_currentFileIndex = -1;
+
+    return compiler;
+}
 
 // Destructor
 
-void zen_Compiler_delete(zen_Compiler_t* compiler);
+void zen_Compiler_delete(zen_Compiler_t* compiler) {
+    jtk_Assert_assertObject(compiler, "The specified compiler is null.");
 
-#endif /* COM_ONECUBE_ZEN_COMPILER_COMPILER_H */
+    jtk_ArrayList_delete(compiler->m_inputFiles);
+    jtk_Memory_deallocate(compiler);
+}
