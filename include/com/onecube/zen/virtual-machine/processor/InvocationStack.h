@@ -61,15 +61,11 @@ zen_InvocationStack_t* zen_InvocationStack_new();
  */
 void zen_InvocationStack_delete(zen_InvocationStack_t* stack);
 
-/* Current Stack Frame */
-
-zen_StackFrame_t* zen_InvocationStack_getCurrentStackFrame(zen_InvocationStack_t* stack);
-
 /* Iterator */
 
 jtk_Iterator_t* zen_InvocationStack_getIterator(zen_InvocationStack_t* invocationStack);
 
-/* Push/Pop Stack Frame */
+/* Stack Frame */
 
 /**
  * @memberof InvocationStack
@@ -81,5 +77,15 @@ void zen_InvocationStack_pushStackFrame(zen_InvocationStack_t* invocationStack,
  * @memberof InvocationStack
  */
 zen_StackFrame_t* zen_InvocationStack_popStackFrame(zen_InvocationStack_t* stack);
+
+/**
+ * @memberof InvocationStack
+ */
+zen_StackFrame_t* zen_InvocationStack_peekStackFrame(zen_InvocationStack_t* stack);
+
+/**
+ * @memberof InvocationStack
+ */
+zen_StackFrame_t* zen_InvocationStack_getCurrentStackFrame(zen_InvocationStack_t* stack);
 
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_PROCESSOR_INVOCATION_STACK_H */

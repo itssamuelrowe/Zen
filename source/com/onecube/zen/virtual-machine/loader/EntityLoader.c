@@ -18,8 +18,10 @@
 
 #include <jtk/collection/Iterator.h>
 #include <jtk/collection/array/Array.h>
+#include <jtk/collection/array/Arrays.h>
 #include <jtk/collection/list/DoublyLinkedList.h>
 #include <jtk/core/String.h>
+#include <jtk/core/StringObjectAdapter.h>
 #include <jtk/fs/Path.h>
 #include <jtk/fs/PathHandle.h>
 #include <jtk/fs/FileInputStream.h>
@@ -47,7 +49,7 @@ zen_EntityLoader_t* zen_EntityLoader_new() {
 }
 
 zen_EntityLoader_t* zen_EntityLoader_newWithEntityDirectories(jtk_Iterator_t* entityDirectoryIterator) {
-    jtk_ObjectAdapter_t* stringObjectAdapter = jtk_StringObjectAdapter_getInstance();
+    // jtk_ObjectAdapter_t* stringObjectAdapter = jtk_StringObjectAdapter_getInstance();
 
     zen_EntityLoader_t* loader = zen_EntityLoader_new();
     while (jtk_Iterator_hasNext(entityDirectoryIterator)) {
@@ -113,7 +115,7 @@ bool zen_EntityLoader_addDirectory_s(zen_EntityLoader_t* loader, jtk_String_t* d
     jtk_Assert_assertObject(loader, "The specified entity loader is null.");
     jtk_Assert_assertObject(directory, "The specified directory is null.");
 
-    jtk_Path_t* path = jtk_Path_newFromString_s(directory);
+    jtk_Path_t* path = jtk_Path_newFromStringEx(directory->m_value, directory->m_size);
     jtk_DoublyLinkedList_add(loader->m_directories, path);
 
     // bool result = jtk_Path_isDirectory(path);
@@ -236,8 +238,37 @@ zen_EntityFile_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader,
 
 // Load Entity From File
 
-// BUG: You cannot copy an array of bytes with the general purpose Array.
-jtk_Array_t* jtk_InputStreamHelper_toArray(jtk_InputStream_t* stream) {
+// Tuesday, March 17, 2020
+
+/**
+ * @author Samuel Rowe
+ * @since JTK 1.1
+ */
+struct jtk_ByteArray_t {
+    int8_t* m_values;
+    int32_t m_size;
+};
+
+typedef struct jtk_ByteArray_t jtk_ByteArray_t;
+
+jtk_ByteArray_t* jtk_ByteArray_fromRawArray(int8_t* array, int32_t size) {
+    jtk_Assert_assertObject(array, "The specified array is null.");
+
+    jtk_ByteArray_t* result = jtk_Memory_allocate(jtk_ByteArray_t, 1);
+    result->m_values = jtk_Arrays_clone_b(array, size);
+    result->m_size = size;
+
+    return result;
+}
+
+void jtk_ByteArray_delete(jtk_ByteArray_t* array) {
+    jtk_Assert_assertObject(array, "The specified byte array is null.");
+    
+    jtk_Memory_deallocate(array->m_values);
+    jtk_Memory_deallocate(array);
+}
+
+jtk_ByteArray_t* jtk_InputStreamHelper_toArray(jtk_InputStream_t* stream) {
     uint8_t* result = jtk_Memory_allocate(uint8_t, 1024);
     int32_t size = 1024;
     int32_t index = 0;
@@ -260,7 +291,7 @@ jtk_Array_t* jtk_InputStreamHelper_toArray(jtk_InputStream_t* stream) {
             size = newSize;
         }
     }
-    jtk_Array_t* array = (index == 0)? NULL : jtk_Array_newFromRawArray(result, index);
+    jtk_Array_t* array = (index == 0)? NULL : jtk_ByteArray_fromRawArray(result, index);
     
     jtk_Memory_deallocate(result);
     
@@ -279,14 +310,14 @@ zen_EntityFile_t* zen_EntityLoader_loadEntityFromHandle(zen_EntityLoader_t* load
             fileInputStream->m_inputStream, ZEN_ENTITY_LOADER_BUFFER_SIZE);
         jtk_InputStream_t* inputStream = bufferedInputStream->m_inputStream;
 
-        jtk_Array_t* input = jtk_InputStreamHelper_toArray(inputStream);
+        jtk_ByteArray_t* input = jtk_InputStreamHelper_toArray(inputStream);
 
         zen_BinaryEntityParser_t* parser = zen_BinaryEntityParser_new(
             loader->m_attributeParseRules, input->m_values, input->m_size);
         result = zen_BinaryEntityParser_parse(parser, inputStream);
 
         zen_BinaryEntityParser_delete(parser);
-        jtk_Array_delete(input);
+        jtk_ByteArray_delete(input);
         jtk_InputStream_destroy(inputStream);
     }
     else {

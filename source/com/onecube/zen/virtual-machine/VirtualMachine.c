@@ -490,8 +490,11 @@ zen_Object_t* zen_VirtualMachine_allocateObject(zen_VirtualMachine_t* virtualMac
      * to 0.
      */
     zen_Object_t* object = calloc(ZEN_OBJECT_HEADER_SIZE + class0->m_memoryRequirement, sizeof (uint8_t));
-    *((uintptr_t*)object + ZEN_OBJECT_HEADER_CLASS_OFFSET) = (uintptr_t)class0;
-    *((uint32_t*)object + ZEN_OBJECT_HEADER_HASH_CODE_OFFSET) = zen_VirtualMachine_identityHash(object);
+    uintptr_t* classField = (uintptr_t*)((uint8_t*)object + ZEN_OBJECT_HEADER_CLASS_OFFSET);
+    int32_t* hashField = (int32_t*)((uint8_t*)object + ZEN_OBJECT_HEADER_HASH_CODE_OFFSET);
+    
+    *classField = (uintptr_t)class0;
+    *hashField = zen_VirtualMachine_identityHash(object);
 
     return object;
 }

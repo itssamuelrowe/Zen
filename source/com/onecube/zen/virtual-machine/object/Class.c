@@ -19,6 +19,7 @@
 // TODO: Change this to single-linked list.
 #include <jtk/collection/Iterator.h>
 #include <jtk/collection/list/DoublyLinkedList.h>
+#include <jtk/core/StringObjectAdapter.h>
 
 #include <com/onecube/zen/virtual-machine/object/Class.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolClass.h>
