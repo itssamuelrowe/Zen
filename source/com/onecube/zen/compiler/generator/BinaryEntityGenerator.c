@@ -47,6 +47,9 @@
 #include <com/onecube/zen/virtual-machine/feb/attribute/InstructionAttribute.h>
 #include <com/onecube/zen/virtual-machine/feb/attribute/PredefinedAttribute.h>
 
+/* TODO: Move the variable to zen_BinaryEntityGenerator_t. */
+bool lhs = false;
+
 // Constructor
 
 zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_newEx(
@@ -810,6 +813,8 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
     // TODO: Remove the following statement. Make sure that the instruction
     // length is never zero.
     zen_BinaryEntityBuilder_emitNop(generator->m_builder);
+
+    lhs = false;
 }
 
 /* The format of a function descriptor is shown below:
@@ -4522,7 +4527,7 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
          * the compiler generates the default extends clause which inherits
          * the zen.core.Object class.
          */
-        jtk_String_t* objectClassName = jtk_String_newEx("zen.core.Object", 15);
+        jtk_String_t* objectClassName = jtk_String_newEx("zen/core/Object", 15);
 
         superclassCount = 1;
         superclassIndexes = jtk_Memory_allocate(uint16_t, 1);
@@ -4685,8 +4690,6 @@ void zen_BinaryEntityGenerator_onExitExpression(zen_ASTListener_t* astListener, 
 }
 
 // assignmentExpression
-
-bool lhs = false;
 
 // How to differentiate between function calls
 
@@ -6233,7 +6236,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                             }
                         }
                     }
-                    else if (zen_Scope_isLocalScope(enclosingScope)) {
+                    else if (zen_Scope_isLocalScope(enclosingScope) || zen_Scope_isFunctionScope(enclosingScope)) {
                         int32_t index = -1;
                         if (zen_Symbol_isVariable(symbol)) {
                             zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)symbol->m_context;
@@ -6465,7 +6468,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
         loadFieldDescriptor, loadFieldDescriptorSize, loadFieldName,
         loadFieldNameSize);
 
-    const uint8_t* objectClassName = "zen.core.Object";
+    const uint8_t* objectClassName = "zen/core/Object";
     int32_t objectClassNameSize = 15;
     uint16_t objectClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
         generator->m_constantPoolBuilder, objectClassName, objectClassNameSize);
@@ -6934,7 +6937,7 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
         // Error: What node do we have here?
     }
 
-    const uint8_t* objectClassName = "zen.core.Object";
+    const uint8_t* objectClassName = "zen/core/Object";
     int32_t objectClassNameSize = 15;
     uint16_t objectClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
         generator->m_constantPoolBuilder, objectClassName, objectClassNameSize);
@@ -7609,7 +7612,7 @@ void zen_BinaryEntityGenerator_onEnterMapExpression(zen_ASTListener_t* astListen
      */
     zen_BinaryEntityGenerator_loadInteger(generator, size);
 
-    const uint8_t* objectClassName = "zen.core.Object";
+    const uint8_t* objectClassName = "zen/core/Object";
     int32_t objectClassNameSize = 15;
     uint16_t objectClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
         generator->m_constantPoolBuilder, objectClassName, objectClassNameSize);
@@ -7796,7 +7799,7 @@ void zen_BinaryEntityGenerator_onEnterListExpression(zen_ASTListener_t* astListe
     /* Push the size of the list onto the operand stack. */
     zen_BinaryEntityGenerator_loadInteger(generator, size);
 
-    const uint8_t* objectClassName = "zen.core.Object";
+    const uint8_t* objectClassName = "zen/core/Object";
     int32_t objectClassNameSize = 15;
     uint16_t objectClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
         generator->m_constantPoolBuilder, objectClassName, objectClassNameSize);
@@ -7999,7 +8002,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
             }
 
             for (j = 0; j < numberOfFixedArguments; j++) {
-                jtk_StringBuilder_appendEx_z(builder, "(zen.core.Object)", 17);
+                jtk_StringBuilder_appendEx_z(builder, "(zen/core/Object)", 17);
 
                 zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
                     expressionsContext->m_expressions, j);
@@ -8011,7 +8014,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
              */
             if ((parameterThreshold != -1) && (numberOfArguments >= parameterThreshold)) {
                 // Generate the array for the variable argument.
-                jtk_StringBuilder_appendEx_z(builder, "@(zen.core.Object)", 18);
+                jtk_StringBuilder_appendEx_z(builder, "@(zen/core/Object)", 18);
 
                 /* Evaluate the number of the variable arguments. */
                 int32_t size = numberOfArguments - parameterThreshold;
@@ -8019,7 +8022,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
                 /* Push the size of the list onto the operand stack. */
                 zen_BinaryEntityGenerator_loadInteger(generator, size);
 
-                const uint8_t* objectClassName = "zen.core.Object";
+                const uint8_t* objectClassName = "zen/core/Object";
                 int32_t objectClassNameSize = 15;
                 uint16_t objectClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
                     generator->m_constantPoolBuilder, objectClassName, objectClassNameSize);
@@ -8105,4 +8108,4 @@ void zen_BinaryEntityGenerator_onExitNewExpression(zen_ASTListener_t* astListene
 }
 
 // var j = [ 1, 2, 3, 4 ].freeze().clone().add(5).add(5).removeIndex(2)
-// var j = [ 1, 2, 3, 4 ].freeze().size
+// var size = [ 1, 2, 3, 4 ].freeze().size

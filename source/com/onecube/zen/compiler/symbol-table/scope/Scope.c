@@ -55,6 +55,10 @@ bool zen_Scope_isClassScope(zen_Scope_t* scope) {
     return scope->m_type == ZEN_SCOPE_CLASS;
 }
 
+bool zen_Scope_isFunctionScope(zen_Scope_t* scope) {
+    return scope->m_type == ZEN_SCOPE_FUNCTION;
+}
+
 bool zen_Scope_isCompilationUnitScope(zen_Scope_t* scope) {
     return scope->m_type == ZEN_SCOPE_COMPILATION_UNIT;
 }

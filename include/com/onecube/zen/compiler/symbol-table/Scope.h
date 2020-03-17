@@ -96,6 +96,11 @@ bool zen_Scope_isClassScope(zen_Scope_t* scope);
 /**
  * @memberof Scope
  */
+bool zen_Scope_isFunctionScope(zen_Scope_t* scope);
+
+/**
+ * @memberof Scope
+ */
 bool zen_Scope_isCompilationUnitScope(zen_Scope_t* scope);
 
 /**

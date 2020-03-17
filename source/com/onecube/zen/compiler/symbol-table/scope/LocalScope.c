@@ -21,6 +21,7 @@
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
 #include <com/onecube/zen/compiler/lexer/Token.h>
 #include <com/onecube/zen/compiler/symbol-table/LocalScope.h>
+#include <com/onecube/zen/compiler/symbol-table/Symbol.h>
 
 /*******************************************************************************
  * LocalScope                                                                  *
