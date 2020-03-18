@@ -257,7 +257,7 @@ void* zen_ZenKernel_evaluate(zen_VirtualMachine_t* virtualMachine,
     }
 
     void* result = NULL;
-    if (targetFunctionSignature != NULL) {
+    if (targetFunctionName != NULL) {
         zen_Function_t* targetFunction = zen_VirtualMachine_getStaticFunction(virtualMachine, class0, targetFunctionName, targetFunctionSignature);
 
         /* NOTE: The arguments received by the evaluate() function are forwarded to the
@@ -272,7 +272,7 @@ void* zen_ZenKernel_evaluate(zen_VirtualMachine_t* virtualMachine,
     }
     else {
         printf("[error] An exception was thrown.\n"
-            "[error] UnknownOperatorException: Cannot find a matching method for symbol %*.s\n",
+            "[error] UnknownOperatorException: Cannot find a matching method for symbol '%.*s'\n",
             symbolSize, symbolBytes);
     }
 
