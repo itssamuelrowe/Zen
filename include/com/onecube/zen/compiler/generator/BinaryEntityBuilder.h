@@ -82,6 +82,9 @@ void zen_BinaryEntityBuilder_delete(zen_BinaryEntityBuilder_t* builder);
 
 // Channel
 
+zen_DataChannel_t* zen_BinaryEntityBuilder_getChannel(zen_BinaryEntityBuilder_t* builder,
+    int32_t index);
+    
 int32_t zen_BinaryEntityBuilder_pushChannel(zen_BinaryEntityBuilder_t* builder);
 
 void zen_BinaryEntityBuilder_popChannel(zen_BinaryEntityBuilder_t* builder);

@@ -814,6 +814,10 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
     // length is never zero.
     zen_BinaryEntityBuilder_emitNop(generator->m_builder);
 
+    // TODO: The first local variable in the local variable array is reserved for the "this" pointer.
+    // Therefore, do not perform the following increment for static functions.
+    generator->m_localVariableCount += 2;
+
     lhs = false;
 }
 
