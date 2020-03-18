@@ -1546,36 +1546,55 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             case ZEN_BYTE_CODE_INVOKE_VIRTUAL: { /* invoke_virtual */
                 uint16_t index = zen_Interpreter_readShort(interpreter);
 
-                zen_Function_t* targetFunction = NULL; /*zen_ConstantPool_resolveFunctionObject(
-                    currentClass->m_constantPool, index);*/
+                zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
+                zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
+                zen_ConstantPoolFunction_t* functionEntry =
+                    (zen_ConstantPoolFunction_t*)constantPool->m_entries[index];
+                zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[functionEntry->m_nameIndex];
+                zen_ConstantPoolUtf8_t* descriptorEntry = constantPool->m_entries[functionEntry->m_descriptorIndex];
+                zen_ConstantPoolClass_t* classEntry = constantPool->m_entries[functionEntry->m_classIndex];
+                zen_ConstantPoolUtf8_t* classNameEntry = constantPool->m_entries[classEntry->m_nameIndex];
 
-                if (targetFunction != NULL) {
-                    zen_Class_t* targetClass = NULL; // zen_Function_getClass(function);
+                zen_Object_t* self = (zen_Object_t*)zen_OperandStack_peekReference(currentStackFrame->m_operandStack);
+                zen_Class_t* selfClass = zen_Object_getClass(self);
 
-                    zen_Object_t* object = (zen_Object_t*)zen_OperandStack_peekReference(currentStackFrame->m_operandStack);
-                    zen_Class_t* objectClass = zen_Object_getClass(object);
+                jtk_String_t* functionName = jtk_String_newEx(nameEntry->m_bytes, nameEntry->m_length);
+                jtk_String_t* functionDescriptor = jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
+                /*zen_Function_t* function = zen_Class_getVirtualFunction(selfClass,
+                    functionName, functionDescriptor);*/
+                #warning "TODO: Replace the following statement with the previous statement!"
+                zen_Function_t* function = zen_Class_getStaticFunction(selfClass,
+                    functionName, functionDescriptor);
 
-                    if (targetClass != objectClass) {
-                        const uint8_t* functionName = zen_Function_getName(targetFunction);
-                        const uint8_t* functionDescriptor = zen_Function_getDescriptor(targetFunction);
+                if (function != NULL) {
+                    int32_t parameterCount = function->m_parameterCount;
+                    if (function->m_parameterCount > 0) {
+                        jtk_Array_t* arguments = jtk_Array_new(parameterCount + 1);
+                        int32_t parameterIndex;
+                        for (parameterIndex = parameterCount - 1; parameterIndex > 0; parameterIndex--) {
+                            void* argument = (void*)zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+                            jtk_Array_setValue(arguments, parameterIndex, argument);
+                        }
+                        jtk_Array_setValue(arguments, 0, self);
 
-                        /* TODO: The resolution of the virtual function should not fail. */
-                        targetFunction = zen_Class_getInstanceFunction(objectClass, functionName,
-                            functionDescriptor);
-                    }
-
-                    if (zen_Function_isNative(targetFunction)) {
-                        zen_Interpreter_invokeNativeFunction(interpreter, targetClass, targetFunction, currentStackFrame->m_operandStack);
-                    }
-                    else {
-                        // currentFrame = ...;
-                        // code = ...;
-
+                        zen_Interpreter_invokeVirtualFunction(interpreter, function, arguments);
+                        jtk_Array_delete(arguments);
                     }
                 }
                 else {
                     /* TODO: Throw an instance of the UnknownFunctionException class. */
+                    printf("[error] An exception was thrown\n"
+                        "[error] UnknownFunctionException: Cannot resolve function '%.*s' with signature '%.*s'.\n",
+                        functionName->m_size, functionName->m_value, functionDescriptor->m_size,
+                        functionDescriptor->m_value);
                 }
+
+                jtk_String_delete(functionDescriptor);
+                jtk_String_delete(functionName);
+
+                /* Log debugging information for assistance in debugging the interpreter. */
+                printf("[debug] Executed instruction `invoke_virtual` (index = %d, operand stack = %d)\n",
+                    index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
             }
@@ -1628,6 +1647,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Log debugging information for assistance in debugging the interpreter. */
                 printf("[debug] Executed instruction `invoke_static` (index = %d, operand stack = %d)\n",
                     index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+
                 break;
             }
 
@@ -3764,6 +3784,49 @@ void zen_Interpreter_invokeStaticFunctionEx(zen_Interpreter_t* interpreter,
     zen_StackFrame_t* stackFrame = zen_StackFrame_new(function);
     zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
     zen_Interpreter_interpret(interpreter);
+}
+
+/* Invoke Virtual Function */
+
+zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpreter,
+    zen_Function_t* function, jtk_Array_t* arguments) {
+    zen_StackFrame_t* oldStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
+    zen_StackFrame_t* stackFrame = zen_StackFrame_new(function);
+    zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
+
+    zen_EntityFile_t* entityFile = function->m_class->m_entityFile;
+    zen_Entity_t* entity = &entityFile->m_entity;
+    zen_ConstantPoolUtf8_t* name =
+        (zen_ConstantPoolUtf8_t*)entityFile->m_constantPool.m_entries[
+            entity->m_reference];
+    jtk_String_t* className = jtk_String_newEx(name->m_bytes, name->m_length);
+
+    zen_Object_t* result = NULL;
+    if (zen_Function_isNative(function)) {
+        zen_NativeFunction_t* nativeFunction = zen_VirtualMachine_getNativeFunction(
+            interpreter->m_virtualMachine, className, function->m_name, function->m_descriptor);
+
+        if (nativeFunction != NULL) {
+            zen_NativeFunction_InvokeFunction_t invoke = nativeFunction->m_invoke;
+            result = invoke(interpreter->m_virtualMachine, arguments);
+        }
+        else {
+            printf("[error] Unknown native function (class=%.*s, name=%.*s, descriptor=%.*s)\n",
+                className->m_size, className->m_value, function->m_name->m_size,
+                function->m_name->m_value, function->m_descriptor->m_size,
+                function->m_descriptor->m_value);
+        }
+    }
+    else {
+        zen_Interpreter_interpret(interpreter);
+        // result = zen_OperandStack_popReference(stackFrame->m_operandStack);
+    }
+
+    zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
+    zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+    zen_StackFrame_delete(stackFrame);
+
+    return result;
 }
 
 /* Invoke Thread Exception Handler */

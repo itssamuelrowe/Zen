@@ -377,6 +377,20 @@ zen_Object_t* zen_ZenKernel_evaluate(zen_VirtualMachine_t* virtualMachine,
     return result;
 }
 
+// `this.j = 1` translates to `ZenKernel.storeField(new Integer(1), this, "j")`
+zen_Object_t* zen_ZenKernel_storeField(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* self = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    zen_Object_t* name = (zen_Object_t*)jtk_Array_getValue(arguments, 2);
+
+    jtk_String_t* name0 = zen_String_toJTKString(virtualMachine, name);
+    zen_VirtualMachine_setObjectField(virtualMachine, self, name0->m_value, name0->m_size, value);
+    jtk_String_delete(name0);
+
+    return value;
+}
+
 /*******************************************************************************
  * VirtualMachine                                                              *
  *******************************************************************************/
@@ -541,7 +555,7 @@ void zen_VirtualMachine_setObjectField(zen_VirtualMachine_t* virtualMachine,
         zen_VirtualMachine_raiseNullReferenceException(virtualMachine);
     }
     else {
-        zen_Class_t* class0 = *((zen_Class_t**)(object + ZEN_OBJECT_HEADER_CLASS_OFFSET));
+        zen_Class_t* class0 = *((zen_Class_t**)((uint8_t*)object + ZEN_OBJECT_HEADER_CLASS_OFFSET));
         int32_t offset = zen_Class_findFieldOffset(class0, fieldDescriptor, fieldDescriptorSize);
         if (offset < 0) {
             zen_VirtualMachine_raiseUnknownFieldException(virtualMachine, fieldDescriptor,
@@ -631,6 +645,11 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
         "evaluate", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)",
         69, zen_ZenKernel_evaluate);
+        
+    // Object ZenKernel.storeField(Object value, Object self, Object name)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
+        "storeField", 10, "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)",
+        69, zen_ZenKernel_storeField);
 
     // void String.new(value)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "String", 6,

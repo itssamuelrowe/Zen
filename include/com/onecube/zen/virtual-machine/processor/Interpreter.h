@@ -85,6 +85,11 @@ zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interprete
 void zen_Interpreter_invokeStaticFunctionEx(zen_Interpreter_t* interpreter,
     zen_Function_t* function, jtk_VariableArguments_t variableArguments);
 
+/* Invoke Virtual Function */
+
+zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpreter,
+    zen_Function_t* function, jtk_Array_t* arguments);
+
 /* Read */
 
 uint8_t zen_Interpreter_readByte(zen_Interpreter_t* interpreter);

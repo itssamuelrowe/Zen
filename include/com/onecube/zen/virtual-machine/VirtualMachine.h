@@ -195,7 +195,6 @@ void zen_VirtualMachine_start(zen_VirtualMachine_t* virtualMachine,
 
 zen_Function_t* zen_VirtualMachine_getStaticFunction(zen_VirtualMachine_t* virtualMachine,
     zen_Class_t* handle, jtk_String_t* identifier, jtk_String_t* signature);
-zen_Object_t* zen_VirtualMachine_invokeStaticFunction(zen_VirtualMachine_t* context, zen_Function_t* function, ...);
 
 // String
 
