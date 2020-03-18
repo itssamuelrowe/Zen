@@ -28,10 +28,12 @@
 
 typedef struct zen_VirtualMachine_t zen_VirtualMachine_t;
 
+typedef struct zen_Object_t zen_Object_t;
+
 /**
  * @memberof NativeFunction
  */
-typedef void* (*zen_NativeFunction_InvokeFunction_t)(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments);
+typedef zen_Object_t* (*zen_NativeFunction_InvokeFunction_t)(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments);
 
 /**
  * @class NativeFunction

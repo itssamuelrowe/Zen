@@ -20,6 +20,7 @@
 #define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_VIRTUAL_MACHINE_H
 
 #include <jtk/collection/map/HashMap.h>
+#include <jtk/collection/array/Array.h>
 
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/virtual-machine/ExceptionManager.h>
@@ -116,6 +117,11 @@ void zen_VirtualMachine_setObjectField(zen_VirtualMachine_t* virtualMachine,
 zen_Object_t* zen_VirtualMachine_getObjectField(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* object, uint8_t* fieldName, int32_t fieldNameSize);
 
+// Integer
+
+zen_Object_t* zen_VirtualMachine_newInteger(zen_VirtualMachine_t* virtualMachine,
+    int64_t value);
+
 // Libraries
 
 void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachine);
@@ -140,19 +146,23 @@ zen_Object_t* zen_VirtualMachine_allocateObject(zen_VirtualMachine_t* virtualMac
     zen_Class_t* class0);
 
 zen_Object_t* zen_VirtualMachine_makeObjectEx(zen_VirtualMachine_t* virtualMachine,
-    zen_Function_t* constructor, jtk_VariableArguments_t arguments);
+    zen_Function_t* constructor, jtk_Array_t* arguments);
 
+/*
 zen_Object_t* zen_VirtualMachine_makeObject(zen_VirtualMachine_t* virtualMachine,
     zen_Function_t* constructor, ...);
+*/
 
 zen_Object_t* zen_VirtualMachine_newObjectEx(zen_VirtualMachine_t* virtualMachine,
     const uint8_t* classDescriptor, int32_t classDescriptorSize,
     const uint8_t* constructorDescriptor, int32_t constructorDescriptorSize,
-    jtk_VariableArguments_t arguments);
+    jtk_Array_t* arguments);
 
+/*
 zen_Object_t* zen_VirtualMachine_newObject(zen_VirtualMachine_t* virtualMachine,
     const uint8_t* classDescriptor, int32_t classDescriptorSize,
     const uint8_t* constructorDescriptor, int32_t constructorDescriptorSize, ...);
+*/
 
 // Raise Exception
 
@@ -185,7 +195,7 @@ void zen_VirtualMachine_start(zen_VirtualMachine_t* virtualMachine,
 
 zen_Function_t* zen_VirtualMachine_getStaticFunction(zen_VirtualMachine_t* virtualMachine,
     zen_Class_t* handle, jtk_String_t* identifier, jtk_String_t* signature);
-void zen_VirtualMachine_invokeStaticFunction(zen_VirtualMachine_t* context, zen_Function_t* function, ...);
+zen_Object_t* zen_VirtualMachine_invokeStaticFunction(zen_VirtualMachine_t* context, zen_Function_t* function, ...);
 
 // String
 

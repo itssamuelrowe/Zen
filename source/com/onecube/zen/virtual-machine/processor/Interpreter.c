@@ -1523,7 +1523,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         
                         zen_Object_t* object = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
 
-                        zen_Interpreter_invokeConstructorX(interpreter, object, constructor, arguments);
+                        zen_Interpreter_invokeConstructor(interpreter, object, constructor, arguments);
                         jtk_Array_delete(arguments);
                     }
                 }
@@ -2176,9 +2176,15 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         int32_t stringClassDescriptorSize = 15;
                         const uint8_t* stringConstructorDescriptor = "v:(zen/core/Object)";
                         int32_t stringConstructorDescriptorSize = 19;
-                        zen_Object_t* value = zen_VirtualMachine_newObject(interpreter->m_virtualMachine,
+
+                        jtk_Array_t* arguments = jtk_Array_new(1);
+                        jtk_Array_setValue(arguments, 0, array);
+
+                        zen_Object_t* value = zen_VirtualMachine_newObjectEx(interpreter->m_virtualMachine,
                             stringClassDescriptor, stringClassDescriptorSize, stringConstructorDescriptor,
-                            stringConstructorDescriptorSize, array);
+                            stringConstructorDescriptorSize, arguments);
+
+                        jtk_Array_delete(arguments);
 
                         zen_OperandStack_pushReference(currentStackFrame->m_operandStack, value);
 
@@ -3617,7 +3623,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
 typedef void (*zen_NativeFunction_InvokeConstructorFunction_t)(zen_VirtualMachine_t* virtualMachine, zen_Object_t* self, jtk_VariableArguments_t arguments);
 
-void zen_Interpreter_invokeConstructorX(zen_Interpreter_t* interpreter,
+void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
     zen_Object_t* object, zen_Function_t* constructor,
     jtk_Array_t* arguments) {
     printf("A constructor was invoked!\n");
@@ -3658,7 +3664,7 @@ void zen_Interpreter_invokeConstructorX(zen_Interpreter_t* interpreter,
     zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
     zen_StackFrame_delete(stackFrame);
 }
-
+/*
 void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
     zen_Object_t* object, zen_Function_t* constructor,
     jtk_VariableArguments_t arguments) {
@@ -3700,6 +3706,7 @@ void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
     zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
     zen_StackFrame_delete(stackFrame);
 }
+*/
 
 /* Invoke Native */
 
@@ -3709,7 +3716,7 @@ void zen_Interpreter_invokeNativeFunction(zen_Interpreter_t* interpreter,
 
 /* Invoke Static Function */
 
-void zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interpreter,
+zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interpreter,
     zen_Function_t* function, jtk_Array_t* arguments) {
 
     zen_StackFrame_t* oldStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
@@ -3723,14 +3730,14 @@ void zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interpreter,
             entity->m_reference];
     jtk_String_t* className = jtk_String_newEx(name->m_bytes, name->m_length);
 
+    zen_Object_t* result = NULL;
     if (zen_Function_isNative(function)) {
         zen_NativeFunction_t* nativeFunction = zen_VirtualMachine_getNativeFunction(
             interpreter->m_virtualMachine, className, function->m_name, function->m_descriptor);
 
         if (nativeFunction != NULL) {
             zen_NativeFunction_InvokeFunction_t invoke = nativeFunction->m_invoke;
-            void* result = invoke(interpreter->m_virtualMachine, arguments);
-            zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
+            result = invoke(interpreter->m_virtualMachine, arguments);
         }
         else {
             printf("[error] Unknown native function (class=%.*s, name=%.*s, descriptor=%.*s)\n",
@@ -3741,10 +3748,14 @@ void zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interpreter,
     }
     else {
         zen_Interpreter_interpret(interpreter);
+        // result = zen_OperandStack_popReference(stackFrame->m_operandStack);
     }
 
+    zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
     zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
     zen_StackFrame_delete(stackFrame);
+
+    return result;
 }
 
 void zen_Interpreter_invokeStaticFunctionEx(zen_Interpreter_t* interpreter,
