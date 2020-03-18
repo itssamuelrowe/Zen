@@ -216,7 +216,7 @@ void zen_String_initialize(zen_VirtualMachine_t* virtualMachine,
         valueDescriptorSize, value);
 }
 
-jtk_String_t* zen_String_add(zen_VirtualMachine_t* virtualMachine,
+zen_Object_t* zen_String_add(zen_VirtualMachine_t* virtualMachine,
     jtk_Array_t* arguments) {
     zen_Object_t* self = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* other = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
@@ -232,6 +232,28 @@ jtk_String_t* zen_String_add(zen_VirtualMachine_t* virtualMachine,
     // printf("%.*s\n", string->m_size, string->m_value);
     zen_Object_t* result = zen_VirtualMachine_newStringFromUtf8(virtualMachine, string->m_value, string->m_size);
     jtk_String_delete(string);
+
+    return result;
+}
+
+zen_Object_t* zen_String_multiply(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    zen_Object_t* string = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    uint8_t* stringBytes = zen_VirtualMachine_getStringBytes(virtualMachine, string);
+    int32_t stringSize = zen_VirtualMachine_getStringSize(virtualMachine, string);
+    
+    zen_Object_t* count = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    int64_t value = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            count, "value", 5);
+
+    jtk_StringBuilder_t* builder = jtk_StringBuilder_newWithCapacity(value * stringSize);
+    int32_t i;
+    for (i = 0; i < value; i++) {
+        jtk_StringBuilder_appendEx_z(builder, stringBytes, stringSize);
+    }
+    
+    zen_Object_t* result = zen_VirtualMachine_newStringFromUtf8(virtualMachine, builder->m_value, builder->m_size);
+    jtk_String_delete(builder);
 
     return result;
 }
@@ -617,6 +639,10 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     // String String.add(value1, value2)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "String", 6,
         "add", 3, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_String_add);
+
+    // String String.multiply(string, count)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "String", 6,
+        "multiply", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_String_multiply);
 
     // void Integer.new(value)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
