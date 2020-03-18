@@ -2514,7 +2514,10 @@ void zen_BinaryEntityGenerator_onExitVariableDeclaration(zen_ASTListener_t* astL
                  * was not previously assigned an index.
                  */
                 if (variableSymbol->m_index < 0) {
-                    variableSymbol->m_index = generator->m_localVariableCount++;
+                    variableSymbol->m_index = generator->m_localVariableCount;
+                    // TODO: Temporary fix. References are considered as 8 bytes.
+                    // TODO: Design the local variable array correctly.
+                    generator->m_localVariableCount += 2;
                 }
             }
             else {
