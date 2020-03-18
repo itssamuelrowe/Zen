@@ -143,6 +143,70 @@ zen_Object_t* zen_Integer_add(zen_VirtualMachine_t* virtualMachine,
     return result;
 }
 
+zen_Object_t* zen_Integer_subtract(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    
+    int64_t value1 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand1, "value", 5);
+    int64_t value2 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand2, "value", 5);
+
+    zen_Object_t* result = zen_VirtualMachine_newInteger(virtualMachine, value1 - value2);
+    // printf("%ld\n", value1 - value2);
+
+    return result;
+}
+
+zen_Object_t* zen_Integer_multiply(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    
+    int64_t value1 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand1, "value", 5);
+    int64_t value2 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand2, "value", 5);
+
+    zen_Object_t* result = zen_VirtualMachine_newInteger(virtualMachine, value1 * value2);
+    // printf("%ld\n", value1 * value2);
+
+    return result;
+}
+
+zen_Object_t* zen_Integer_divide(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    
+    int64_t value1 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand1, "value", 5);
+    int64_t value2 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand2, "value", 5);
+
+    zen_Object_t* result = zen_VirtualMachine_newInteger(virtualMachine, value1 / value2);
+    // printf("%ld\n", value1 / value2);
+
+    return result;
+}
+
+zen_Object_t* zen_Integer_remainder(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    
+    int64_t value1 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand1, "value", 5);
+    int64_t value2 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand2, "value", 5);
+
+    zen_Object_t* result = zen_VirtualMachine_newInteger(virtualMachine, value1 % value2);
+    // printf("%ld\n", value1 % value2);
+
+    return result;
+}
+
 void zen_String_initialize(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* self, jtk_Array_t* arguments) {
     const uint8_t* valueDescriptor = "value";
@@ -251,6 +315,18 @@ zen_Object_t* zen_ZenKernel_evaluate(zen_VirtualMachine_t* virtualMachine,
         case 1: {
             if (jtk_CString_equals(symbolBytes, symbolSize, "+", 1)) {
                 targetFunctionName = jtk_String_newEx("add", 3);
+            }
+            else if (jtk_CString_equals(symbolBytes, symbolSize, "-", 1)) {
+                targetFunctionName = jtk_String_newEx("subtract", 8);
+            }
+            else if (jtk_CString_equals(symbolBytes, symbolSize, "*", 1)) {
+                targetFunctionName = jtk_String_newEx("multiply", 8);
+            }
+            else if (jtk_CString_equals(symbolBytes, symbolSize, "/", 1)) {
+                targetFunctionName = jtk_String_newEx("divide", 6);
+            }
+            else if (jtk_CString_equals(symbolBytes, symbolSize, "%", 1)) {
+                targetFunctionName = jtk_String_newEx("remainder", 9);
             }
             break;
         }
@@ -549,6 +625,22 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     // Integer Integer.add(value1, value2)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
         "add", 3, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_add);
+
+    // Integer Integer.subtract(value1, value2)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+        "subtract", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_subtract);
+
+    // Integer Integer.multiply(value1, value2)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+        "multiply", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_multiply);
+
+    // Integer Integer.divide(value1, value2)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+        "divide", 6, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_divide);
+
+    // Integer Integer.remainder(value1, value2)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+        "remainder", 9, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_remainder);
 
     // TODO: Unload native functions
 }
