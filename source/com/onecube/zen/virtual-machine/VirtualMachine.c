@@ -67,24 +67,47 @@ int32_t zen_VirtualMachine_identityHash(zen_Object_t* object) {
 
 // ** Native Functions **
 
-void zen_print(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
-    zen_Object_t* format = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
-    zen_Object_t* array = zen_VirtualMachine_getObjectField(virtualMachine,
-        format, "value", 5);
-    uint8_t* values = (uint8_t*)zen_VirtualMachine_getObjectField(virtualMachine,
-        array, "values", 6);
-    int32_t size = (int32_t)zen_VirtualMachine_getObjectField(virtualMachine,
-        array, "size", 4);
-    fwrite(values, 1, size, stdout);
-    puts("");
-    fflush(stdout);
+zen_Class_t* zen_Object_getClass(zen_Object_t* object) {
+    jtk_Assert_assertObject(object, "The specified object is null.");
+
+    zen_Class_t** classField = ((uint8_t*)object + ZEN_OBJECT_HEADER_CLASS_OFFSET);
+    return *classField;
 }
 
-void zen_printInteger(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
-    zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
-    int64_t value0 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
-        value, "value", 5);
-    printf("%ld\n", value0);
+bool zen_VirtualMachine_isInstance(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* object, jtk_String_t* classDescriptor) {
+    zen_Class_t* class0 = zen_VirtualMachine_getClass(virtualMachine, classDescriptor);
+    zen_Class_t** classField = ((uint8_t*)object + ZEN_OBJECT_HEADER_CLASS_OFFSET);
+    return *classField == class0;
+}
+
+void zen_print(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
+    jtk_String_t* stringDescriptor = jtk_String_newEx("zen/core/String", 15);
+    jtk_String_t* integerDescriptor = jtk_String_newEx("zen/core/Integer", 16);
+
+    zen_Object_t* argument = (zen_Object_t*)jtk_Array_getValue(arguments, 0);;
+
+    if (zen_VirtualMachine_isInstance(virtualMachine, argument, stringDescriptor)) {
+        zen_Object_t* format = argument;
+        zen_Object_t* array = zen_VirtualMachine_getObjectField(virtualMachine,
+            format, "value", 5);
+        uint8_t* values = (uint8_t*)zen_VirtualMachine_getObjectField(virtualMachine,
+            array, "values", 6);
+        int32_t size = (int32_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            array, "size", 4);
+        fwrite(values, 1, size, stdout);
+        puts("");
+    }
+    else if (zen_VirtualMachine_isInstance(virtualMachine, argument, integerDescriptor)) {
+        zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+        int64_t value0 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            value, "value", 5);
+        printf("%ld\n", value0);
+    }
+    else {
+        printf("Object <%lX>\n", argument);
+    }
+
     fflush(stdout);
 }
 
@@ -388,7 +411,7 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
 
     // Object Test.print(Object format)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
-        "print", 5, "(zen/core/Object):(zen/core/Object)", 35, zen_printInteger);
+        "print", 5, "(zen/core/Object):(zen/core/Object)", 35, zen_print);
 
     // Object ZenKernel.invokeStatic(Object className, Object functionName, Object ... arguments)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
