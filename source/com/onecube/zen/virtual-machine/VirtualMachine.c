@@ -358,7 +358,8 @@ zen_Object_t* zen_VirtualMachine_getObjectField(zen_VirtualMachine_t* virtualMac
         zen_VirtualMachine_raiseNullReferenceException(virtualMachine);
     }
     else {
-        zen_Class_t* class0 = *((zen_Class_t**)(object + ZEN_OBJECT_HEADER_CLASS_OFFSET));
+        zen_Class_t** classField = (zen_Class_t**)((uint8_t*)object + ZEN_OBJECT_HEADER_CLASS_OFFSET);
+        zen_Class_t* class0 = *classField;
         int32_t offset = zen_Class_findFieldOffset(class0, fieldName, fieldNameSize);
         if (offset < 0) {
             zen_VirtualMachine_raiseUnknownFieldException(virtualMachine, fieldName,

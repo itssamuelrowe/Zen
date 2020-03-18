@@ -104,4 +104,16 @@ void zen_LocalVariableArray_setDouble(zen_LocalVariableArray_t* array, int32_t i
  */
 double zen_LocalVariableArray_getDouble(zen_LocalVariableArray_t* array, int32_t index);
 
+/* Reference */
+
+uintptr_t zen_LocalVariableArray_getReference(zen_LocalVariableArray_t* localVariableArray,
+    int32_t index);
+
+void zen_LocalVariableArray_setReference(zen_LocalVariableArray_t* localVariableArray,
+    int32_t index, uintptr_t reference);
+
+/* Size */
+
+int32_t zen_LocalVariableArray_getSize(zen_LocalVariableArray_t* localVariableArray);
+
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_PROCESSOR_LOCAL_VARIABLE_ARRAY_H */

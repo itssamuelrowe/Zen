@@ -17,6 +17,7 @@
 // Sunday, September 30, 2018
 
 #include <jtk/core/Assert.h>
+#include <jtk/collection/array/Arrays.h>
 #include <com/onecube/zen/virtual-machine/processor/LocalVariableArray.h>
 
 /*******************************************************************************
@@ -47,8 +48,15 @@ int32_t zen_LocalVariableArray_referenceSlotCountError() {
  */
 zen_LocalVariableArray_t* zen_LocalVariableArray_new(int32_t size) {
     zen_LocalVariableArray_t* localVariableArray = jtk_Memory_allocate(zen_LocalVariableArray_t, 1);
-    localVariableArray->m_values = (size > 0)? jtk_Memory_allocate(uint32_t, size) : NULL;
+    localVariableArray->m_values = NULL;
     localVariableArray->m_size = size;
+
+    if (size > 0) {
+        uint32_t* values = jtk_Memory_allocate(uint32_t, size);
+        jtk_Arrays_fill_i(values, size, 0);
+
+        localVariableArray->m_values = values;
+    }
 
     return localVariableArray;
 }

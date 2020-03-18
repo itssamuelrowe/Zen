@@ -34,7 +34,9 @@
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolTag.h>
 #include <com/onecube/zen/virtual-machine/feb/Entity.h>
 #include <com/onecube/zen/virtual-machine/object/Object.h>
+#include <com/onecube/zen/virtual-machine/object/Function.h>
 #include <com/onecube/zen/virtual-machine/processor/Interpreter.h>
+#include <com/onecube/zen/virtual-machine/processor/LocalVariableArray.h>
 #include <com/onecube/zen/virtual-machine/memory/MemoryManager.h>
 
 /* The interpreter is the heart of the virtual machine. */
@@ -1503,12 +1505,10 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
                 jtk_String_t* classDescriptor = jtk_String_newEx(classNameEntry->m_bytes, classNameEntry->m_length);
                 zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine, classDescriptor);
-                jtk_String_delete(classDescriptor);
 
                 jtk_String_t* constructorDescriptor = jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);                
                 zen_Function_t* constructor = zen_Class_getConstructor(targetClass, constructorDescriptor);
-                jtk_String_delete(constructorDescriptor);
-
+                
                 if (constructor != NULL) {
                     // TODO: Invoke the constructor when it accepts no arguments.
                     
@@ -1529,7 +1529,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 }
                 else {
                     /* TODO: Throw an instance of the UnknownFunctionException class. */
+                    printf("[error] Unknown constructor in class %.*s with signature %.*s!\n", classDescriptor->m_size,
+                        classDescriptor->m_value, constructorDescriptor->m_size, constructorDescriptor->m_value);
                 }
+
+                jtk_String_delete(classDescriptor);
+                jtk_String_delete(constructorDescriptor);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
                 printf("[debug] Executed instruction `invoke_special` (index = %d, operand stack = %d)\n",
@@ -1736,7 +1741,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Retrieve the object reference stored in the local variable at
                  * the specified index.
                  */
-                intptr_t reference = zen_LocalVariableArray_getReference(currentStackFrame->m_localVariableArray, index);
+                uintptr_t reference = zen_LocalVariableArray_getReference(currentStackFrame->m_localVariableArray, index);
                 /* Push the retrieved reference on the operand stack. */
                 zen_OperandStack_pushReference(currentStackFrame->m_operandStack, reference);
 
@@ -2447,9 +2452,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Retrieve the size of the array from the operand stack. */
                 int32_t size = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
                 /* TODO: Create a new reference array. */
-                void* result = jtk_Array_new(size);
+                jtk_Array_t* result = jtk_Array_new(size);
                 /* Push the reference of the newly created reference array. */
-                zen_OperandStack_pushReference(currentStackFrame->m_operandStack, result);
+                zen_OperandStack_pushReference(currentStackFrame->m_operandStack, (void*)result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
                 printf("[debug] Executed instruction `new_array_a` (index = %d, size = %d, result = 0x%X, operand stack = %d)\n",
@@ -3723,7 +3728,8 @@ void zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interpreter,
             interpreter->m_virtualMachine, className, function->m_name, function->m_descriptor);
 
         if (nativeFunction != NULL) {
-            void* result = nativeFunction->m_invoke(interpreter->m_virtualMachine, arguments);
+            zen_NativeFunction_InvokeFunction_t invoke = nativeFunction->m_invoke;
+            void* result = invoke(interpreter->m_virtualMachine, arguments);
             zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
         }
         else {
