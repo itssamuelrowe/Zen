@@ -18,6 +18,7 @@
 
 #include <jtk/collection/array/Arrays.h>
 #include <jtk/core/VariableArguments.h>
+#include <jtk/core/CString.h>
 #include <jtk/core/StringBuilder.h>
 #include <jtk/core/StringObjectAdapter.h>
 
@@ -129,6 +130,8 @@ void zen_String_initialize(zen_VirtualMachine_t* virtualMachine,
         valueDescriptorSize, value);
 }
 
+
+
 jtk_String_t* zen_String_add(zen_VirtualMachine_t* virtualMachine,
     jtk_Array_t* arguments) {
     jtk_String_t* self = (jtk_String_t*)jtk_Array_getValue(arguments, 0);
@@ -139,15 +142,6 @@ jtk_String_t* zen_String_add(zen_VirtualMachine_t* virtualMachine,
     printf("%.*s\n", result->m_size, result->m_value);
 
     return result;
-}
-
-/* TODO: The evaluate function builds a cache of operator-function pairs
- * as the program runs. This helps in reducing lookup time for mapping operators
- * to functions.
- */
-void* zen_ZenKernel_evaluate(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
-    return zen_String_add(virtualMachine, arguments);
 }
 
 jtk_String_t* zen_ByteArray_toJTKString(zen_VirtualMachine_t* virtualMachine,
@@ -191,6 +185,55 @@ void zen_ZenKernel_invokeStatic(zen_VirtualMachine_t* virtualMachine,
 
     zen_Interpreter_invokeStaticFunction(virtualMachine->m_interpreter, targetFunction,
         targetArguments);
+}
+
+/* TODO: The evaluate function builds a cache of operator-function pairs
+ * as the program runs. This helps in reducing lookup time for mapping operators
+ * to functions.
+ */
+void* zen_ZenKernel_evaluate(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(argument, 0);
+    zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(argument, 1);
+    zen_Object_t* symbol = (zen_Object_t*)jtk_Array_getValue(argument, 1);
+
+    uint8_t* symbolBytes = zen_VirtualMachine_getStringBytes(virtualMachine, symbol);
+    int32_t symbolSize = zen_VirtualMachine_getStringSize(virtualMachine, symbol);
+    zen_Class_t* class0 = zen_Object_getClass(operand1);
+
+    jtk_String_t* targetFunctionName = NULL;
+    jtk_String_t* targetFunctionSignature = jtk_String_newEx("(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52);
+
+    switch (symbolSize) {
+        case 1: {
+            if (jtk_CString_equals(symbolBytes, symbolSize, "+", 1)) {
+                targetFunctionName = jtk_String_newEx("add", 3);
+            }
+            break;
+        }
+    }
+
+    void* result = NULL;
+    if (targetFunctionSignature != NULL) {
+        zen_Function_t* targetFunction = zen_VirtualMachine_getStaticFunction(virtualMachine, class0, targetFunctionName, targetFunctionSignature);
+
+        /* NOTE: The arguments received by the evaluate() function are forwarded to the
+         * target function as is, assuming that the target function uses only the
+         * first two values.
+         */
+        /* result = */ zen_Interpreter_invokeStaticFunction(virtualMachine->m_interpreter, targetFunction,
+            arguments);
+
+        jtk_String_delete(targetFunctionSignature);
+        jtk_String_delete(targetFunctionName);
+    }
+    else {
+        printf("[error] An exception was thrown.\n"
+            "[error] UnknownOperatorException: Cannot find a matching method for symbol %*.s\n",
+            symbolSize, symbolBytes);
+    }
+
+    return result;
 }
 
 /*******************************************************************************
