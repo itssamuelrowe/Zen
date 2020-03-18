@@ -6152,6 +6152,17 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
     zen_Symbol_t* primarySymbol = NULL;
     int32_t postfixPartCount = jtk_ArrayList_getSize(context->m_postfixParts);
 
+    const uint8_t* kernelClassName = "zen/core/ZenKernel";
+    int32_t kernelClassNameSize = 18;
+    const uint8_t* loadFieldDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)";
+    int32_t loadFieldDescriptorSize = 52;
+    const uint8_t* loadFieldName = "loadField";
+    int32_t loadFieldNameSize = 9;
+    uint16_t loadFieldIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
+        loadFieldDescriptor, loadFieldDescriptorSize, loadFieldName,
+        loadFieldNameSize);
+
     /* Emit a push instruction if the primary expression is a literal or an
      * identifier.
      */
@@ -6179,6 +6190,8 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                 /* Retrieve the string equivalent to the identifier node. */
                 int32_t identifierSize;
                 uint8_t* identifierText = zen_ASTNode_toCString(expression, &identifierSize);
+                uint16_t identifierIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
+                    generator->m_constantPoolBuilder, identifierText, identifierSize);
 
                 /* Resolve the symbol in the symbol table. */
                 zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, identifierText);
@@ -6200,11 +6213,18 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                                 /* Log the emission of the load_a instruction. */
                                 printf("[debug] Emitted load_a 0\n");
 
-                                /* Load the instance field. */
-                                zen_BinaryEntityBuilder_emitLoadInstanceField(generator->m_builder, 0);
+                                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
 
-                                /* Log the emission of the load_instance_field instruction. */
-                                printf("[debug] Emitted load_instance_field 0 (dummy index)\n");
+                                /* Log the emission of the load_cpr instruction. */
+                                printf("[debug] Emitted load_cpr %d\n", identifierIndex);
+
+                                /* Invoke the ZenKernel.loadField() function to load
+                                 * the field.
+                                 */
+                                zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, loadFieldIndex);
+
+                                /* Log the emission of the invoke_static instruction. */
+                                printf("[debug] Emitted invoke_static %d\n", loadFieldIndex);
                             }
                             else {
                                 /* Load the static field. */
@@ -6430,8 +6450,6 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
         // Error: What node do we have here?
     }
 
-    const uint8_t* kernelClassName = "zen/core/ZenKernel";
-    int32_t kernelClassNameSize = 18;
     const uint8_t* invokeDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/String)";
     int32_t invokeDescriptorSize = 52;
     const uint8_t* invokeName = "invoke";
@@ -6465,15 +6483,6 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
         generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
         invokeStatic2Descriptor, invokeStatic2DescriptorSize, invokeStaticName,
         invokeStaticNameSize);
-
-    const uint8_t* loadFieldDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/String)";
-    int32_t loadFieldDescriptorSize = 52;
-    const uint8_t* loadFieldName = "loadField";
-    int32_t loadFieldNameSize = 9;
-    uint16_t loadFieldIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
-        loadFieldDescriptor, loadFieldDescriptorSize, loadFieldName,
-        loadFieldNameSize);
 
     const uint8_t* objectClassName = "zen/core/Object";
     int32_t objectClassNameSize = 15;
@@ -6951,7 +6960,7 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
 
     const uint8_t* kernelClassName = "zen/core/ZenKernel";
     int32_t kernelClassNameSize = 18;
-    const uint8_t* storeFieldDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/String)(zen/core/Object)";
+    const uint8_t* storeFieldDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)";
     int32_t storeFieldDescriptorSize = 69;
     const uint8_t* storeFieldName = "storeField";
     int32_t storeFieldNameSize = 10;
@@ -6960,7 +6969,7 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
         storeFieldDescriptor, storeFieldDescriptorSize, storeFieldName,
         storeFieldNameSize);
 
-    const uint8_t* storeClassFieldDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/String)(zen/core/Object)";
+    const uint8_t* storeClassFieldDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)";
     int32_t storeClassFieldDescriptorSize = 69;
     const uint8_t* storeClassFieldName = "storeClassField";
     int32_t storeClassFieldNameSize = 15;
