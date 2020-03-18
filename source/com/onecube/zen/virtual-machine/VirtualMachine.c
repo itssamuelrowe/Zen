@@ -127,6 +127,23 @@ void zen_Integer_initialize(zen_VirtualMachine_t* virtualMachine,
         valueDescriptorSize, value);
 }
 
+zen_Object_t* zen_Integer_add(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    
+    int64_t value1 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand1, "value", 5);
+    int64_t value2 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand2, "value", 5);
+
+    int64_t result = value1 + value2;
+    printf("%ld\n", result);
+
+    return result;
+}
+
+
 void zen_String_initialize(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* self, jtk_VariableArguments_t arguments) {
     const uint8_t* valueDescriptor = "value";
@@ -135,8 +152,6 @@ void zen_String_initialize(zen_VirtualMachine_t* virtualMachine,
     zen_VirtualMachine_setObjectField(virtualMachine, self, valueDescriptor,
         valueDescriptorSize, value);
 }
-
-
 
 jtk_String_t* zen_String_add(zen_VirtualMachine_t* virtualMachine,
     jtk_Array_t* arguments) {
@@ -505,6 +520,10 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     // void Integer.new(value)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
         "<initialize>", 12, "v:(zen/core/Object)", 19, zen_Integer_initialize);
+
+    // Integer Integer.add(value1, value2)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+        "add", 3, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_add);
 
     // TODO: Unload native functions
 }
