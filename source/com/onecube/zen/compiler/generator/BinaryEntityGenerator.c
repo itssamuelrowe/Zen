@@ -6712,7 +6712,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                     /* Log the emission of the load_cpr instruction. */
                     printf("[debug] Emitted load_cpr %d\n", targetNameIndex);
 
-                    int32_t index = invoke2Index;
+                    int32_t index = invokeIndex;
 
                     zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
                     if (expressions != NULL) {
@@ -6759,7 +6759,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                                 printf("[debug] Emitted store_aa\n");
                             }
 
-                            index = invokeIndex;
+                            index = invoke2Index;
                         }
                     }
 
@@ -7329,7 +7329,7 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
                             /* Log the emission of the load_cpr instruction. */
                             printf("[debug] Emitted load_cpr %d\n", targetNameIndex);
 
-                            int32_t index = invoke2Index;
+                            int32_t index = invokeIndex;
 
                             zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
                             if (expressions != NULL) {
@@ -7376,7 +7376,7 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
                                         printf("[debug] Emitted store_aa\n");
                                     }
 
-                                    index = invokeIndex;
+                                    index = invoke2Index;
                                 }
                             }
 
