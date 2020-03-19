@@ -88,7 +88,13 @@ void zen_Interpreter_invokeStaticFunctionEx(zen_Interpreter_t* interpreter,
 /* Invoke Virtual Function */
 
 zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpreter,
-    zen_Function_t* function, jtk_Array_t* arguments);
+    zen_Function_t* function, zen_Object_t* object, jtk_Array_t* arguments);
+
+/* Load Arguments */
+
+void zen_Interpreter_loadArguments(zen_Interpreter_t* interpreter,
+    zen_Function_t* function, zen_LocalVariableArray_t* array,
+    jtk_Array_t* arguments, bool instance);
 
 /* Read */
 

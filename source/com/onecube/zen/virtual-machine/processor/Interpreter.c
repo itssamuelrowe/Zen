@@ -1585,7 +1585,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         }
                         jtk_Array_setValue(arguments, 0, self);
 
-                        zen_Interpreter_invokeVirtualFunction(interpreter, function, arguments);
+                        zen_Interpreter_invokeVirtualFunction(interpreter, function, self, arguments);
                         jtk_Array_delete(arguments);
                     }
                 }
@@ -3693,6 +3693,8 @@ void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
         }
     }
     else {
+        zen_Interpreter_loadArguments(interpreter, constructor, stackFrame->m_localVariableArray,
+            arguments, true);
         zen_Interpreter_interpret(interpreter);
     }
 
@@ -3774,6 +3776,10 @@ zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interprete
         if (nativeFunction != NULL) {
             zen_NativeFunction_InvokeFunction_t invoke = nativeFunction->m_invoke;
             result = invoke(interpreter->m_virtualMachine, arguments);
+
+            if (function->m_returnType != ZEN_TYPE_VOID) {
+                zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
+            }
         }
         else {
             printf("[error] Unknown native function (class=%.*s, name=%.*s, descriptor=%.*s)\n",
@@ -3783,11 +3789,17 @@ zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interprete
         }
     }
     else {
+        zen_Interpreter_loadArguments(interpreter, function, stackFrame->m_localVariableArray,
+            arguments, false);
         zen_Interpreter_interpret(interpreter);
         // result = zen_OperandStack_popReference(stackFrame->m_operandStack);
+
+        if (function->m_returnType != ZEN_TYPE_VOID) {
+            result = zen_OperandStack_popReference(stackFrame->m_operandStack);
+            zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
+        }
     }
 
-    zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
     zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
     zen_StackFrame_delete(stackFrame);
 
@@ -3804,14 +3816,74 @@ void zen_Interpreter_invokeStaticFunctionEx(zen_Interpreter_t* interpreter,
 
 /* Invoke Virtual Function */
 
+zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpreter,
+    zen_Function_t* function, zen_Object_t* object, jtk_Array_t* arguments) {
+    zen_StackFrame_t* oldStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
+    zen_StackFrame_t* stackFrame = zen_StackFrame_new(function);
+    zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
+
+    zen_LocalVariableArray_setReference(stackFrame->m_localVariableArray, 0, object);
+
+    zen_EntityFile_t* entityFile = function->m_class->m_entityFile;
+    zen_Entity_t* entity = &entityFile->m_entity;
+    zen_ConstantPoolUtf8_t* name =
+        (zen_ConstantPoolUtf8_t*)entityFile->m_constantPool.m_entries[
+            entity->m_reference];
+    jtk_String_t* className = jtk_String_newEx(name->m_bytes, name->m_length);
+
+    zen_Object_t* result = NULL;
+    if (zen_Function_isNative(function)) {
+        zen_NativeFunction_t* nativeFunction = zen_VirtualMachine_getNativeFunction(
+            interpreter->m_virtualMachine, className, function->m_name, function->m_descriptor);
+
+        if (nativeFunction != NULL) {
+            zen_NativeFunction_InvokeFunction_t invoke = nativeFunction->m_invoke;
+            result = invoke(interpreter->m_virtualMachine, arguments);
+
+            if (function->m_returnType != ZEN_TYPE_VOID) {
+                zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
+            }
+        }
+        else {
+            printf("[error] Unknown native function (class=%.*s, name=%.*s, descriptor=%.*s)\n",
+                className->m_size, className->m_value, function->m_name->m_size,
+                function->m_name->m_value, function->m_descriptor->m_size,
+                function->m_descriptor->m_value);
+        }
+    }
+    else {
+        zen_Interpreter_loadArguments(interpreter, function, stackFrame->m_localVariableArray,
+            arguments, true);
+        zen_Interpreter_interpret(interpreter);
+
+        if (function->m_returnType != ZEN_TYPE_VOID) {
+            result = zen_OperandStack_popReference(stackFrame->m_operandStack);
+            zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
+        }
+    }
+
+    zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+    zen_StackFrame_delete(stackFrame);
+
+    return result;
+}
+
+/* Invoke Thread Exception Handler */
+
+void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter) {
+}
+
+/* Load Arguments */
+
 void zen_Interpreter_loadArguments(zen_Interpreter_t* interpreter,
-    zen_LocalVariableArray_t* array, jtk_Array_t* arguments) {
+    zen_Function_t* function, zen_LocalVariableArray_t* array,
+    jtk_Array_t* arguments, bool instance) {
     int32_t i;
     int32_t j;
-    /* Start from the second slot. The first slot is reserved for
-        * self reference.
-        */
-    j = ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT;
+    /* Start from the second slot, if the specified function is an instance function.
+     * The first slot is reserved for self reference.
+     */
+    j = instance? ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT : 0;
     for (i = 0; i < function->m_parameterCount; i += 2) {
         zen_Type_t parameterType = function->m_parameters[i];
         switch (parameterType) {
@@ -3866,7 +3938,7 @@ void zen_Interpreter_loadArguments(zen_Interpreter_t* interpreter,
                 break;
             }
 
-            case case ZEN_TYPE_INTEGER_64: {
+            case ZEN_TYPE_INTEGER_64: {
                 // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
                 int64_t argument = (int64_t)jtk_Array_getValue(arguments, i);
                 zen_LocalVariableArray_setLong(array, j, argument);
@@ -3874,7 +3946,7 @@ void zen_Interpreter_loadArguments(zen_Interpreter_t* interpreter,
                 break;
             }
 
-            case ZEN_TYPE_TYPE_DECIMAL_64: {
+            case ZEN_TYPE_DECIMAL_64: {
                 // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
                 // NOTE: We are using bit pattern instead of double values.
                 // Otherwise, all the casting could result in loss of value.
@@ -3896,62 +3968,6 @@ void zen_Interpreter_loadArguments(zen_Interpreter_t* interpreter,
             }
         }
     }
-}
-
-zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpreter,
-    zen_Function_t* function, zen_Object_t* object, jtk_Array_t* arguments) {
-    zen_StackFrame_t* oldStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
-    zen_StackFrame_t* stackFrame = zen_StackFrame_new(function);
-    zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
-
-    zen_LocalVariableArray_setReference(stackFrame->m_localVariableArray, 0, object);
-
-    zen_EntityFile_t* entityFile = function->m_class->m_entityFile;
-    zen_Entity_t* entity = &entityFile->m_entity;
-    zen_ConstantPoolUtf8_t* name =
-        (zen_ConstantPoolUtf8_t*)entityFile->m_constantPool.m_entries[
-            entity->m_reference];
-    jtk_String_t* className = jtk_String_newEx(name->m_bytes, name->m_length);
-
-    zen_Object_t* result = NULL;
-    if (zen_Function_isNative(function)) {
-        zen_NativeFunction_t* nativeFunction = zen_VirtualMachine_getNativeFunction(
-            interpreter->m_virtualMachine, className, function->m_name, function->m_descriptor);
-
-        if (nativeFunction != NULL) {
-            zen_NativeFunction_InvokeFunction_t invoke = nativeFunction->m_invoke;
-            result = invoke(interpreter->m_virtualMachine, arguments);
-
-            if (function->m_returnType != ZEN_TYPE_VOID) {
-                zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
-            }
-        }
-        else {
-            printf("[error] Unknown native function (class=%.*s, name=%.*s, descriptor=%.*s)\n",
-                className->m_size, className->m_value, function->m_name->m_size,
-                function->m_name->m_value, function->m_descriptor->m_size,
-                function->m_descriptor->m_value);
-        }
-    }
-    else {
-        zen_Interpreter_loadArguments(interpreter, stackFrame->m_localVariableArray, arguments);
-        zen_Interpreter_interpret(interpreter);
-
-        if (function->m_returnType != ZEN_TYPE_VOID) {
-            result = zen_OperandStack_popReference(stackFrame->m_operandStack);
-            zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
-        }
-    }
-
-    zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
-    zen_StackFrame_delete(stackFrame);
-
-    return result;
-}
-
-/* Invoke Thread Exception Handler */
-
-void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter) {
 }
 
 /* Read */

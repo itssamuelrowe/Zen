@@ -288,7 +288,7 @@ jtk_String_t* zen_String_toJTKString(zen_VirtualMachine_t* virtualMachine,
     return zen_ByteArray_toJTKString(virtualMachine, value);
 }
 
-void zen_ZenKernel_invoke(zen_VirtualMachine_t* virtualMachine,
+zen_Object_t* zen_ZenKernel_invoke(zen_VirtualMachine_t* virtualMachine,
     jtk_Array_t* arguments) {
     zen_Object_t* object = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* name = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
@@ -304,10 +304,10 @@ void zen_ZenKernel_invoke(zen_VirtualMachine_t* virtualMachine,
     jtk_String_delete(name0);
     jtk_String_delete(descriptor);
 
-    zen_Interpreter_invokeVirtualFunction(virtualMachine->m_interpreter, object, targetFunction, NULL);
+    return zen_Interpreter_invokeVirtualFunction(virtualMachine->m_interpreter, function, object, NULL);
 }
 
-void zen_ZenKernel_invokeStatic(zen_VirtualMachine_t* virtualMachine,
+zen_Object_t* zen_ZenKernel_invokeStatic(zen_VirtualMachine_t* virtualMachine,
     jtk_Array_t* arguments) {
     zen_Object_t* entity = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* targetFunctionName = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
@@ -333,7 +333,7 @@ void zen_ZenKernel_invokeStatic(zen_VirtualMachine_t* virtualMachine,
     jtk_String_delete(entity0);
     jtk_String_delete(targetFunctionDescriptor);
 
-    zen_Interpreter_invokeStaticFunction(virtualMachine->m_interpreter, targetFunction,
+    return zen_Interpreter_invokeStaticFunction(virtualMachine->m_interpreter, targetFunction,
         targetArguments);
 }
 
@@ -668,6 +668,11 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     // Object Test.print(Object format)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
         "print", 5, "(zen/core/Object):(zen/core/Object)", 35, zen_print);
+
+    // Object ZenKernel.invoke(Object object, Object name)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
+        "invoke", 6, "(zen/core/Object):(zen/core/Object)(zen/core/Object)",
+        52, zen_ZenKernel_invoke);
 
     // Object ZenKernel.invokeStatic(Object className, Object functionName, Object ... arguments)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
