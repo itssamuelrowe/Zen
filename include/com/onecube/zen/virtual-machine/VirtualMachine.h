@@ -82,7 +82,12 @@ zen_ObjectArray_t* zen_VirtualMachine_newObjectArray(zen_VirtualMachine_t* virtu
 zen_ObjectArray_t* zen_VirtualMachine_newByteArray(
     zen_VirtualMachine_t* virtualMachine, int8_t* bytes, int32_t size);
 
-/* Context */
+// Boolean
+
+zen_Object_t* zen_VirtualMachine_newBoolean(zen_VirtualMachine_t* virtualMachine,
+    bool value);
+
+// Context
 
 /**
  * The standard provides two classes to manipulate the virtual machine directly.

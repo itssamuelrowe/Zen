@@ -208,6 +208,90 @@ zen_Object_t* zen_Integer_remainder(zen_VirtualMachine_t* virtualMachine,
     return result;
 }
 
+zen_Object_t* zen_Integer_equals(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    
+    int64_t value1 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand1, "value", 5);
+    int64_t value2 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand2, "value", 5);
+    zen_Object_t* result = zen_VirtualMachine_newBoolean(virtualMachine, value1 == value2);
+    
+    return result;
+}
+
+zen_Object_t* zen_Integer_notEquals(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    
+    int64_t value1 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand1, "value", 5);
+    int64_t value2 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand2, "value", 5);
+    zen_Object_t* result = zen_VirtualMachine_newBoolean(virtualMachine, value1 != value2);
+    
+    return result;
+}
+
+zen_Object_t* zen_Integer_greater(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    
+    int64_t value1 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand1, "value", 5);
+    int64_t value2 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand2, "value", 5);
+    zen_Object_t* result = zen_VirtualMachine_newBoolean(virtualMachine, value1 > value2);
+    
+    return result;
+}
+
+zen_Object_t* zen_Integer_greaterOrEqual(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    
+    int64_t value1 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand1, "value", 5);
+    int64_t value2 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand2, "value", 5);
+    zen_Object_t* result = zen_VirtualMachine_newBoolean(virtualMachine, value1 >= value2);
+    
+    return result;
+}
+
+zen_Object_t* zen_Integer_lesser(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    
+    int64_t value1 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand1, "value", 5);
+    int64_t value2 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand2, "value", 5);
+    zen_Object_t* result = zen_VirtualMachine_newBoolean(virtualMachine, value1 < value2);
+    
+    return result;
+}
+
+zen_Object_t* zen_Integer_lesserOrEqual(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    
+    int64_t value1 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand1, "value", 5);
+    int64_t value2 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            operand2, "value", 5);
+    zen_Object_t* result = zen_VirtualMachine_newBoolean(virtualMachine, value1 <= value2);
+    
+    return result;
+}
+
 void zen_String_initialize(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* self, jtk_Array_t* arguments) {
     const uint8_t* valueDescriptor = "value";
@@ -484,6 +568,31 @@ zen_ObjectArray_t* zen_VirtualMachine_newByteArray(
     zen_VirtualMachine_setObjectField(virtualMachine, result, "values", 6, values);
     // TODO: Change setObjectField to setIntegerField!
     zen_VirtualMachine_setObjectField(virtualMachine, result, "size", 4, size);
+
+    return result;
+}
+
+// Boolean
+
+zen_Object_t* zen_VirtualMachine_newBoolean(zen_VirtualMachine_t* virtualMachine,
+    bool value) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+    
+    zen_Interpreter_t* interpreter = virtualMachine->m_interpreter;
+    
+    const uint8_t* booleanClassDescriptor = "zen/core/Boolean";
+    int32_t booleanClassDescriptorSize = 16;
+    const uint8_t* booleanConstructorDescriptor = "v:(zen/core/Object)";
+    int32_t booleanConstructorDescriptorSize = 19;
+
+    jtk_Array_t* arguments = jtk_Array_new(1);
+    jtk_Array_setValue(arguments, 0, (void*)value);
+
+    zen_Object_t* result = zen_VirtualMachine_newObjectEx(interpreter->m_virtualMachine,
+        booleanClassDescriptor, booleanClassDescriptorSize, booleanConstructorDescriptor,
+        booleanConstructorDescriptorSize, arguments);
+
+    jtk_Array_delete(arguments);
 
     return result;
 }
