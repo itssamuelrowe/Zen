@@ -83,6 +83,7 @@ void zen_EntityLoader_delete(zen_EntityLoader_t* loader) {
         zen_EntityFile_t* entityFile = (zen_EntityFile_t*)jtk_HashMapEntry_getValue(entry->m_value);
         // zen_EntityFile_delete(entityFile);
     }
+    jtk_Iterator_delete(entryIterator);
 
     zen_AttributeParseRules_delete(loader->m_attributeParseRules);
 

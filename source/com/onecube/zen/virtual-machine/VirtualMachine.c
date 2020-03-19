@@ -91,6 +91,7 @@ bool zen_VirtualMachine_isInstance(zen_VirtualMachine_t* virtualMachine,
 void zen_print(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
     jtk_String_t* stringDescriptor = jtk_String_newEx("zen/core/String", 15);
     jtk_String_t* integerDescriptor = jtk_String_newEx("zen/core/Integer", 16);
+    jtk_String_t* booleanDescriptor = jtk_String_newEx("zen/core/Boolean", 16);
 
     zen_Object_t* argument = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
 
@@ -110,6 +111,12 @@ void zen_print(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
         int64_t value0 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
             value, "value", 5);
         printf("%ld\n", value0);
+    }
+    else if (zen_VirtualMachine_isInstance(virtualMachine, argument, booleanDescriptor)) {
+        zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+        int64_t value0 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            value, "value", 5);
+        printf("%s\n", value0? "true" : "false");
     }
     else {
         printf("Object <%lX>\n", argument);
@@ -290,6 +297,20 @@ zen_Object_t* zen_Integer_lesserOrEqual(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* result = zen_VirtualMachine_newBoolean(virtualMachine, value1 <= value2);
     
     return result;
+}
+
+/*******************************************************************************
+ * Boolean                                                                     *
+ *******************************************************************************/
+
+void zen_Boolean_initialize(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* self, jtk_Array_t* arguments) {
+    const uint8_t* valueDescriptor = "value";
+    int32_t valueDescriptorSize = 5;
+    
+    zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_VirtualMachine_setObjectField(virtualMachine, self, valueDescriptor,
+        valueDescriptorSize, value);
 }
 
 void zen_String_initialize(zen_VirtualMachine_t* virtualMachine,
@@ -623,7 +644,7 @@ zen_Object_t* zen_VirtualMachine_newBoolean(zen_VirtualMachine_t* virtualMachine
     int32_t booleanConstructorDescriptorSize = 19;
 
     jtk_Array_t* arguments = jtk_Array_new(1);
-    jtk_Array_setValue(arguments, 0, (void*)value);
+    jtk_Array_setValue(arguments, 0, (void*)(int64_t)value);
 
     zen_Object_t* result = zen_VirtualMachine_newObjectEx(interpreter->m_virtualMachine,
         booleanClassDescriptor, booleanClassDescriptorSize, booleanConstructorDescriptor,
@@ -801,6 +822,7 @@ zen_Object_t* zen_VirtualMachine_newInteger(zen_VirtualMachine_t* virtualMachine
 
 // Libraries
 
+// TODO: registerNativeFunction() should accept full class descriptor not just the name!
 void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachine) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
 
@@ -899,6 +921,11 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     // Boolean Integer.lesserOrEqual(value1, value2)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
         "lesserOrEqual", 13, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_lesserOrEqual);
+
+    // void Boolean.new(value)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Boolean", 7,
+        "<initialize>", 12, "v:(zen/core/Object)", 19, zen_Boolean_initialize);
+
 
     // TODO: Unload native functions
 }
@@ -1002,8 +1029,8 @@ zen_Object_t* zen_VirtualMachine_makeObjectEx(zen_VirtualMachine_t* virtualMachi
      * to 0.
      */
     zen_Object_t* object = calloc(ZEN_OBJECT_HEADER_SIZE + class0->m_memoryRequirement, sizeof (uint8_t));
-    *((uintptr_t*)object + ZEN_OBJECT_HEADER_CLASS_OFFSET) = (uintptr_t)class0;
-    *((uint32_t*)object + ZEN_OBJECT_HEADER_HASH_CODE_OFFSET) = zen_VirtualMachine_identityHash(object);
+    *(intptr_t*)((uint8_t*)object + ZEN_OBJECT_HEADER_CLASS_OFFSET) = (uintptr_t)class0;
+    *(int32_t*)((uint8_t*)object + ZEN_OBJECT_HEADER_HASH_CODE_OFFSET) = zen_VirtualMachine_identityHash(object);
 
     zen_Interpreter_invokeConstructor(virtualMachine->m_interpreter, object,
         constructor, arguments);
