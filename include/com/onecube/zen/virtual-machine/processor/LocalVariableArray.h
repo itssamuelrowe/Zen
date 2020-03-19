@@ -26,6 +26,12 @@
  * LocalVariableArray                                                          *
  *******************************************************************************/
 
+#define ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT_1 1
+#define ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT_2 2
+#define ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT (sizeof (void*) <= 4)? \
+    ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT_1 : ((sizeof (void*) <= 8)? \
+    ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT_2 : zen_LocalVariableArray_referenceSlotCountError())
+
 /**
  * @class LocalVariableArray
  * @ingroup zen_vm_processor

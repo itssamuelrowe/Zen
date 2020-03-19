@@ -24,12 +24,6 @@
  * LocalVariableArray                                                          *
  *******************************************************************************/
 
-#define ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT_1 1
-#define ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT_2 2
-#define ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT (sizeof (void*) <= 4)? \
-    ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT_1 : ((sizeof (void*) <= 8)? \
-    ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT_2 : zen_LocalVariableArray_referenceSlotCountError())
-
 int32_t zen_LocalVariableArray_referenceSlotCountError() {
     fprintf(stderr, "[internal error] Pointer type occupies more than 8 bytes. A reference cannot occupy more than two slots in the local variable array.\n");
     exit(0);

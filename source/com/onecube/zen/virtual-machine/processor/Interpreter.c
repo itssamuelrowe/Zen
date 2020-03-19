@@ -3804,11 +3804,107 @@ void zen_Interpreter_invokeStaticFunctionEx(zen_Interpreter_t* interpreter,
 
 /* Invoke Virtual Function */
 
+void zen_Interpreter_loadArguments(zen_Interpreter_t* interpreter,
+    zen_LocalVariableArray_t* array, jtk_Array_t* arguments) {
+    int32_t i;
+    int32_t j;
+    /* Start from the second slot. The first slot is reserved for
+        * self reference.
+        */
+    j = ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT;
+    for (i = 0; i < function->m_parameterCount; i += 2) {
+        zen_Type_t parameterType = function->m_parameters[i];
+        switch (parameterType) {
+            case ZEN_TYPE_BOOLEAN: {
+                // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
+                bool argument = (bool)jtk_Array_getValue(arguments, i);
+                zen_LocalVariableArray_setInteger(array, j, (int32_t)argument);
+                j += 1;
+                break;
+            }
+
+            case ZEN_TYPE_CHARACTER: {
+                // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
+                // TODO: Is character 1 byte?
+                uint8_t argument = (uint8_t)jtk_Array_getValue(arguments, i);
+                zen_LocalVariableArray_setInteger(array, j, (int32_t)argument);
+                j += 1;
+                break;
+            }
+
+            case ZEN_TYPE_INTEGER_8: {
+                // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
+                int8_t argument = (int8_t)jtk_Array_getValue(arguments, i);
+                zen_LocalVariableArray_setInteger(array, j, (int32_t)argument);
+                j += 1;
+                break;
+            }
+
+            case ZEN_TYPE_INTEGER_16: {
+                // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
+                int16_t argument = (int16_t)jtk_Array_getValue(arguments, i);
+                zen_LocalVariableArray_setInteger(array, j, (int32_t)argument);
+                j += 1;
+                break;
+            }
+
+            case ZEN_TYPE_INTEGER_32: {
+                // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
+                int32_t argument = (int32_t)jtk_Array_getValue(arguments, i);
+                zen_LocalVariableArray_setInteger(array, j, argument);
+                j += 1;
+                break;
+            }
+
+            case ZEN_TYPE_DECIMAL_32: {
+                // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
+                // NOTE: We are using bit pattern instead of float values.
+                // Otherwise, all the casting could result in loss of value.
+                int32_t argument = (int32_t)jtk_Array_getValue(arguments, i);
+                zen_LocalVariableArray_setInteger(array, j, argument);
+                j += 1;
+                break;
+            }
+
+            case case ZEN_TYPE_INTEGER_64: {
+                // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
+                int64_t argument = (int64_t)jtk_Array_getValue(arguments, i);
+                zen_LocalVariableArray_setLong(array, j, argument);
+                j += 1;
+                break;
+            }
+
+            case ZEN_TYPE_TYPE_DECIMAL_64: {
+                // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
+                // NOTE: We are using bit pattern instead of double values.
+                // Otherwise, all the casting could result in loss of value.
+                int64_t argument = (int64_t)jtk_Array_getValue(arguments, i);
+                zen_LocalVariableArray_setLong(array, j, argument);
+                j += 1;
+                break;
+            }
+            
+            case ZEN_TYPE_REFERENCE: {
+                void* argument = jtk_Array_getValue(arguments, i);
+                zen_LocalVariableArray_setReference(array, j, argument);
+                j += ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT;
+                break;
+            }
+
+            default: {
+                printf("[error] Invalid parameter type %d!\n", parameterType);
+            }
+        }
+    }
+}
+
 zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpreter,
-    zen_Function_t* function, jtk_Array_t* arguments) {
+    zen_Function_t* function, zen_Object_t* object, jtk_Array_t* arguments) {
     zen_StackFrame_t* oldStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
     zen_StackFrame_t* stackFrame = zen_StackFrame_new(function);
     zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
+
+    zen_LocalVariableArray_setReference(stackFrame->m_localVariableArray, 0, object);
 
     zen_EntityFile_t* entityFile = function->m_class->m_entityFile;
     zen_Entity_t* entity = &entityFile->m_entity;
@@ -3825,6 +3921,10 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
         if (nativeFunction != NULL) {
             zen_NativeFunction_InvokeFunction_t invoke = nativeFunction->m_invoke;
             result = invoke(interpreter->m_virtualMachine, arguments);
+
+            if (function->m_returnType != ZEN_TYPE_VOID) {
+                zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
+            }
         }
         else {
             printf("[error] Unknown native function (class=%.*s, name=%.*s, descriptor=%.*s)\n",
@@ -3834,11 +3934,15 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
         }
     }
     else {
+        zen_Interpreter_loadArguments(interpreter, stackFrame->m_localVariableArray, arguments);
         zen_Interpreter_interpret(interpreter);
-        // result = zen_OperandStack_popReference(stackFrame->m_operandStack);
+
+        if (function->m_returnType != ZEN_TYPE_VOID) {
+            result = zen_OperandStack_popReference(stackFrame->m_operandStack);
+            zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
+        }
     }
 
-    zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
     zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
     zen_StackFrame_delete(stackFrame);
 
