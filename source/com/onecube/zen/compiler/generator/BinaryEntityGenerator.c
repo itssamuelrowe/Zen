@@ -2698,11 +2698,10 @@ void zen_BinaryEntityGenerator_onExitAssertStatement(zen_ASTListener_t* astListe
         generator->m_constantPoolBuilder, assertionErrorClassName,
         assertionErrorClassNameSize);
 
-    // TODO: Change <constructor> to <initialize>
-    const uint8_t* constructor1Descriptor = "v:@(zen/core/String)";
+    const uint8_t* constructor1Descriptor = "v:@(zen/core/Object)";
     int32_t constructor1DescriptorSize = 20;
-    const uint8_t* constructorName = "<constructor>";
-    int32_t constructorNameSize = 13;
+    const uint8_t* constructorName = "<initialize>";
+    int32_t constructorNameSize = 10;
     uint16_t constructor1Index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
         generator->m_constantPoolBuilder, assertionErrorClassName,
         assertionErrorClassNameSize, constructor1Descriptor, constructor1DescriptorSize,
@@ -6450,7 +6449,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
         // Error: What node do we have here?
     }
 
-    const uint8_t* invokeDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/String)";
+    const uint8_t* invokeDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)";
     int32_t invokeDescriptorSize = 52;
     const uint8_t* invokeName = "invoke";
     int32_t invokeNameSize = 6;
@@ -6459,7 +6458,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
         invokeDescriptor, invokeDescriptorSize, invokeName,
         invokeNameSize);
 
-    const uint8_t* invoke2Descriptor = "(zen/core/Object):(zen/core/Object)(zen/core/String)@(zen/core/Object)";
+    const uint8_t* invoke2Descriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)";
     int32_t invoke2DescriptorSize = 70;
     uint16_t invoke2Index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
         generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
@@ -6978,7 +6977,7 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
         storeClassFieldDescriptor, storeClassFieldDescriptorSize, storeClassFieldName,
         storeClassFieldNameSize);
 
-    const uint8_t* invokeDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/String)";
+    const uint8_t* invokeDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)";
     int32_t invokeDescriptorSize = 52;
     const uint8_t* invokeName = "invoke";
     int32_t invokeNameSize = 6;
@@ -6987,7 +6986,7 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
         invokeDescriptor, invokeDescriptorSize, invokeName,
         invokeNameSize);
 
-    const uint8_t* invoke2Descriptor = "(zen/core/Object):(zen/core/Object)(zen/core/String)@(zen/core/Object)";
+    const uint8_t* invoke2Descriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)";
     int32_t invoke2DescriptorSize = 70;
     uint16_t invoke2Index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
         generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
@@ -7012,7 +7011,7 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
         invokeStatic2Descriptor, invokeStatic2DescriptorSize, invokeStaticName,
         invokeStaticNameSize);
 
-    const uint8_t* loadFieldDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/String)";
+    const uint8_t* loadFieldDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)";
     int32_t loadFieldDescriptorSize = 52;
     const uint8_t* loadFieldName = "loadField";
     int32_t loadFieldNameSize = 9;
