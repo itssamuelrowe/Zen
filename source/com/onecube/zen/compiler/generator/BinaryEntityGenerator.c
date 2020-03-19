@@ -795,6 +795,55 @@ void zen_BinaryEntityGenerator_onExitComponentDeclaration(zen_ASTListener_t* ast
 }
 
 // functionDeclaration
+jtk_String_t* zen_BinaryEntityGenerator_getDescriptor(zen_ASTNode_t* functionParameters);
+
+void zen_BinaryEntityGenerator_assignParameterIndexes(zen_BinaryEntityGenerator_t* generator,
+    zen_ASTNode_t* functionParameters) {
+    zen_FunctionParametersContext_t* functionParametersContext =
+        (zen_FunctionParametersContext_t*)functionParameters->m_context;
+
+    /* Retrieve the current scope from the symbol table. */
+    zen_Scope_t* currentScope = zen_SymbolTable_getCurrentScope(generator->m_symbolTable);
+    
+    int32_t fixedParameterCount = jtk_ArrayList_getSize(functionParametersContext->m_fixedParameters);
+    int32_t i;
+    for (i = 0; i < fixedParameterCount; i++) {
+        zen_ASTNode_t* identifier = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+            functionParametersContext->m_fixedParameters, i);
+        int32_t identifierSize;
+        uint8_t* identifierText = zen_ASTNode_toCString(identifier, &identifierSize);
+
+        zen_Symbol_t* symbol = zen_Scope_resolve(currentScope, identifierText);
+        zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
+
+        /* Generate an index for the parameter. */
+        constantSymbol->m_index = generator->m_localVariableCount;
+        /* Update the local variable count, each parameter is a reference. Therefore,
+         * increment the count by 2.
+         */
+        generator->m_localVariableCount += 2;
+
+        jtk_CString_delete(identifierText);
+    }
+
+    if (functionParametersContext->m_variableParameter != NULL) {
+        int32_t identifierSize;
+        uint8_t* identifierText = zen_ASTNode_toCString(
+            functionParametersContext->m_variableParameter, &identifierSize);
+
+        zen_Symbol_t* symbol = zen_Scope_resolve(currentScope, identifierText);
+        zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
+
+        /* Generate an index for the parameter. */
+        constantSymbol->m_index = generator->m_localVariableCount;
+        /* Update the local variable count, each parameter is a reference. Therefore,
+         * increment the count by 2.
+         */
+        generator->m_localVariableCount += 2;
+
+        jtk_CString_delete(identifierText);
+    }
+}
 
 void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
     zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
@@ -817,6 +866,11 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
     // TODO: The first local variable in the local variable array is reserved for the "this" pointer.
     // Therefore, do not perform the following increment for static functions.
     generator->m_localVariableCount += 2;
+
+    generator->m_descriptor = zen_BinaryEntityGenerator_getDescriptor(
+        context->m_functionParameters);
+
+    zen_BinaryEntityGenerator_assignParameterIndexes(generator, context->m_functionParameters);
 
     lhs = false;
 }
@@ -866,8 +920,8 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
  * The function descriptor for this function is shown below.
  * (zen/core/Object):(zen/core/Object)@(zen/core/Object)
  */
-jtk_String_t* zen_BinaryEntityGenerator_getDescriptorEx(zen_BinaryEntityGenerator_t* generator,
-    zen_ASTNode_t* functionParameters, bool constructor) {
+jtk_String_t* zen_BinaryEntityGenerator_getDescriptorEx(zen_ASTNode_t* functionParameters,
+    bool constructor) {
     zen_FunctionParametersContext_t* functionParametersContext =
         (zen_FunctionParametersContext_t*)functionParameters->m_context;
 
@@ -897,9 +951,8 @@ jtk_String_t* zen_BinaryEntityGenerator_getDescriptorEx(zen_BinaryEntityGenerato
     return result;
 }
 
-jtk_String_t* zen_BinaryEntityGenerator_getDescriptor(zen_BinaryEntityGenerator_t* generator,
-    zen_ASTNode_t* functionParameters) {
-    return zen_BinaryEntityGenerator_getDescriptorEx(generator, functionParameters, false);
+jtk_String_t* zen_BinaryEntityGenerator_getDescriptor(zen_ASTNode_t* functionParameters) {
+    return zen_BinaryEntityGenerator_getDescriptorEx(functionParameters, false);
 }
 
 zen_InstructionAttribute_t* zen_BinaryEntityGenerator_makeInstructionAttribute(
@@ -2306,8 +2359,6 @@ void zen_BinaryEntityGenerator_onExitFunctionDeclaration(
     zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
 
     bool constructor = zen_Token_getType(identifierToken) == ZEN_TOKEN_KEYWORD_NEW;
-    jtk_String_t* descriptor = zen_BinaryEntityGenerator_getDescriptorEx(generator,
-        context->m_functionParameters, constructor);
 
     uint8_t* temporary = jtk_CString_newWithSize(identifierToken->m_text, identifierToken->m_length);
     zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, temporary);
@@ -2322,12 +2373,7 @@ void zen_BinaryEntityGenerator_onExitFunctionDeclaration(
             identifierToken->m_length);
 
     uint16_t descriptorIndex = zen_ConstantPoolBuilder_getUtf8EntryIndex(
-        generator->m_constantPoolBuilder, descriptor);
-
-    /* Destroy the descriptor. A constant pool reference to the descriptor was
-     * acquired.
-     */
-    jtk_String_delete(descriptor);
+        generator->m_constantPoolBuilder, generator->m_descriptor);
 
     zen_FunctionEntity_t* functionEntity = zen_FunctionEntity_new(flags,
         nameIndex, descriptorIndex);
@@ -2369,13 +2415,17 @@ void zen_BinaryEntityGenerator_onExitFunctionDeclaration(
 #warning "TODO: Implement a stack like behaviour to alter active channel."
     zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_builder, 0);
 
+    /* Destroy the descriptor of the function. */
+    jtk_String_delete(generator->m_descriptor);
+    /* The exception handler sites are destroyed when the entity file is destroyed. */
+    jtk_ArrayList_clear(generator->m_exceptionHandlerSites);
+
     /* Reset the counters used for tracking certain properties of the function
      * being declared.
      */
     generator->m_maxStackSize = 0;
     generator->m_localVariableCount = 0;
-    /* The exception handler sites are destroyed when the entity file is destroyed. */
-    jtk_ArrayList_clear(generator->m_exceptionHandlerSites);
+    generator->m_descriptor = NULL;
 }
 
 // functionParameters

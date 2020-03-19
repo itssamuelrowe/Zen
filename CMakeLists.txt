@@ -194,7 +194,7 @@ add_executable (zen ${ZEN_PUBLIC_HEADERS} ${ZEN_COMMON_SOURCE} ${ZEN_COMPILER_SO
 target_link_libraries(zen ${JTK_LIBRARIES} m)
 target_include_directories(zen SYSTEM PUBLIC ${JTK_INCLUDE_DIRS})
 # target_compile_options(zen PUBLIC -Wall -Wswitch)
-target_compile_options(zen PUBLIC -g -Wall ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
+target_compile_options(zen PUBLIC -g -w ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
 
 
 

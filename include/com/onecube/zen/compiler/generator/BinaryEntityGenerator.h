@@ -106,6 +106,11 @@ struct zen_BinaryEntityGenerator_t {
      * The list of exception handler sites within the function being declared.
      */
     jtk_ArrayList_t* m_exceptionHandlerSites;
+
+    /* The descriptor of the function for which instructions are being
+     * generated.
+     */
+    jtk_String_t* m_descriptor;
 };
 
 /**
