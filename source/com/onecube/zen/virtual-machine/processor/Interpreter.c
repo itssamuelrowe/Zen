@@ -3884,8 +3884,8 @@ void zen_Interpreter_loadArguments(zen_Interpreter_t* interpreter,
      * The first slot is reserved for self reference.
      */
     j = instance? ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT : 0;
-    for (i = 0; i < function->m_parameterCount; i += 2) {
-        zen_Type_t parameterType = function->m_parameters[i];
+    for (i = 0; i < function->m_parameterCount; i++) {
+        zen_Type_t parameterType = (zen_Type_t)function->m_parameters[i * 2];
         switch (parameterType) {
             case ZEN_TYPE_BOOLEAN: {
                 // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
