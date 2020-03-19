@@ -440,21 +440,58 @@ zen_Object_t* zen_ZenKernel_evaluate(zen_VirtualMachine_t* virtualMachine,
 
     switch (symbolSize) {
         case 1: {
-            if (jtk_CString_equals(symbolBytes, symbolSize, "+", 1)) {
-                targetFunctionName = jtk_String_newEx("add", 3);
+            switch (symbolBytes[0]) {
+                case '+': {
+                    targetFunctionName = jtk_String_newEx("add", 3);
+                    break;
+                }
+                case '-': {
+                    targetFunctionName = jtk_String_newEx("subtract", 8);
+                    break;
+                }
+            
+                case '*': {
+                    targetFunctionName = jtk_String_newEx("multiply", 8);
+                    break;
+                }
+            
+                case '/': {
+                    targetFunctionName = jtk_String_newEx("divide", 6);
+                    break;
+                }
+                
+                case '%': {
+                    targetFunctionName = jtk_String_newEx("remainder", 9);
+                    break;
+                }
+
+                case '>': {
+                    targetFunctionName = jtk_String_newEx("greater", 7);
+                    break;
+                }
+
+                case '<': {
+                    targetFunctionName = jtk_String_newEx("lesser", 6);
+                    break;
+                }
             }
-            else if (jtk_CString_equals(symbolBytes, symbolSize, "-", 1)) {
-                targetFunctionName = jtk_String_newEx("subtract", 8);
+            break;
+        }
+
+        case 2: {
+            if (jtk_CString_equals(symbolBytes, 2, "==", 2)) {
+                targetFunctionName = jtk_String_newEx("equals", 6);
             }
-            else if (jtk_CString_equals(symbolBytes, symbolSize, "*", 1)) {
-                targetFunctionName = jtk_String_newEx("multiply", 8);
+            else if (jtk_CString_equals(symbolBytes, 2, "!=", 2)) {
+                targetFunctionName = jtk_String_newEx("notEquals", 9);
             }
-            else if (jtk_CString_equals(symbolBytes, symbolSize, "/", 1)) {
-                targetFunctionName = jtk_String_newEx("divide", 6);
+            else if (jtk_CString_equals(symbolBytes, 2, ">=", 2)) {
+                targetFunctionName = jtk_String_newEx("greaterOrEqual", 14);
             }
-            else if (jtk_CString_equals(symbolBytes, symbolSize, "%", 1)) {
-                targetFunctionName = jtk_String_newEx("remainder", 9);
+            else if (jtk_CString_equals(symbolBytes, 2, "<=", 2)) {
+                targetFunctionName = jtk_String_newEx("lesserOrEqual", 13);
             }
+            
             break;
         }
     }
@@ -838,6 +875,30 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     // Integer Integer.remainder(value1, value2)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
         "remainder", 9, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_remainder);
+
+    // Boolean Integer.equals(value1, value2)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+        "equals", 6, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_equals);
+
+    // Boolean Integer.notEquals(value1, value2)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+        "notEquals", 9, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_notEquals);
+
+    // Boolean Integer.greater(value1, value2)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+        "greater", 7, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_greater);
+
+    // Boolean Integer.greaterOrEqual(value1, value2)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+        "greaterOrEqual", 14, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_greaterOrEqual);
+
+    // Boolean Integer.lesser(value1, value2)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+        "lesser", 6, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_lesser);
+
+    // Boolean Integer.lesserOrEqual(value1, value2)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+        "lesserOrEqual", 13, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_lesserOrEqual);
 
     // TODO: Unload native functions
 }
