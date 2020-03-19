@@ -1514,14 +1514,15 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     
                     int32_t parameterCount = constructor->m_parameterCount;
                     if (constructor->m_parameterCount > 0) {
+                        // jtk_Array_t* arguments = jtk_Array_new(parameterCount + 1);
                         jtk_Array_t* arguments = jtk_Array_new(parameterCount);
                         int32_t parameterIndex;
                         for (parameterIndex = parameterCount - 1; parameterIndex >= 0; parameterIndex--) {
                             void* argument = (void*)zen_OperandStack_popReference(currentStackFrame->m_operandStack);
                             jtk_Array_setValue(arguments, parameterIndex, argument);
                         }
-                        
                         zen_Object_t* object = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+                        // jtk_Array_setValue(arguments, 0, object);
 
                         zen_Interpreter_invokeConstructor(interpreter, object, constructor, arguments);
                         jtk_Array_delete(arguments);
@@ -1569,9 +1570,13 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 if (function != NULL) {
                     int32_t parameterCount = function->m_parameterCount;
                     if (function->m_parameterCount > 0) {
+                        /* For native instance functions, the first argument is always the instance itself. 
+                         * Consider changing this behaviour such that the self reference is in the prototype
+                         * of the native function pointer.
+                         */
                         jtk_Array_t* arguments = jtk_Array_new(parameterCount + 1);
                         int32_t parameterIndex;
-                        for (parameterIndex = parameterCount - 1; parameterIndex > 0; parameterIndex--) {
+                        for (parameterIndex = parameterCount; parameterIndex > 0; parameterIndex--) {
                             void* argument = (void*)zen_OperandStack_popReference(currentStackFrame->m_operandStack);
                             jtk_Array_setValue(arguments, parameterIndex, argument);
                         }
@@ -3651,6 +3656,9 @@ void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
     zen_StackFrame_t* oldStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
     zen_StackFrame_t* stackFrame = zen_StackFrame_new(constructor);
     zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
+
+    /* Pass the self reference to the constructor. */
+    zen_LocalVariableArray_setReference(stackFrame->m_localVariableArray, 0, object);
 
     zen_EntityFile_t* entityFile = constructor->m_class->m_entityFile;
     zen_Entity_t* entity = &entityFile->m_entity;

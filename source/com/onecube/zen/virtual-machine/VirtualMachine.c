@@ -92,7 +92,7 @@ void zen_print(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
     jtk_String_t* stringDescriptor = jtk_String_newEx("zen/core/String", 15);
     jtk_String_t* integerDescriptor = jtk_String_newEx("zen/core/Integer", 16);
 
-    zen_Object_t* argument = (zen_Object_t*)jtk_Array_getValue(arguments, 0);;
+    zen_Object_t* argument = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
 
     if (zen_VirtualMachine_isInstance(virtualMachine, argument, stringDescriptor)) {
         zen_Object_t* format = argument;
@@ -122,6 +122,7 @@ void zen_Integer_initialize(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* self, jtk_Array_t* arguments) {
     const uint8_t* valueDescriptor = "value";
     int32_t valueDescriptorSize = 5;
+    
     zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_VirtualMachine_setObjectField(virtualMachine, self, valueDescriptor,
         valueDescriptorSize, value);
@@ -211,6 +212,7 @@ void zen_String_initialize(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* self, jtk_Array_t* arguments) {
     const uint8_t* valueDescriptor = "value";
     int32_t valueDescriptorSize = 5;
+    
     zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_VirtualMachine_setObjectField(virtualMachine, self, valueDescriptor,
         valueDescriptorSize, value);
@@ -391,6 +393,19 @@ zen_Object_t* zen_ZenKernel_storeField(zen_VirtualMachine_t* virtualMachine,
     return value;
 }
 
+zen_Object_t* zen_ZenKernel_loadField(zen_VirtualMachine_t* virtualMachine,
+    jtk_Array_t* arguments) {
+    zen_Object_t* self = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* name = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+
+    jtk_String_t* name0 = zen_String_toJTKString(virtualMachine, name);
+    zen_Object_t* result = zen_VirtualMachine_getObjectField(virtualMachine,
+        self, name0->m_value, name0->m_size);
+    jtk_String_delete(name0);
+
+    return result;
+}
+
 /*******************************************************************************
  * VirtualMachine                                                              *
  *******************************************************************************/
@@ -567,7 +582,6 @@ void zen_VirtualMachine_setObjectField(zen_VirtualMachine_t* virtualMachine,
         }
         // hexDump(NULL, object, class0->m_memoryRequirement + ZEN_OBJECT_HEADER_CLASS_SIZE);
     }
-
 }
 
 zen_Object_t* zen_VirtualMachine_getObjectField(zen_VirtualMachine_t* virtualMachine,
@@ -650,6 +664,11 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
         "storeField", 10, "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)",
         69, zen_ZenKernel_storeField);
+    
+    // Object ZenKernel.loadField(Object self, Object name)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
+        "loadField", 9, "(zen/core/Object):(zen/core/Object)(zen/core/Object)",
+        52, zen_ZenKernel_loadField);
 
     // void String.new(value)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "String", 6,
