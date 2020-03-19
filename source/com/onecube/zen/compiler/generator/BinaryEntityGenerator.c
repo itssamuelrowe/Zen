@@ -796,6 +796,8 @@ void zen_BinaryEntityGenerator_onExitComponentDeclaration(zen_ASTListener_t* ast
 
 // functionDeclaration
 jtk_String_t* zen_BinaryEntityGenerator_getDescriptor(zen_ASTNode_t* functionParameters);
+jtk_String_t* zen_BinaryEntityGenerator_getDescriptorEx(zen_ASTNode_t* functionParameters,
+    bool constructor);
 
 void zen_BinaryEntityGenerator_assignParameterIndexes(zen_BinaryEntityGenerator_t* generator,
     zen_ASTNode_t* functionParameters) {
@@ -867,8 +869,11 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
     // Therefore, do not perform the following increment for static functions.
     generator->m_localVariableCount += 2;
 
-    generator->m_descriptor = zen_BinaryEntityGenerator_getDescriptor(
-        context->m_functionParameters);
+    zen_ASTNode_t* identifier = context->m_identifier;
+    zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+    bool constructor = zen_Token_getType(identifierToken) == ZEN_TOKEN_KEYWORD_NEW;
+    generator->m_descriptor = zen_BinaryEntityGenerator_getDescriptorEx(
+        context->m_functionParameters, constructor);
 
     zen_BinaryEntityGenerator_assignParameterIndexes(generator, context->m_functionParameters);
 
