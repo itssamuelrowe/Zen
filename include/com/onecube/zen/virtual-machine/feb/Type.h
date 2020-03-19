@@ -39,7 +39,8 @@ enum zen_Type_t {
     ZEN_TYPE_DECIMAL_32 = 6,
     ZEN_TYPE_DECIMAL_64 = 7,
     ZEN_TYPE_REFERENCE = 8,
-    ZEN_TYPE_VOID = 9
+    ZEN_TYPE_VOID = 9,
+    ZEN_TYPE_UNKNOWN = 10
 };
 
 /**

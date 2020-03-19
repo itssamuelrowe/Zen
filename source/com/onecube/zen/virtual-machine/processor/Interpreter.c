@@ -1512,19 +1512,22 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 if (constructor != NULL) {
                     // TODO: Invoke the constructor when it accepts no arguments.
                     
+                    jtk_Array_t* arguments = NULL;
                     int32_t parameterCount = constructor->m_parameterCount;
                     if (constructor->m_parameterCount > 0) {
                         // jtk_Array_t* arguments = jtk_Array_new(parameterCount + 1);
-                        jtk_Array_t* arguments = jtk_Array_new(parameterCount);
+                        arguments = jtk_Array_new(parameterCount);
                         int32_t parameterIndex;
                         for (parameterIndex = parameterCount - 1; parameterIndex >= 0; parameterIndex--) {
                             void* argument = (void*)zen_OperandStack_popReference(currentStackFrame->m_operandStack);
                             jtk_Array_setValue(arguments, parameterIndex, argument);
                         }
-                        zen_Object_t* object = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
-                        // jtk_Array_setValue(arguments, 0, object);
+                    }
 
-                        zen_Interpreter_invokeConstructor(interpreter, object, constructor, arguments);
+                    zen_Object_t* object = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+                    zen_Interpreter_invokeConstructor(interpreter, object, constructor, arguments);
+
+                    if (arguments != NULL) {
                         jtk_Array_delete(arguments);
                     }
                 }
@@ -1628,8 +1631,6 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 jtk_String_t* functionDescriptor = jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
                 zen_Function_t* function = zen_Class_getStaticFunction(targetClass,
                     functionName, functionDescriptor);
-                jtk_String_delete(functionDescriptor);
-                jtk_String_delete(functionName);
 
                 if (function != NULL) {
                     // zen_Interpreter_handleClassInitialization(interpreter, class0);
@@ -1647,8 +1648,15 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 }
                 else {
                     /* TODO: Throw an instance of the UnknownFunctionException class. */
+                    printf("[error] An exception was thrown\n"
+                        "[error] UnknownFunctionException: Cannot resolve function '%.*s' with signature '%.*s'.\n",
+                        functionName->m_size, functionName->m_value, functionDescriptor->m_size,
+                        functionDescriptor->m_value);
                 }
 
+                jtk_String_delete(functionDescriptor);
+                jtk_String_delete(functionName);
+                
                 /* Log debugging information for assistance in debugging the interpreter. */
                 printf("[debug] Executed instruction `invoke_static` (index = %d, operand stack = %d)\n",
                     index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));

@@ -40,6 +40,7 @@ zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
     function->m_functionEntity = functionEntity;
 
     // type, startIndex
+    int32_t afterColon = -1;
     int32_t parameterCount = 0;
     int32_t i;
     /* The following function descriptor parser is a naive implementation.
@@ -59,13 +60,15 @@ zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
             /* When the colon symbol is encountered, ignore it. */
             case ':': {
                 /* Do not count the return type as a parameter. */
-                parameterCount--;
+                afterColon = i + 1;
                 continue;
             }
 
             case '(': {
                 while (descriptorEntry->m_bytes[++i] != ')');
-                parameterCount++;
+                if (afterColon >= 0) {
+                    parameterCount++;
+                }
                 break;
             }
 
@@ -78,7 +81,12 @@ zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
             case 'f':
             case 'd':
             case 'v': {
-                parameterCount++;
+                if (afterColon >= 0) {
+                    /* Note that parameter count is incremented for void only for the sake of parsing.
+                    * It is adjusted in the next section.
+                    */
+                    parameterCount++;
+                }
                 break;
             }
 
@@ -89,7 +97,8 @@ zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
         }
     }
 
-    zen_Type_t returnType;
+    int32_t lastKnownVoid = -1;
+    zen_Type_t returnType = ZEN_TYPE_UNKNOWN;
     int32_t* parameters = jtk_Memory_allocate(int32_t, parameterCount * 2);
     zen_Type_t type;
     int32_t parameterIndex;
@@ -104,6 +113,10 @@ zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
                 while (descriptorEntry->m_bytes[++i] == '@');
                 if (descriptorEntry->m_bytes[i] == '(') {
                     while (descriptorEntry->m_bytes[++i] != ')');
+                }
+                else {
+                    /* Skip the primitive type. */
+                    i++;
                 }
                 break;
             }
@@ -150,6 +163,7 @@ zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
 
             case 'v': {
                 type = ZEN_TYPE_VOID;
+                lastKnownVoid = i;
                 break;
             }
 
@@ -160,7 +174,6 @@ zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
             }
 
             default: {
-
             }
         }
         if (parameterIndex < 0) {
@@ -174,7 +187,17 @@ zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
             parameters[index + 1] = startIndex;
         }
     }
-    
+
+    if (lastKnownVoid >= afterColon) {
+        if (parameterCount == 1) {
+            parameterCount = 0;
+        }
+        else {
+            printf("[error] Malformed function descriptor '%.*s'.\n",
+                descriptorEntry->m_length, descriptorEntry->m_bytes);
+        }
+    }
+
     function->m_returnType = returnType;
     function->m_parameterCount = parameterCount;
     function->m_parameters = parameters;
