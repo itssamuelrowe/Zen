@@ -2,6 +2,9 @@
 
 Zen is a general purpose programming language designed to build simple, reliable and efficient programs.
 
+> Zen is currently under development. Please contact the author,
+> Samuel Rowe <samuelrowe1999@gmail.com>, to contribute.
+
 Visit the [official website](https://itssamuelrowe.github.io/zen-website/) to learn
 more about the language, tools, getting started, and more.
 
