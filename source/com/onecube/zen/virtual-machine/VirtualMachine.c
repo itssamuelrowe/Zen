@@ -314,6 +314,11 @@ void zen_Boolean_initialize(zen_VirtualMachine_t* virtualMachine,
         valueDescriptorSize, value);
 }
 
+zen_Object_t* zen_Boolean_getValue(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* self, jtk_Array_t* arguments) {
+    return (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            self, "value", 5);
+}
 void zen_String_initialize(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* self, jtk_Array_t* arguments) {
     const uint8_t* valueDescriptor = "value";
@@ -927,6 +932,10 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     // void Boolean.new(value)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Boolean", 7,
         "<initialize>", 12, "v:(zen/core/Object)", 19, zen_Boolean_initialize);
+
+    // boolean Boolean.getValue()
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Boolean", 7,
+        "getValue", 8, "(zen/core/Object):v", 19, zen_Boolean_getValue);
 
 
     // TODO: Unload native functions

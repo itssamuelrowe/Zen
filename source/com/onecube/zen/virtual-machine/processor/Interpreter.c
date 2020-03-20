@@ -1102,7 +1102,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 else {
                     currentStackFrame->m_ip += 2;
 
-                    printf("[debug] Operand is %d, expected 0. Branch ignored.", operand);
+                    printf("[debug] Operand is %d, expected 0. Branch ignored.\n", operand);
                 }
 
 
