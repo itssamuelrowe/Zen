@@ -3079,8 +3079,9 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
         /* The last if clause is unaware of the else clause. In other words, when
          * none of the if clauses are selected, the jump_ne0_i instruction causes
          * the program to reach the jump instruction generated here to skip the else
-         * clause. Therefore, update the index given to the jump_ne0_i instruction
-         * corresponding to the last if clause.
+         * clause, meaning the else clause will never be executed! Therefore, update
+         * the index given to the jump_ne0_i instruction corresponding to the last
+         * if clause.
          */
         int32_t newParentChannelSize = zen_DataChannel_getSize(parentChannel);
         parentChannel->m_bytes[updateIndex] = (newParentChannelSize & 0x0000FF00) >> 8;
@@ -6736,7 +6737,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                                     printf("[debug] Emitted duplicate\n");
 
                                     /* Push the index at which the result of the expression will be stored. */
-                                    zen_BinaryEntityGenerator_loadInteger(generator, i);
+                                    zen_BinaryEntityGenerator_loadInteger(generator, argumentIndex);
 
                                     /* Visit the expression node and generate the relevant instructions. */
                                     zen_ASTWalker_walk(astListener, argument);

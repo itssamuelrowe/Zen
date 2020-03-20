@@ -1555,7 +1555,7 @@ void zen_Parser_forParameter(zen_Parser_t* parser, zen_ASTNode_t* node) {
 
 /*
  * forStatement
- * :    'for' forParameters 'in' expression statementSuite
+ * :    'for' forParameter 'in' expression statementSuite
  * ;
  *
  * TODO: Remove elseClause!
