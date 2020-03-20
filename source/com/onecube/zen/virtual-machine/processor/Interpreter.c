@@ -1674,7 +1674,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_JUMP: { /* jump */
                 int16_t offset = zen_Interpreter_readShort(interpreter);
-                currentStackFrame->m_ip += offset - 3;
+                currentStackFrame->m_ip = offset;
 
                 /* Log debugging information for assistance in debugging the interpreter. */
                 printf("[debug] Executed instruction `jump` (offset = %d, operand stack = %d)\n",
