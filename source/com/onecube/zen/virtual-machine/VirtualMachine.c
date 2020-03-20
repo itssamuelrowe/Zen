@@ -354,8 +354,8 @@ zen_Object_t* zen_String_add(zen_VirtualMachine_t* virtualMachine,
     uint8_t* operand1Bytes = zen_VirtualMachine_getStringBytes(virtualMachine, operand1);
     uint8_t* operand2Bytes = zen_VirtualMachine_getStringBytes(virtualMachine, operand2);
     
-    uint8_t* operand1Size = zen_VirtualMachine_getStringSize(virtualMachine, operand1);
-    uint8_t* operand2Size = zen_VirtualMachine_getStringSize(virtualMachine, operand2);
+    int32_t operand1Size = zen_VirtualMachine_getStringSize(virtualMachine, operand1);
+    int32_t operand2Size = zen_VirtualMachine_getStringSize(virtualMachine, operand2);
 
     jtk_String_t* string = jtk_String_newFromJoinEx(operand1Bytes, operand1Size,
         operand2Bytes, operand2Size);
@@ -385,6 +385,39 @@ zen_Object_t* zen_String_multiply(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* result = zen_VirtualMachine_newStringFromUtf8(virtualMachine, builder->m_value, builder->m_size);
     jtk_String_delete(builder);
 
+    return result;
+}
+
+zen_Object_t* zen_String_equals(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* self, jtk_Array_t* arguments) {
+    zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    
+    uint8_t* operand1Bytes = zen_VirtualMachine_getStringBytes(virtualMachine, operand1);
+    uint8_t* operand2Bytes = zen_VirtualMachine_getStringBytes(virtualMachine, operand2);
+    
+    int32_t operand1Size = zen_VirtualMachine_getStringSize(virtualMachine, operand1);
+    int32_t operand2Size = zen_VirtualMachine_getStringSize(virtualMachine, operand2);
+
+    zen_Object_t* result = zen_VirtualMachine_newBoolean(virtualMachine,
+        jtk_CString_equals(operand1Bytes, operand1Size, operand2Bytes, operand2Size));
+    
+    return result;
+}
+
+zen_Object_t* zen_String_notEquals(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* self, jtk_Array_t* arguments) {    zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    
+    uint8_t* operand1Bytes = zen_VirtualMachine_getStringBytes(virtualMachine, operand1);
+    uint8_t* operand2Bytes = zen_VirtualMachine_getStringBytes(virtualMachine, operand2);
+    
+    int32_t operand1Size = zen_VirtualMachine_getStringSize(virtualMachine, operand1);
+    int32_t operand2Size = zen_VirtualMachine_getStringSize(virtualMachine, operand2);
+
+    zen_Object_t* result = zen_VirtualMachine_newBoolean(virtualMachine,
+        !jtk_CString_equals(operand1Bytes, operand1Size, operand2Bytes, operand2Size));
+    
     return result;
 }
 
@@ -901,6 +934,14 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     // String String.multiply(string, count)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "String", 6,
         "multiply", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_String_multiply);
+
+    // Boolean String.equals(string, count)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "String", 6,
+        "equals", 6, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_String_equals);
+
+    // Boolean String.notEquals(string, count)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "String", 6,
+        "notEquals", 9, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_String_notEquals);
 
     // void Integer.new(value)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
