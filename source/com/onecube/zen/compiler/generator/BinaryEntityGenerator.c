@@ -2509,9 +2509,6 @@ void zen_BinaryEntityGenerator_onExitEmptyStatement(zen_ASTListener_t* astListen
 // variableDeclaration
 
 void zen_BinaryEntityGenerator_onEnterVariableDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-}
-
-void zen_BinaryEntityGenerator_onExitVariableDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
     /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
 
@@ -2571,12 +2568,30 @@ void zen_BinaryEntityGenerator_onExitVariableDeclaration(zen_ASTListener_t* astL
                 zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)symbol->m_context;
                 /* Generate and assign the index of the local variable only if it
                  * was not previously assigned an index.
+                 * 
+                 * I don't remember why this condition should be checked.
                  */
                 if (variableSymbol->m_index < 0) {
                     variableSymbol->m_index = generator->m_localVariableCount;
                     // TODO: Temporary fix. References are considered as 8 bytes.
                     // TODO: Design the local variable array correctly.
                     generator->m_localVariableCount += 2;
+
+                    if (variableDeclaratorContext->m_expression != NULL) {
+                        zen_ASTWalker_walk(astListener, variableDeclaratorContext->m_expression);
+
+                        /* Store the obtained result in the local variable.
+                        * The actual emission of the instruction is delegated to the
+                        * zen_BinaryEntityGenerator_storeLocalReference() function which takes
+                        * care of optimizing the emission.
+                        *
+                        * TODO: Implement the zen_BinaryEntityGenerator_storeLocalReference() function.
+                        */
+                        zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, variableSymbol->m_index);
+
+                        /* Log the emission of the store_a instruction. */
+                        printf("[debug] Emitted store_a %d\n", variableSymbol->m_index);
+                    }
                 }
             }
             else {
@@ -2584,6 +2599,17 @@ void zen_BinaryEntityGenerator_onExitVariableDeclaration(zen_ASTListener_t* astL
             }
         }
     }
+
+    /* The normal behaviour of the AST walker causes the generator to emit instructions
+     * in an undesirable fashion. Therefore, we partially switch from the listener
+     * to visitor design pattern. The AST walker can be guided to switch to this
+     * mode via zen_ASTListener_skipChildren() function which causes the AST walker
+     * to skip iterating over the children nodes.
+     */
+    zen_ASTListener_skipChildren(astListener);
+}
+
+void zen_BinaryEntityGenerator_onExitVariableDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
 }
 
 // variableDeclarator
@@ -2738,8 +2764,10 @@ void zen_BinaryEntityGenerator_onExitAssertStatement(zen_ASTListener_t* astListe
 
     const uint8_t* booleanClassName = "zen/core/Boolean";
     int32_t booleanClassNameSize = 16;
-    const uint8_t* getValueDescriptor = "z:v";
-    int32_t getValueDescriptorSize = 3;
+    // const uint8_t* getValueDescriptor = "z:v";
+    // int32_t getValueDescriptorSize = 3;
+    const uint8_t* getValueDescriptor = "(zen/core/Object):v";
+    int32_t getValueDescriptorSize = 19;
     const uint8_t* getValueName = "getValue";
     int32_t getValueNameSize = 8;
     uint16_t getValueIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
@@ -2930,8 +2958,10 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
 
     const uint8_t* booleanClassName = "zen/core/Boolean";
     int32_t booleanClassNameSize = 16;
-    const uint8_t* getValueDescriptor = "z:v";
-    int32_t getValueDescriptorSize = 3;
+    // const uint8_t* getValueDescriptor = "z:v";
+    // int32_t getValueDescriptorSize = 3;
+    const uint8_t* getValueDescriptor = "(zen/core/Object):v";
+    int32_t getValueDescriptorSize = 19;
     const uint8_t* getValueName = "getValue";
     int32_t getValueNameSize = 8;
     uint16_t getValueIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
@@ -3135,8 +3165,10 @@ void zen_BinaryEntityGenerator_onExitWhileStatement(zen_ASTListener_t* astListen
 
     const uint8_t* booleanClassName = "zen/core/Boolean";
     int32_t booleanClassNameSize = 16;
-    const uint8_t* getValueDescriptor = "z:v";
-    int32_t getValueDescriptorSize = 3;
+    // const uint8_t* getValueDescriptor = "z:v";
+    // int32_t getValueDescriptorSize = 3;
+    const uint8_t* getValueDescriptor = "(zen/core/Object):v";
+    int32_t getValueDescriptorSize = 19;
     const uint8_t* getValueName = "getValue";
     int32_t getValueNameSize = 8;
     uint16_t getValueIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
