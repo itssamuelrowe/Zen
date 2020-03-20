@@ -3270,8 +3270,8 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
 
     const uint8_t* iteratorClassName = "zen/core/Iterator";
     int32_t iteratorClassNameSize = 17;
-    const uint8_t* hasNextDescriptor = "z:v";
-    int32_t hasNextDescriptorSize = 3;
+    const uint8_t* hasNextDescriptor = "(zen/core/Object):v";
+    int32_t hasNextDescriptorSize = 19;
     const uint8_t* hasNextName = "hasNext";
     int32_t hasNextNameSize = 7;
     uint16_t hasNextIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
@@ -3287,6 +3287,19 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
         generator->m_constantPoolBuilder, iteratorClassName, iteratorClassNameSize,
         getNextDescriptor, getNextDescriptorSize, getNextName,
         getNextNameSize);
+
+    const uint8_t* booleanClassName = "zen/core/Boolean";
+    int32_t booleanClassNameSize = 16;
+    // const uint8_t* getValueDescriptor = "z:v";
+    // int32_t getValueDescriptorSize = 3;
+    const uint8_t* getValueDescriptor = "(zen/core/Object):v";
+    int32_t getValueDescriptorSize = 19;
+    const uint8_t* getValueName = "getValue";
+    int32_t getValueNameSize = 8;
+    uint16_t getValueIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, booleanClassName, booleanClassNameSize,
+        getValueDescriptor, getValueDescriptorSize, getValueName,
+        getValueNameSize);
 
     zen_ASTNode_t* forParameter = context->m_forParameter;
     zen_ForParameterContext_t* forParameterContext =
@@ -3304,6 +3317,9 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
 
     /* Log the emission of the invoke_virtual instruction. */
     printf("[debug] Emitted invoke_virtual %d\n", getIteratorIndex);
+    
+    int32_t iteratorIndex = generator->m_localVariableCount;
+    generator->m_localVariableCount += 2;
 
     /* Store the obtained iterator in a local variable for future reference.
      * The actual emission of the instruction is delegated to the
@@ -3312,10 +3328,10 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
      *
      * TODO: Implement the zen_BinaryEntityGenerator_storeLocalReference() function.
      */
-    zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, 0);
+    zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, iteratorIndex);
 
     /* Log the emission of the store_a instruction. */
-    printf("[debug] Emitted store_a %d (dummy index)\n", 0);
+    printf("[debug] Emitted store_a %d\n", iteratorIndex);
 
     uint16_t loopIndex = zen_DataChannel_getSize(parentChannel);
 
@@ -3326,10 +3342,10 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
      *
      * TODO: Implement the zen_BinaryEntityGenerator_loadLocalReference() function.
      */
-    zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
+    zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, iteratorIndex);
 
     /* Log the emission of the load_a instruction. */
-    printf("[debug] Emitted load_a %d (dummy index)\n", 0);
+    printf("[debug] Emitted load_a %d\n", iteratorIndex);
 
     /* Invoke the Iterator#hasNext() function to determine whether the iterator
      * has more values to return.
@@ -3338,6 +3354,14 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
 
     /* Log the emission of the invoke_virtual instruction. */
     printf("[debug] Emitted invoke_virtual %d\n", hasNextIndex);
+
+    /* Invoke the Boolean#getValue() function to determine whether the iterator
+     * has more values to return.
+     */
+    zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_builder, getValueIndex);
+
+    /* Log the emission of the invoke_virtual instruction. */
+    printf("[debug] Emitted invoke_virtual %d\n", getValueIndex);
 
     /* Emit the jump_eq0_i instruction. */
     zen_BinaryEntityBuilder_emitJumpEqual0Integer(generator->m_builder, 0);
@@ -3348,17 +3372,66 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
     /* Save the index of the byte where the dummy data was written. */
     int32_t updateIndex = zen_DataChannel_getSize(parentChannel) - 2;
 
+    /* Load the iterator from the local variable so we can invoke
+     * Iterator#getNext(). The actual emission of the instruction is delegated to the
+     * zen_BinaryEntityGenerator_loadLocalReference() function which takes
+     * care of optimizing the emission.
+     *
+     * TODO: Implement the zen_BinaryEntityGenerator_loadLocalReference() function.
+     */
+    zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, iteratorIndex);
+
+    /* Log the emission of the load_a instruction. */
+    printf("[debug] Emitted load_a %d\n", iteratorIndex);
+
     /* Invoke the Iterator#getNext() function to retrieve the next value. */
     zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_builder, getNextIndex);
 
     /* Log the emission of the invoke_virtual instruction. */
     printf("[debug] Emitted invoke_virtual %d\n", getNextIndex);
 
+    int32_t parameterIndex = -1;
+    /* Retrieve the string equivalent to the identifier node. */
+    int32_t identifierSize;
+    uint8_t* identifierText = zen_ASTNode_toCString(forParameterContext->m_identifier, &identifierSize);
+    /* Resolve the parameter symbol in the symbol table. */
+    zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, identifierText);
+    if (forParameterContext->m_declaration) {
+        /* Generate an index for the parameter. */
+        parameterIndex = generator->m_localVariableCount;
+        /* Update the local variable count, each parameter is a reference. Therefore,
+         * increment the count by 2.
+         */
+        generator->m_localVariableCount += 2;
+
+        if (zen_Symbol_isVariable(symbol)) {
+            zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)symbol->m_context;
+            variableSymbol->m_index = parameterIndex;
+        }
+        else {
+            zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
+            constantSymbol->m_index = parameterIndex;
+        }
+    }
+    else {
+        if (zen_Symbol_isVariable(symbol)) {
+            zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)symbol->m_context;
+            parameterIndex = variableSymbol->m_index;
+        }
+        else if (zen_Symbol_isConstant(symbol)) {
+            zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
+            parameterIndex = constantSymbol->m_index;
+        }
+        else {
+            printf("[error] Using non-storage entity as for parameter.\n");
+        }
+    }
+
     /* Store the retrieved value in a local variable. */
-    zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, 0);
+    zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, parameterIndex);
 
     /* Log the emission of the store_a instruction. */
-    printf("[debug] Emitted store_a %d (dummy index)\n", 0);
+    printf("[debug] Emitted store_a %d\n", parameterIndex);
 
     /* Generate the instructions corresponding to the statement suite specified
      * to the while statement.
