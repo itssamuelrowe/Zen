@@ -126,6 +126,23 @@ void zen_print(zen_VirtualMachine_t* virtualMachine, zen_Object_t* self,
     fflush(stdout);
 }
 
+zen_Object_t* zen_range(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* class0, jtk_Array_t* arguments) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+
+    const uint8_t* integerIteratorClassDescriptor = "zen/core/IntegerIterator";
+    int32_t integerIteratorClassDescriptorSize = 24;
+    const uint8_t* integerIteratorConstructorDescriptor = "v:(zen/core/Object)(zen/core/Object)";
+    int32_t integerIteratorConstructorDescriptorSize = 36;
+
+    zen_Object_t* result = zen_VirtualMachine_newObjectEx(virtualMachine,
+        integerIteratorClassDescriptor, integerIteratorClassDescriptorSize,
+        integerIteratorConstructorDescriptor, integerIteratorConstructorDescriptorSize,
+        arguments);
+
+    return result;
+}
+
 void zen_Integer_initialize(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* self, jtk_Array_t* arguments) {
     const uint8_t* valueDescriptor = "value";
@@ -844,6 +861,10 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
         "print", 5, "(zen/core/Object):(zen/core/Object)", 35, zen_print);
 
+    // Object Test.range(Object start, Object stop)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
+        "range", 5, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_range);
+
     // Object ZenKernel.invoke(Object object, Object name)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
         "invoke", 6, "(zen/core/Object):(zen/core/Object)(zen/core/Object)",
@@ -1084,7 +1105,6 @@ zen_Object_t* zen_VirtualMachine_newObjectEx(zen_VirtualMachine_t* virtualMachin
         jtk_String_t* constructorDescriptor0 = jtk_String_newEx(constructorDescriptor, constructorDescriptorSize);
         zen_Function_t* constructor = zen_Class_getConstructor(class0, constructorDescriptor0);
         if (zen_VirtualMachine_isClear(virtualMachine)) {
-
             result = zen_VirtualMachine_makeObjectEx(virtualMachine, constructor, arguments);
         }
     }
