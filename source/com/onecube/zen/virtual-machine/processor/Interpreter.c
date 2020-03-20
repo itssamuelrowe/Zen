@@ -33,6 +33,7 @@
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolUtf8.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolTag.h>
 #include <com/onecube/zen/virtual-machine/feb/Entity.h>
+#include <com/onecube/zen/virtual-machine/object/Class.h>
 #include <com/onecube/zen/virtual-machine/object/Object.h>
 #include <com/onecube/zen/virtual-machine/object/Function.h>
 #include <com/onecube/zen/virtual-machine/processor/Interpreter.h>
@@ -1510,13 +1511,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_Function_t* constructor = zen_Class_getConstructor(targetClass, constructorDescriptor);
                 
                 if (constructor != NULL) {
-                    // TODO: Invoke the constructor when it accepts no arguments.
-                    
                     jtk_Array_t* arguments = NULL;
                     int32_t parameterCount = constructor->m_parameterCount;
+
                     if (constructor->m_parameterCount > 0) {
-                        // jtk_Array_t* arguments = jtk_Array_new(parameterCount + 1);
                         arguments = jtk_Array_new(parameterCount);
+
                         int32_t parameterIndex;
                         for (parameterIndex = parameterCount - 1; parameterIndex >= 0; parameterIndex--) {
                             void* argument = (void*)zen_OperandStack_popReference(currentStackFrame->m_operandStack);
@@ -1572,20 +1572,21 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
                 if (function != NULL) {
                     int32_t parameterCount = function->m_parameterCount;
+                    jtk_Array_t* arguments = NULL;
+
                     if (function->m_parameterCount > 0) {
-                        /* For native instance functions, the first argument is always the instance itself. 
-                         * Consider changing this behaviour such that the self reference is in the prototype
-                         * of the native function pointer.
-                         */
-                        jtk_Array_t* arguments = jtk_Array_new(parameterCount + 1);
+                        arguments = jtk_Array_new(parameterCount);
+
                         int32_t parameterIndex;
-                        for (parameterIndex = parameterCount; parameterIndex > 0; parameterIndex--) {
+                        for (parameterIndex = parameterCount - 1; parameterIndex >= 0; parameterIndex--) {
                             void* argument = (void*)zen_OperandStack_popReference(currentStackFrame->m_operandStack);
                             jtk_Array_setValue(arguments, parameterIndex, argument);
                         }
-                        jtk_Array_setValue(arguments, 0, self);
+                    }
 
-                        zen_Interpreter_invokeVirtualFunction(interpreter, function, self, arguments);
+                    zen_Interpreter_invokeVirtualFunction(interpreter, function, self, arguments);
+
+                    if (arguments != NULL) {
                         jtk_Array_delete(arguments);
                     }
                 }
@@ -3775,7 +3776,7 @@ zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interprete
 
         if (nativeFunction != NULL) {
             zen_NativeFunction_InvokeFunction_t invoke = nativeFunction->m_invoke;
-            result = invoke(interpreter->m_virtualMachine, arguments);
+            result = invoke(interpreter->m_virtualMachine, NULL, arguments);
 
             if (function->m_returnType != ZEN_TYPE_VOID) {
                 zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
@@ -3838,7 +3839,7 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
 
         if (nativeFunction != NULL) {
             zen_NativeFunction_InvokeFunction_t invoke = nativeFunction->m_invoke;
-            result = invoke(interpreter->m_virtualMachine, arguments);
+            result = invoke(interpreter->m_virtualMachine, object, arguments);
 
             if (function->m_returnType != ZEN_TYPE_VOID) {
                 zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);

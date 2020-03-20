@@ -88,7 +88,8 @@ bool zen_VirtualMachine_isInstance(zen_VirtualMachine_t* virtualMachine,
     return *classField == class0;
 }
 
-void zen_print(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
+void zen_print(zen_VirtualMachine_t* virtualMachine, zen_Object_t* self,
+    jtk_Array_t* arguments) {
     jtk_String_t* stringDescriptor = jtk_String_newEx("zen/core/String", 15);
     jtk_String_t* integerDescriptor = jtk_String_newEx("zen/core/Integer", 16);
     jtk_String_t* booleanDescriptor = jtk_String_newEx("zen/core/Boolean", 16);
@@ -136,7 +137,7 @@ void zen_Integer_initialize(zen_VirtualMachine_t* virtualMachine,
 }
 
 zen_Object_t* zen_Integer_add(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
+    zen_Object_t* self, jtk_Array_t* arguments) {
     zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     
@@ -152,7 +153,7 @@ zen_Object_t* zen_Integer_add(zen_VirtualMachine_t* virtualMachine,
 }
 
 zen_Object_t* zen_Integer_subtract(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
+    zen_Object_t* self, jtk_Array_t* arguments) {
     zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     
@@ -168,7 +169,7 @@ zen_Object_t* zen_Integer_subtract(zen_VirtualMachine_t* virtualMachine,
 }
 
 zen_Object_t* zen_Integer_multiply(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
+    zen_Object_t* self, jtk_Array_t* arguments) {
     zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     
@@ -184,7 +185,7 @@ zen_Object_t* zen_Integer_multiply(zen_VirtualMachine_t* virtualMachine,
 }
 
 zen_Object_t* zen_Integer_divide(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
+    zen_Object_t* self, jtk_Array_t* arguments) {
     zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     
@@ -200,7 +201,7 @@ zen_Object_t* zen_Integer_divide(zen_VirtualMachine_t* virtualMachine,
 }
 
 zen_Object_t* zen_Integer_remainder(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
+    zen_Object_t* self, jtk_Array_t* arguments) {
     zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     
@@ -216,7 +217,7 @@ zen_Object_t* zen_Integer_remainder(zen_VirtualMachine_t* virtualMachine,
 }
 
 zen_Object_t* zen_Integer_equals(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
+    zen_Object_t* self, jtk_Array_t* arguments) {
     zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     
@@ -230,7 +231,7 @@ zen_Object_t* zen_Integer_equals(zen_VirtualMachine_t* virtualMachine,
 }
 
 zen_Object_t* zen_Integer_notEquals(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
+    zen_Object_t* self, jtk_Array_t* arguments) {
     zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     
@@ -244,7 +245,7 @@ zen_Object_t* zen_Integer_notEquals(zen_VirtualMachine_t* virtualMachine,
 }
 
 zen_Object_t* zen_Integer_greater(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
+    zen_Object_t* self, jtk_Array_t* arguments) {
     zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     
@@ -258,7 +259,7 @@ zen_Object_t* zen_Integer_greater(zen_VirtualMachine_t* virtualMachine,
 }
 
 zen_Object_t* zen_Integer_greaterOrEqual(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
+    zen_Object_t* self, jtk_Array_t* arguments) {
     zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     
@@ -272,7 +273,7 @@ zen_Object_t* zen_Integer_greaterOrEqual(zen_VirtualMachine_t* virtualMachine,
 }
 
 zen_Object_t* zen_Integer_lesser(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
+    zen_Object_t* self, jtk_Array_t* arguments) {
     zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     
@@ -286,7 +287,7 @@ zen_Object_t* zen_Integer_lesser(zen_VirtualMachine_t* virtualMachine,
 }
 
 zen_Object_t* zen_Integer_lesserOrEqual(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
+    zen_Object_t* self, jtk_Array_t* arguments) {
     zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     
@@ -324,18 +325,18 @@ void zen_String_initialize(zen_VirtualMachine_t* virtualMachine,
 }
 
 zen_Object_t* zen_String_add(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
-    zen_Object_t* self = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
-    zen_Object_t* other = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    zen_Object_t* self, jtk_Array_t* arguments) {
+    zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     
-    uint8_t* selfBytes = zen_VirtualMachine_getStringBytes(virtualMachine, self);
-    uint8_t* otherBytes = zen_VirtualMachine_getStringBytes(virtualMachine, other);
+    uint8_t* operand1Bytes = zen_VirtualMachine_getStringBytes(virtualMachine, operand1);
+    uint8_t* operand2Bytes = zen_VirtualMachine_getStringBytes(virtualMachine, operand2);
     
-    uint8_t* selfSize = zen_VirtualMachine_getStringSize(virtualMachine, self);
-    uint8_t* otherSize = zen_VirtualMachine_getStringSize(virtualMachine, other);
+    uint8_t* operand1Size = zen_VirtualMachine_getStringSize(virtualMachine, operand1);
+    uint8_t* operand2Size = zen_VirtualMachine_getStringSize(virtualMachine, operand2);
 
-    jtk_String_t* string = jtk_String_newFromJoinEx(selfBytes, selfSize,
-        otherBytes, otherSize);
+    jtk_String_t* string = jtk_String_newFromJoinEx(operand1Bytes, operand1Size,
+        operand2Bytes, operand2Size);
     // printf("%.*s\n", string->m_size, string->m_value);
     zen_Object_t* result = zen_VirtualMachine_newStringFromUtf8(virtualMachine, string->m_value, string->m_size);
     jtk_String_delete(string);
@@ -344,7 +345,7 @@ zen_Object_t* zen_String_add(zen_VirtualMachine_t* virtualMachine,
 }
 
 zen_Object_t* zen_String_multiply(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
+    zen_Object_t* self, jtk_Array_t* arguments) {
     zen_Object_t* string = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     uint8_t* stringBytes = zen_VirtualMachine_getStringBytes(virtualMachine, string);
     int32_t stringSize = zen_VirtualMachine_getStringSize(virtualMachine, string);
@@ -365,7 +366,8 @@ zen_Object_t* zen_String_multiply(zen_VirtualMachine_t* virtualMachine,
     return result;
 }
 
-int32_t zen_String_getSize(zen_VirtualMachine_t* virtualMachine, jtk_Array_t* arguments) {
+int32_t zen_String_getSize(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* self, jtk_Array_t* arguments) {
     return 0;
 }
 
@@ -394,17 +396,17 @@ jtk_String_t* zen_String_toJTKString(zen_VirtualMachine_t* virtualMachine,
 }
 
 zen_Object_t* zen_ZenKernel_invoke(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
+    zen_Object_t* class0, jtk_Array_t* arguments) {
     zen_Object_t* object = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* name = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     
     jtk_String_t* descriptor = jtk_String_newEx("(zen/core/Object):v", 19);
     jtk_String_t* name0 = zen_String_toJTKString(virtualMachine, name);
 
-    zen_Class_t* class0 = zen_Object_getClass(object);
+    zen_Class_t* targetClass = zen_Object_getClass(object);
     // TODO: Change getStaticFunction() to getVirtualFunction()
     zen_Function_t* function = zen_VirtualMachine_getStaticFunction(virtualMachine,
-        class0, name0, descriptor);
+        targetClass, name0, descriptor);
 
     jtk_String_delete(name0);
     jtk_String_delete(descriptor);
@@ -413,7 +415,7 @@ zen_Object_t* zen_ZenKernel_invoke(zen_VirtualMachine_t* virtualMachine,
 }
 
 zen_Object_t* zen_ZenKernel_invokeStatic(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
+    zen_Object_t* class0, jtk_Array_t* arguments) {
     zen_Object_t* entity = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* targetFunctionName = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     jtk_Array_t* targetArguments = (jtk_Array_t*)jtk_Array_getValue(arguments, 2);
@@ -447,14 +449,14 @@ zen_Object_t* zen_ZenKernel_invokeStatic(zen_VirtualMachine_t* virtualMachine,
  * to functions.
  */
 zen_Object_t* zen_ZenKernel_evaluate(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
+    zen_Object_t* class0, jtk_Array_t* arguments) {
     zen_Object_t* operand1 = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* operand2 = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     zen_Object_t* symbol = (zen_Object_t*)jtk_Array_getValue(arguments, 2);
 
     uint8_t* symbolBytes = zen_VirtualMachine_getStringBytes(virtualMachine, symbol);
     int32_t symbolSize = zen_VirtualMachine_getStringSize(virtualMachine, symbol);
-    zen_Class_t* class0 = zen_Object_getClass(operand1);
+    zen_Class_t* targetClass = zen_Object_getClass(operand1);
 
     jtk_String_t* targetFunctionName = NULL;
     jtk_String_t* targetFunctionSignature = jtk_String_newEx("(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52);
@@ -519,7 +521,7 @@ zen_Object_t* zen_ZenKernel_evaluate(zen_VirtualMachine_t* virtualMachine,
 
     void* result = NULL;
     if (targetFunctionName != NULL) {
-        zen_Function_t* targetFunction = zen_VirtualMachine_getStaticFunction(virtualMachine, class0, targetFunctionName, targetFunctionSignature);
+        zen_Function_t* targetFunction = zen_VirtualMachine_getStaticFunction(virtualMachine, targetClass, targetFunctionName, targetFunctionSignature);
 
         /* NOTE: The arguments received by the evaluate() function are forwarded to the
          * target function as is, assuming that the target function uses only the
@@ -542,7 +544,7 @@ zen_Object_t* zen_ZenKernel_evaluate(zen_VirtualMachine_t* virtualMachine,
 
 // `this.j = 1` translates to `ZenKernel.storeField(new Integer(1), this, "j")`
 zen_Object_t* zen_ZenKernel_storeField(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
+    zen_Object_t* class0, jtk_Array_t* arguments) {
     zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* self = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     zen_Object_t* name = (zen_Object_t*)jtk_Array_getValue(arguments, 2);
@@ -555,7 +557,7 @@ zen_Object_t* zen_ZenKernel_storeField(zen_VirtualMachine_t* virtualMachine,
 }
 
 zen_Object_t* zen_ZenKernel_loadField(zen_VirtualMachine_t* virtualMachine,
-    jtk_Array_t* arguments) {
+    zen_Object_t* class0, jtk_Array_t* arguments) {
     zen_Object_t* self = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* name = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
 

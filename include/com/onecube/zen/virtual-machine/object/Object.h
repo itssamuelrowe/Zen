@@ -31,4 +31,6 @@ struct zen_Object_t {
 
 typedef struct zen_Object_t zen_Object_t;
 
+zen_Class_t* zen_Object_getClass(zen_Object_t* object);
+
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_OBJECT_OBJECT_H */
