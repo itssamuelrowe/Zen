@@ -165,6 +165,8 @@ struct zen_Lexer_t {
  */
 typedef struct zen_Lexer_t zen_Lexer_t;
 
+const uint8_t* zen_Lexer_getLiteralName(zen_TokenType_t type);
+
 // Constructor
 
 /**

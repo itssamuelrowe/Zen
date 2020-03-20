@@ -2982,6 +2982,7 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
     int32_t size = jtk_ArrayList_getSize(context->m_elseIfClauses);
     int32_t* skipIndexes = jtk_Memory_allocate(int32_t, size + 1);
 
+    int32_t updateIndex = -1;
     int32_t index = -1;
     do {
         /* Generate the instructions corresponding to the conditional expression
@@ -3005,7 +3006,7 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
         printf("[debug] Emitted jump_eq0_i 0 (dummy index)\n");
 
         /* Save the index of the byte where the dummy data was written. */
-        int32_t updateIndex = zen_DataChannel_getSize(parentChannel) - 2;
+        updateIndex = zen_DataChannel_getSize(parentChannel) - 2;
 
         /* Generate the instructions corresponding to the statement suite specified
          * to the if clause.
@@ -3074,6 +3075,16 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
 
         /* Log the emission of the jump instruction. */
         printf("[debug] Emitted jump 0 (dummy index)\n");
+
+        /* The last if clause is unaware of the else clause. In other words, when
+         * none of the if clauses are selected, the jump_ne0_i instruction causes
+         * the program to reach the jump instruction generated here to skip the else
+         * clause. Therefore, update the index given to the jump_ne0_i instruction
+         * corresponding to the last if clause.
+         */
+        int32_t newParentChannelSize = zen_DataChannel_getSize(parentChannel);
+        parentChannel->m_bytes[updateIndex] = (newParentChannelSize & 0x0000FF00) >> 8;
+        parentChannel->m_bytes[updateIndex + 1] = newParentChannelSize & 0x000000FF;
 
         /* Save the index of the bytes where the dummy data was written. */
         skipIndexes[index] = zen_DataChannel_getSize(parentChannel) - 2;

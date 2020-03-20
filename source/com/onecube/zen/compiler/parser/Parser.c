@@ -136,7 +136,9 @@ const char* zen_Parser_getRuleName(zen_ASTNodeType_t type) {
 
 void zen_Parser_reportSyntaxError(zen_Parser_t* parser, zen_Token_t* token,
     const char* message) {
-    fprintf(stderr, "[error] %d-%d:%d-%d: %s '%s'\n", token->m_startLine + 1, token->m_stopLine + 1, token->m_startColumn + 1, token->m_stopColumn + 1, message, zen_Lexer_getLiteralName(token->m_type));
+    fprintf(stderr, "[error] %d-%d:%d-%d: %s\n", token->m_startLine + 1,
+        token->m_stopLine + 1, token->m_startColumn + 1, token->m_stopColumn + 1,
+        message);
 }
 
 /* Terminal Node */
@@ -165,7 +167,12 @@ void zen_Parser_match(zen_Parser_t* parser, zen_TokenType_t type) {
         }
     }
     else {
-        zen_Parser_reportSyntaxError(parser, lt1, "Unexpected token");
+        char buffer[200];
+        const uint8_t* expectedName = zen_Lexer_getLiteralName(type);
+        const uint8_t* actualName = zen_Lexer_getLiteralName(lt1->m_type);
+        sprintf(buffer, "Expected token '%s', encountered token '%s'",
+            expectedName, actualName);
+        zen_Parser_reportSyntaxError(parser, lt1, buffer);
         // TODO: ...
     }
 }
@@ -2752,7 +2759,6 @@ void zen_Parser_unaryExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_ASTNode_t* postfixExpression = zen_ASTNode_new(node);
         context->m_postfixExpression = postfixExpression;
         zen_Parser_postfixExpression(parser, postfixExpression);
-
     }
     else {
         // Syntax Error: Expected ...
