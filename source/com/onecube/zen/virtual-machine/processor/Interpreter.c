@@ -1634,16 +1634,21 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     functionName, functionDescriptor);
 
                 if (function != NULL) {
-                    // zen_Interpreter_handleClassInitialization(interpreter, class0);
                     int32_t parameterCount = function->m_parameterCount;
+                    jtk_Array_t* arguments = NULL;
+
                     if (function->m_parameterCount > 0) {
-                        jtk_Array_t* arguments = jtk_Array_new(parameterCount);
+                        arguments = jtk_Array_new(parameterCount);
                         int32_t parameterIndex;
                         for (parameterIndex = parameterCount - 1; parameterIndex >= 0; parameterIndex--) {
                             void* argument = (void*)zen_OperandStack_popReference(currentStackFrame->m_operandStack);
                             jtk_Array_setValue(arguments, parameterIndex, argument);
                         }
-                        zen_Interpreter_invokeStaticFunction(interpreter, function, arguments);
+                    }
+                    
+                    zen_Interpreter_invokeStaticFunction(interpreter, function, arguments);
+                    
+                    if (arguments != NULL) {
                         jtk_Array_delete(arguments);
                     }
                 }
