@@ -1093,7 +1093,10 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             /* Jump */
 
             case ZEN_BYTE_CODE_JUMP_EQ0_I: { /* jump_eq0_i */
-                int32_t operand = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
+                // int32_t operand = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
+
+                #warning    "TODO: 32-bit instruction is implemented as 64-bit instruction!"
+                int32_t operand = (int32_t)zen_OperandStack_popLong(currentStackFrame->m_operandStack);
 
                 if (operand == 0) {
                     uint16_t offset = zen_Interpreter_readShort(interpreter);
@@ -1114,11 +1117,14 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             }
 
             case ZEN_BYTE_CODE_JUMP_NE0_I: { /* jump_ne0_i */
-                int32_t operand = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
+                // int32_t operand = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
+
+#warning    "TODO: 32-bit instruction is implemented as 64-bit instruction!"
+                int32_t operand = (int32_t)zen_OperandStack_popLong(currentStackFrame->m_operandStack);
 
                 if (operand != 0) {
                     uint16_t offset = zen_Interpreter_readShort(interpreter);
-                    currentStackFrame->m_ip += offset - 3;
+                    currentStackFrame->m_ip = offset;
                 }
                 else {
                     currentStackFrame->m_ip += 2;
@@ -1559,7 +1565,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_ConstantPoolClass_t* classEntry = constantPool->m_entries[functionEntry->m_classIndex];
                 zen_ConstantPoolUtf8_t* classNameEntry = constantPool->m_entries[classEntry->m_nameIndex];
 
-                zen_Object_t* self = (zen_Object_t*)zen_OperandStack_peekReference(currentStackFrame->m_operandStack);
+                zen_Object_t* self = (zen_Object_t*)zen_OperandStack_popReference(currentStackFrame->m_operandStack);
                 zen_Class_t* selfClass = zen_Object_getClass(self);
 
                 jtk_String_t* functionName = jtk_String_newEx(nameEntry->m_bytes, nameEntry->m_length);
