@@ -126,6 +126,15 @@ void zen_print(zen_VirtualMachine_t* virtualMachine, zen_Object_t* self,
     fflush(stdout);
 }
 
+zen_Object_t* zen_scanInteger(zen_VirtualMachine_t* virtualMachine, zen_Object_t* self,
+    jtk_Array_t* arguments) {
+
+    int n;
+    scanf("%d", &n);
+
+    return zen_VirtualMachine_newInteger(virtualMachine, n);
+}
+
 zen_Object_t* zen_range(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* class0, jtk_Array_t* arguments) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
@@ -469,7 +478,7 @@ zen_Object_t* zen_ZenKernel_invoke(zen_VirtualMachine_t* virtualMachine,
     return zen_Interpreter_invokeVirtualFunction(virtualMachine->m_interpreter, function, object, NULL);
 }
 
-zen_Object_t* zen_ZenKernel_invokeStatic(zen_VirtualMachine_t* virtualMachine,
+zen_Object_t* zen_ZenKernel_invokeStaticEx(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* class0, jtk_Array_t* arguments) {
     zen_Object_t* entity = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* targetFunctionName = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
@@ -497,6 +506,28 @@ zen_Object_t* zen_ZenKernel_invokeStatic(zen_VirtualMachine_t* virtualMachine,
 
     return zen_Interpreter_invokeStaticFunction(virtualMachine->m_interpreter, targetFunction,
         targetArguments);
+}
+
+zen_Object_t* zen_ZenKernel_invokeStatic(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* class0, jtk_Array_t* arguments) {
+    zen_Object_t* entity = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* targetFunctionName = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    
+    jtk_String_t* targetFunctionDescriptor = jtk_String_newEx("(zen/core/Object):v", 19);
+    jtk_String_t* entity0 = zen_String_toJTKString(virtualMachine, entity);
+    jtk_String_t* targetFunctionName0 = zen_String_toJTKString(virtualMachine, targetFunctionName);
+
+    zen_Class_t* targetClass = zen_VirtualMachine_getClass(virtualMachine,
+        entity0);
+    zen_Function_t* targetFunction = zen_VirtualMachine_getStaticFunction(virtualMachine,
+        targetClass, targetFunctionName0, targetFunctionDescriptor);
+
+    jtk_String_delete(targetFunctionName0);
+    jtk_String_delete(entity0);
+    jtk_String_delete(targetFunctionDescriptor);
+
+    return zen_Interpreter_invokeStaticFunction(virtualMachine->m_interpreter, targetFunction,
+        NULL);
 }
 
 /* TODO: The evaluate function builds a cache of operator-function pairs
@@ -893,6 +924,10 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     // Object Test.print(Object format)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
         "print", 5, "(zen/core/Object):(zen/core/Object)", 35, zen_print);
+    
+    // Object Test.scanInteger()
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
+        "scanInteger", 11, "(zen/core/Object):v", 19, zen_scanInteger);
 
     // Object Test.range(Object start, Object stop)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
@@ -905,8 +940,13 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
 
     // Object ZenKernel.invokeStatic(Object className, Object functionName, Object ... arguments)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
-        "invokeStatic", 12, "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)",
-        70, zen_ZenKernel_invokeStatic);
+        "invokeStatic", 12, "(zen/core/Object):(zen/core/Object)(zen/core/Object)",
+        52, zen_ZenKernel_invokeStatic);
+
+    // Object ZenKernel.invokeStaticEx(Object className, Object functionName, Object ... arguments)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
+        "invokeStaticEx", 14, "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)",
+        70, zen_ZenKernel_invokeStaticEx);
 
     // Object ZenKernel.evaluate(Object operator, Object operand1, Object operand2)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
