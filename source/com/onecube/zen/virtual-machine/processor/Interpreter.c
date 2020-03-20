@@ -1097,7 +1097,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
                 if (operand == 0) {
                     uint16_t offset = zen_Interpreter_readShort(interpreter);
-                    currentStackFrame->m_ip += offset - 3;
+                    currentStackFrame->m_ip = offset;
                 }
                 else {
                     currentStackFrame->m_ip += 2;
