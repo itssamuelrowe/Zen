@@ -6649,13 +6649,15 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
         invokeStaticDescriptor, invokeStaticDescriptorSize, invokeStaticName,
         invokeStaticNameSize);
 
-    // const uint8_t* invokeStatic2Descriptor = "(zen/core/Object):(zen/core/Class)(zen/core/String)@(zen/core/Object)";
-    const uint8_t* invokeStatic2Descriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)";
-    int32_t invokeStatic2DescriptorSize = 70;
-    uint16_t invokeStatic2Index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+    // const uint8_t* invokeStaticExDescriptor = "(zen/core/Object):(zen/core/Class)(zen/core/String)@(zen/core/Object)";
+    const uint8_t* invokeStaticExDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)";
+    int32_t invokeStaticExDescriptorSize = 70;
+    const uint8_t* invokeStaticExName = "invokeStaticEx";
+    int32_t invokeStaticExNameSize = 14;
+    uint16_t invokeStaticExIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
         generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
-        invokeStatic2Descriptor, invokeStatic2DescriptorSize, invokeStaticName,
-        invokeStaticNameSize);
+        invokeStaticExDescriptor, invokeStaticExDescriptorSize, invokeStaticExName,
+        invokeStaticExNameSize);
 
     const uint8_t* objectClassName = "zen/core/Object";
     int32_t objectClassNameSize = 15;
@@ -6824,7 +6826,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                                 }
 
                                 index = !zen_Modifier_hasStatic(primarySymbol->m_modifiers)?
-                                    invokeExIndex : invokeStatic2Index;
+                                    invokeExIndex : invokeStaticExIndex;
                             }
                         }
 
@@ -7179,13 +7181,15 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
         invokeStaticDescriptor, invokeStaticDescriptorSize, invokeStaticName,
         invokeStaticNameSize);
 
-    // const uint8_t* invokeStatic2Descriptor = "(zen/core/Object):(zen/core/Class)(zen/core/String)@(zen/core/Object)";
-    const uint8_t* invokeStatic2Descriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)";
-    int32_t invokeStatic2DescriptorSize = 70;
-    uint16_t invokeStatic2Index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+    // const uint8_t* invokeStaticExDescriptor = "(zen/core/Object):(zen/core/Class)(zen/core/String)@(zen/core/Object)";
+    const uint8_t* invokeStaticExDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)";
+    int32_t invokeStaticExDescriptorSize = 70;
+    const uint8_t* invokeStaticExName = "invokeStaticEx";
+    int32_t invokeStaticExNameSize = 14;
+    uint16_t invokeStaticExIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
         generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
-        invokeStatic2Descriptor, invokeStatic2DescriptorSize, invokeStaticName,
-        invokeStaticNameSize);
+        invokeStaticExDescriptor, invokeStaticExDescriptorSize, invokeStaticExName,
+        invokeStaticExNameSize);
 
     const uint8_t* loadFieldDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)";
     int32_t loadFieldDescriptorSize = 52;
@@ -7447,7 +7451,7 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
                                     }
 
                                     index = !zen_Modifier_hasStatic(primarySymbol->m_modifiers)?
-                                        invokeExIndex : invokeStatic2Index;
+                                        invokeExIndex : invokeStaticExIndex;
                                 }
                             }
 
