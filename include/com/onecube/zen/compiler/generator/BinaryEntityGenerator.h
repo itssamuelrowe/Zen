@@ -26,6 +26,7 @@
 
 #include <com/onecube/zen/Configuration.h>
 
+#include <com/onecube/zen/compiler/Compiler.h>
 #include <com/onecube/zen/compiler/ast/ASTListener.h>
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
 #include <com/onecube/zen/compiler/ast/ASTAnnotations.h>
@@ -49,6 +50,7 @@ struct zen_FunctionRecord_t {
  * @ingroup zen_compiler_generator
  */
 struct zen_BinaryEntityGenerator_t {
+    zen_Compiler_t* m_compiler;
     zen_ASTListener_t* m_astListener;
     zen_BinaryEntityBuilder_t* m_builder;
     zen_SymbolTable_t* m_symbolTable;
@@ -123,7 +125,8 @@ typedef struct zen_BinaryEntityGenerator_t zen_BinaryEntityGenerator_t;
 /**
  * @memberof BinaryEntityGenerator
  */
-zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_newEx(zen_SymbolTable_t* symbolTable,
+zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_newEx(
+    zen_Compiler_t* compiler, zen_SymbolTable_t* symbolTable,
     zen_ASTAnnotations_t* scopes, zen_ASTNode_t* compilationUnit,
     jtk_OutputStream_t* outputStream);
 

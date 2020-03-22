@@ -1483,7 +1483,6 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                             zen_Lexer_consume(lexer);
                         }
 
-                        printf("%d\n", sizeof (uint8_t*));
                         uint8_t* text = lexer->m_text->m_value; // jtk_StringBuilder_toCString(lexer->m_text);
                         int32_t length = lexer->m_text->m_size; // lexer->m_index - lexer->m_startIndex;
 

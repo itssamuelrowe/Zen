@@ -26,6 +26,13 @@
 #include <stdlib.h>
 #include <stddef.h>
 
+/* Uncomment/comment the following definition to enable/disable
+ * the logger at compile-time.
+ */
+// #ifndef JTK_LOGGER_DISABLE
+//     #define JTK_LOGGER_DISABLE
+// #endif
+
 #include <jtk/Configuration.h>
 
 #ifndef NULL

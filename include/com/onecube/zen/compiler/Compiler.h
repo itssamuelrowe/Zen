@@ -19,8 +19,11 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_COMPILER_H
 #define COM_ONECUBE_ZEN_COMPILER_COMPILER_H
 
+
 #include <com/onecube/zen/Configuration.h>
 #include <jtk/collection/list/ArrayList.h>
+
+#include <jtk/log/Logger.h>
 
 /******************************************************************************
  * Compiler                                                                   *
@@ -36,6 +39,7 @@ struct zen_Compiler_t {
     bool m_footprint;
     jtk_ArrayList_t* m_inputFiles;
     int32_t m_currentFileIndex;
+    jtk_Logger_t* m_logger;
 };
 
 /**

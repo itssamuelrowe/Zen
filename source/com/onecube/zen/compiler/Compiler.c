@@ -19,13 +19,19 @@
 #include <stdio.h>
 #include <string.h>
 
+/* The JTK_LOGGER_DISABLE constant is defined in Configuration.h. Therefore,
+ * make sure it is included before any other file which may
+ * include Logger.h!
+ */
+#include <com/onecube/zen/Configuration.h>
+
 #include <jtk/collection/list/ArrayList.h>
 #include <jtk/fs/FileInputStream.h>
 #include <jtk/io/BufferedInputStream.h>
 #include <jtk/io/InputStream.h>
 #include <jtk/core/String.h>
+#include <jtk/log/ConsoleLogger.h>
 
-#include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/compiler/Compiler.h>
 #include <com/onecube/zen/compiler/lexer/Lexer.h>
 #include <com/onecube/zen/compiler/lexer/LexerError.h>
@@ -133,6 +139,12 @@ zen_Compiler_t* zen_Compiler_new() {
     compiler->m_footprint = false;
     compiler->m_inputFiles = jtk_ArrayList_new();
     compiler->m_currentFileIndex = -1;
+#ifdef JTK_LOGGER_DISABLE
+    compiler->m_logger = NULL;
+#else
+    compiler->m_logger = jtk_Logger_new(jtk_ConsoleLogger_log);
+    jtk_Logger_setLevel(compiler->m_logger, JTK_LOG_LEVEL_INFORMATION);
+#endif
 
     return compiler;
 }
@@ -142,6 +154,9 @@ zen_Compiler_t* zen_Compiler_new() {
 void zen_Compiler_delete(zen_Compiler_t* compiler) {
     jtk_Assert_assertObject(compiler, "The specified compiler is null.");
 
+#ifndef JTK_LOGGER_DISABLE
+    jtk_Logger_delete(compiler->m_logger);
+#endif
     jtk_ArrayList_delete(compiler->m_inputFiles);
     jtk_Memory_deallocate(compiler);
 }
@@ -185,6 +200,7 @@ void printLexicalErrors(jtk_ArrayList_t* errors) {
 bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t length) {
     jtk_Assert_assertObject(compiler, "The specified compiler is null.");
 
+    bool invalidCommandLine = false;
     int32_t i;
     for (i = 1; i < length; i++) {
         if (arguments[i][0] == '-') {
@@ -196,6 +212,54 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
             }
             else if (strcmp(arguments[i], "--internal-footprint") == 0) {
                 compiler->m_footprint = true;
+            }
+            else if (strcmp(arguments[i], "--log") == 0) {
+                if ((i + 1) < length) {
+                    i++;
+                    jtk_LogLevel_t level = JTK_LOG_LEVEL_NONE;
+                    if (strcmp(arguments[i], "all") == 0) {
+                        level = JTK_LOG_LEVEL_ALL;
+                    }
+                    else if (strcmp(arguments[i], "finest") == 0) {
+                        level = JTK_LOG_LEVEL_FINEST;
+                    }
+                    else if (strcmp(arguments[i], "finer") == 0) {
+                        level = JTK_LOG_LEVEL_FINER;
+                    }
+                    else if (strcmp(arguments[i], "fine") == 0) {
+                        level = JTK_LOG_LEVEL_FINE;
+                    }
+                    else if (strcmp(arguments[i], "debug") == 0) {
+                        level = JTK_LOG_LEVEL_DEBUG;
+                    }
+                    else if (strcmp(arguments[i], "configuration") == 0) {
+                        level = JTK_LOG_LEVEL_CONFIGURATION;
+                    }
+                    else if (strcmp(arguments[i], "information") == 0) {
+                        level = JTK_LOG_LEVEL_INFORMATION;
+                    }
+                    else if (strcmp(arguments[i], "warning") == 0) {
+                        level = JTK_LOG_LEVEL_WARNING;
+                    }
+                    else if (strcmp(arguments[i], "severe") == 0) {
+                        level = JTK_LOG_LEVEL_SEVERE;
+                    }
+                    else if (strcmp(arguments[i], "error") == 0) {
+                        level = JTK_LOG_LEVEL_ERROR;
+                    }
+                    else if (strcmp(arguments[i], "none") == 0) {
+                        level = JTK_LOG_LEVEL_NONE;
+                    }
+
+                    #ifdef JTK_LOGGER_DISABLE
+                        printf("[warning] The logger was disabled at compile time. Please consider building Zen without the `JTK_LOGGER_DISABLE` constant in 'Configuration.h'.");
+                    #else
+                        jtk_Logger_setLevel(compiler->m_logger, level);
+                    #endif
+                }
+                else {
+                    printf("[error] The `--log` flag expects argument specifying log level.");
+                }
             }
         }
         else {
@@ -233,7 +297,7 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
                     zen_TokenStream_fill(tokens);
                     printTokens(tokens);
                 }
-                printf("[debug] The lexical analysis phase is complete.\n");
+                jtk_Logger_info(compiler->m_logger, "The lexical analysis phase is complete.");
                 
                 int32_t errorCount = jtk_ArrayList_getSize(errors);
                 if (errorCount == 0) {
@@ -241,7 +305,7 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
 
                     zen_ASTNode_t* compilationUnit = zen_ASTNode_new(NULL);
                     zen_Parser_compilationUnit(parser, compilationUnit);
-                    printf("[debug] The syntatical analysis phase is complete.\n");
+                    jtk_Logger_info(compiler->m_logger, "The syntatical analysis phase is complete.");
 
                     if (compiler->m_dumpNodes) {
                         zen_ASTPrinter_t* astPrinter = zen_ASTPrinter_new();
@@ -256,19 +320,19 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
                     zen_SymbolDefinitionListener_t* symbolDefinitionListener = zen_SymbolDefinitionListener_new(symbolTable, scopes);
                     zen_ASTListener_t* symbolDefinitionASTListener = zen_SymbolDefinitionListener_getASTListener(symbolDefinitionListener);
                     zen_ASTWalker_walk(symbolDefinitionASTListener, compilationUnit);
-                    printf("[debug] The symbol definition phase is complete.\n");
+                    jtk_Logger_info(compiler->m_logger, "The symbol definition phase is complete.");
 
                     zen_SymbolResolutionListener_t* symbolResolutionListener = zen_SymbolResolutionListener_new(symbolTable, scopes);
                     zen_ASTListener_t* symbolResolutionASTListener = zen_SymbolResolutionListener_getASTListener(symbolResolutionListener);
                     zen_ASTWalker_walk(symbolResolutionASTListener, compilationUnit);
-                    printf("[debug] The symbol resolution phase is complete.\n");
+                    jtk_Logger_info(compiler->m_logger, "The symbol resolution phase is complete.");
 
                     // zen_BinaryEntityBuilder_t* entityBuilder = zen_BinaryEntityBuilder_new(symbolTable, scopes);
                     // zen_BinaryEntityBuilder_build(entityBuilder, compilationUnit);
 
-                    zen_BinaryEntityGenerator_t* generator = zen_BinaryEntityGenerator_newEx(symbolTable, scopes, compilationUnit, NULL);
+                    zen_BinaryEntityGenerator_t* generator = zen_BinaryEntityGenerator_newEx(compiler, symbolTable, scopes, compilationUnit, NULL);
                     zen_BinaryEntityGenerator_generate(generator);
-                    printf("[debug] The code generation phase is complete.\n");
+                    jtk_Logger_info(compiler->m_logger, "The code generation phase is complete.");
 
                     /* The binary entity generator is not required anymore. Therefore, destroy
                      * it and release the resources it holds.
