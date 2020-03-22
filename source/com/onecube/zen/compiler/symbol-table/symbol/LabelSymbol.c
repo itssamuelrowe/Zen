@@ -29,6 +29,7 @@ zen_LabelSymbol_t* zen_LabelSymbol_new(zen_ASTNode_t* identifier,
     zen_Symbol_t* symbol = zen_Symbol_new(ZEN_SYMBOL_CATEGORY_LABEL, identifier, enclosingScope, labelSymbol);
 
     labelSymbol->m_symbol = symbol;
+    labelSymbol->m_loopIdentifier = -1;
 
     return labelSymbol;
 }

@@ -37,6 +37,7 @@
 #include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/ConstantSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/LabelSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/VariableSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/Scope.h>
 #include <com/onecube/zen/compiler/symbol-table/ClassScope.h>
@@ -1039,12 +1040,12 @@ zen_InstructionAttribute_t* zen_BinaryEntityGenerator_makeInstructionAttribute(
             exceptionHandlerSite;
     }
 
-    /*
+    //
     jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
     zen_BinaryEntityDisassember_disassembleInstructions(instructionBytes, instructionLength, builder);
     printf("%.*s", builder->m_size, builder->m_value);
     jtk_StringBuilder_delete(builder);
-    */
+    //
 
     return instructionAttribute;
 }
@@ -2992,7 +2993,11 @@ void zen_BinaryEntityGenerator_onEnterBreakStatement(zen_ASTListener_t* astListe
             int32_t identifierSize;
             uint8_t* identifierText = zen_ASTNode_toCString(context->m_identifier, &identifierSize);
             
-            // TODO: Get the symbol for the label.
+            /* Resolve the parameter symbol in the symbol table. */
+            zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, identifierText);
+            /* Retrieve the label symbol. */
+            zen_LabelSymbol_t* labelSymbol = (zen_LabelSymbol_t*)symbol->m_context;
+            loopIdentifier = labelSymbol->m_loopIdentifier;
         }
         else {
             loopIdentifier = generator->m_currentLoopLabel;
@@ -3291,7 +3296,14 @@ void zen_BinaryEntityGenerator_onEnterIterativeStatement(zen_ASTListener_t* astL
         int32_t identifierTextSize;
         uint8_t* identifierText = zen_ASTNode_toCString(labelClauseContext->m_identifier, &identifierTextSize);
 
-        // TODO: Resolve the label symbol and assign the loop identifier.
+        /* Resolve the parameter symbol in the symbol table. */
+        zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, identifierText);
+        /* Retrieve the label symbol. */
+        zen_LabelSymbol_t* labelSymbol = (zen_LabelSymbol_t*)symbol->m_context;
+        /* Associate the label symbol with the identifier generated
+         * for the current loop.
+         */
+        labelSymbol->m_loopIdentifier = loopIdentifier;
     }
 
     generator->m_currentLoopLabel = loopIdentifier;

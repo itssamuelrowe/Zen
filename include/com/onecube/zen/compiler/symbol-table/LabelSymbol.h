@@ -34,6 +34,7 @@
  */
 struct zen_LabelSymbol_t {
     zen_Symbol_t* m_symbol;
+    int32_t m_loopIdentifier;
 };
 
 /**
