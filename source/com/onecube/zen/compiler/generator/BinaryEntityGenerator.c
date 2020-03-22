@@ -598,7 +598,7 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
     /* Log the constant pool details, including the number of entries and the trends
      * seen among the entries.
      */
-    jtk_Logger_info(logger, "Constant pool size is %d.", entryCount);
+    jtk_Logger_debug(logger, "Constant pool size is %d.", entryCount);
 
     /* Retrieve the entity to write. */
     zen_Entity_t* entity = &generator->m_entityFile->m_entity;
@@ -2566,7 +2566,7 @@ void zen_BinaryEntityGenerator_onEnterVariableDeclaration(zen_ASTListener_t* ast
 
             uint16_t descriptorIndex = zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
                 generator->m_constantPoolBuilder,
-                "com/todo/Class", 14);
+                "zen/core/Object", 15);
 
             /* Create an instance of the field entity that represents the variable
              * declared.
@@ -2645,11 +2645,10 @@ void zen_BinaryEntityGenerator_onExitVariableDeclarator(zen_ASTListener_t* astLi
 // constantDeclaration
 
 void zen_BinaryEntityGenerator_onEnterConstantDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-}
-
-void zen_BinaryEntityGenerator_onExitConstantDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
     /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    /* Retrieve the logger from the compiler. */
+    jtk_Logger_t* logger = generator->m_compiler->m_logger;
 
     /* Retrieve the context associated with the AST node. */
     zen_ConstantDeclarationContext_t* context = (zen_ConstantDeclarationContext_t*)node->m_context;
@@ -2657,9 +2656,9 @@ void zen_BinaryEntityGenerator_onExitConstantDeclaration(zen_ASTListener_t* astL
     /* Retrieve the current scope from the symbol table. */
     zen_Scope_t* currentScope = zen_SymbolTable_getCurrentScope(generator->m_symbolTable);
 
-    int32_t constantCount = jtk_ArrayList_getSize(context->m_constantDeclarators);
+    int32_t variableCount = jtk_ArrayList_getSize(context->m_constantDeclarators);
     int32_t i;
-    for (i = 0; i < constantCount; i++) {
+    for (i = 0; i < variableCount; i++) {
         zen_ASTNode_t* constantDeclarator = (zen_ASTNode_t*)jtk_ArrayList_getValue(
             context->m_constantDeclarators, i);
         zen_ConstantDeclaratorContext_t* constantDeclaratorContext =
@@ -2670,22 +2669,21 @@ void zen_BinaryEntityGenerator_onExitConstantDeclaration(zen_ASTListener_t* astL
         /* Retrieve the identifier token. */
         zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
 
-        /* If a class scope encloses the constant being declared, we are processing
+        /* If a class scope encloses the variable being declared, we are processing
          * a class member declaration.
          */
         if (zen_Scope_isClassScope(currentScope)) {
             uint16_t flags = 0;
 
-            /* Retrieve the constant pool index for the constant name. */
+            /* Retrieve the constant pool index for the variable name. */
             uint16_t nameIndex = zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
                 generator->m_constantPoolBuilder,
                 identifierToken->m_text, identifierToken->m_length);
 
             uint16_t descriptorIndex = zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
-                generator->m_constantPoolBuilder,
-                "com/todo/Class", 14);
+                generator->m_constantPoolBuilder, "zen/core/Object", 15);
 
-            /* Create an instance of the field entity that represents the constant
+            /* Create an instance of the field entity that represents the variable
              * declared.
              */
             zen_FieldEntity_t* fieldEntity = zen_FieldEntity_new(flags, nameIndex, descriptorIndex);
@@ -2698,18 +2696,35 @@ void zen_BinaryEntityGenerator_onExitConstantDeclaration(zen_ASTListener_t* astL
             int32_t identifierSize;
             uint8_t* identifierText = zen_ASTNode_toCString(identifier, &identifierSize);
 
-            /* Although a constant is being declared, we increment the local variable
-             * count here. This is because the virtual machine recognizes only local
-             * variables. Local constants are syntatic sugar over local variables.
+            /* TODO: If the local scope belongs to an instance function, then a local
+             * variable for the "this" reference should be created.
              */
+
             zen_Symbol_t* symbol = zen_Scope_resolve(currentScope, identifierText);
             if (zen_Symbol_isConstant(symbol)) {
                 zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
                 /* Generate and assign the index of the local variable only if it
                  * was not previously assigned an index.
                  */
-                if (constantSymbol->m_index < 0) {
-                    constantSymbol->m_index = generator->m_localVariableCount++;
+                constantSymbol->m_index = generator->m_localVariableCount;
+                // TODO: Temporary fix. References are considered as 8 bytes.
+                // TODO: Design the local variable array correctly.
+                generator->m_localVariableCount += 2;
+
+                if (constantDeclaratorContext->m_expression != NULL) {
+                    zen_ASTWalker_walk(astListener, constantDeclaratorContext->m_expression);
+
+                    /* Store the obtained result in the local constant.
+                     * The actual emission of the instruction is delegated to the
+                     * zen_BinaryEntityGenerator_storeLocalReference() function which takes
+                     * care of optimizing the emission.
+                     *
+                     * TODO: Implement the zen_BinaryEntityGenerator_storeLocalReference() function.
+                     */
+                    zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, constantSymbol->m_index);
+
+                    /* Log the emission of the store_a instruction. */
+                    jtk_Logger_debug(logger, "Emitted store_a %d", constantSymbol->m_index);
                 }
             }
             else {
@@ -2717,6 +2732,17 @@ void zen_BinaryEntityGenerator_onExitConstantDeclaration(zen_ASTListener_t* astL
             }
         }
     }
+
+    /* The normal behaviour of the AST walker causes the generator to emit instructions
+     * in an undesirable fashion. Therefore, we partially switch from the listener
+     * to visitor design pattern. The AST walker can be guided to switch to this
+     * mode via zen_ASTListener_skipChildren() function which causes the AST walker
+     * to skip iterating over the children nodes.
+     */
+    zen_ASTListener_skipChildren(astListener);
+}
+
+void zen_BinaryEntityGenerator_onExitConstantDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
 }
 
 // constantDeclarator
