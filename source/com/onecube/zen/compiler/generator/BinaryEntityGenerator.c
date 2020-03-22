@@ -2903,32 +2903,26 @@ void zen_BinaryEntityGenerator_onExitAssertStatement(zen_ASTListener_t* astListe
 
 void zen_BinaryEntityGenerator_recordBreak(zen_BinaryEntityGenerator_t* generator,
     int32_t loopIdentifier, int32_t updateIndex) {
-    if (generator->m_currentLoopLabel >= 0) {
-        if (generator->m_breakRecordsCount + 1 >= generator->m_breakRecordsCapacity) {
-            int32_t newCapacity = generator->m_breakRecordsCapacity + ZEN_BREAK_RECORDS_BUFFER_INCREMENT;
-            int32_t* newBuffer = jtk_Memory_allocate(int32_t, newCapacity * 2);
+    if (generator->m_breakRecordsCount + 1 >= generator->m_breakRecordsCapacity) {
+        int32_t newCapacity = generator->m_breakRecordsCapacity + ZEN_BREAK_RECORDS_BUFFER_INCREMENT;
+        int32_t* newBuffer = jtk_Memory_allocate(int32_t, newCapacity * 2);
 
-            /* Copy the values in the old buffer and destroy it. */
-            if (generator->m_breakRecords != NULL) {
-                jtk_Arrays_copyEx_i(generator->m_breakRecords, generator->m_breakRecordsCount * 2,
-                    0, newBuffer, generator->m_breakRecordsCount * 2, 0,
-                    generator->m_breakRecordsCount * 2);
-                jtk_Memory_deallocate(generator->m_breakRecords);
-            }
-            
-            generator->m_breakRecords = newBuffer;
-            generator->m_breakRecordsCapacity = newCapacity;
+        /* Copy the values in the old buffer and destroy it. */
+        if (generator->m_breakRecords != NULL) {
+            jtk_Arrays_copyEx_i(generator->m_breakRecords, generator->m_breakRecordsCount * 2,
+                0, newBuffer, generator->m_breakRecordsCount * 2, 0,
+                generator->m_breakRecordsCount * 2);
+            jtk_Memory_deallocate(generator->m_breakRecords);
         }
+        
+        generator->m_breakRecords = newBuffer;
+        generator->m_breakRecordsCapacity = newCapacity;
+    }
 
-        generator->m_breakRecordsCount++;
-        int32_t breakRecordIndex = generator->m_breakRecordsCount * 2;
-        generator->m_breakRecords[breakRecordIndex] = loopIdentifier;
-        generator->m_breakRecords[breakRecordIndex + 1] = updateIndex;
-    }
-    else {
-        printf("[error] Break statement outside an iterative statement.\n");
-        printf("[warning] Please move this error detection to the syntax analysis phase.\n");
-    }
+    generator->m_breakRecordsCount++;
+    int32_t breakRecordIndex = (generator->m_breakRecordsCount - 1) * 2;
+    generator->m_breakRecords[breakRecordIndex] = loopIdentifier;
+    generator->m_breakRecords[breakRecordIndex + 1] = updateIndex;
 }
 
 /* When the "enter" listener of a loop statement is invoked, a unique identifier
@@ -2951,31 +2945,37 @@ void zen_BinaryEntityGenerator_onEnterBreakStatement(zen_ASTListener_t* astListe
     /* Retrieve the context of the AST node. */
     zen_BreakStatementContext_t* context = (zen_BreakStatementContext_t*)node->m_context;
 
-    int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
-         generator->m_builder);
-    zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
-         generator->m_builder, parentChannelIndex);
+    if (generator->m_currentLoopLabel >= 0) {
+        int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
+            generator->m_builder);
+        zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
+            generator->m_builder, parentChannelIndex);
 
-    /* Emit the jump instruction. */
-    zen_BinaryEntityBuilder_emitJump(generator->m_builder, 0);
-    /* Log the emission of the jump instruction. */
-    jtk_Logger_debug(logger, "Emitted jump 0 (dummy index)");
+        /* Emit the jump instruction. */
+        zen_BinaryEntityBuilder_emitJump(generator->m_builder, 0);
+        /* Log the emission of the jump instruction. */
+        jtk_Logger_debug(logger, "Emitted jump 0 (dummy index)");
 
-    /* Calculate the inndex of the byte where the dummy data was written. */
-    int32_t updateIndex = zen_DataChannel_getSize(parentChannel) - 2;
-    /* Determine the identifier of the loop to break. */
-    int32_t loopIdentifier;
-    if (context->m_identifier != NULL) {
-        int32_t identifierSize;
-        uint8_t* identifierText = zen_ASTNode_toCString(context->m_identifier, &identifierSize);
-        
-        // TODO: Get the symbol for the label.
+        /* Calculate the inndex of the byte where the dummy data was written. */
+        int32_t updateIndex = zen_DataChannel_getSize(parentChannel) - 2;
+        /* Determine the identifier of the loop to break. */
+        int32_t loopIdentifier;
+        if (context->m_identifier != NULL) {
+            int32_t identifierSize;
+            uint8_t* identifierText = zen_ASTNode_toCString(context->m_identifier, &identifierSize);
+            
+            // TODO: Get the symbol for the label.
+        }
+        else {
+            loopIdentifier = generator->m_currentLoopLabel;
+        }
+
+        zen_BinaryEntityGenerator_recordBreak(generator, loopIdentifier, updateIndex);
     }
     else {
-        loopIdentifier = generator->m_currentLoopLabel;
+        printf("[error] Break statement outside an iterative statement.\n");
+        printf("[warning] Please move this error detection to the syntax analysis phase.\n");
     }
-
-    zen_BinaryEntityGenerator_recordBreak(generator, loopIdentifier, updateIndex);
 }
 
 void zen_BinaryEntityGenerator_onExitBreakStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
@@ -3248,6 +3248,48 @@ void zen_BinaryEntityGenerator_onExitElseClause(zen_ASTListener_t* astListener, 
 // iterativeStatement
 
 void zen_BinaryEntityGenerator_onEnterIterativeStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+    /* Retrieve the generator associated with the AST listener. */
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    /* Retrieve the logger from the compiler. */
+    jtk_Logger_t* logger = generator->m_compiler->m_logger;
+    /* Retrieve the context of the AST node. */
+    zen_IterativeStatementContext_t* context = (zen_IterativeStatementContext_t*)node->m_context;
+    
+    int32_t parentLoop = generator->m_currentLoopLabel;
+    int32_t loopIdentifier = generator->m_nextLoopLabel++;
+    
+    if (context->m_labelClause != NULL) {
+        zen_LabelClauseContext_t* labelClauseContext = (zen_LabelClauseContext_t*)context->m_labelClause->m_context;
+        int32_t identifierTextSize;
+        uint8_t* identifierText = zen_ASTNode_toCString(labelClauseContext->m_identifier, &identifierTextSize);
+
+        // TODO: Resolve the label symbol and assign the loop identifier.
+    }
+
+    generator->m_currentLoopLabel = loopIdentifier;
+    zen_ASTWalker_walk(astListener, context->m_statement);
+    generator->m_currentLoopLabel = parentLoop;
+
+    int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
+         generator->m_builder);
+    zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
+         generator->m_builder, parentChannelIndex);
+
+    int32_t channelSize = zen_DataChannel_getSize(parentChannel);
+    int32_t i;
+    for (i = 0; i < generator->m_breakRecordsCount; i++) {
+        int32_t index = i * 2;
+        /* Update the jump offset only for the current loop. */
+        if (generator->m_breakRecords[i] == loopIdentifier) {
+            int32_t updateIndex = generator->m_breakRecords[i + 1];
+            /* Update the offset of the jump instruction. */
+            parentChannel->m_bytes[updateIndex] = (channelSize & 0x0000FF00) >> 8;
+            parentChannel->m_bytes[updateIndex + 1] = channelSize & 0x000000FF;
+        }
+    }
+
+    /* Cause the AST walker to skip iterating over the children nodes. */
+    zen_ASTListener_skipChildren(astListener);
 }
 
 void zen_BinaryEntityGenerator_onExitIterativeStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {

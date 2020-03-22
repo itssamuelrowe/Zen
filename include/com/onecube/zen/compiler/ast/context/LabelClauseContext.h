@@ -26,6 +26,8 @@
  * LabelClauseContext                                                          *
  *******************************************************************************/
 
+// TODO: Use the ASTNode of the identifier instead of LabelClauseContext!
+
 /**
  * @class LabelClauseContext
  * @ingroup zen_compiler_ast
