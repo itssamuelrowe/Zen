@@ -1039,10 +1039,12 @@ zen_InstructionAttribute_t* zen_BinaryEntityGenerator_makeInstructionAttribute(
             exceptionHandlerSite;
     }
 
+    /*
     jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
     zen_BinaryEntityDisassember_disassembleInstructions(instructionBytes, instructionLength, builder);
     printf("%.*s", builder->m_size, builder->m_value);
     jtk_StringBuilder_delete(builder);
+    */
 
     return instructionAttribute;
 }
@@ -7403,6 +7405,9 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
 
     if (postfixPartCount == 0) {
         if (zen_Symbol_isVariable(primarySymbol) || zen_Symbol_isConstant(primarySymbol)) {
+            zen_ASTNode_t* identifier = primarySymbol->m_identifier;
+            zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+            
             zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(primarySymbol);
             if (zen_Scope_isClassScope(enclosingScope)) {
                 bool instance = false;
@@ -7415,8 +7420,6 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
                     instance = true; /* !zen_ConstantSymbol_isStatic(constantSymbol)) */
                 }
 
-                zen_ASTNode_t* identifier = primarySymbol->m_identifier;
-                zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
                 uint16_t identifierIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
                     generator->m_constantPoolBuilder, identifierToken->m_text,
                     identifierToken->m_length);
@@ -7476,17 +7479,19 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
                 if (zen_Symbol_isVariable(primarySymbol)) {
                     zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)primarySymbol->m_context;
                     index = variableSymbol->m_index;
+
+                    /* Emit the store_a instruction. */
+                    zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, index);
+
+                    /* Log the emission of the store_a instruction. */
+                    jtk_Logger_debug(logger, "Emitted store_a %d", index);
                 }
                 else {
-                    zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)primarySymbol->m_context;
-                    index = constantSymbol->m_index;
+                    // zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)primarySymbol->m_context;
+                    // index = constantSymbol->m_index;
+                    zen_Parser_reportSyntaxError(NULL, identifierToken, "Invalid assignment of constant after declaration.");
+                    
                 }
-
-                /* Emit the store_a instruction. */
-                zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, index);
-
-                /* Log the emission of the store_a instruction. */
-                jtk_Logger_debug(logger, "Emitted store_a %d", index);
             }
         }
     }
