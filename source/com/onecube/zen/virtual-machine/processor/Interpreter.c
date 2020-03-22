@@ -2237,7 +2237,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         jtk_Logger_debug(logger, "Executed instruction `load_cpr` (index = %d, result = '%.*s', operand stack = %d)\n",
                             index, constantPoolUtf8->m_length, constantPoolUtf8->m_bytes, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
                         
-                        printf("String object at 0x%X, array object at 0x%x\n", value, array);
+                        jtk_Logger_debug(logger, "String object at 0x%X, array object at 0x%x", value, array);
 
                         break;
                     }
@@ -3672,8 +3672,6 @@ typedef void (*zen_NativeFunction_InvokeConstructorFunction_t)(zen_VirtualMachin
 void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
     zen_Object_t* object, zen_Function_t* constructor,
     jtk_Array_t* arguments) {
-    printf("A constructor was invoked!\n");
-
     zen_StackFrame_t* oldStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
     zen_StackFrame_t* stackFrame = zen_StackFrame_new(constructor);
     zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
@@ -3719,7 +3717,6 @@ void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
 void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
     zen_Object_t* object, zen_Function_t* constructor,
     jtk_VariableArguments_t arguments) {
-    printf("A constructor was invoked!\n");
 
     zen_StackFrame_t* oldStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
     zen_StackFrame_t* stackFrame = zen_StackFrame_new(constructor);

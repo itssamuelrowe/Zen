@@ -42,6 +42,72 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
     int32_t argumentCount = length - 1;
     int32_t argumentStartIndex = 1;
 
+    /* The configuration of the virtual machine is stored in an instance of
+     * jtk_VirtualMachineConfiguration_t.
+     */
+    zen_VirtualMachineConfiguration_t* configuration = zen_VirtualMachineConfiguration_new();
+    zen_VirtualMachineConfiguration_addEntityDirectory(configuration, "./");
+
+    bool invalidCommandLine = false;
+    int32_t i;
+    for (i = 1; i < length; i++) {
+        if (arguments[i][0] == '-') {
+            if (strcmp(arguments[i], "--log") == 0) {
+                if ((i + 1) < length) {
+                    i++;
+                    jtk_LogLevel_t level = JTK_LOG_LEVEL_NONE;
+                    if (strcmp(arguments[i], "all") == 0) {
+                        level = JTK_LOG_LEVEL_ALL;
+                    }
+                    else if (strcmp(arguments[i], "finest") == 0) {
+                        level = JTK_LOG_LEVEL_FINEST;
+                    }
+                    else if (strcmp(arguments[i], "finer") == 0) {
+                        level = JTK_LOG_LEVEL_FINER;
+                    }
+                    else if (strcmp(arguments[i], "fine") == 0) {
+                        level = JTK_LOG_LEVEL_FINE;
+                    }
+                    else if (strcmp(arguments[i], "debug") == 0) {
+                        level = JTK_LOG_LEVEL_DEBUG;
+                    }
+                    else if (strcmp(arguments[i], "configuration") == 0) {
+                        level = JTK_LOG_LEVEL_CONFIGURATION;
+                    }
+                    else if (strcmp(arguments[i], "information") == 0) {
+                        level = JTK_LOG_LEVEL_INFORMATION;
+                    }
+                    else if (strcmp(arguments[i], "warning") == 0) {
+                        level = JTK_LOG_LEVEL_WARNING;
+                    }
+                    else if (strcmp(arguments[i], "severe") == 0) {
+                        level = JTK_LOG_LEVEL_SEVERE;
+                    }
+                    else if (strcmp(arguments[i], "error") == 0) {
+                        level = JTK_LOG_LEVEL_ERROR;
+                    }
+                    else if (strcmp(arguments[i], "none") == 0) {
+                        level = JTK_LOG_LEVEL_NONE;
+                    }
+                    else {
+                        printf("[error] Unknown log level '%s'\n", arguments[i]);
+                        invalidCommandLine = true;
+                    }
+
+                    #ifdef JTK_LOGGER_DISABLE
+                        printf("[warning] The logger was disabled at compile time. Please consider building PulsarVM without the `JTK_LOGGER_DISABLE` constant in 'Configuration.h'.");
+                    #else
+                        configuration->m_logLevel = level;
+                    #endif
+                }
+                else {
+                    printf("[error] The `--log` flag expects argument specifying log level.");
+                    invalidCommandLine = true;
+                }
+            }
+        }
+    }
+
     jtk_String_t* mainClassDescriptor = jtk_String_newEx("Test", 4);
     const uint8_t* stringClassDescriptor = "(zen/core/String)";
     jtk_String_t* mainFunctionIdentifier = jtk_String_newEx("main", 4);
@@ -54,12 +120,6 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
      * - v/@(zen.core.String)
      * - zen.core.Object/@(zen.core.Object)
      */
-
-    /* The configuration of the virtual machine is stored in an instance of
-     * jtk_VirtualMachineConfiguration_t.
-     */
-    zen_VirtualMachineConfiguration_t* configuration = zen_VirtualMachineConfiguration_new();
-    zen_VirtualMachineConfiguration_addEntityDirectory(configuration, "./");
 
     /* Create an instance of the jtk_VirtualMachine_t. It provides an abstract
      * interface between the implementation of the virtual machine and the user.

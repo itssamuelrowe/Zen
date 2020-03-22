@@ -21,6 +21,7 @@
 
 #include <jtk/collection/list/ArrayList.h>
 #include <jtk/collection/map/HashMap.h>
+#include <jtk/log/LogLevel.h>
 
 #include <com/onecube/zen/Configuration.h>
 
@@ -37,6 +38,7 @@
 struct zen_VirtualMachineConfiguration_t {
     jtk_ArrayList_t* m_entityDirectories;
     jtk_HashMap_t* m_variables;
+    jtk_LogLevel_t m_logLevel;
 };
 
 /**

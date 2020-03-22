@@ -29,6 +29,7 @@ zen_VirtualMachineConfiguration_t* zen_VirtualMachineConfiguration_new() {
     zen_VirtualMachineConfiguration_t* configuration = zen_Memory_allocate(zen_VirtualMachineConfiguration_t, 1);
     configuration->m_entityDirectories = jtk_ArrayList_new();
     configuration->m_variables = jtk_HashMap_new(jtk_StringObjectAdapter_getInstance(), jtk_StringObjectAdapter_getInstance());
+    configuration->m_logLevel = JTK_LOG_LEVEL_NONE;
 
     return configuration;
 }

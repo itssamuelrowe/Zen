@@ -679,7 +679,7 @@ zen_VirtualMachine_t* zen_VirtualMachine_new(zen_VirtualMachineConfiguration_t* 
     virtualMachine->m_logger = NULL;
 #else
     virtualMachine->m_logger = jtk_Logger_new(jtk_ConsoleLogger_log);
-    jtk_Logger_setLevel(virtualMachine->m_logger, JTK_LOG_LEVEL_INFORMATION);
+    jtk_Logger_setLevel(virtualMachine->m_logger, configuration->m_logLevel);
 #endif
 
     zen_VirtualMachine_loadDefaultLibraries(virtualMachine);
