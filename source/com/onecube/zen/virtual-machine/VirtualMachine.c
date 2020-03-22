@@ -21,6 +21,7 @@
 #include <jtk/core/CString.h>
 #include <jtk/core/StringBuilder.h>
 #include <jtk/core/StringObjectAdapter.h>
+#include <jtk/log/ConsoleLogger.h>
 
 #include <com/onecube/zen/virtual-machine/ExceptionManager.h>
 #include <com/onecube/zen/virtual-machine/VirtualMachine.h>
@@ -674,6 +675,12 @@ zen_VirtualMachine_t* zen_VirtualMachine_new(zen_VirtualMachineConfiguration_t* 
     virtualMachine->m_interpreter = zen_Interpreter_new(NULL, virtualMachine, NULL);
     virtualMachine->m_nativeFunctions = jtk_HashMap_newEx(stringObjectAdapter, NULL,
         JTK_HASH_MAP_DEFAULT_CAPACITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
+#ifdef JTK_LOGGER_DISABLE
+    virtualMachine->m_logger = NULL;
+#else
+    virtualMachine->m_logger = jtk_Logger_new(jtk_ConsoleLogger_log);
+    jtk_Logger_setLevel(virtualMachine->m_logger, JTK_LOG_LEVEL_INFORMATION);
+#endif
 
     zen_VirtualMachine_loadDefaultLibraries(virtualMachine);
 

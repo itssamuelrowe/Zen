@@ -3,7 +3,7 @@
 PulsarVM is the reference implementation of the Zen Virtual Machine (ZVM).
 
 > Zen is currently under development. Please contact the author,
-> Samuel Rowe <samuelrowe1999@gmail.com>, to contribute.
+> Samuel Rowe (<samuelrowe1999@gmail.com>), to contribute.
 
 Please explore the following links to find other relevant resources.
  * [Zen](https://github.com/itssamuelrowe/Zen)

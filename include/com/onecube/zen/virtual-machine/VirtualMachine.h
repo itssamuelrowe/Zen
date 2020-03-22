@@ -21,6 +21,7 @@
 
 #include <jtk/collection/map/HashMap.h>
 #include <jtk/collection/array/Array.h>
+#include <jtk/log/Logger.h>
 
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/virtual-machine/ExceptionManager.h>
@@ -44,6 +45,7 @@
  * @since zen 1.0
  */
 struct zen_VirtualMachine_t {
+    jtk_Logger_t* m_logger;
     zen_VirtualMachineConfiguration_t* m_configuration;
     zen_EntityLoader_t* m_entityLoader;
     zen_ClassLoader_t* m_classLoader;

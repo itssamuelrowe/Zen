@@ -28,6 +28,13 @@
 
 #include <jtk/Configuration.h>
 
+/* Uncomment/comment the following definition to enable/disable
+ * the logger at compile-time.
+ */
+// #ifndef JTK_LOGGER_DISABLE
+//     #define JTK_LOGGER_DISABLE
+// #endif
+
 #ifndef NULL
     #define NULL 0
 #endif
