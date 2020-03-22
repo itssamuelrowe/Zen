@@ -95,7 +95,7 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
                     }
 
                     #ifdef JTK_LOGGER_DISABLE
-                        printf("[warning] The logger was disabled at compile time. Please consider building PulsarVM without the `JTK_LOGGER_DISABLE` constant in 'Configuration.h'.");
+                        printf("[warning] The logger was disabled at compile time. Please consider building PulsarVM without the `JTK_LOGGER_DISABLE` constant in 'Configuration.h'.\n");
                     #else
                         configuration->m_logLevel = level;
                     #endif

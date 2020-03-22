@@ -19,11 +19,12 @@
 #ifndef COM_ONECUBE_ZEN_VIRTUAL_MACHINE_VIRTUAL_MACHINE_H
 #define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_VIRTUAL_MACHINE_H
 
+#include <com/onecube/zen/Configuration.h>
+
 #include <jtk/collection/map/HashMap.h>
 #include <jtk/collection/array/Array.h>
 #include <jtk/log/Logger.h>
 
-#include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/virtual-machine/ExceptionManager.h>
 #include <com/onecube/zen/virtual-machine/VirtualMachineConfiguration.h>
 #include <com/onecube/zen/virtual-machine/object/Class.h>
