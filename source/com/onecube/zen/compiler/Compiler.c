@@ -143,7 +143,7 @@ zen_Compiler_t* zen_Compiler_new() {
     compiler->m_logger = NULL;
 #else
     compiler->m_logger = jtk_Logger_new(jtk_ConsoleLogger_log);
-    jtk_Logger_setLevel(compiler->m_logger, JTK_LOG_LEVEL_INFORMATION);
+    jtk_Logger_setLevel(compiler->m_logger, JTK_LOG_LEVEL_NONE);
 #endif
 
     return compiler;
@@ -250,6 +250,10 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
                     else if (strcmp(arguments[i], "none") == 0) {
                         level = JTK_LOG_LEVEL_NONE;
                     }
+                    else {
+                        printf("[error] Unknown log level '%s'\n", arguments[i]);
+                        invalidCommandLine = true;
+                    }
 
                     #ifdef JTK_LOGGER_DISABLE
                         printf("[warning] The logger was disabled at compile time. Please consider building Zen without the `JTK_LOGGER_DISABLE` constant in 'Configuration.h'.");
@@ -259,6 +263,7 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
                 }
                 else {
                     printf("[error] The `--log` flag expects argument specifying log level.");
+                    invalidCommandLine = true;
                 }
             }
         }

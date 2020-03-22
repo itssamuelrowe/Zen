@@ -113,6 +113,12 @@ struct zen_BinaryEntityGenerator_t {
      * generated.
      */
     jtk_String_t* m_descriptor;
+
+    int32_t* m_breakRecords;
+    int32_t m_breakRecordsCount;
+    int32_t m_breakRecordsCapacity;
+    int32_t m_nextLoopLabel;
+    int32_t m_currentLoopLabel;
 };
 
 /**

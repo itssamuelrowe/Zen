@@ -74,6 +74,11 @@ zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_newEx(
     generator->m_localVariableCount = 0;
     generator->m_exceptionHandlerSites = jtk_ArrayList_new();
 
+    generator->m_breakRecords = NULL;
+    generator->m_breakRecordsCount = 0;
+    generator->m_nextLoopLabel = 0;
+    generator->m_currentLoopLabel = -1;
+
     zen_ASTListener_t* astListener = generator->m_astListener;
 
     astListener->m_onVisitErrorNode = zen_BinaryEntityGenerator_onVisitErrorNode;
@@ -359,6 +364,10 @@ void zen_BinaryEntityGenerator_delete(zen_BinaryEntityGenerator_t* generator) {
      */
     zen_ConstantPoolBuilder_delete(generator->m_constantPoolBuilder);
     zen_Memory_deallocate(generator->m_entityFile);
+
+    if (generator->m_breakRecords != NULL) {
+        jtk_Memory_deallocate(generator->m_breakRecords);
+    }
 
     zen_ASTListener_delete(generator->m_astListener);
     jtk_Memory_deallocate(generator);
@@ -2437,6 +2446,9 @@ void zen_BinaryEntityGenerator_onExitFunctionDeclaration(
     generator->m_maxStackSize = 0;
     generator->m_localVariableCount = 0;
     generator->m_descriptor = NULL;
+    generator->m_breakRecordsCount = 0;
+    generator->m_nextLoopLabel = 0;
+    generator->m_currentLoopLabel = -1;
 }
 
 // functionParameters
@@ -2752,7 +2764,7 @@ void zen_BinaryEntityGenerator_onEnterAssertStatement(zen_ASTListener_t* astList
 }
 
 void zen_BinaryEntityGenerator_onExitAssertStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-/* Retrieve the generator associated with the AST listener. */
+    /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     /* Retrieve the logger from the compiler. */
     jtk_Logger_t* logger = generator->m_compiler->m_logger;
@@ -2885,10 +2897,86 @@ void zen_BinaryEntityGenerator_onExitAssertStatement(zen_ASTListener_t* astListe
     parentChannel->m_bytes[updateIndex2 + 1] = newParentChannelSize & 0x000000FF;
 }
 
-void zen_BinaryEntityGenerator_onEnterBreakStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+// breakStatement
+
+#define ZEN_BREAK_RECORDS_BUFFER_INCREMENT 8
+
+void zen_BinaryEntityGenerator_recordBreak(zen_BinaryEntityGenerator_t* generator,
+    int32_t loopIdentifier, int32_t updateIndex) {
+    if (generator->m_currentLoopLabel >= 0) {
+        if (generator->m_breakRecordsCount + 1 >= generator->m_breakRecordsCapacity) {
+            int32_t newCapacity = generator->m_breakRecordsCapacity + ZEN_BREAK_RECORDS_BUFFER_INCREMENT;
+            int32_t* newBuffer = jtk_Memory_allocate(int32_t, newCapacity * 2);
+
+            /* Copy the values in the old buffer and destroy it. */
+            if (generator->m_breakRecords != NULL) {
+                jtk_Arrays_copyEx_i(generator->m_breakRecords, generator->m_breakRecordsCount * 2,
+                    0, newBuffer, generator->m_breakRecordsCount * 2, 0,
+                    generator->m_breakRecordsCount * 2);
+                jtk_Memory_deallocate(generator->m_breakRecords);
+            }
+            
+            generator->m_breakRecords = newBuffer;
+            generator->m_breakRecordsCapacity = newCapacity;
+        }
+
+        generator->m_breakRecordsCount++;
+        int32_t breakRecordIndex = generator->m_breakRecordsCount * 2;
+        generator->m_breakRecords[breakRecordIndex] = loopIdentifier;
+        generator->m_breakRecords[breakRecordIndex + 1] = updateIndex;
+    }
+    else {
+        printf("[error] Break statement outside an iterative statement.\n");
+        printf("[warning] Please move this error detection to the syntax analysis phase.\n");
+    }
 }
 
-// breakStatement
+/* When the "enter" listener of a loop statement is invoked, a unique identifier
+ * is generated for the loop statement. If the loop statement has a label, the
+ * label symbol is associated with this identifier. The code generator emits a
+ * jump instruction with a dummy offset for the break statement. The position
+ * of the dummy offset and the identifier of the current loop statement are
+ * recorded. When the "exit" listener of a loop statement is invoked, all the
+ * offsets with the identifier of the loop statement are updated.
+ *
+ * | [loop_identifier][jump_offset_index] |
+ * ----------------------------------------
+ *          break statement record         
+ */
+void zen_BinaryEntityGenerator_onEnterBreakStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+    /* Retrieve the generator associated with the AST listener. */
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    /* Retrieve the logger from the compiler. */
+    jtk_Logger_t* logger = generator->m_compiler->m_logger;
+    /* Retrieve the context of the AST node. */
+    zen_BreakStatementContext_t* context = (zen_BreakStatementContext_t*)node->m_context;
+
+    int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
+         generator->m_builder);
+    zen_DataChannel_t* parentChannel = zen_BinaryEntityBuilder_getChannel(
+         generator->m_builder, parentChannelIndex);
+
+    /* Emit the jump instruction. */
+    zen_BinaryEntityBuilder_emitJump(generator->m_builder, 0);
+    /* Log the emission of the jump instruction. */
+    jtk_Logger_debug(logger, "Emitted jump 0 (dummy index)");
+
+    /* Calculate the inndex of the byte where the dummy data was written. */
+    int32_t updateIndex = zen_DataChannel_getSize(parentChannel) - 2;
+    /* Determine the identifier of the loop to break. */
+    int32_t loopIdentifier;
+    if (context->m_identifier != NULL) {
+        int32_t identifierSize;
+        uint8_t* identifierText = zen_ASTNode_toCString(context->m_identifier, &identifierSize);
+        
+        // TODO: Get the symbol for the label.
+    }
+    else {
+        loopIdentifier = generator->m_currentLoopLabel;
+    }
+
+    zen_BinaryEntityGenerator_recordBreak(generator, loopIdentifier, updateIndex);
+}
 
 void zen_BinaryEntityGenerator_onExitBreakStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
 }
