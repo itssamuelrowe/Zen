@@ -3805,8 +3805,6 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
 
     int32_t tryClauseStartIndex = -1;
     int32_t tryClauseStopIndex = -1;
-    uint8_t* exceptionClassName = "Exception";
-    int32_t exceptionClassSize = 9;
 
     zen_ASTNode_t* catchClause = NULL;
     zen_CatchClauseContext_t* catchClauseContext = NULL;
@@ -3841,9 +3839,6 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
             catchClauseIndexes[(index * 2) + 0] = startIndex - 2;
             catchClauseIndexes[(index * 2) + 1] = stopIndex;
 
-            uint16_t exceptionClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
-                generator->m_constantPoolBuilder, exceptionClassName, exceptionClassSize);
-
             zen_ASTNode_t* catchFilter = catchClauseContext->m_catchFilter;
             zen_CatchFilterContext_t* catchFilterContext =
                 (zen_CatchFilterContext_t*)catchFilter->m_context;
@@ -3853,7 +3848,12 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
                 zen_ASTNode_t* typeName = (zen_ASTNode_t*)jtk_ArrayList_getValue(
                     catchFilterContext->m_typeNames, filterIndex);
 
-                // TODO: Evaluate the class name
+                int32_t exceptionClassNameSize;
+                uint8_t* exceptionClassName = zen_ASTNode_toCString(catchClauseContext->m_catchFilter,
+                    &exceptionClassNameSize);
+                // TODO: Resolve the symbol of the class with the given name.
+                uint16_t exceptionClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
+                    generator->m_constantPoolBuilder, exceptionClassName, exceptionClassNameSize);
 
                 /* In this exception handler site, the exceptions triggered within the
                  * try clause are handled by the catch clauses. These exceptions are
@@ -3905,13 +3905,19 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
             statementSuite = catchClauseContext->m_statementSuite;
             // Update the exception class name here.
 
+            zen_ASTNode_t* catchParameter = catchClauseContext->m_identifier;
+            int32_t catchParameterSize;
+            uint8_t* catchParameterText = zen_ASTNode_toCString(catchParameter, &catchParameterSize);
+            zen_Symbol_t* catchParameterSymbol = zen_SymbolTable_resolve(generator->m_symbolTable, catchParameterText);
+            zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)catchParameterSymbol->m_context;
+            
             /* The virtual machine pushes the exception that was caught to the
              * operand stack. Store this reference in a local variable.
              */
-            zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
+            zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, variableSymbol->m_index);
 
             /* Log the emission of the load_a instruction. */
-            jtk_Logger_debug(logger, "Emitted load_a 0 (dummy index)");
+            jtk_Logger_debug(logger, "Emitted store_a %d", variableSymbol->m_index);
         }
     }
     while (index < numberOfCatchClauses);
