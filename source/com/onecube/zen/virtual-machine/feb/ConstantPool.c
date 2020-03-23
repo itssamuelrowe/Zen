@@ -21,10 +21,10 @@
 /*******************************************************************************
  * ConstantPool                                                                *
  *******************************************************************************/
- 
+
 zen_ConstantPoolUtf8_t* zen_ConstantPool_resolveUtf8(zen_ConstantPool_t* constantPool,
     uint16_t index) {
-    return constantPool->m_entries[index];
+    return (zen_ConstantPoolUtf8_t*)constantPool->m_entries[index];
 }
 
 void* zen_ConstantPool_getEntry(zen_ConstantPool_t* constantPool, int32_t index) {

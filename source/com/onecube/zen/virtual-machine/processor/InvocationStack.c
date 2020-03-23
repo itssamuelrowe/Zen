@@ -80,3 +80,11 @@ zen_StackFrame_t* zen_InvocationStack_popStackFrame(zen_InvocationStack_t* invoc
 
     return currentStackFrame;
 }
+
+/* Size */
+
+int32_t zen_InvocationStack_getSize(zen_InvocationStack_t* invocationStack) {
+    jtk_Assert_assertObject(invocationStack, "The specified invocation stack is null.");
+    
+    return jtk_DoublyLinkedList_getSize(invocationStack->m_stackFrames);
+}

@@ -124,12 +124,6 @@ zen_Object_t* zen_Interpreter_makeException(zen_Interpreter_t* interpreter,
     return NULL;
 }
 
-/* Exception Handler */
-
-bool zen_Interpreter_hasExceptionHandler(zen_Interpreter_t* interpreter, zen_StackFrame_t* stackFrame) {
-    return false;
-}
-
 /* Interpret */
 
 void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
@@ -143,7 +137,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
         zen_InstructionAttribute_t* instructionAttribute = currentStackFrame->m_instructionAttribute;
 
         // Temporary fix. In reality, the return instruction should be provided. */
-        if ((currentStackFrame->m_ip + 1) >= instructionAttribute->m_instructionLength) {
+        if ((currentStackFrame->m_ip + 1) > instructionAttribute->m_instructionLength) {
             break;
         }
 
@@ -937,18 +931,20 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Retrieve the first operand from the operand stack. */
                 int32_t operand1 = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
 
+                int32_t result = -1;
                 if (operand2 == 0) {
-                    /* Throw an instance of the zen.core.DivisionByZeroException class. */
-                    zen_Object_t* exception = zen_Interpreter_makeException(interpreter,
-                        ZEN_BOOTSTRAP_CLASS_ZEN_CORE_DIVISION_BY_ZERO_EXCEPTION);
+                    // /* Throw an instance of the zen.core.DivisionByZeroException class. */
+                    // zen_Object_t* exception = zen_Interpreter_makeException(interpreter,
+                    //     ZEN_BOOTSTRAP_CLASS_ZEN_CORE_DIVISION_BY_ZERO_EXCEPTION);
                     // jtk_ProcessorThread_setException(thread, exception);
 
-                    goto exceptionHandler;
+                    // goto exceptionHandler;
                 }
-
-                /* Divide the operands. Push the result on the operand stack. */
-                int32_t result = operand1 / operand2;
-                zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
+                else {
+                    /* Divide the operands. Push the result on the operand stack. */
+                    result = operand1 / operand2;
+                    zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
+                }
 
                 /* Log debugging information for assistance in debugging the interpreter. */
                 jtk_Logger_debug(logger, "Executed instruction `divide_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
@@ -963,18 +959,20 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Retrieve the first operand from the operand stack. */
                 int64_t operand1 = zen_OperandStack_popLong(currentStackFrame->m_operandStack);
 
+                int64_t result = -1;
                 if (operand2 == 0L) {
-                    /* Throw an instance of the zen.core.DivisionByZeroException class. */
-                    zen_Object_t* exception = zen_Interpreter_makeException(interpreter,
-                        ZEN_BOOTSTRAP_CLASS_ZEN_CORE_DIVISION_BY_ZERO_EXCEPTION);
+                    // /* Throw an instance of the zen.core.DivisionByZeroException class. */
+                    // zen_Object_t* exception = zen_Interpreter_makeException(interpreter,
+                    //     ZEN_BOOTSTRAP_CLASS_ZEN_CORE_DIVISION_BY_ZERO_EXCEPTION);
                     // jtk_ProcessorThread_setException(thread, exception);
 
-                    goto exceptionHandler;
+                    // goto exceptionHandler;
                 }
-
-                /* Divide the operands. Push the result on the operand stack. */
-                int64_t result = operand1 / operand2;
-                zen_OperandStack_pushLong(currentStackFrame->m_operandStack, result);
+                else {
+                    /* Divide the operands. Push the result on the operand stack. */
+                    result = operand1 / operand2;
+                    zen_OperandStack_pushLong(currentStackFrame->m_operandStack, result);
+                }
 
                 /* Log debugging information for assistance in debugging the interpreter. */
                 jtk_Logger_debug(logger, "Executed instruction `divide_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
@@ -3594,41 +3592,71 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
                 /* Retrieve the class of the exception object. */
                 zen_Object_t* exception = (zen_Object_t*)reference;
-                zen_Class_t* class0 = zen_Object_getClass(exception);
+                zen_Class_t* exceptionClass = zen_Object_getClass(exception);
+
+                zen_ExceptionTable_t* exceptionTable = &instructionAttribute->m_exceptionTable;
 
                 /* Recursively search the stack trace for the most appropriate
                  * exception handler, nearest to the current stack frame.
                  * The search results in popping of the stack frames. Which goes
                  * to say, the currently executing function may terminate.
                  */
-                do {
-                    if (zen_Interpreter_hasExceptionHandler(interpreter, currentStackFrame)) {
-                        /* Push the reference to the exception object on top of the operand
-                         * stack belonging to the function with the suitable exception
-                         * handler. This reference is required by the "catch clause".
+                while (zen_InvocationStack_getSize(interpreter->m_invocationStack) > 0) {
+                    if (exceptionTable->m_size > 0) {
+                        /* Scan the exception table for an exception handler site with a catch
+                         * filter corresponding to the exception currently being thrown.
                          */
-                        zen_OperandStack_pushReference(currentStackFrame->m_operandStack, reference);
+                        int32_t siteIndex;
+                        for (siteIndex = 0; siteIndex < exceptionTable->m_size; siteIndex++) {
+                            zen_ExceptionHandlerSite_t* site = exceptionTable->m_exceptionHandlerSites[siteIndex];
+                            /* Make sure that the exception was caused by an instruction
+                             * within the boundaries of the exception handler site.
+                             */
+                            if ((currentStackFrame->m_ip >= site->m_startIndex) &&
+                                (currentStackFrame->m_ip <= site->m_stopIndex)) {
+                                zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
+                                zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
+                                zen_ConstantPoolClass_t* classEntry =
+                                    (zen_ConstantPoolClass_t*)constantPool->m_entries[site->m_exceptionClassIndex];
+                                zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[classEntry->m_nameIndex];
+                
+                                jtk_String_t* classDescriptor = jtk_String_newEx(nameEntry->m_bytes, nameEntry->m_length);
+                                zen_Class_t* filterClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine, classDescriptor);
+                                jtk_String_delete(classDescriptor);
 
-                        /* A suitable exception handler has been discovered. Terminate the search
-                         * loop.
-                         */
-                        break;
+                                if (exceptionClass == filterClass) {
+                                    /* Update the instruction pointer of the current stack frame to
+                                     * the exception handler.
+                                     */
+                                    currentStackFrame->m_ip = site->m_handlerIndex;
+
+                                    /* Push the reference to the exception object on top of the operand
+                                     * stack belonging to the function with the suitable exception
+                                     * handler. This reference is required by the "catch clause".
+                                     */
+                                    zen_OperandStack_pushReference(currentStackFrame->m_operandStack, reference);
+
+                                    /* A suitable exception handler has been discovered. Terminate the search
+                                    * loop.
+                                    */
+                                    break;
+                                }
+                            }
+                        }
                     }
 
                     /* A suitable exception handler was not found. Move to the previous stack
                      * frame and repeat.
+                     * 
+                     * TODO: Create a stacktrace.
                      */
                     currentStackFrame = zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
-
-                    exceptionHandler: {
-                    }
                 }
-                while (currentStackFrame != NULL);
 
                 /* No exception handler has been discovered in the stack trace. Invoke the thread
                  * level exception handler.
                  */
-                if (currentStackFrame == NULL) {
+                if (zen_InvocationStack_getSize(interpreter->m_invocationStack) == 0) {
                     /* Invoking an exception handler function causes the interpreter to insert
                      * a stack frame. The primary loop continues normally. It is terminated
                      * when a `return` (includes the other variations, too) instruction is
@@ -3881,6 +3909,7 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
 /* Invoke Thread Exception Handler */
 
 void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter) {
+    printf("[error] An exception was thrown!\n");
 }
 
 /* Load Arguments */

@@ -88,4 +88,8 @@ zen_StackFrame_t* zen_InvocationStack_peekStackFrame(zen_InvocationStack_t* stac
  */
 zen_StackFrame_t* zen_InvocationStack_getCurrentStackFrame(zen_InvocationStack_t* stack);
 
+/* Size */
+
+int32_t zen_InvocationStack_getSize(zen_InvocationStack_t* invocationStack);
+
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_PROCESSOR_INVOCATION_STACK_H */
