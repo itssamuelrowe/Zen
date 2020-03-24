@@ -3813,7 +3813,8 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
             result = invoke(interpreter->m_virtualMachine, object, arguments);
 
             if ((function->m_returnType != ZEN_TYPE_VOID) &&
-                (interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
+                ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) &&
+                (oldStackFrame != NULL)) {
                 zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
             }
 
@@ -3840,7 +3841,8 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
         zen_Interpreter_interpret(interpreter);
 
         if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
-            if (function->m_returnType != ZEN_TYPE_VOID) {
+            if ((function->m_returnType != ZEN_TYPE_VOID) &&
+                (oldStackFrame != NULL)) {
                 result = zen_OperandStack_popReference(stackFrame->m_operandStack);
                 zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
             }

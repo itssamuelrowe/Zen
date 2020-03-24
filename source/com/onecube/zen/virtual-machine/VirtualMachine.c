@@ -518,6 +518,34 @@ zen_Object_t* zen_ZenKernel_invoke(zen_VirtualMachine_t* virtualMachine,
     return zen_Interpreter_invokeVirtualFunction(virtualMachine->m_interpreter, function, object, NULL);
 }
 
+zen_Object_t* zen_ZenKernel_invokeEx(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* class0, jtk_Array_t* arguments){
+    zen_Object_t* object = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* targetFunctionName = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    jtk_Array_t* targetArguments = (jtk_Array_t*)jtk_Array_getValue(arguments, 2);
+    
+    jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+    jtk_StringBuilder_appendEx_z(builder, "(zen/core/Object):", 18);
+    int32_t i;
+    int32_t parameterCount = jtk_Array_getSize(targetArguments);
+    for (i = 0; i < parameterCount; i++) {
+        jtk_StringBuilder_appendEx_z(builder, "(zen/core/Object)", 17);
+    }
+
+    jtk_String_t* targetFunctionDescriptor = jtk_StringBuilder_toString(builder);
+    zen_Class_t* targetClass = zen_Object_getClass(object);
+    jtk_String_t* targetFunctionName0 = zen_String_toJTKString(virtualMachine, targetFunctionName);
+
+    zen_Function_t* targetFunction = zen_VirtualMachine_getStaticFunction(virtualMachine,
+        targetClass, targetFunctionName0, targetFunctionDescriptor);
+
+    jtk_String_delete(targetFunctionName0);
+    jtk_String_delete(targetFunctionDescriptor);
+
+    return zen_Interpreter_invokeVirtualFunction(virtualMachine->m_interpreter, targetFunction,
+        object, targetArguments);
+}
+
 zen_Object_t* zen_ZenKernel_invokeStaticEx(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* class0, jtk_Array_t* arguments) {
     zen_Object_t* entity = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
@@ -982,11 +1010,11 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
      */
 
     // Object Array.setValue(Object index, Object value)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Array", 5,
         "setValue", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Array_setValue);
 
-    // Object Array.setValue(Object index, Object value)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
+    // Object Array.getValue(Object index, Object value)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Array", 5,
         "getValue", 8, "(zen/core/Object):(zen/core/Object)", 35, zen_Array_getValue);
     
     // Object Test.print(Object format)
@@ -1009,6 +1037,11 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
         "invoke", 6, "(zen/core/Object):(zen/core/Object)(zen/core/Object)",
         52, zen_ZenKernel_invoke);
+
+    // Object ZenKernel.invokeEx(Object object, Object name, Object ... arguments)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
+        "invokeEx", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)",
+        70, zen_ZenKernel_invokeEx);
 
     // Object ZenKernel.invokeStatic(Object className, Object functionName, Object ... arguments)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
