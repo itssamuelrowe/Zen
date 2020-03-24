@@ -3875,8 +3875,7 @@ void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter
             if (descriptor[i] == ':') {
                 afterColon = i + 1;
             }
-            
-            if (afterColon >= 0) {
+            else if (afterColon >= 0) {
                 if (descriptor[i] == '/') {
                     friendlyDescriptor[j++] = '.';
                 }
@@ -3898,7 +3897,7 @@ void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter
 
         printf("        at %.*s.%.*s(%s)\n", class0->m_descriptor->m_size,
             class0->m_descriptor->m_value, function->m_name->m_size,
-            function->m_name->m_value, friendlyDescriptor + afterColon);
+            function->m_name->m_value, friendlyDescriptor);
 
         jtk_Memory_deallocate(friendlyDescriptor);
     }

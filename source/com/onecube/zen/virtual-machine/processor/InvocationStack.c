@@ -102,7 +102,7 @@ void zen_InvocationStack_popStackFrame(zen_InvocationStack_t* invocationStack) {
     jtk_DoublyLinkedList_removeFirst(invocationStack->m_stackFrames);
 
     if (invocationStack->m_tracing) {
-        jtk_DoublyLinkedList_addFirst(invocationStack->m_trace, currentStackFrame);
+        jtk_DoublyLinkedList_addLast(invocationStack->m_trace, currentStackFrame);
     }
     else {
         /* NOTE: The stack frame should not be accessible to the world outside the interpreter.
