@@ -3855,7 +3855,54 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
 /* Invoke Thread Exception Handler */
 
 void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter) {
-    printf("[error] An exception was thrown!\n");
+    zen_Class_t* exceptionClass = zen_Object_getClass(interpreter->m_exception);
+    printf("\033[1;31m[error]\033[0m An instance of \033[1;37m%.*s\033[0m was thrown as exception\n",
+        exceptionClass->m_descriptor->m_size, exceptionClass->m_descriptor->m_value);
+
+    jtk_Iterator_t* iterator = jtk_DoublyLinkedList_getIterator(interpreter->m_invocationStack->m_trace);
+    while (jtk_Iterator_hasNext(iterator)) {
+        zen_StackFrame_t* stackFrame = (zen_StackFrame_t*)jtk_Iterator_getNext(iterator);
+        zen_Class_t* class0 = stackFrame->m_class;
+        zen_Function_t* function = stackFrame->m_function;
+        
+        int32_t descriptorSize = function->m_descriptor->m_size;
+        uint8_t* descriptor = function->m_descriptor->m_value;
+        uint8_t* friendlyDescriptor = jtk_Memory_allocate(uint8_t, descriptorSize + 1);
+        int32_t afterColon = -1;
+        int32_t i;
+        int32_t j = 0;
+        for (i = 0; i < descriptorSize; i++) {
+            if (descriptor[i] == ':') {
+                afterColon = i + 1;
+            }
+            
+            if (afterColon >= 0) {
+                if (descriptor[i] == '/') {
+                    friendlyDescriptor[j++] = '.';
+                }
+                else if (descriptor[i] == '(') {
+                    // Do nothing
+                }
+                else if (descriptor[i] == ')') {
+                    if (i + 1 < descriptorSize) {
+                        friendlyDescriptor[j++] = ',';
+                        friendlyDescriptor[j++] = ' ';
+                    }
+                }
+                else {
+                    friendlyDescriptor[j++] = descriptor[i];
+                }
+            }
+        }
+        friendlyDescriptor[j] = '\0';
+
+        printf("        at %.*s.%.*s(%s)\n", class0->m_descriptor->m_size,
+            class0->m_descriptor->m_value, function->m_name->m_size,
+            function->m_name->m_value, friendlyDescriptor + afterColon);
+
+        jtk_Memory_deallocate(friendlyDescriptor);
+    }
+    jtk_Iterator_delete(iterator);
 }
 
 /* Load Arguments */
