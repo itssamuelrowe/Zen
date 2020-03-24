@@ -3662,6 +3662,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     }
                 }
 
+                /* Log debugging information for assistance in debugging the interpreter. */
+                jtk_Logger_debug(logger, "Executed instruction `throw`");
+
                 /* No exception handler has been discovered in the stack trace. Invoke the thread
                  * level exception handler.
                  */
@@ -3672,10 +3675,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                      * encountered.
                      */
                     zen_Interpreter_invokeThreadExceptionHandler(interpreter);
-                }
 
-                /* Log debugging information for assistance in debugging the interpreter. */
-                jtk_Logger_debug(logger, "Executed instruction `throw`");
+                    goto emptyInvocationStack;
+                }
 
                 break;
             }
@@ -3700,6 +3702,8 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             }
         }
     }
+    emptyInvocationStack:
+        ;
 }
 
 /* Invoke Constructor */
