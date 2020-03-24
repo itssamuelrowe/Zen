@@ -132,19 +132,17 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
     zen_StackFrame_t* currentStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
     uint32_t flags = 0;
     while (!zen_InvocationStack_isEmpty(interpreter->m_invocationStack)) {
+        /* Stop the interpreter loop if the byte stream has been exhausted. */
+        zen_InstructionAttribute_t* instructionAttribute = currentStackFrame->m_instructionAttribute;
+        if ((currentStackFrame->m_ip + 1) > instructionAttribute->m_instructionLength) {
+            break;
+        }
+
         /* If the previous instruction caused the interpreter to move to the "exception thrown"
          * state, the next instruction should be the instruction to handle the exception.
          * Therefore, reset the interpreter state.
          */
         interpreter->m_state &= ~ZEN_INTERPRETER_STATE_EXCEPTION_THROWN;
-
-        // TODO: Check if the instruction stream is exhausted.
-        zen_InstructionAttribute_t* instructionAttribute = currentStackFrame->m_instructionAttribute;
-
-        // Temporary fix. In reality, the return instruction should be provided. */
-        if ((currentStackFrame->m_ip + 1) > instructionAttribute->m_instructionLength) {
-            break;
-        }
 
         uint8_t instruction = instructionAttribute->m_instructions[currentStackFrame->m_ip++];
 
@@ -1611,9 +1609,16 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 jtk_String_delete(functionDescriptor);
                 jtk_String_delete(functionName);
 
-                /* Log debugging information for assistance in debugging the interpreter. */
-                jtk_Logger_debug(logger, "Executed instruction `invoke_virtual` (index = %d, operand stack = %d)",
-                    index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+                if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
+                    /* Log debugging information for assistance in debugging the interpreter. */
+                    jtk_Logger_debug(logger, "Executed instruction `invoke_virtual` (index = %d, operand stack = %d)",
+                        index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+                }
+                else {
+                    /* Log debugging information for assistance in debugging the interpreter. */
+                    jtk_Logger_debug(logger, "An exception was thrown when executing the `invoke_virtual` instruction (index = %d)",
+                        index);
+                }
 
                 break;
             }
@@ -1673,9 +1678,16 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 jtk_String_delete(functionDescriptor);
                 jtk_String_delete(functionName);
                 
-                /* Log debugging information for assistance in debugging the interpreter. */
-                jtk_Logger_debug(logger, "Executed instruction `invoke_static` (index = %d, operand stack = %d)",
-                    index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+                if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
+                    /* Log debugging information for assistance in debugging the interpreter. */
+                    jtk_Logger_debug(logger, "Executed instruction `invoke_static` (index = %d, operand stack = %d)",
+                        index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+                }
+                else {
+                    /* Log debugging information for assistance in debugging the interpreter. */
+                    jtk_Logger_debug(logger, "An exception was thrown when executing the `invoke_static` instruction (index = %d)",
+                        index);
+                }
 
                 break;
             }
