@@ -72,6 +72,7 @@ zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* manager,
     interpreter->m_logger = NULL;
     interpreter->m_virtualMachine = virtualMachine;
     interpreter->m_state = 0;
+    interpreter->m_exception = NULL;
 
     return interpreter;
 }
@@ -3631,104 +3632,19 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
                 /* Retrieve the reference to the exception object from the operand stack. */
                 uintptr_t reference = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+                zen_Object_t* exception = (zen_Object_t*)reference;;
 
-                /* Retrieve the class of the exception object. */
-                zen_Object_t* exception = (zen_Object_t*)reference;
-                zen_Class_t* exceptionClass = zen_Object_getClass(exception);
-
-                /* Recursively search the stack trace for the most appropriate
-                 * exception handler, nearest to the current stack frame.
-                 * The search results in popping of the stack frames. Which goes
-                 * to say, the currently executing function may terminate.
-                 */
-                bool found = false;
-                int32_t invocationStackSize = zen_InvocationStack_getSize(interpreter->m_invocationStack);
-                while ((invocationStackSize > 0) && !found) {
-                    currentStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
-                    instructionAttribute = currentStackFrame->m_instructionAttribute;
-                    zen_ExceptionTable_t* exceptionTable = &instructionAttribute->m_exceptionTable;
-
-                    if (exceptionTable->m_size > 0) {
-                        /* Scan the exception table for an exception handler site with a catch
-                         * filter corresponding to the exception currently being thrown.
-                         */
-                        int32_t siteIndex;
-                        for (siteIndex = 0; siteIndex < exceptionTable->m_size; siteIndex++) {
-                            zen_ExceptionHandlerSite_t* site = exceptionTable->m_exceptionHandlerSites[siteIndex];
-                            /* Make sure that the exception was caused by an instruction
-                             * within the boundaries of the exception handler site.
-                             */
-                            if ((currentStackFrame->m_ip >= site->m_startIndex) &&
-                                (currentStackFrame->m_ip <= site->m_stopIndex)) {
-                                zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
-                                zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
-                                zen_ConstantPoolClass_t* classEntry =
-                                    (zen_ConstantPoolClass_t*)constantPool->m_entries[site->m_exceptionClassIndex];
-                                zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[classEntry->m_nameIndex];
-                
-                                jtk_String_t* classDescriptor = jtk_String_newEx(nameEntry->m_bytes, nameEntry->m_length);
-                                zen_Class_t* filterClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine, classDescriptor);
-                                jtk_String_delete(classDescriptor);
-
-                                if (exceptionClass == filterClass) {
-                                    found = true;
-
-                                    /* Update the instruction pointer of the current stack frame to
-                                     * the exception handler.
-                                     */
-                                    currentStackFrame->m_ip = site->m_handlerIndex;
-
-                                    /* Push the reference to the exception object on top of the operand
-                                     * stack belonging to the function with the suitable exception
-                                     * handler. This reference is required by the "catch clause".
-                                     */
-                                    zen_OperandStack_pushReference(currentStackFrame->m_operandStack, reference);
-
-                                    /* A suitable exception handler has been discovered. Terminate the search
-                                    * loop.
-                                    */
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    if (!found) {
-                        /* NOTE: The stack frame should not be accessible to the world outside the interpreter.
-                         * Which means no reference to the stack frame will be maintained outside the interpreter.
-                         * Thus, we can destroy the stack frame here.
-                         */
-                        zen_StackFrame_delete(currentStackFrame);
-                        
-                        /* A suitable exception handler was not found. Move to the previous stack
-                        * frame and repeat.
-                        * 
-                        * TODO: Create a stacktrace.
-                        */
-                        zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
-                        invocationStackSize--;
-                    }
-                }
+                bool possibleNativeFunction = !zen_Interpreter_throw(interpreter, exception);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
                 jtk_Logger_debug(logger, "Executed instruction `throw`");
 
-                /* No exception handler has been discovered in the stack trace. Invoke the thread
-                 * level exception handler.
+                /* If the thread was terminated because of an exception, the interpreter state for
+                 * that thread is not reset.
                  */
-                if (invocationStackSize == 0) {
-                    /* Invoking an exception handler function causes the interpreter to insert
-                     * a stack frame. The primary loop continues normally. It is terminated
-                     * when a `return` (includes the other variations, too) instruction is
-                     * encountered.
-                     */
-                    zen_Interpreter_invokeThreadExceptionHandler(interpreter);
-
-                    /* If the thread was terminated because of an exception, the interpreter state for
-                     * that thread is not reset.
-                     */
-
-                    goto emptyInvocationStack;
+                if ((zen_InvocationStack_getSize(interpreter->m_invocationStack) == 0) ||
+                    possibleNativeFunction) {
+                    goto edgeOfEarth;
                 }
 
                 break;
@@ -3754,7 +3670,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             }
         }
     }
-    emptyInvocationStack:
+    edgeOfEarth:
         ;
 }
 
@@ -4108,12 +4024,133 @@ zen_StackFrame_t* currentStackFrame = zen_InvocationStack_peekStackFrame(interpr
     return (byte0 << 8) | byte1;
 }
 
+/* Throw */
 
+bool zen_Interpreter_throw(zen_Interpreter_t* interpreter,
+    zen_Object_t* exception) {
+    /* Retrieve the logger associated with the virtual machine. */
+    jtk_Logger_t* logger = interpreter->m_virtualMachine->m_logger;
+    
+    /* Retrieve the class of the exception object. */
+    zen_Class_t* exceptionClass = zen_Object_getClass(exception);
 
+    /* The exception mechanism may temporarily pause when the control
+     * is returned to native functions. Therefore, save the exception that is being thrown.
+     */
+    interpreter->m_exception = exception;
 
+    /* Recursively search the stack trace for the most appropriate
+     * exception handler or native function nearest to the current
+     * stack frame. The search results in popping of the stack
+     * frames. Which goes to say, the currently executing function
+     * may terminate.
+     */
+    zen_StackFrame_t* currentStackFrame;
+    bool found = false;
+    int32_t invocationStackSize = zen_InvocationStack_getSize(interpreter->m_invocationStack);
+    while ((invocationStackSize > 0) && !found) {
+        currentStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
+        
+        /* When a native function is found on the invocation stack, the control
+         * is passed to it. The native function is responsible to catch the
+         * exception or let it propogate.
+         *
+         * The exception mechanism in the interpreter tries to find an
+         * exception handler site, if found the control is passed to it and
+         * the exception is considered as handled. However, if a native
+         * function is found instead, the control is passed to it.
+         * The native function can invoke an appropriate native interface
+         * function to determine if an exception is being thrown. After which,
+         * it may choose to handle the exception or return control back to
+         * the virtual machine.
+         * 
+         * Note that, the native function is responsible to mark the exception
+         * as handled. Otherwise, the virtual machine assumes that the
+         * exception was unhandled and resumes searching for an exception
+         * handler site, which may cause the thread to terminate.
+         */
+        if (zen_Function_isNative(currentStackFrame->m_function)) {
+            /* Return control to the native function. */
+            break;
+        }
+        else {
+            zen_InstructionAttribute_t* instructionAttribute = currentStackFrame->m_instructionAttribute;
+            zen_ExceptionTable_t* exceptionTable = &instructionAttribute->m_exceptionTable;
 
+            if (exceptionTable->m_size > 0) {
+                /* Scan the exception table for an exception handler site with a catch
+                    * filter corresponding to the exception currently being thrown.
+                    */
+                int32_t siteIndex;
+                for (siteIndex = 0; siteIndex < exceptionTable->m_size; siteIndex++) {
+                    zen_ExceptionHandlerSite_t* site = exceptionTable->m_exceptionHandlerSites[siteIndex];
+                    /* Make sure that the exception was caused by an instruction
+                        * within the boundaries of the exception handler site.
+                        */
+                    if ((currentStackFrame->m_ip >= site->m_startIndex) &&
+                        (currentStackFrame->m_ip <= site->m_stopIndex)) {
+                        zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
+                        zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
+                        zen_ConstantPoolClass_t* classEntry =
+                            (zen_ConstantPoolClass_t*)constantPool->m_entries[site->m_exceptionClassIndex];
+                        zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[classEntry->m_nameIndex];
+        
+                        jtk_String_t* classDescriptor = jtk_String_newEx(nameEntry->m_bytes, nameEntry->m_length);
+                        zen_Class_t* filterClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine, classDescriptor);
+                        jtk_String_delete(classDescriptor);
 
-uint8_t* zen_MemoryManager_allocateEx(zen_MemoryManager_t* manager, uint32_t size, zen_AlignmentConstraint_t alignment,
-    int32_t flags) {
-    return NULL;
+                        if (exceptionClass == filterClass) {
+                            found = true;
+
+                            /* Update the instruction pointer of the current stack frame to
+                                * the exception handler.
+                                */
+                            currentStackFrame->m_ip = site->m_handlerIndex;
+
+                            /* Push the reference to the exception object on top of the operand
+                                * stack belonging to the function with the suitable exception
+                                * handler. This reference is required by the "catch clause".
+                                */
+                            zen_OperandStack_pushReference(currentStackFrame->m_operandStack, reference);
+
+                            /* A suitable exception handler has been discovered. Terminate the search
+                            * loop.
+                            */
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!found) {
+            /* NOTE: The stack frame should not be accessible to the world outside the interpreter.
+                * Which means no reference to the stack frame will be maintained outside the interpreter.
+                * Thus, we can destroy the stack frame here.
+                */
+            zen_StackFrame_delete(currentStackFrame);
+            
+            /* A suitable exception handler was not found. Move to the previous stack
+            * frame and repeat.
+            * 
+            * TODO: Create a stacktrace.
+            */
+            zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+            invocationStackSize--;
+        }
+    }
+
+    /* No exception handler has been discovered in the stack trace. Invoke the thread
+        * level exception handler.
+        */
+    if (invocationStackSize == 0) {
+        /* Invoking an exception handler function causes the interpreter to insert
+         * a stack frame. The primary loop continues normally. It is terminated
+         * when a `return` (includes the other variations, too) instruction is
+         * encountered.
+         */
+        zen_Interpreter_invokeThreadExceptionHandler(interpreter);
+    }
+
+    return found;
 }

@@ -52,6 +52,7 @@ struct zen_Interpreter_t {
     jtk_Logger_t* m_logger;
     zen_VirtualMachine_t* m_virtualMachine;
     uint32_t m_state;
+    zen_Object_t* m_exception;
 };
 
 /**
@@ -103,5 +104,9 @@ void zen_Interpreter_loadArguments(zen_Interpreter_t* interpreter,
 
 uint8_t zen_Interpreter_readByte(zen_Interpreter_t* interpreter);
 uint16_t zen_Interpreter_readShort(zen_Interpreter_t* interpreter);
+
+/* Throw */
+
+bool zen_Interpreter_throw(zen_Interpreter_t* interpreter, zen_Object_t* exception);
 
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_PROCESSOR_INTERPRETER_H */
