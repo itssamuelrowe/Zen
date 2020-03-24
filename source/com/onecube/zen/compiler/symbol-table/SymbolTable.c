@@ -29,9 +29,10 @@
 #include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/MemberVariableSymbol.h>
 
-zen_SymbolTable_t* zen_SymbolTable_new() {
+zen_SymbolTable_t* zen_SymbolTable_new(zen_Compiler_t* compiler) {
     zen_SymbolTable_t* symbolTable = zen_Memory_allocate(zen_SymbolTable_t, 1);
     symbolTable->m_currentScope = NULL;
+    symbolTable->m_compiler = compiler;
 
     return symbolTable;
 }
@@ -45,7 +46,8 @@ void zen_SymbolTable_delete(zen_SymbolTable_t* symbolTable) {
 void zen_SymbolTable_setCurrentScope(zen_SymbolTable_t* symbolTable, zen_Scope_t* currentScope) {
     jtk_Assert_assertObject(symbolTable, "The specified symbol table is null.");
 
-    // printf("<enter> %s\n", zen_Scope_getName(currentScope));
+    jtk_Logger_t* logger = symbolTable->m_compiler->m_logger;
+    jtk_Logger_debug(logger, "<enter> %s", zen_Scope_getName(currentScope));
     symbolTable->m_currentScope = currentScope;
 }
 
@@ -57,7 +59,8 @@ zen_Scope_t* zen_SymbolTable_getCurrentScope(zen_SymbolTable_t* symbolTable) {
 void zen_SymbolTable_invalidateCurrentScope(zen_SymbolTable_t* symbolTable) {
     jtk_Assert_assertObject(symbolTable, "The specified symbol table is null.");
     
-    // printf("<exit> %s\n", zen_Scope_getName(symbolTable->m_currentScope));
+    jtk_Logger_t* logger = symbolTable->m_compiler->m_logger;
+    jtk_Logger_debug(logger, "<exit> %s", zen_Scope_getName(symbolTable->m_currentScope));
     symbolTable->m_currentScope = zen_Scope_getEnclosingScope(symbolTable->m_currentScope);
 }
 

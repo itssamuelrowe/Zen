@@ -123,6 +123,11 @@ void zen_SymbolDefinitionListener_onEnterForParameters(zen_ASTListener_t* astLis
 /**
  * @memberof SymbolDefinitionListener
  */
+void zen_SymbolDefinitionListener_onEnterTryStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node);
+
+/**
+ * @memberof SymbolDefinitionListener
+ */
 void zen_SymbolDefinitionListener_onEnterClassDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node);
 
 /**

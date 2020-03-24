@@ -3809,6 +3809,16 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
     zen_ASTNode_t* catchClause = NULL;
     zen_CatchClauseContext_t* catchClauseContext = NULL;
 
+    /* Generate an index into the local variable array. This index is
+     * used for all the catch clause parameters in the current try
+     * statement.
+     */
+    int32_t parameterIndex = -1;
+    if (numberOfCatchClauses > 0) {
+        parameterIndex = generator->m_localVariableCount;
+        generator->m_localVariableCount += 2;
+    }
+
     int32_t index = -1;
     do {
         /* Save the index where the instruction section for the current clause
@@ -3903,6 +3913,14 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
                 index);
             catchClauseContext =(zen_CatchClauseContext_t*)catchClause->m_context;
             statementSuite = catchClauseContext->m_statementSuite;
+            
+            /* Invalidate the the previous local scope. */
+            if (index >= 1) {
+                zen_SymbolTable_invalidateCurrentScope(generator->m_symbolTable);
+            }
+            /* Activate the scope of the catch clause. */
+            zen_Scope_t* scope = zen_ASTAnnotations_get(generator->m_scopes, catchClause);
+            zen_SymbolTable_setCurrentScope(generator->m_symbolTable, scope);
             // Update the exception class name here.
 
             zen_ASTNode_t* catchParameter = catchClauseContext->m_identifier;
@@ -3910,17 +3928,23 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
             uint8_t* catchParameterText = zen_ASTNode_toCString(catchParameter, &catchParameterSize);
             zen_Symbol_t* catchParameterSymbol = zen_SymbolTable_resolve(generator->m_symbolTable, catchParameterText);
             zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)catchParameterSymbol->m_context;
-            
+            variableSymbol->m_index = parameterIndex;
+
             /* The virtual machine pushes the exception that was caught to the
              * operand stack. Store this reference in a local variable.
              */
-            zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, variableSymbol->m_index);
+            zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, parameterIndex);
 
             /* Log the emission of the load_a instruction. */
-            jtk_Logger_debug(logger, "Emitted store_a %d", variableSymbol->m_index);
+            jtk_Logger_debug(logger, "Emitted store_a %d", parameterIndex);
         }
     }
     while (index < numberOfCatchClauses);
+
+    /* Invalidate the local scope of the last catch clause. */
+    if (numberOfCatchClauses > 0) {
+        zen_SymbolTable_invalidateCurrentScope(generator->m_symbolTable);
+    }
 
     int32_t fc1StartIndex = zen_DataChannel_getSize(parentChannel);
     int32_t i;

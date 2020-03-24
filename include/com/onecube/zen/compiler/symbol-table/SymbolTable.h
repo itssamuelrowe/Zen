@@ -19,6 +19,7 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_SYMBOL_TABLE_H
 #define COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_SYMBOL_TABLE_H
 
+#include <com/onecube/zen/compiler/Compiler.h>
 #include <com/onecube/zen/compiler/symbol-table/ClassScope.h>
 #include <com/onecube/zen/compiler/symbol-table/Scope.h>
 #include <com/onecube/zen/compiler/symbol-table/Symbol.h>
@@ -35,6 +36,7 @@
  */
 struct zen_SymbolTable_t {
     zen_Scope_t* m_currentScope;
+    zen_Compiler_t* m_compiler;
 };
 
 /**
@@ -47,7 +49,7 @@ typedef struct zen_SymbolTable_t zen_SymbolTable_t;
 /**
  * @memberof SymbolTable
  */
-zen_SymbolTable_t* zen_SymbolTable_new();
+zen_SymbolTable_t* zen_SymbolTable_new(zen_Compiler_t* compiler);
 
 // Destructor
 

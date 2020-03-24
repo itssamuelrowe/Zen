@@ -319,7 +319,7 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
                         zen_ASTPrinter_delete(astPrinter);
                     }
 
-                    zen_SymbolTable_t* symbolTable = zen_SymbolTable_new();
+                    zen_SymbolTable_t* symbolTable = zen_SymbolTable_new(compiler);
                     zen_ASTAnnotations_t* scopes = zen_ASTAnnotations_new();
 
                     zen_SymbolDefinitionListener_t* symbolDefinitionListener = zen_SymbolDefinitionListener_new(symbolTable, scopes);

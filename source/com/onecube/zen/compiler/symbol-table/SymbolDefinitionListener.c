@@ -58,6 +58,7 @@ zen_SymbolDefinitionListener_t* zen_SymbolDefinitionListener_new(zen_SymbolTable
     astListener->m_onEnterConstantDeclaration = zen_SymbolDefinitionListener_onEnterConstantDeclaration;
     astListener->m_onEnterLabelClause = zen_SymbolDefinitionListener_onEnterLabelClause;
     astListener->m_onEnterForParameter = zen_SymbolDefinitionListener_onEnterForParameters;
+    astListener->m_onEnterTryStatement = zen_SymbolDefinitionListener_onEnterTryStatement;
     astListener->m_onEnterClassDeclaration = zen_SymbolDefinitionListener_onEnterClassDeclaration;
     astListener->m_onExitClassDeclaration = zen_SymbolDefinitionListener_onExitClassDeclaration;
     astListener->m_onEnterEnumerationDeclaration = zen_SymbolDefinitionListener_onEnterEnumerationDeclaration;
@@ -693,6 +694,8 @@ void zen_SymbolDefinitionListener_onEnterLabelClause(
     }
 }
 
+// TODO: Each for statement should receive its own local scope to define
+// its item variable.
 void zen_SymbolDefinitionListener_onEnterForParameters(
     zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
@@ -721,6 +724,58 @@ void zen_SymbolDefinitionListener_onEnterForParameters(
             zen_SymbolTable_define(listener->m_symbolTable, symbol);
         }
     }
+}
+
+void zen_SymbolDefinitionListener_onEnterTryStatement(
+    zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+    jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
+    jtk_Assert_assertObject(node, "The specified AST node is null.");
+
+    zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
+    zen_TryStatementContext_t* context = (zen_TryStatementContext_t*)node->m_context;
+    zen_ASTWalker_walk(astListener, context->m_tryClause);
+
+    int32_t catchClauseCount = jtk_ArrayList_getSize(context->m_catchClauses);
+    int32_t i;
+    for (i = 0; i < catchClauseCount; i++) {
+        zen_ASTNode_t* catchClause = (zen_ASTNode_t*)jtk_ArrayList_getValue(context->m_catchClauses, i);
+        zen_CatchClauseContext_t* catchClauseContext = (zen_CatchClauseContext_t*)catchClause->m_context;
+
+        /* Each catch clause receives its own local scope to define its
+         * catch parameter.
+         */
+        zen_LocalScope_t* localScope = zen_LocalScope_new(listener->m_symbolTable->m_currentScope);
+        zen_Scope_t* scope = zen_LocalScope_getScope(localScope);
+        zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
+        zen_ASTAnnotations_put(listener->m_scopes, catchClause, scope);
+        
+        zen_ASTNode_t* identifier = catchClauseContext->m_identifier;
+        int32_t identifierSize;
+        uint8_t* identifierText = zen_ASTNode_toCString(identifier, &identifierSize);
+        
+        zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
+        if (symbol != NULL) {
+            zen_ErrorHandler_reportError(NULL, "Redeclaration of symbol as catch parameter", (zen_Token_t*)identifier->m_context);
+        }
+        else {
+            zen_VariableSymbol_t* variableSymbol = zen_VariableSymbol_new(identifier, scope);
+            symbol = zen_VariableSymbol_getSymbol(variableSymbol);
+            
+            zen_SymbolTable_define(listener->m_symbolTable, symbol);
+        }
+
+        /* Visit the scopes of the statement suite specified to the
+         * catch clause.
+         */
+        zen_ASTWalker_walk(astListener, catchClauseContext->m_statementSuite);
+
+        zen_SymbolTable_invalidateCurrentScope(listener->m_symbolTable);
+
+        /* Destroy the identifier text. It is not required anymore. */
+        jtk_Memory_deallocate(identifierText);
+    }
+
+    zen_ASTListener_skipChildren(astListener);
 }
 
 void zen_SymbolDefinitionListener_onEnterClassDeclaration(

@@ -830,6 +830,30 @@ void zen_SymbolResolutionListener_onExitForParameters(zen_ASTListener_t* astList
 
 void zen_SymbolResolutionListener_onEnterTryStatement(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+    jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
+    jtk_Assert_assertObject(node, "The specified AST node is null.");
+
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_TryStatementContext_t* context = (zen_TryStatementContext_t*)node->m_context;
+
+    int32_t catchClauseCount = jtk_ArrayList_getSize(context->m_catchClauses);
+    int32_t i;
+    for (i = 0; i < catchClauseCount; i++) {
+        zen_ASTNode_t* catchClause = (zen_ASTNode_t*)jtk_ArrayList_getValue(context->m_catchClauses, i);
+        zen_CatchClauseContext_t* catchClauseContext = (zen_CatchClauseContext_t*)catchClause->m_context;
+
+        zen_Scope_t* scope = zen_ASTAnnotations_get(listener->m_scopes, catchClause);
+        zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
+        
+        /* Visit the scopes of the statement suite specified to the
+         * catch clause.
+         */
+        zen_ASTWalker_walk(astListener, catchClauseContext->m_statementSuite);
+
+        zen_SymbolTable_invalidateCurrentScope(listener->m_symbolTable);
+    }
+
+    zen_ASTListener_skipChildren(astListener);
 }
 
 void zen_SymbolResolutionListener_onExitTryStatement(zen_ASTListener_t* astListener,
