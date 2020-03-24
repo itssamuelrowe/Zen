@@ -3895,9 +3895,10 @@ void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter
         }
         friendlyDescriptor[j] = '\0';
 
-        printf("        at %.*s.%.*s(%s)\n", class0->m_descriptor->m_size,
+        printf("        at %.*s.%.*s(%s) %s\n", class0->m_descriptor->m_size,
             class0->m_descriptor->m_value, function->m_name->m_size,
-            function->m_name->m_value, friendlyDescriptor);
+            function->m_name->m_value, friendlyDescriptor,
+            zen_Function_isNative(function)? "\033[1;37m[native]\033[0m" : "");
 
         jtk_Memory_deallocate(friendlyDescriptor);
     }
