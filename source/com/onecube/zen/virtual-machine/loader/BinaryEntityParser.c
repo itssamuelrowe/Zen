@@ -52,9 +52,6 @@ void zen_BinaryEntityParser_delete(zen_BinaryEntityParser_t* parser) {
 
 /* Parse */
 
-#warning "zen_MemoryManager_allocateEx is not defined."
-#define zen_MemoryManager_allocateEx(a, b, c, d) NULL
-
 /* TODO: Do not maintain a reference to the input stream. This restricts the
  * binary entity parser to a single thread. Therefore, make the state of the
  * binary entity parser independent of the object.

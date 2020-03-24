@@ -3501,14 +3501,6 @@ void zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interpreter,
     }
 }
 
-void zen_Interpreter_invokeStaticFunctionEx(zen_Interpreter_t* interpreter,
-    zen_Function_t* function, jtk_VariableArguments_t variableArguments) {
-
-    zen_StackFrame_t* stackFrame = zen_StackFrame_new(function);
-    zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
-    zen_Interpreter_interpret(interpreter);
-}
-
 /* Invoke Thread Exception Handler */
 
 void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter) {
@@ -3530,14 +3522,4 @@ zen_StackFrame_t* currentStackFrame = zen_InvocationStack_peekStackFrame(interpr
     uint8_t byte0 = instructionAttribute->m_instructions[currentStackFrame->m_ip++];
     uint8_t byte1 = instructionAttribute->m_instructions[currentStackFrame->m_ip++];
     return (byte0 << 8) | byte1;
-}
-
-
-
-
-
-
-uint8_t* zen_MemoryManager_allocateEx(zen_MemoryManager_t* manager, uint32_t size, zen_AlignmentConstraint_t alignment,
-    int32_t flags) {
-    return NULL;
 }
