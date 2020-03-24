@@ -3602,6 +3602,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                  * to say, the currently executing function may terminate.
                  */
                 while (zen_InvocationStack_getSize(interpreter->m_invocationStack) > 0) {
+                    bool found = false;
                     if (exceptionTable->m_size > 0) {
                         /* Scan the exception table for an exception handler site with a catch
                          * filter corresponding to the exception currently being thrown.
@@ -3625,6 +3626,8 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                                 jtk_String_delete(classDescriptor);
 
                                 if (exceptionClass == filterClass) {
+                                    found = true;
+
                                     /* Update the instruction pointer of the current stack frame to
                                      * the exception handler.
                                      */
@@ -3645,12 +3648,14 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         }
                     }
 
-                    /* A suitable exception handler was not found. Move to the previous stack
-                     * frame and repeat.
-                     * 
-                     * TODO: Create a stacktrace.
-                     */
-                    currentStackFrame = zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+                    if (!found) {
+                        /* A suitable exception handler was not found. Move to the previous stack
+                        * frame and repeat.
+                        * 
+                        * TODO: Create a stacktrace.
+                        */
+                        currentStackFrame = zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+                    }
                 }
 
                 /* No exception handler has been discovered in the stack trace. Invoke the thread
