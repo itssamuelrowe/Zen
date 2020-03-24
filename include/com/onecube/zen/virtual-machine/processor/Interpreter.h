@@ -37,6 +37,8 @@ typedef struct zen_VirtualMachine_t zen_VirtualMachine_t;
  * Interpreter                                                                 *
  *******************************************************************************/
 
+#define ZEN_INTERPRETER_STATE_EXCEPTION_THROWN (1 << 0)
+
 /**
  * @class Interpreter
  * @ingroup zen_vm_processor
@@ -49,6 +51,7 @@ struct zen_Interpreter_t {
     zen_ProcessorThread_t* m_processorThread;
     jtk_Logger_t* m_logger;
     zen_VirtualMachine_t* m_virtualMachine;
+    uint32_t m_state;
 };
 
 /**

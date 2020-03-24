@@ -59,9 +59,6 @@ const uint8_t* ZEN_BOOTSTRAP_CLASS_ZEN_CORE_NULL_POINTER_EXCEPTION = "zen.core.N
  * Interpreter                                                                 *
  *******************************************************************************/
 
-xjtk_Logger_debug(void* logger, const uint8_t* tag, const uint8_t* message, ...) {
-}
-
 /* Constructor */
 
 zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* manager,
@@ -74,6 +71,7 @@ zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* manager,
     interpreter->m_processorThread = processorThread;
     interpreter->m_logger = NULL;
     interpreter->m_virtualMachine = virtualMachine;
+    interpreter->m_state = 0;
 
     return interpreter;
 }
@@ -133,6 +131,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
     zen_StackFrame_t* currentStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
     uint32_t flags = 0;
     while (true) {
+        /* If the previous instruction caused the interpreter to move to the "exception thrown"
+         * state, the next instruction should be the instruction to handle the exception.
+         * Therefore, reset the interpreter state.
+         */
+        interpreter->m_state &= ~ZEN_INTERPRETER_STATE_EXCEPTION_THROWN;
+
         // TODO: Check if the instruction stream is exhausted.
         zen_InstructionAttribute_t* instructionAttribute = currentStackFrame->m_instructionAttribute;
 
@@ -715,7 +719,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_CHECK_CAST: { /* check_cast */
                 uint16_t index = zen_Interpreter_readShort(interpreter);
-/*
+            /*
                 zen_Object_t* object = zen_OperandStack_peekReference(currentStackFrame->m_operandStack);
                 if (object != NULL) {
                     zen_Class_t* targetClass = NULL; //zen_ConstantPool_resolveClass(constantPool, function, index);
@@ -1118,7 +1122,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             case ZEN_BYTE_CODE_JUMP_NE0_I: { /* jump_ne0_i */
                 // int32_t operand = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
 
-#warning    "TODO: 32-bit instruction is implemented as 64-bit instruction!"
+                #warning    "TODO: 32-bit instruction is implemented as 64-bit instruction!"
                 int32_t operand = (int32_t)zen_OperandStack_popLong(currentStackFrame->m_operandStack);
 
                 if (operand != 0) {
@@ -2765,6 +2769,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             /* Return */
 
             case ZEN_BYTE_CODE_RETURN: { /* return */
+                /* NOTE: The stack frame should not be accessible to the world outside the interpreter.
+                 * Which means no reference to the stack frame will be maintained outside the interpreter.
+                 * Thus, we can destroy the stack frame here.
+                 */
+                zen_StackFrame_delete(currentStackFrame);
+
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
                  */
@@ -2781,6 +2791,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Retrieve the operand from the operand stack. */
                 int32_t returnValue = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
 
+                /* NOTE: The stack frame should not be accessible to the world outside the interpreter.
+                 * Which means no reference to the stack frame will be maintained outside the interpreter.
+                 * Thus, we can destroy the stack frame here.
+                 */
+                zen_StackFrame_delete(currentStackFrame);
+                
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
                  */
@@ -2799,6 +2815,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             case ZEN_BYTE_CODE_RETURN_L: { /* return_l */
                 /* Retrieve the operand from the operand stack. */
                 int64_t returnValue = zen_OperandStack_popLong(currentStackFrame->m_operandStack);
+
+                /* NOTE: The stack frame should not be accessible to the world outside the interpreter.
+                 * Which means no reference to the stack frame will be maintained outside the interpreter.
+                 * Thus, we can destroy the stack frame here.
+                 */
+                zen_StackFrame_delete(currentStackFrame);
 
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
@@ -2827,6 +2849,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Retrieve the operand from the operand stack. */
                 int32_t returnValue = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
 
+                /* NOTE: The stack frame should not be accessible to the world outside the interpreter.
+                 * Which means no reference to the stack frame will be maintained outside the interpreter.
+                 * Thus, we can destroy the stack frame here.
+                 */
+                zen_StackFrame_delete(currentStackFrame);
+
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
                  */
@@ -2846,6 +2874,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Retrieve the operand from the operand stack. */
                 int64_t returnValue = zen_OperandStack_popLong(currentStackFrame->m_operandStack);
 
+                /* NOTE: The stack frame should not be accessible to the world outside the interpreter.
+                 * Which means no reference to the stack frame will be maintained outside the interpreter.
+                 * Thus, we can destroy the stack frame here.
+                 */
+                zen_StackFrame_delete(currentStackFrame);
+
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
                  */
@@ -2864,6 +2898,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             case ZEN_BYTE_CODE_RETURN_A: { /* return_a */
                 /* Retrieve the operand from the operand stack. */
                 intptr_t returnValue = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+
+                /* NOTE: The stack frame should not be accessible to the world outside the interpreter.
+                 * Which means no reference to the stack frame will be maintained outside the interpreter.
+                 * Thus, we can destroy the stack frame here.
+                 */
+                zen_StackFrame_delete(currentStackFrame);
 
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
@@ -3587,6 +3627,8 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             /* Throw */
 
             case ZEN_BYTE_CODE_THROW: { /* throw */
+                interpreter->m_state |= ZEN_INTERPRETER_STATE_EXCEPTION_THROWN;
+
                 /* Retrieve the reference to the exception object from the operand stack. */
                 uintptr_t reference = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
 
@@ -3652,6 +3694,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     }
 
                     if (!found) {
+                        /* NOTE: The stack frame should not be accessible to the world outside the interpreter.
+                         * Which means no reference to the stack frame will be maintained outside the interpreter.
+                         * Thus, we can destroy the stack frame here.
+                         */
+                        zen_StackFrame_delete(currentStackFrame);
+                        
                         /* A suitable exception handler was not found. Move to the previous stack
                         * frame and repeat.
                         * 
@@ -3675,6 +3723,10 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                      * encountered.
                      */
                     zen_Interpreter_invokeThreadExceptionHandler(interpreter);
+
+                    /* If the thread was terminated because of an exception, the interpreter state for
+                     * that thread is not reset.
+                     */
 
                     goto emptyInvocationStack;
                 }
@@ -3828,7 +3880,8 @@ zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interprete
             zen_NativeFunction_InvokeFunction_t invoke = nativeFunction->m_invoke;
             result = invoke(interpreter->m_virtualMachine, NULL, arguments);
 
-            if (function->m_returnType != ZEN_TYPE_VOID) {
+            if ((function->m_returnType != ZEN_TYPE_VOID) &&
+                (interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
                 zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
             }
         }
@@ -3845,14 +3898,21 @@ zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interprete
         zen_Interpreter_interpret(interpreter);
         // result = zen_OperandStack_popReference(stackFrame->m_operandStack);
 
-        if (function->m_returnType != ZEN_TYPE_VOID) {
+        if ((function->m_returnType != ZEN_TYPE_VOID) &&
+            (interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
             result = zen_OperandStack_popReference(stackFrame->m_operandStack);
             zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
         }
     }
 
-    zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
-    zen_StackFrame_delete(stackFrame);
+    /* Do not pop the stack frame if an exception is being thrown. The stack frames
+     * would have already been popped off during the look up for a suitable exception
+     * handler site.
+     */
+    if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) != 0) {
+        zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+        zen_StackFrame_delete(stackFrame);
+    }
 
     return result;
 }
@@ -3891,7 +3951,8 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
             zen_NativeFunction_InvokeFunction_t invoke = nativeFunction->m_invoke;
             result = invoke(interpreter->m_virtualMachine, object, arguments);
 
-            if (function->m_returnType != ZEN_TYPE_VOID) {
+            if ((function->m_returnType != ZEN_TYPE_VOID) &&
+                (interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
                 zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
             }
         }
@@ -3907,14 +3968,21 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
             arguments, true);
         zen_Interpreter_interpret(interpreter);
 
-        if (function->m_returnType != ZEN_TYPE_VOID) {
+        if ((function->m_returnType != ZEN_TYPE_VOID) &&
+            (interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
             result = zen_OperandStack_popReference(stackFrame->m_operandStack);
             zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
         }
     }
 
-    zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
-    zen_StackFrame_delete(stackFrame);
+    /* Do not pop the stack frame if an exception is being thrown. The stack frames
+     * would have already been popped off during the look up for a suitable exception
+     * handler site.
+     */
+    if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) != 0) {
+        zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+        zen_StackFrame_delete(stackFrame);
+    }
 
     return result;
 }
