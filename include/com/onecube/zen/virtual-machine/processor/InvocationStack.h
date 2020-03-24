@@ -83,11 +83,6 @@ zen_StackFrame_t* zen_InvocationStack_popStackFrame(zen_InvocationStack_t* stack
  */
 zen_StackFrame_t* zen_InvocationStack_peekStackFrame(zen_InvocationStack_t* stack);
 
-/**
- * @memberof InvocationStack
- */
-zen_StackFrame_t* zen_InvocationStack_getCurrentStackFrame(zen_InvocationStack_t* stack);
-
 /* Size */
 
 int32_t zen_InvocationStack_getSize(zen_InvocationStack_t* invocationStack);

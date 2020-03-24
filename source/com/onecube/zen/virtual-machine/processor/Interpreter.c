@@ -3594,15 +3594,18 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_Object_t* exception = (zen_Object_t*)reference;
                 zen_Class_t* exceptionClass = zen_Object_getClass(exception);
 
-                zen_ExceptionTable_t* exceptionTable = &instructionAttribute->m_exceptionTable;
-
                 /* Recursively search the stack trace for the most appropriate
                  * exception handler, nearest to the current stack frame.
                  * The search results in popping of the stack frames. Which goes
                  * to say, the currently executing function may terminate.
                  */
-                while (zen_InvocationStack_getSize(interpreter->m_invocationStack) > 0) {
-                    bool found = false;
+                bool found = false;
+                int32_t invocationStackSize = zen_InvocationStack_getSize(interpreter->m_invocationStack);
+                while ((invocationStackSize > 0) && !found) {
+                    currentStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
+                    instructionAttribute = currentStackFrame->m_instructionAttribute;
+                    zen_ExceptionTable_t* exceptionTable = &instructionAttribute->m_exceptionTable;
+
                     if (exceptionTable->m_size > 0) {
                         /* Scan the exception table for an exception handler site with a catch
                          * filter corresponding to the exception currently being thrown.
@@ -3654,14 +3657,15 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         * 
                         * TODO: Create a stacktrace.
                         */
-                        currentStackFrame = zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+                        zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+                        invocationStackSize--;
                     }
                 }
 
                 /* No exception handler has been discovered in the stack trace. Invoke the thread
                  * level exception handler.
                  */
-                if (zen_InvocationStack_getSize(interpreter->m_invocationStack) == 0) {
+                if (invocationStackSize == 0) {
                     /* Invoking an exception handler function causes the interpreter to insert
                      * a stack frame. The primary loop continues normally. It is terminated
                      * when a `return` (includes the other variations, too) instruction is

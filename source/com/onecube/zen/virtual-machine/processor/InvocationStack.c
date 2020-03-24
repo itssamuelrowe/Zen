@@ -40,11 +40,6 @@ void zen_InvocationStack_delete(zen_InvocationStack_t* invocationStack) {
     jtk_Memory_deallocate(invocationStack);
 }
 
-/* Current Stack Frame */
-
-zen_StackFrame_t* zen_InvocationStack_getCurrentStackFrame(zen_InvocationStack_t* invocationStack) {
-}
-
 /* Iterator */
 
 jtk_Iterator_t* zen_InvocationStack_getIterator(zen_InvocationStack_t* invocationStack) {
