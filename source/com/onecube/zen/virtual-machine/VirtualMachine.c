@@ -153,6 +153,45 @@ zen_Object_t* zen_range(zen_VirtualMachine_t* virtualMachine,
     return result;
 }
 
+zen_Object_t* zen_array(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* class0, jtk_Array_t* arguments) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+
+    zen_Object_t* size = arguments->m_values[0];
+    int32_t size0 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+            size, "value", 5);
+    jtk_Array_t* values = jtk_Array_new(size0);
+    jtk_Array_fill(values, 0);
+
+    zen_Object_t* result = zen_VirtualMachine_newObjectArray(virtualMachine,
+        values->m_values, values->m_size);
+    
+    jtk_Array_delete(values);
+
+    return result;
+}
+
+zen_Object_t* zen_Array_getValue(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* self, jtk_Array_t* arguments) {
+    zen_Object_t* index = arguments->m_values[0];
+    int32_t index0 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+        index, "value", 5);
+    void** values = (void**)zen_VirtualMachine_getObjectField(virtualMachine, self, "values", 6);
+    return values[index0];
+}
+
+zen_Object_t* zen_Array_setValue(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* self, jtk_Array_t* arguments) {
+    zen_Object_t* index = arguments->m_values[0];
+    zen_Object_t* value = arguments->m_values[1];
+    int32_t index0 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+        index, "value", 5);
+    void** values = (void**)zen_VirtualMachine_getObjectField(virtualMachine, self, "values", 6);
+    values[index0] = value;
+    
+    return self;
+}
+
 void zen_Integer_initialize(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* self, jtk_Array_t* arguments) {
     const uint8_t* valueDescriptor = "value";
@@ -701,11 +740,6 @@ void zen_VirtualMachine_delete(zen_VirtualMachine_t* virtualMachine) {
 
 // Array
 
-zen_ObjectArray_t* zen_VirtualMachine_newObjectArray(zen_VirtualMachine_t* virtualMachine,
-    zen_Class_t* class0, int32_t size) {
-    return NULL;
-}
-
 zen_ObjectArray_t* zen_VirtualMachine_newByteArray(
     zen_VirtualMachine_t* virtualMachine, int8_t* bytes, int32_t size) {
     const uint8_t* arrayDescriptor = "zen/core/Array";
@@ -717,6 +751,25 @@ zen_ObjectArray_t* zen_VirtualMachine_newByteArray(
         arrayDescriptor, arrayDescriptorSize, constructorDescriptor,
         constructorDescriptorSize, NULL);
     uint8_t* values = jtk_Arrays_clone_b(bytes, size);
+
+    zen_VirtualMachine_setObjectField(virtualMachine, result, "values", 6, values);
+    // TODO: Change setObjectField to setIntegerField!
+    zen_VirtualMachine_setObjectField(virtualMachine, result, "size", 4, size);
+
+    return result;
+}
+
+zen_ObjectArray_t* zen_VirtualMachine_newObjectArray(
+    zen_VirtualMachine_t* virtualMachine, void** objects, int32_t size) {
+    const uint8_t* arrayDescriptor = "zen/core/Array";
+    int32_t arrayDescriptorSize = 14;
+    const uint8_t* constructorDescriptor = "v:v";
+    int32_t constructorDescriptorSize = 3;
+
+    zen_Object_t* result = zen_VirtualMachine_newObjectEx(virtualMachine,
+        arrayDescriptor, arrayDescriptorSize, constructorDescriptor,
+        constructorDescriptorSize, NULL);
+    uint8_t* values = jtk_Arrays_clone_v(objects, size);
 
     zen_VirtualMachine_setObjectField(virtualMachine, result, "values", 6, values);
     // TODO: Change setObjectField to setIntegerField!
@@ -928,9 +981,21 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
      * and native functions, with the class owning the native function.
      */
 
+    // Object Array.setValue(Object index, Object value)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
+        "setValue", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Array_setValue);
+
+    // Object Array.setValue(Object index, Object value)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
+        "getValue", 8, "(zen/core/Object):(zen/core/Object)", 35, zen_Array_getValue);
+    
     // Object Test.print(Object format)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
         "print", 5, "(zen/core/Object):(zen/core/Object)", 35, zen_print);
+    
+    // Object Test.array(size)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
+        "array", 5, "(zen/core/Object):(zen/core/Object)", 35, zen_array);
     
     // Object Test.scanInteger()
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,

@@ -2884,7 +2884,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
                  */
-                zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
+                // zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
 
                 /* Push the operand on the "new" current stack frame. */
                 zen_OperandStack_pushReference(currentStackFrame->m_operandStack, returnValue);
@@ -2892,6 +2892,8 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Log debugging information for assistance in debugging the interpreter. */
                 jtk_Logger_debug(logger, "Executed instruction `return_a` (operand = 0x%X, operand stack = %d)",
                     returnValue, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+
+                goto edgeOfEarth;
 
                 break;
             }
@@ -3730,7 +3732,8 @@ zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interprete
             result = invoke(interpreter->m_virtualMachine, NULL, arguments);
 
             if ((function->m_returnType != ZEN_TYPE_VOID) &&
-                (interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
+                ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) &&
+                (oldStackFrame != NULL)) {
                 zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
             }
 
@@ -3757,7 +3760,8 @@ zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interprete
         zen_Interpreter_interpret(interpreter);
 
         if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
-            if (function->m_returnType != ZEN_TYPE_VOID) {
+            if ((function->m_returnType != ZEN_TYPE_VOID) &&
+                (oldStackFrame != NULL)) {
                 result = zen_OperandStack_popReference(stackFrame->m_operandStack);
                 zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
             }

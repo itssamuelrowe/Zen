@@ -79,8 +79,8 @@ void zen_VirtualMachine_delete(zen_VirtualMachine_t* virtualMachine);
 
 // Array
 
-zen_ObjectArray_t* zen_VirtualMachine_newObjectArray(zen_VirtualMachine_t* virtualMachine,
-    zen_Class_t* class0, int32_t size);
+zen_ObjectArray_t* zen_VirtualMachine_newObjectArray(
+    zen_VirtualMachine_t* virtualMachine, void** objects, int32_t size);
 
 zen_ObjectArray_t* zen_VirtualMachine_newByteArray(
     zen_VirtualMachine_t* virtualMachine, int8_t* bytes, int32_t size);
