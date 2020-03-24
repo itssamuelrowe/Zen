@@ -40,6 +40,14 @@ void zen_InvocationStack_delete(zen_InvocationStack_t* invocationStack) {
     jtk_Memory_deallocate(invocationStack);
 }
 
+/* Empty */
+
+bool zen_InvocationStack_isEmpty(zen_InvocationStack_t* invocationStack) {
+    jtk_Assert_assertObject(invocationStack, "The specified invocation stack is null.");
+
+    return jtk_DoublyLinkedList_isEmpty(invocationStack->m_stackFrames);
+}
+
 /* Iterator */
 
 jtk_Iterator_t* zen_InvocationStack_getIterator(zen_InvocationStack_t* invocationStack) {

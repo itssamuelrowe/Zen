@@ -131,7 +131,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
     zen_StackFrame_t* currentStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
     uint32_t flags = 0;
-    while (true) {
+    while (!zen_InvocationStack_isEmpty(interpreter->m_invocationStack)) {
         /* If the previous instruction caused the interpreter to move to the "exception thrown"
          * state, the next instruction should be the instruction to handle the exception.
          * Therefore, reset the interpreter state.
@@ -3678,6 +3678,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
 typedef void (*zen_NativeFunction_InvokeConstructorFunction_t)(zen_VirtualMachine_t* virtualMachine, zen_Object_t* self, jtk_VariableArguments_t arguments);
 
+// TODO: Fix this function to accomodate exceptions.
 void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
     zen_Object_t* object, zen_Function_t* constructor,
     jtk_Array_t* arguments) {
@@ -3800,6 +3801,17 @@ zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interprete
                 (interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
                 zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
             }
+
+            /* Always pop the stack frame of a native function, regardless of an
+             * exception is being thrown or not.
+             */
+            zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+            zen_StackFrame_delete(stackFrame);
+
+            /* If an exception is being thrown, resume throwing it. */
+            if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) != 0) {
+                zen_Interpreter_throw(interpreter, interpreter->m_exception);
+            }
         }
         else {
             printf("[error] Unknown native function (class=%.*s, name=%.*s, descriptor=%.*s)\n",
@@ -3812,22 +3824,20 @@ zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interprete
         zen_Interpreter_loadArguments(interpreter, function, stackFrame->m_localVariableArray,
             arguments, false);
         zen_Interpreter_interpret(interpreter);
-        // result = zen_OperandStack_popReference(stackFrame->m_operandStack);
 
-        if ((function->m_returnType != ZEN_TYPE_VOID) &&
-            (interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
-            result = zen_OperandStack_popReference(stackFrame->m_operandStack);
-            zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
+        if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
+            if (function->m_returnType != ZEN_TYPE_VOID) {
+                result = zen_OperandStack_popReference(stackFrame->m_operandStack);
+                zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
+            }
+            
+            /* Do not pop the stack frame if an exception is being thrown. The stack frames
+             * would have already been popped off during the look up for a suitable exception
+             * handler site.
+             */
+            zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+            zen_StackFrame_delete(stackFrame);
         }
-    }
-
-    /* Do not pop the stack frame if an exception is being thrown. The stack frames
-     * would have already been popped off during the look up for a suitable exception
-     * handler site.
-     */
-    if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) != 0) {
-        zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
-        zen_StackFrame_delete(stackFrame);
     }
 
     return result;
@@ -3871,6 +3881,17 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
                 (interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
                 zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
             }
+
+            /* Always pop the stack frame of a native function, regardless of an
+             * exception is being thrown or not.
+             */
+            zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+            zen_StackFrame_delete(stackFrame);
+
+            /* If an exception is being thrown, resume throwing it. */
+            if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) != 0) {
+                zen_Interpreter_throw(interpreter, interpreter->m_exception);
+            }
         }
         else {
             printf("[error] Unknown native function (class=%.*s, name=%.*s, descriptor=%.*s)\n",
@@ -3884,20 +3905,19 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
             arguments, true);
         zen_Interpreter_interpret(interpreter);
 
-        if ((function->m_returnType != ZEN_TYPE_VOID) &&
-            (interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
-            result = zen_OperandStack_popReference(stackFrame->m_operandStack);
-            zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
+        if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
+            if (function->m_returnType != ZEN_TYPE_VOID) {
+                result = zen_OperandStack_popReference(stackFrame->m_operandStack);
+                zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
+            }
+            
+            /* Do not pop the stack frame if an exception is being thrown. The stack frames
+             * would have already been popped off during the look up for a suitable exception
+             * handler site.
+             */
+            zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+            zen_StackFrame_delete(stackFrame);
         }
-    }
-
-    /* Do not pop the stack frame if an exception is being thrown. The stack frames
-     * would have already been popped off during the look up for a suitable exception
-     * handler site.
-     */
-    if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) != 0) {
-        zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
-        zen_StackFrame_delete(stackFrame);
     }
 
     return result;
@@ -4111,7 +4131,7 @@ bool zen_Interpreter_throw(zen_Interpreter_t* interpreter,
                                 * stack belonging to the function with the suitable exception
                                 * handler. This reference is required by the "catch clause".
                                 */
-                            zen_OperandStack_pushReference(currentStackFrame->m_operandStack, reference);
+                            zen_OperandStack_pushReference(currentStackFrame->m_operandStack, exception);
 
                             /* A suitable exception handler has been discovered. Terminate the search
                             * loop.

@@ -61,6 +61,10 @@ zen_InvocationStack_t* zen_InvocationStack_new();
  */
 void zen_InvocationStack_delete(zen_InvocationStack_t* stack);
 
+/* Empty */
+
+bool zen_InvocationStack_isEmpty(zen_InvocationStack_t* invocationStack);
+
 /* Iterator */
 
 jtk_Iterator_t* zen_InvocationStack_getIterator(zen_InvocationStack_t* invocationStack);
