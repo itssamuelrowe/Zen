@@ -142,7 +142,8 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
 
             if (zen_VirtualMachine_isClear(virtualMachine)) {
                 /* Create a String array capable. It may result in an exception. */
-                zen_ObjectArray_t* arguments0 = NULL; // zen_VirtualMachine_newObjectArray(virtualMachine, stringClass, argumentCount);
+                jtk_Array_t* arguments0 = jtk_Array_new(1); // zen_VirtualMachine_newObjectArray(virtualMachine, stringClass, argumentCount);
+                jtk_Array_setValue(arguments0, 0, NULL);
 
                 if (zen_VirtualMachine_isClear(virtualMachine)) {
                     int32_t i;
@@ -169,9 +170,12 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
                         /* Invoke the main function. It may result in an exception.
                          * The exception will be handled eventually.
                          */
-                        zen_VirtualMachine_start(virtualMachine, mainFunction, arguments0);
+                        zen_Interpreter_invokeStaticFunction(virtualMachine->m_interpreter,
+                            mainFunction, arguments0);
                     }
                 }
+
+                jtk_Array_delete(arguments0);
             }
         }
     }

@@ -194,11 +194,6 @@ void zen_VirtualMachine_shutDown(zen_VirtualMachine_t* virtualMachine);
 void zen_VirtualMachine_notifyShutDown(zen_VirtualMachine_t* virtualMachine);
 void zen_VirtualMachine_tearDown(zen_VirtualMachine_t* virtualMachine);
 
-// Start
-
-void zen_VirtualMachine_start(zen_VirtualMachine_t* virtualMachine,
-    zen_Function_t* function, ...);
-
 // Static Function
 
 zen_Function_t* zen_VirtualMachine_getStaticFunction(zen_VirtualMachine_t* virtualMachine,

@@ -20,6 +20,8 @@
 #include <jtk/core/Float.h>
 #include <jtk/core/Double.h>
 #include <jtk/collection/array/Array.h>
+#include <jtk/collection/array/Arrays.h>
+#include <jtk/core/CString.h>
 
 #include <com/onecube/zen/virtual-machine/VirtualMachine.h>
 #include <com/onecube/zen/virtual-machine/feb/ByteCode.h>
@@ -82,13 +84,6 @@ zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* manager,
 void zen_Interpreter_delete(zen_Interpreter_t* interpreter) {
     jtk_Assert_assertObject(interpreter, "The specified interpreter is null.");
 
-    jtk_Iterator_t* iterator = zen_InvocationStack_getIterator(interpreter->m_invocationStack);
-    while (jtk_Iterator_hasNext(iterator)) {
-        zen_StackFrame_t* stackFrame = (zen_StackFrame_t*)jtk_Iterator_getNext(iterator);
-        zen_StackFrame_delete(stackFrame);
-    }
-    jtk_Iterator_delete(iterator);
-
     zen_InvocationStack_delete(interpreter->m_invocationStack);
     jtk_Memory_deallocate(interpreter);
 }
@@ -143,6 +138,10 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
          * Therefore, reset the interpreter state.
          */
         interpreter->m_state &= ~ZEN_INTERPRETER_STATE_EXCEPTION_THROWN;
+        interpreter->m_exception = NULL;
+        /* Destroy the stack frames that were traced. */
+        // TODO: Move stopTracing somewhere more appropriate.
+        zen_InvocationStack_stopTracing(interpreter->m_invocationStack);
 
         uint8_t instruction = instructionAttribute->m_instructions[currentStackFrame->m_ip++];
 
@@ -1616,7 +1615,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 }
                 else {
                     /* Log debugging information for assistance in debugging the interpreter. */
-                    jtk_Logger_debug(logger, "An exception was thrown when executing the `invoke_virtual` instruction (index = %d)",
+                    jtk_Logger_debug(logger, "An exception was thrown when executing `invoke_virtual` (index = %d)",
                         index);
                 }
 
@@ -1685,7 +1684,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 }
                 else {
                     /* Log debugging information for assistance in debugging the interpreter. */
-                    jtk_Logger_debug(logger, "An exception was thrown when executing the `invoke_static` instruction (index = %d)",
+                    jtk_Logger_debug(logger, "An exception was thrown when executing `invoke_static` (index = %d)",
                         index);
                 }
 
@@ -2782,16 +2781,10 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             /* Return */
 
             case ZEN_BYTE_CODE_RETURN: { /* return */
-                /* NOTE: The stack frame should not be accessible to the world outside the interpreter.
-                 * Which means no reference to the stack frame will be maintained outside the interpreter.
-                 * Thus, we can destroy the stack frame here.
-                 */
-                zen_StackFrame_delete(currentStackFrame);
-
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
                  */
-                currentStackFrame = zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
+                zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
                 jtk_Logger_debug(logger, "Executed instruction `return` (operand stack = %d)",
@@ -2804,16 +2797,10 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Retrieve the operand from the operand stack. */
                 int32_t returnValue = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
 
-                /* NOTE: The stack frame should not be accessible to the world outside the interpreter.
-                 * Which means no reference to the stack frame will be maintained outside the interpreter.
-                 * Thus, we can destroy the stack frame here.
-                 */
-                zen_StackFrame_delete(currentStackFrame);
-                
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
                  */
-                currentStackFrame = zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
+                zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
 
                 /* Push the operand on the "new" current stack frame. */
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, returnValue);
@@ -2829,16 +2816,10 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Retrieve the operand from the operand stack. */
                 int64_t returnValue = zen_OperandStack_popLong(currentStackFrame->m_operandStack);
 
-                /* NOTE: The stack frame should not be accessible to the world outside the interpreter.
-                 * Which means no reference to the stack frame will be maintained outside the interpreter.
-                 * Thus, we can destroy the stack frame here.
-                 */
-                zen_StackFrame_delete(currentStackFrame);
-
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
                  */
-                currentStackFrame = zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
+                zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
 
                 /* Push the operand on the "new" current stack frame. */
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, returnValue);
@@ -2862,16 +2843,10 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Retrieve the operand from the operand stack. */
                 int32_t returnValue = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
 
-                /* NOTE: The stack frame should not be accessible to the world outside the interpreter.
-                 * Which means no reference to the stack frame will be maintained outside the interpreter.
-                 * Thus, we can destroy the stack frame here.
-                 */
-                zen_StackFrame_delete(currentStackFrame);
-
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
                  */
-                currentStackFrame = zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
+                zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
 
                 /* Push the operand on the "new" current stack frame. */
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, returnValue);
@@ -2887,16 +2862,10 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Retrieve the operand from the operand stack. */
                 int64_t returnValue = zen_OperandStack_popLong(currentStackFrame->m_operandStack);
 
-                /* NOTE: The stack frame should not be accessible to the world outside the interpreter.
-                 * Which means no reference to the stack frame will be maintained outside the interpreter.
-                 * Thus, we can destroy the stack frame here.
-                 */
-                zen_StackFrame_delete(currentStackFrame);
-
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
                  */
-                currentStackFrame = zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
+                zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
 
                 /* Push the operand on the "new" current stack frame. */
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, returnValue);
@@ -2912,16 +2881,10 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Retrieve the operand from the operand stack. */
                 intptr_t returnValue = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
 
-                /* NOTE: The stack frame should not be accessible to the world outside the interpreter.
-                 * Which means no reference to the stack frame will be maintained outside the interpreter.
-                 * Thus, we can destroy the stack frame here.
-                 */
-                zen_StackFrame_delete(currentStackFrame);
-
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
                  */
-                currentStackFrame = zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
+                zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
 
                 /* Push the operand on the "new" current stack frame. */
                 zen_OperandStack_pushReference(currentStackFrame->m_operandStack, returnValue);
@@ -3695,8 +3658,8 @@ void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
     zen_Object_t* object, zen_Function_t* constructor,
     jtk_Array_t* arguments) {
     zen_StackFrame_t* oldStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
-    zen_StackFrame_t* stackFrame = zen_StackFrame_new(constructor);
-    zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
+    zen_StackFrame_t* stackFrame = zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack,
+        constructor);
 
     /* Pass the self reference to the constructor. */
     zen_LocalVariableArray_setReference(stackFrame->m_localVariableArray, 0, object);
@@ -3733,50 +3696,7 @@ void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
 
     jtk_String_delete(className);
     zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
-    zen_StackFrame_delete(stackFrame);
 }
-/*
-void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
-    zen_Object_t* object, zen_Function_t* constructor,
-    jtk_VariableArguments_t arguments) {
-
-    zen_StackFrame_t* oldStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
-    zen_StackFrame_t* stackFrame = zen_StackFrame_new(constructor);
-    zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
-
-    zen_EntityFile_t* entityFile = constructor->m_class->m_entityFile;
-    zen_Entity_t* entity = &entityFile->m_entity;
-    zen_ConstantPoolUtf8_t* name =
-        (zen_ConstantPoolUtf8_t*)entityFile->m_constantPool.m_entries[
-            entity->m_reference];
-    jtk_String_t* className = jtk_String_newEx(name->m_bytes, name->m_length);
-
-    if (zen_Function_isNative(constructor)) {
-        zen_NativeFunction_t* nativeConstructor = zen_VirtualMachine_getNativeFunction(
-            interpreter->m_virtualMachine, className, constructor->m_name,
-            constructor->m_descriptor);
-
-        if (nativeConstructor != NULL) {
-            zen_NativeFunction_InvokeConstructorFunction_t invokeConstructor =
-                (zen_NativeFunction_InvokeConstructorFunction_t)nativeConstructor->m_invoke;
-            invokeConstructor(interpreter->m_virtualMachine, object, arguments);
-        }
-        else {
-            printf("[error] Unknown native constructor (class=%.*s, name=%.*s, descriptor=%.*s)\n",
-                className->m_size, className->m_value, constructor->m_name->m_size,
-                constructor->m_name->m_value, constructor->m_descriptor->m_size,
-                constructor->m_descriptor->m_value);
-        }
-    }
-    else {
-        zen_Interpreter_interpret(interpreter);
-    }
-
-    jtk_String_delete(className);
-    zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
-    zen_StackFrame_delete(stackFrame);
-}
-*/
 
 /* Invoke Native */
 
@@ -3790,8 +3710,8 @@ zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interprete
     zen_Function_t* function, jtk_Array_t* arguments) {
 
     zen_StackFrame_t* oldStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
-    zen_StackFrame_t* stackFrame = zen_StackFrame_new(function);
-    zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
+    zen_StackFrame_t* stackFrame = zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack,
+        function);
 
     zen_EntityFile_t* entityFile = function->m_class->m_entityFile;
     zen_Entity_t* entity = &entityFile->m_entity;
@@ -3818,7 +3738,6 @@ zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interprete
              * exception is being thrown or not.
              */
             zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
-            zen_StackFrame_delete(stackFrame);
 
             /* If an exception is being thrown, resume throwing it. */
             if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) != 0) {
@@ -3848,7 +3767,6 @@ zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interprete
              * handler site.
              */
             zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
-            zen_StackFrame_delete(stackFrame);
         }
     }
 
@@ -3858,9 +3776,10 @@ zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interprete
 void zen_Interpreter_invokeStaticFunctionEx(zen_Interpreter_t* interpreter,
     zen_Function_t* function, jtk_VariableArguments_t variableArguments) {
 
-    zen_StackFrame_t* stackFrame = zen_StackFrame_new(function);
-    zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
+    zen_StackFrame_t* stackFrame = zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack,
+        function);
     zen_Interpreter_interpret(interpreter);
+    // zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
 }
 
 /* Invoke Virtual Function */
@@ -3868,8 +3787,8 @@ void zen_Interpreter_invokeStaticFunctionEx(zen_Interpreter_t* interpreter,
 zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpreter,
     zen_Function_t* function, zen_Object_t* object, jtk_Array_t* arguments) {
     zen_StackFrame_t* oldStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
-    zen_StackFrame_t* stackFrame = zen_StackFrame_new(function);
-    zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
+    zen_StackFrame_t* stackFrame = zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack,
+        function);
 
     zen_LocalVariableArray_setReference(stackFrame->m_localVariableArray, 0, object);
 
@@ -3898,7 +3817,6 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
              * exception is being thrown or not.
              */
             zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
-            zen_StackFrame_delete(stackFrame);
 
             /* If an exception is being thrown, resume throwing it. */
             if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) != 0) {
@@ -3928,7 +3846,6 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
              * handler site.
              */
             zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
-            zen_StackFrame_delete(stackFrame);
         }
     }
 
@@ -4063,6 +3980,9 @@ bool zen_Interpreter_throw(zen_Interpreter_t* interpreter,
     /* Retrieve the logger associated with the virtual machine. */
     jtk_Logger_t* logger = interpreter->m_virtualMachine->m_logger;
     
+    /* Keep track of all the stack frames that are being popped off. */
+    zen_InvocationStack_startTracing(interpreter->m_invocationStack);
+
     /* Retrieve the class of the exception object. */
     zen_Class_t* exceptionClass = zen_Object_getClass(exception);
 
@@ -4156,12 +4076,6 @@ bool zen_Interpreter_throw(zen_Interpreter_t* interpreter,
         }
 
         if (!found) {
-            /* NOTE: The stack frame should not be accessible to the world outside the interpreter.
-                * Which means no reference to the stack frame will be maintained outside the interpreter.
-                * Thus, we can destroy the stack frame here.
-                */
-            zen_StackFrame_delete(currentStackFrame);
-            
             /* A suitable exception handler was not found. Move to the previous stack
             * frame and repeat.
             * 

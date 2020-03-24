@@ -1309,19 +1309,6 @@ zen_Function_t* zen_VirtualMachine_getStaticFunction(zen_VirtualMachine_t* virtu
     return function;
 }
 
-// Start
-
-void zen_VirtualMachine_start(zen_VirtualMachine_t* virtualMachine,
-    zen_Function_t* function, ...) {
-    jtk_VariableArguments_t variableArguments;
-    jtk_VariableArguments_start(variableArguments, function);
-
-    zen_Interpreter_invokeStaticFunctionEx(virtualMachine->m_interpreter,
-        function, variableArguments);
-
-    jtk_VariableArguments_end(variableArguments);
-}
-
 // String
 
 zen_Object_t* zen_VirtualMachine_getEmptyString(zen_VirtualMachine_t* virtualMachine) {

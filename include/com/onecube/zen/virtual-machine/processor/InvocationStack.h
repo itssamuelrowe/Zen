@@ -40,6 +40,8 @@
 struct zen_InvocationStack_t {
     // TODO: Replace this with a singly-linked list.
     jtk_DoublyLinkedList_t* m_stackFrames;
+    jtk_DoublyLinkedList_t* m_trace;
+    bool m_tracing;
 };
 
 /**
@@ -74,13 +76,13 @@ jtk_Iterator_t* zen_InvocationStack_getIterator(zen_InvocationStack_t* invocatio
 /**
  * @memberof InvocationStack
  */
-void zen_InvocationStack_pushStackFrame(zen_InvocationStack_t* invocationStack,
-    zen_StackFrame_t* stackFrame);
+zen_StackFrame_t* zen_InvocationStack_pushStackFrame(zen_InvocationStack_t* invocationStack,
+    zen_Function_t* function);
 
 /**
  * @memberof InvocationStack
  */
-zen_StackFrame_t* zen_InvocationStack_popStackFrame(zen_InvocationStack_t* stack);
+void zen_InvocationStack_popStackFrame(zen_InvocationStack_t* stack);
 
 /**
  * @memberof InvocationStack
@@ -90,5 +92,10 @@ zen_StackFrame_t* zen_InvocationStack_peekStackFrame(zen_InvocationStack_t* stac
 /* Size */
 
 int32_t zen_InvocationStack_getSize(zen_InvocationStack_t* invocationStack);
+
+// Tracing
+
+void zen_InvocationStack_startTracing(zen_InvocationStack_t* invocationStack);
+void zen_InvocationStack_stopTracing(zen_InvocationStack_t* invocationStack);
 
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_PROCESSOR_INVOCATION_STACK_H */

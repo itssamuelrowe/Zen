@@ -152,14 +152,9 @@ void zen_Class_initialize(zen_Class_t* class0, zen_EntityFile_t* entityFile) {
     zen_Entity_t* entity = &entityFile->m_entity;
     zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
 
-    /*
-    zen_ConstantPoolClass_t* classEntry =
-        (zen_ConstantPoolClass_t*)constantPool->m_entries[entity->m_reference];
     zen_ConstantPoolUtf8_t* descriptorEntry =
-        (zen_ConstantPoolUtf8_t*)constantPool->m_entries[classEntry->m_nameIndex];
-        */
-
-    class0->m_descriptor = jtk_String_newEx("<unknown>", 9); // jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
+        (zen_ConstantPoolUtf8_t*)constantPool->m_entries[entity->m_reference];
+    class0->m_descriptor = jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
 
     int32_t i;
     int32_t fieldCount = entity->m_fieldCount;
