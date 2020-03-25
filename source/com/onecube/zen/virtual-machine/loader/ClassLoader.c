@@ -19,7 +19,6 @@
 #include <jtk/collection/Iterator.h>
 #include <jtk/collection/map/HashMapEntry.h>
 #include <jtk/core/StringObjectAdapter.h>
-#include <jtk/core/String.h>
 
 #include <com/onecube/zen/virtual-machine/loader/ClassLoader.h>
 
