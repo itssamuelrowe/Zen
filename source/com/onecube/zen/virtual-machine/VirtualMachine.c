@@ -112,7 +112,7 @@ void zen_print(zen_VirtualMachine_t* virtualMachine, zen_Object_t* self,
         zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
         int64_t value0 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
             value, "value", 5);
-        printf("%ld\n", value0);
+        printf("%ld ", value0);
     }
     else if (zen_VirtualMachine_isInstance(virtualMachine, argument, booleanDescriptor)) {
         zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
@@ -135,6 +135,15 @@ zen_Object_t* zen_scanInteger(zen_VirtualMachine_t* virtualMachine, zen_Object_t
 
     return zen_VirtualMachine_newInteger(virtualMachine, n);
 }
+
+zen_Object_t* zen_random(zen_VirtualMachine_t* virtualMachine, zen_Object_t* self,
+    jtk_Array_t* arguments) {
+
+    int n = rand();
+
+    return zen_VirtualMachine_newInteger(virtualMachine, n);
+}
+
 
 zen_Object_t* zen_range(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* class0, jtk_Array_t* arguments) {
@@ -1039,6 +1048,10 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     // Object Test.scanInteger()
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
         "scanInteger", 11, "(zen/core/Object):v", 19, zen_scanInteger);
+
+    // Object Test.scanInteger()
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
+        "random", 6, "(zen/core/Object):v", 19, zen_random);
 
     // Object Test.range(Object start, Object stop)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
