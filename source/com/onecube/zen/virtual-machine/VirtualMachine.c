@@ -180,6 +180,13 @@ zen_Object_t* zen_Array_getValue(zen_VirtualMachine_t* virtualMachine,
     return values[index0];
 }
 
+zen_Object_t* zen_Array_getSize(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* self, jtk_Array_t* arguments) {
+    int32_t size = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
+        self, "size", 5);
+    return zen_VirtualMachine_newInteger(virtualMachine, size);
+}
+
 zen_Object_t* zen_Array_setValue(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* self, jtk_Array_t* arguments) {
     zen_Object_t* index = arguments->m_values[0];
@@ -1016,6 +1023,10 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     // Object Array.getValue(Object index, Object value)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Array", 5,
         "getValue", 8, "(zen/core/Object):(zen/core/Object)", 35, zen_Array_getValue);
+    
+    // Object Array.getValue()
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Array", 5,
+        "getSize", 7, "(zen/core/Object):v", 19, zen_Array_getSize);
     
     // Object Test.print(Object format)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
