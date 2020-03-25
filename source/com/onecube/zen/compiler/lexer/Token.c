@@ -31,7 +31,7 @@ zen_Token_t* zen_Token_new(
     zen_Token_t* token = zen_Memory_allocate(zen_Token_t, 1);
     token->m_channel = channel;
     token->m_type = type;
-    token->m_text = jtk_CString_newWithSize(text, length);
+    token->m_text = jtk_CString_newEx(text, length);
     token->m_length = length; // This is the length of the text representation!
     token->m_startIndex = startIndex;
     token->m_stopIndex = stopIndex;
@@ -75,7 +75,7 @@ void zen_Token_setText(zen_Token_t* token, const uint8_t* text, int32_t length) 
 
     /* The text should not be null. */
     jtk_CString_delete(token->m_text);
-    token->m_text = jtk_CString_newWithSize(text, length);
+    token->m_text = jtk_CString_newEx(text, length);
     token->m_length = length;
 }
 

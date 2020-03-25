@@ -19,10 +19,10 @@
 #include <com/onecube/zen/CString.h>
 
 uint8_t* jtk_CString_new(const uint8_t* string) {
-    return jtk_CString_newWithSize(string, jtk_CString_getSize(string));
+    return jtk_CString_newEx(string, jtk_CString_getSize(string));
 }
 
-uint8_t* jtk_CString_newWithSize(const uint8_t* string, int32_t size) {
+uint8_t* jtk_CString_newEx(const uint8_t* string, int32_t size) {
     uint8_t* result = zen_Memory_allocate(uint8_t, size + 1);
     int32_t i;
     for (i = 0; i < size; i++) {

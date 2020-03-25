@@ -2383,7 +2383,7 @@ void zen_BinaryEntityGenerator_onExitFunctionDeclaration(
 
     bool constructor = zen_Token_getType(identifierToken) == ZEN_TOKEN_KEYWORD_NEW;
 
-    uint8_t* temporary = jtk_CString_newWithSize(identifierToken->m_text, identifierToken->m_length);
+    uint8_t* temporary = jtk_CString_newEx(identifierToken->m_text, identifierToken->m_length);
     zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, temporary);
     jtk_Memory_deallocate(temporary);
 
@@ -4868,7 +4868,7 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
     uint8_t* reference0 = NULL;
     int32_t referenceSize;
     if (generator->m_package != NULL) {
-        reference = jtk_String_newFromJoinEx(generator->m_package,
+        reference = jtk_CString_joinEx(generator->m_package,
             generator->m_packageSize, identifierToken->m_text,
             identifierToken->m_length, &referenceSize);
         reference0 = reference;

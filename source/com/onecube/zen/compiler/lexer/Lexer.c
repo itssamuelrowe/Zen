@@ -248,7 +248,7 @@ void zen_Lexer_delete(zen_Lexer_t* lexer) {
 /* Create Token */
 
 zen_Token_t* zen_Lexer_createToken(zen_Lexer_t* lexer) {
-    uint8_t* text = jtk_CString_newWithSize(lexer->m_text->m_value, lexer->m_text->m_size); // jtk_StringBuilder_toCString(lexer->m_text);
+    uint8_t* text = jtk_CString_newEx(lexer->m_text->m_value, lexer->m_text->m_size); // jtk_StringBuilder_toCString(lexer->m_text);
     int32_t length = jtk_StringBuilder_getSize(lexer->m_text);
 
     zen_Token_t* token =

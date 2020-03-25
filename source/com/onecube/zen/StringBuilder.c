@@ -47,7 +47,7 @@ void zen_StringBuilder_appendCodePoint(zen_StringBuilder_t* builder, int32_t cod
 
 uint8_t* zen_StringBuilder_toString(zen_StringBuilder_t* builder) {
     jtk_Assert_assertObject(builder, "The specified string builder is null.");
-    return jtk_CString_newWithSize(builder->m_value, builder->m_size);
+    return jtk_CString_newEx(builder->m_value, builder->m_size);
 }
 
 int32_t zen_StringBuilder_getSize(zen_StringBuilder_t* builder) {

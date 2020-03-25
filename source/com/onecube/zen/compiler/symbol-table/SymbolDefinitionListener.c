@@ -796,11 +796,13 @@ void zen_SymbolDefinitionListener_onEnterClassDeclaration(
     }
     else {
         uint8_t* qualifiedName = NULL;
+        uint8_t* qualifiedName0 = NULL;
         int32_t qualifiedNameSize;
         if (listener->m_package != NULL) {
-            qualifiedName = jtk_String_newFromJoinEx(listener->m_package,
+            qualifiedName = jtk_CString_joinEx(listener->m_package,
                 listener->m_packageSize, identifierToken->m_text,
                 identifierToken->m_length, &qualifiedNameSize);
+            qualifiedName0 = qualifiedName;
         }
         else {
             qualifiedName = identifierToken->m_text;
@@ -814,6 +816,10 @@ void zen_SymbolDefinitionListener_onEnterClassDeclaration(
             qualifiedName, qualifiedNameSize);
         symbol = zen_ClassSymbol_getSymbol(classSymbol);
         zen_SymbolTable_define(listener->m_symbolTable, symbol);
+
+        if (qualifiedName0 != NULL) {
+            jtk_CString_delete(qualifiedName0);
+        }
 
         classScope->m_classSymbol = symbol;
 
