@@ -19,7 +19,6 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_CLASS_SYMBOL_H
 #define COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_CLASS_SYMBOL_H
 
-#include <jtk/core/String.h>
 #include <jtk/collection/list/ArrayList.h>
 
 #include <com/onecube/zen/compiler/symbol-table/Symbol.h>

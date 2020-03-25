@@ -18,7 +18,6 @@
 #define COM_ONECUBE_ZEN_COMPILER_COMPILER_AST_NODE_H
 
 #include <jtk/collection/list/ArrayList.h>
-#include <jtk/core/String.h>
 
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/compiler/ast/ASTNodeType.h>

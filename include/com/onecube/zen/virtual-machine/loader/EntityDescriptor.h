@@ -20,7 +20,6 @@
 #define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_LOADER_ENTITY_DESCRIPTOR_H
 
 #include <com/onecube/zen/Configuration.h>
-#include <jtk/core/String.h>
 
 /*******************************************************************************
  * EntityDescriptor                                                            *

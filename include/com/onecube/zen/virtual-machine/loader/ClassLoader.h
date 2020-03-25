@@ -20,7 +20,6 @@
 #define COM_ONECUBE_ZEN_VIRTUAL_MACHINE_LOADER_CLASS_LOADER_H
 
 #include <jtk/collection/map/HashMap.h>
-#include <jtk/core/String.h>
 
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/virtual-machine/feb/EntityFile.h>

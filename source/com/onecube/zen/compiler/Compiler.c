@@ -29,7 +29,6 @@
 #include <jtk/fs/FileInputStream.h>
 #include <jtk/io/BufferedInputStream.h>
 #include <jtk/io/InputStream.h>
-#include <jtk/core/String.h>
 #include <jtk/log/ConsoleLogger.h>
 
 #include <com/onecube/zen/compiler/Compiler.h>

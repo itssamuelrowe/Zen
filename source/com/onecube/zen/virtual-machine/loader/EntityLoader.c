@@ -19,7 +19,6 @@
 #include <jtk/collection/Iterator.h>
 #include <jtk/collection/array/Array.h>
 #include <jtk/collection/list/DoublyLinkedList.h>
-#include <jtk/core/String.h>
 #include <jtk/fs/Path.h>
 #include <jtk/fs/PathHandle.h>
 #include <jtk/fs/FileInputStream.h>

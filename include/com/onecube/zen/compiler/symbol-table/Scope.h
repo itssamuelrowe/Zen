@@ -19,7 +19,6 @@
 #ifndef ZEN_SCOPE_H
 #define ZEN_SCOPE_H
 
-#include <jtk/core/String.h>
 #include <jtk/collection/list/ArrayList.h>
 #include <jtk/collection/map/HashMap.h>
 

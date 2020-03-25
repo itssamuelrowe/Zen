@@ -20,7 +20,6 @@
 #define COM_ONECUBE_ZEN_COMPILER_GENERATOR_BINARY_ENTITY_GENERATOR_H
 
 // #include <jtk/collection/map/DualHashMap.h>
-#include <jtk/core/String.h>
 #include <jtk/collection/list/ArrayList.h>
 #include <jtk/io/OutputStream.h>
 

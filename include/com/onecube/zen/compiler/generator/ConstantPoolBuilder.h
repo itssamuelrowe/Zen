@@ -20,7 +20,6 @@
 #define COM_ONECUBE_ZEN_COMPILER_GENERATOR_CONSTANT_POOL_BUILDER_H
 
 #include <jtk/collection/list/ArrayList.h>
-#include <jtk/core/String.h>
 
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolClass.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolDouble.h>
