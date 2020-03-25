@@ -7165,7 +7165,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                                 jtk_Logger_debug(logger, "Emitted duplicate");
 
                                 /* Push the index at which the result of the expression will be stored. */
-                                zen_BinaryEntityGenerator_loadInteger(generator, i);
+                                zen_BinaryEntityGenerator_loadInteger(generator, argumentIndex);
 
                                 /* Visit the expression node and generate the relevant instructions. */
                                 zen_ASTWalker_walk(astListener, argument);
@@ -7685,7 +7685,7 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
                                         jtk_Logger_debug(logger, "Emitted duplicate");
 
                                         /* Push the index at which the result of the expression will be stored. */
-                                        zen_BinaryEntityGenerator_loadInteger(generator, i);
+                                        zen_BinaryEntityGenerator_loadInteger(generator, argumentIndex);
 
                                         /* Visit the expression node and generate the relevant instructions. */
                                         zen_ASTWalker_walk(astListener, argument);
@@ -7792,7 +7792,7 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
                                         jtk_Logger_debug(logger, "Emitted duplicate");
 
                                         /* Push the index at which the result of the expression will be stored. */
-                                        zen_BinaryEntityGenerator_loadInteger(generator, i);
+                                        zen_BinaryEntityGenerator_loadInteger(generator, argumentIndex);
 
                                         /* Visit the expression node and generate the relevant instructions. */
                                         zen_ASTWalker_walk(astListener, argument);
