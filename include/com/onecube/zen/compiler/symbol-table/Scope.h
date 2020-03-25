@@ -139,8 +139,8 @@ zen_Symbol_t* zen_Scope_resolve(zen_Scope_t* scope, uint8_t* identifier);
 /**
  * @memberof Scope
  */
-zen_Scope_t* zen_Scope_resolveQualifiedSymbol(zen_Scope_t* scope, uint8_t* name,
-    int32_t nameSize);
+zen_Scope_t* zen_Scope_resolveQualifiedSymbol(zen_Scope_t* scope,
+    const uint8_t* name, int32_t nameSize);
 
 // Type
 

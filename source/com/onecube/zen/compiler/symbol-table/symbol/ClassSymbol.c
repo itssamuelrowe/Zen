@@ -45,7 +45,7 @@ zen_ClassSymbol_t* zen_ClassSymbol_new(zen_ASTNode_t* identifier,
 void zen_ClassSymbol_delete(zen_ClassSymbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
-    jtk_String_delete(symbol->m_qualifiedName);
+    jtk_CString_delete(symbol->m_qualifiedName);
     zen_Symbol_delete(symbol->m_symbol);
     jtk_ArrayList_delete(symbol->m_superClasses);
     jtk_Memory_deallocate(symbol);

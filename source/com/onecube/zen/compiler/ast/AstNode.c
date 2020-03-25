@@ -145,11 +145,7 @@ uint8_t* zen_ASTNode_toCString(zen_ASTNode_t* node, int32_t* size) {
     zen_ASTNode_toString0(node, builder);
     
     /* Build and retrieve the string. */
-    uint8_t* result = jtk_StringBuilder_toCString(builder);
-    /* Return the size of the string. */
-    if (size != NULL) {
-        *size = jtk_StringBuilder_getSize(builder);
-    }
+    uint8_t* result = jtk_StringBuilder_toCString(builder, size);
 
     /* Destroy the string builder. */
     jtk_StringBuilder_delete(builder);
