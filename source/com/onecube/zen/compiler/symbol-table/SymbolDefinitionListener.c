@@ -795,7 +795,7 @@ void zen_SymbolDefinitionListener_onEnterClassDeclaration(
         zen_ErrorHandler_reportError(NULL, "Redeclaration of symbol as class", (zen_Token_t*)identifier->m_context);
     }
     else {
-        jtk_String_t* qualifiedName = NULL;
+        uint8_t* qualifiedName = NULL;
         if (listener->m_package != NULL) {
             qualifiedName = jtk_String_newFromJoinEx(listener->m_package->m_value,
                 listener->m_package->m_size, identifierToken->m_text, identifierToken->m_length);

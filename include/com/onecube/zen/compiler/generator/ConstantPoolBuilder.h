@@ -82,9 +82,6 @@ zen_ConstantPoolEntry_t* zen_ConstantPoolBuilder_getEntry(zen_ConstantPoolBuilde
 zen_ConstantPoolClass_t* zen_ConstantPoolBuilder_getClassEntry(
     zen_ConstantPoolBuilder_t* builder, int32_t index);
 
-int32_t zen_ConstantPoolBuilder_getClassEntryIndex(
-    zen_ConstantPoolBuilder_t* builder, jtk_String_t* name);
-
 int32_t zen_ConstantPoolBuilder_getClassEntryIndexEx(
     zen_ConstantPoolBuilder_t* builder, uint8_t* bytes, int32_t bytesSize);
 
@@ -92,10 +89,6 @@ int32_t zen_ConstantPoolBuilder_getClassEntryIndexEx(
 
 zen_ConstantPoolField_t* zen_ConstantPoolBuilder_getFieldEntry(
     zen_ConstantPoolBuilder_t* builder, int32_t index);
-
-int32_t zen_ConstantPoolBuilder_getFieldEntryIndex(
-    zen_ConstantPoolBuilder_t* builder, jtk_String_t* class0,
-        jtk_String_t* descriptor, jtk_String_t* name);
 
 int32_t zen_ConstantPoolBuilder_getFieldEntryIndexEx(
     zen_ConstantPoolBuilder_t* builder, const uint8_t* class0, int32_t classSize,
@@ -106,10 +99,6 @@ int32_t zen_ConstantPoolBuilder_getFieldEntryIndexEx(
 
 zen_ConstantPoolFunction_t* zen_ConstantPoolBuilder_getFunctionEntry(
     zen_ConstantPoolBuilder_t* builder, int32_t index);
-
-int32_t zen_ConstantPoolBuilder_getFunctionEntryIndex(
-    zen_ConstantPoolBuilder_t* builder, jtk_String_t* class0,
-        jtk_String_t* descriptor, jtk_String_t* name);
 
 int32_t zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
     zen_ConstantPoolBuilder_t* builder, const uint8_t* class0, int32_t classSize,
@@ -129,9 +118,6 @@ int32_t zen_ConstantPoolBuilder_getIntegerEntryIndex(
 zen_ConstantPoolString_t* zen_ConstantPoolBuilder_getStringEntry(
     zen_ConstantPoolBuilder_t* builder, int32_t index);
 
-int32_t zen_ConstantPoolBuilder_getStringEntryIndex(
-    zen_ConstantPoolBuilder_t* builder, jtk_String_t* string);
-
 int32_t zen_ConstantPoolBuilder_getStringEntryIndexEx(
     zen_ConstantPoolBuilder_t* builder, uint8_t* bytes, int32_t bytesSize);
 
@@ -139,10 +125,6 @@ int32_t zen_ConstantPoolBuilder_getStringEntryIndexEx(
 
 zen_ConstantPoolUtf8_t* zen_ConstantPoolBuilder_getUtf8Entry(
     zen_ConstantPoolBuilder_t* builder, int32_t index);
-
-zen_ConstantPoolBuilder_getUtf8EntryIndex(
-    zen_ConstantPoolBuilder_t* builder, jtk_String_t* string);
-
 
 // Long Entry
 

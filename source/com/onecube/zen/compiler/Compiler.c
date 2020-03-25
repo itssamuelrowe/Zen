@@ -267,7 +267,7 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
             }
         }
         else {
-            // jtk_String_t* path = jtk_String_new(arguments[i]);
+            // 
             // jtk_ArrayList_add(compiler->m_inputFiles, path);
             jtk_ArrayList_add(compiler->m_inputFiles, arguments[i]);
         }

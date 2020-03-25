@@ -37,8 +37,10 @@ typedef struct zen_Class_t zen_Class_t;
  * @since zen 1.0
  */
 struct zen_Field_t {
-    jtk_String_t* m_name;
-    jtk_String_t* m_descriptor;
+    uint8_t* m_name;
+    int32_t m_nameSize;
+    uint8_t* m_descriptor;
+    int32_t m_descriptorSize;
     zen_Class_t* m_class;
 };
 
@@ -55,13 +57,5 @@ zen_Field_t* zen_Field_newFromFieldEntity(zen_Class_t* class0,
 // Destructor
 
 void zen_Field_delete(zen_Field_t* field);
-
-// Descriptor
-
-jtk_String_t* zen_Field_getDescriptor(zen_Field_t* field);
-
-// Name
-
-jtk_String_t* zen_Field_getName(zen_Field_t* field);
 
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_OBJECT_FIELD_H */

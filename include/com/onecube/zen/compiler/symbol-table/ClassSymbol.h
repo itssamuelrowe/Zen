@@ -45,7 +45,8 @@ struct zen_ClassSymbol_t {
 
     zen_Scope_t* m_classScope;
 
-    jtk_String_t* m_qualifiedName;
+    uint8_t* m_qualifiedName;
+    int32_t m_qualifiedNameSize;
 };
 
 /**
@@ -59,7 +60,8 @@ typedef struct zen_ClassSymbol_t zen_ClassSymbol_t;
  * @memberof ClassSymbol
  */
 zen_ClassSymbol_t* zen_ClassSymbol_new(zen_ASTNode_t* identifier,
-    zen_Scope_t* enclosingScope, zen_Scope_t* m_classScope, jtk_String_t* qualifiedName);
+    zen_Scope_t* enclosingScope, zen_Scope_t* m_classScope,
+    uint8_t* qualifiedName, int32_t qualifiedNameSize);
 
 // Destructor
 
@@ -107,8 +109,6 @@ zen_Symbol_t* zen_ClassSymbol_getSymbol(zen_ClassSymbol_t* symbol);
 /**
  * @memberof ClassSymbol
  */
-jtk_String_t* zen_ClassSymbol_getQualifiedName(zen_ClassSymbol_t* symbol);
-
-jtk_String_t* zen_ClassSymbol_getQualifiedName(zen_ClassSymbol_t* symbol);
+uint8_t* zen_ClassSymbol_getQualifiedName(zen_ClassSymbol_t* symbol);
 
 #endif /* COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_CLASS_SYMBOL_H */

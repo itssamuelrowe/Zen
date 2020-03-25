@@ -133,26 +133,6 @@ void zen_ASTNode_toString0(zen_ASTNode_t* node, jtk_StringBuilder_t* builder) {
     }
 }
 
-jtk_String_t* zen_ASTNode_toString(zen_ASTNode_t* node) {
-    jtk_Assert_assertObject(node, "The specified node is null.");
-
-    /* Create a string builder to create the string equivalent of the given
-     * node.
-     */
-    jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
-    
-    /* Recursively construct the string equivalent of the given node. */
-    zen_ASTNode_toString0(node, builder);
-    
-    /* Build and retrieve the string. */
-    jtk_String_t* result = jtk_StringBuilder_toString(builder);
-
-    /* Destroy the string builder. */
-    jtk_StringBuilder_delete(result);
-
-    return result;
-}
-
 uint8_t* zen_ASTNode_toCString(zen_ASTNode_t* node, int32_t* size) {
     jtk_Assert_assertObject(node, "The specified node is null.");
 

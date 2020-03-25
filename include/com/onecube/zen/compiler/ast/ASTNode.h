@@ -141,7 +141,6 @@ zen_ASTNodeType_t zen_ASTNode_getType(zen_ASTNode_t* node);
 
 // String
 
-jtk_String_t* zen_ASTNode_toString(zen_ASTNode_t* node);
 uint8_t* zen_ASTNode_toCString(zen_ASTNode_t* node, int32_t* size);
 
 #endif /* COM_ONECUBE_ZEN_COMPILER_COMPILER_AST_NODE_H */

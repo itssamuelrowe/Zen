@@ -37,8 +37,10 @@ typedef struct zen_Class_t zen_Class_t;
  * @since zen 1.0
  */
 struct zen_Function_t {
-    jtk_String_t* m_name;
-    jtk_String_t* m_descriptor;
+    uint8_t* m_name;
+    int32_t m_nameSize;
+    uint8_t* m_descriptor;
+    int32_t m_descriptorSize;
     uint16_t m_flags;
     zen_Class_t* m_class;
     zen_FunctionEntity_t* m_functionEntity;

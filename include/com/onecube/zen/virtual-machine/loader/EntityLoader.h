@@ -142,6 +142,7 @@ zen_EntityFile_t* zen_EntityLoader_loadEntityFromHandle(zen_EntityLoader_t* load
 bool zen_EntityLoader_shouldIgnoreCorruptEntity(zen_EntityLoader_t* loader);
 void zen_EntityLoader_setIgnoreCorruptEntity(zen_EntityLoader_t* loader, bool ignoreCorruptEntity);
 
-bool zen_EntityLoader_addDirectory_s(zen_EntityLoader_t* loader, jtk_String_t* directory);
+bool zen_EntityLoader_addDirectory(zen_EntityLoader_t* loader, uint8_t* directory,
+    int32_t directorySize);
 
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_LOADER_ENTITY_LOADER_H */

@@ -32,7 +32,8 @@
  * @since Newton Virtual Machine 1.0
  */
 struct zen_EntityDescriptor_t {
-    jtk_String_t* m_value;
+    uint8_t* m_value;
+    int32_t m_valueSize;
 };
 
 /**
@@ -42,8 +43,7 @@ typedef struct zen_EntityDescriptor_t zen_EntityDescriptor_t;
 
 // Constructor
 
-zen_EntityDescriptor_t* zen_EntityDescriptor_new(jtk_String_t* value);
-zen_EntityDescriptor_t* zen_EntityDescriptor_newEx(const uint8_t* value);
+zen_EntityDescriptor_t* zen_EntityDescriptor_new(uint8_t* value, int32_t valueSize);
 
 // Destructor
 

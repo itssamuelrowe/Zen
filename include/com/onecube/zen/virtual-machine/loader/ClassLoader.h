@@ -71,6 +71,6 @@ zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
  * previously loaded. This behavior can cause memory leaks if used incorrectly.
  */
 zen_Class_t* zen_ClassLoader_loadFromEntityFile(zen_ClassLoader_t* classLoader,
-    jtk_String_t* descriptor, zen_EntityFile_t* entityFile);
+    uint8_t* descriptor, int32_t descriptorSize, zen_EntityFile_t* entityFile);
     
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_LOADER_CLASS_LOADER_H */

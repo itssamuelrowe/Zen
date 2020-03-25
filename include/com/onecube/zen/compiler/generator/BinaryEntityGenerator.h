@@ -63,7 +63,8 @@ struct zen_BinaryEntityGenerator_t {
     
     zen_EntityFile_t* m_entityFile;
     zen_ConstantPoolBuilder_t* m_constantPoolBuilder;
-    jtk_String_t* m_package;
+    uint8_t* m_package;
+    int32_t m_packageSize;
     jtk_ArrayList_t* m_fields;
     jtk_ArrayList_t* m_functions;
     
@@ -111,7 +112,8 @@ struct zen_BinaryEntityGenerator_t {
     /* The descriptor of the function for which instructions are being
      * generated.
      */
-    jtk_String_t* m_descriptor;
+    uint8_t* m_descriptor;
+    int32_t m_descriptorSize;
 
     int32_t* m_breakRecords;
     int32_t m_breakRecordsCount;

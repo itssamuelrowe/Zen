@@ -809,9 +809,6 @@ void zen_BinaryEntityGenerator_onExitComponentDeclaration(zen_ASTListener_t* ast
 }
 
 // functionDeclaration
-jtk_String_t* zen_BinaryEntityGenerator_getDescriptor(zen_ASTNode_t* functionParameters);
-jtk_String_t* zen_BinaryEntityGenerator_getDescriptorEx(zen_ASTNode_t* functionParameters,
-    bool constructor);
 
 void zen_BinaryEntityGenerator_assignParameterIndexes(zen_BinaryEntityGenerator_t* generator,
     zen_ASTNode_t* functionParameters) {
@@ -939,8 +936,8 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
  * The function descriptor for this function is shown below.
  * (zen/core/Object):(zen/core/Object)@(zen/core/Object)
  */
-jtk_String_t* zen_BinaryEntityGenerator_getDescriptorEx(zen_ASTNode_t* functionParameters,
-    bool constructor) {
+uint8_t* zen_BinaryEntityGenerator_getDescriptorEx(zen_ASTNode_t* functionParameters,
+    bool constructor, int32_t* descriptorSize) {
     zen_FunctionParametersContext_t* functionParametersContext =
         (zen_FunctionParametersContext_t*)functionParameters->m_context;
 
@@ -962,7 +959,7 @@ jtk_String_t* zen_BinaryEntityGenerator_getDescriptorEx(zen_ASTNode_t* functionP
         jtk_StringBuilder_append_c(builder, 'v');
     }
 
-    jtk_String_t* result = jtk_StringBuilder_toString(builder);
+    uint8_t* result = jtk_StringBuilder_toCString(builder, descriptorSize);
 
     /* Destroy the string builder. */
     jtk_StringBuilder_delete(builder);
@@ -970,8 +967,9 @@ jtk_String_t* zen_BinaryEntityGenerator_getDescriptorEx(zen_ASTNode_t* functionP
     return result;
 }
 
-jtk_String_t* zen_BinaryEntityGenerator_getDescriptor(zen_ASTNode_t* functionParameters) {
-    return zen_BinaryEntityGenerator_getDescriptorEx(functionParameters, false);
+uint8_t* zen_BinaryEntityGenerator_getDescriptor(zen_ASTNode_t* functionParameters,
+    int32_t* descriptorSize) {
+    return zen_BinaryEntityGenerator_getDescriptorEx(functionParameters, false, descriptorSize);
 }
 
 zen_InstructionAttribute_t* zen_BinaryEntityGenerator_makeInstructionAttribute(
@@ -4863,7 +4861,7 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
 
     zen_ASTNode_t* identifier = context->m_identifier;
     zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
-    jtk_String_t* reference = NULL;
+    uint8_t* reference = NULL;
     if (generator->m_package != NULL) {
         reference = jtk_String_newFromJoinEx(generator->m_package->m_value,
             generator->m_package->m_size, identifierToken->m_text, identifierToken->m_length);
@@ -4906,7 +4904,7 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
             zen_TypeNameContext_t* typeNameContext = (zen_TypeNameContext_t*)typeNameNode->m_context;
 
             // TODO: Prepare a qualified name from the type name context.
-            jtk_String_t* qualifiedName = NULL;
+            uint8_t* qualifiedName = NULL;
 
             /* Retrieve the symbol for the current superclass. Do not begin the resolution
              * from the current scope, which is this class. In the future, if Zen allows
@@ -4917,7 +4915,7 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
                 parentScope, qualifiedName);
             if (zen_Symbol_isClass(symbol)) {
                 zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
-                jtk_String_t* fullyQualifiedName = zen_ClassSymbol_getQualifiedName(classSymbol);
+                uint8_t* fullyQualifiedName = zen_ClassSymbol_getQualifiedName(classSymbol);
 
                 uint16_t superclassIndex = zen_ConstantPoolBuilder_getUtf8EntryIndex(
                     generator->m_constantPoolBuilder, fullyQualifiedName);
@@ -4933,14 +4931,11 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
          * the compiler generates the default extends clause which inherits
          * the zen.core.Object class.
          */
-        jtk_String_t* objectClassName = jtk_String_newEx("zen/core/Object", 15);
 
         superclassCount = 1;
         superclassIndexes = jtk_Memory_allocate(uint16_t, 1);
         superclassIndexes[0] = zen_ConstantPoolBuilder_getUtf8EntryIndex(
-            generator->m_constantPoolBuilder, objectClassName);
-
-        jtk_String_delete(objectClassName);
+            generator->m_constantPoolBuilder, "zen/core/Object", 15);
     }
 
     zen_Entity_t* entity = &generator->m_entityFile->m_entity;
@@ -8420,7 +8415,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
 
     uint8_t* constructorName = "<initialize>";
     int32_t constructorNameSize = 12;
-    jtk_String_t* constructorDescriptor0 = NULL;
+    uint8_t* constructorDescriptor0 = NULL;
     const uint8_t* constructorDescriptor = "v:v";
     int32_t constructorDescriptorSize = 3;
 
@@ -8514,9 +8509,8 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
                 }
             }
 
-            constructorDescriptor0 = jtk_StringBuilder_toString(builder);
-            constructorDescriptor = constructorDescriptor0->m_value;
-            constructorDescriptorSize = jtk_String_getSize(constructorDescriptor0);
+            constructorDescriptor = jtk_StringBuilder_toCString(builder, &constructorDescriptorSize);
+            constructorDescriptor0 = constructorDescriptor;
             jtk_StringBuilder_delete(builder);
         }
     }
@@ -8534,7 +8528,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
     jtk_Logger_debug(logger, "Emitted invoke_special %d", constructorIndex);
 
     if (constructorDescriptor0 != NULL) {
-        jtk_String_delete(constructorDescriptor0);
+        jtk_CString_delete(constructorDescriptor0);
     }
 
     // TODO: Generate arrays when variable parameters are encountered!

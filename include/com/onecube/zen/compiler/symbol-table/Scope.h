@@ -48,7 +48,8 @@ typedef struct zen_Scope_t zen_Scope_t;
  * @since zen 1.0
  */
 struct zen_Scope_t {
-    jtk_String_t* m_name;
+    uint8_t* m_name;
+    int32_t m_nameSize;
     zen_ScopeType_t m_type;
     zen_Scope_t* m_enclosingScope;
     void* m_context;
@@ -138,7 +139,8 @@ zen_Symbol_t* zen_Scope_resolve(zen_Scope_t* scope, uint8_t* identifier);
 /**
  * @memberof Scope
  */
-zen_Scope_t* zen_Scope_resolveQualifiedSymbol(zen_Scope_t* scope, jtk_String_t* name);
+zen_Scope_t* zen_Scope_resolveQualifiedSymbol(zen_Scope_t* scope, uint8_t* name,
+    int32_t nameSize);
 
 // Type
 

@@ -92,6 +92,7 @@ void* zen_Scope_getContext(zen_Scope_t* scope) {
     return scope->m_context;
 }
 
-zen_Scope_t* zen_Scope_resolveQualifiedSymbol(zen_Scope_t* scope, jtk_String_t* name) {
+zen_Scope_t* zen_Scope_resolveQualifiedSymbol(zen_Scope_t* scope, const uint8_t* name,
+    int32_t nameSize) {
     return NULL;
 }

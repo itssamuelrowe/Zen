@@ -90,14 +90,6 @@ zen_ConstantPoolClass_t* zen_ConstantPoolBuilder_getClassEntry(
     return (zen_ConstantPoolClass_t*)jtk_ArrayList_getValue(builder->m_entries, index);
 }
 
-int32_t zen_ConstantPoolBuilder_getClassEntryIndex(
-    zen_ConstantPoolBuilder_t* builder, jtk_String_t* name) {
-    jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
-
-    return zen_ConstantPoolBuilder_getClassEntryIndexEx(builder, name->m_value,
-        name->m_size);
-}
-
 int32_t zen_ConstantPoolBuilder_getClassEntryIndexEx(
     zen_ConstantPoolBuilder_t* builder, uint8_t* bytes, int32_t bytesSize) {
     jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
@@ -179,16 +171,6 @@ zen_ConstantPoolField_t* zen_ConstantPoolBuilder_getFieldEntry(
     jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
 
     return (zen_ConstantPoolField_t*)jtk_ArrayList_getValue(builder->m_entries, index);
-}
-
-int32_t zen_ConstantPoolBuilder_getFieldEntryIndex(
-    zen_ConstantPoolBuilder_t* builder, jtk_String_t* class0,
-        jtk_String_t* descriptor, jtk_String_t* name) {
-    jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
-
-    return zen_ConstantPoolBuilder_getFieldEntryIndexEx(builder, class0->m_value,
-        class0->m_size, descriptor->m_value, descriptor->m_size, name->m_value,
-        name->m_size);
 }
 
 int32_t zen_ConstantPoolBuilder_getFieldEntryIndexEx(
@@ -310,16 +292,6 @@ zen_ConstantPoolFunction_t* zen_ConstantPoolBuilder_getFunctionEntry(
     jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
 
     return (zen_ConstantPoolFunction_t*)jtk_ArrayList_getValue(builder->m_entries, index);
-}
-
-int32_t zen_ConstantPoolBuilder_getFunctionEntryIndex(
-    zen_ConstantPoolBuilder_t* builder, jtk_String_t* class0,
-        jtk_String_t* descriptor, jtk_String_t* name) {
-    jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
-
-    return zen_ConstantPoolBuilder_getFunctionEntryIndexEx(builder, class0->m_value,
-        class0->m_size, descriptor->m_value, descriptor->m_size, name->m_value,
-        name->m_size);
 }
 
 int32_t zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
@@ -578,14 +550,6 @@ zen_ConstantPoolString_t* zen_ConstantPoolBuilder_getStringEntry(
     return (zen_ConstantPoolString_t*)jtk_ArrayList_getValue(builder->m_entries, index);
 }
 
-int32_t zen_ConstantPoolBuilder_getStringEntryIndex(
-    zen_ConstantPoolBuilder_t* builder, jtk_String_t* string) {
-    jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
-
-    return zen_ConstantPoolBuilder_getStringEntryIndexEx(builder, string->m_value,
-        string->m_size);
-}
-
 int32_t zen_ConstantPoolBuilder_getStringEntryIndexEx(
     zen_ConstantPoolBuilder_t* builder, uint8_t* bytes, int32_t bytesSize) {
     jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
@@ -667,14 +631,6 @@ zen_ConstantPoolUtf8_t* zen_ConstantPoolBuilder_getUtf8Entry(
     jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
 
     return (zen_ConstantPoolUtf8_t*)jtk_ArrayList_getValue(builder->m_entries, index);
-}
-
-int32_t zen_ConstantPoolBuilder_getUtf8EntryIndex(
-    zen_ConstantPoolBuilder_t* builder, jtk_String_t* string) {
-    jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
-
-    return zen_ConstantPoolBuilder_getUtf8EntryIndexEx(builder, string->m_value,
-        string->m_size);
 }
 
 int32_t zen_ConstantPoolBuilder_getUtf8EntryIndexEx(

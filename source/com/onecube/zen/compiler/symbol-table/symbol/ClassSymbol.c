@@ -24,7 +24,8 @@
  *******************************************************************************/
 
 zen_ClassSymbol_t* zen_ClassSymbol_new(zen_ASTNode_t* identifier,
-    zen_Scope_t* enclosingScope, zen_Scope_t* classScope, jtk_String_t* qualifiedName) {
+    zen_Scope_t* enclosingScope, zen_Scope_t* classScope,
+    uint8_t* qualifiedName, int32_t qualifiedNameSize) {
     zen_ClassSymbol_t* classSymbol = zen_Memory_allocate(zen_ClassSymbol_t, 1);
 
     zen_Symbol_t* symbol = zen_Symbol_new(ZEN_SYMBOL_CATEGORY_CLASS, identifier, enclosingScope, classSymbol);
@@ -32,7 +33,8 @@ zen_ClassSymbol_t* zen_ClassSymbol_new(zen_ASTNode_t* identifier,
     classSymbol->m_symbol = symbol;
     classSymbol->m_superClasses = jtk_ArrayList_new();
     classSymbol->m_classScope = classScope;
-    classSymbol->m_qualifiedName = jtk_String_clone(qualifiedName);
+    classSymbol->m_qualifiedName = jtk_CString_make(qualifiedName, &qualifiedNameSize);
+    classSymbol->m_qualifiedNameSize = qualifiedNameSize;
 
     zen_ClassScope_t* classScope0 = (zen_ClassScope_t*)enclosingScope->m_context;
     classScope0->m_classSymbol = symbol;
@@ -67,7 +69,7 @@ zen_Symbol_t* zen_ClassSymbol_getSymbol(zen_ClassSymbol_t* symbol) {
     return symbol->m_symbol;
 }
 
-jtk_String_t* zen_ClassSymbol_getQualifiedName(zen_ClassSymbol_t* symbol) {
+uint8_t* zen_ClassSymbol_getQualifiedName(zen_ClassSymbol_t* symbol) {
     /* To retrieve the fully qualified name a few resolution steps must be taken.
      * Therefore, a fully qualified name is evaluated and stored during the instantiation
      * of this class.

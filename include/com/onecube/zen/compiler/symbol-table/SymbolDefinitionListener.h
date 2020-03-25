@@ -40,7 +40,8 @@ struct zen_SymbolDefinitionListener_t {
     zen_ASTListener_t* m_astListener;
     zen_SymbolTable_t* m_symbolTable;
     zen_ASTAnnotations_t* m_scopes;
-    jtk_String_t* m_package;
+    uint8_t* m_package;
+    int32_t m_packageSize;
 };
 
 /**
