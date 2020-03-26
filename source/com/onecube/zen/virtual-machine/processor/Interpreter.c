@@ -1511,11 +1511,11 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_ConstantPoolClass_t* classEntry = constantPool->m_entries[constructorEntry->m_classIndex];
                 zen_ConstantPoolUtf8_t* classNameEntry = constantPool->m_entries[classEntry->m_nameIndex];
 
-                jtk_String_t* classDescriptor = jtk_String_newEx(classNameEntry->m_bytes, classNameEntry->m_length);
-                zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine, classDescriptor);
+                zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine,
+                    classNameEntry->m_bytes, classNameEntry->m_length);
 
-                jtk_String_t* constructorDescriptor = jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);                
-                zen_Function_t* constructor = zen_Class_getConstructor(targetClass, constructorDescriptor);
+                zen_Function_t* constructor = zen_Class_getConstructor(targetClass,
+                    descriptorEntry->m_bytes, descriptorEntry->m_length);
                 
                 if (constructor != NULL) {
                     jtk_Array_t* arguments = NULL;
@@ -1540,12 +1540,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 }
                 else {
                     /* TODO: Throw an instance of the UnknownFunctionException class. */
-                    printf("[error] Unknown constructor in class %.*s with signature %.*s!", classDescriptor->m_size,
-                        classDescriptor->m_value, constructorDescriptor->m_size, constructorDescriptor->m_value);
+                    printf("[error] Unknown constructor in class %s with signature %s!",
+                        classNameEntry->m_bytes, descriptorEntry->m_bytes);
                 }
-
-                jtk_String_delete(classDescriptor);
-                jtk_String_delete(constructorDescriptor);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
                 jtk_Logger_debug(logger, "Executed instruction `invoke_special` (index = %d, operand stack = %d)",
@@ -1569,13 +1566,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_Object_t* self = (zen_Object_t*)zen_OperandStack_popReference(currentStackFrame->m_operandStack);
                 zen_Class_t* selfClass = zen_Object_getClass(self);
 
-                jtk_String_t* functionName = jtk_String_newEx(nameEntry->m_bytes, nameEntry->m_length);
-                jtk_String_t* functionDescriptor = jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
                 /*zen_Function_t* function = zen_Class_getVirtualFunction(selfClass,
                     functionName, functionDescriptor);*/
                 #warning "TODO: Replace the following statement with the previous statement!"
                 zen_Function_t* function = zen_Class_getStaticFunction(selfClass,
-                    functionName, functionDescriptor);
+                    nameEntry->m_bytes, nameEntry->m_length, descriptorEntry->m_bytes,
+                    descriptorEntry->m_length);
 
                 if (function != NULL) {
                     int32_t parameterCount = function->m_parameterCount;
@@ -1600,13 +1596,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 else {
                     /* TODO: Throw an instance of the UnknownFunctionException class. */
                     printf("[error] An exception was thrown\n"
-                        "[error] UnknownFunctionException: Cannot resolve function '%.*s' with signature '%.*s'.\n",
-                        functionName->m_size, functionName->m_value, functionDescriptor->m_size,
-                        functionDescriptor->m_value);
+                        "[error] UnknownFunctionException: Cannot resolve function '%s' with signature '%s'.\n",
+                        nameEntry->m_bytes, descriptorEntry->m_bytes);
                 }
-
-                jtk_String_delete(functionDescriptor);
-                jtk_String_delete(functionName);
 
                 if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
                     /* Log debugging information for assistance in debugging the interpreter. */
@@ -1638,14 +1630,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_ConstantPoolClass_t* classEntry = constantPool->m_entries[functionEntry->m_classIndex];
                 zen_ConstantPoolUtf8_t* classNameEntry = constantPool->m_entries[classEntry->m_nameIndex];
 
-                jtk_String_t* classDescriptor = jtk_String_newEx(classNameEntry->m_bytes, classNameEntry->m_length);
-                zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine, classDescriptor);
-                jtk_String_delete(classDescriptor);
+                zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine,
+                    classNameEntry->m_bytes, classNameEntry->m_length);
 
-                jtk_String_t* functionName = jtk_String_newEx(nameEntry->m_bytes, nameEntry->m_length);
-                jtk_String_t* functionDescriptor = jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
                 zen_Function_t* function = zen_Class_getStaticFunction(targetClass,
-                    functionName, functionDescriptor);
+                    nameEntry->m_bytes, nameEntry->m_length,
+                    descriptorEntry->m_bytes, descriptorEntry->m_length);
 
                 if (function != NULL) {
                     int32_t parameterCount = function->m_parameterCount;
@@ -1669,13 +1659,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 else {
                     /* TODO: Throw an instance of the UnknownFunctionException class. */
                     printf("[error] An exception was thrown\n"
-                        "[error] UnknownFunctionException: Cannot resolve function '%.*s' with signature '%.*s'.\n",
-                        functionName->m_size, functionName->m_value, functionDescriptor->m_size,
-                        functionDescriptor->m_value);
+                        "[error] UnknownFunctionException: Cannot resolve function '%s' with signature '%s'.\n",
+                        nameEntry->m_bytes, descriptorEntry->m_bytes);
                 }
-
-                jtk_String_delete(functionDescriptor);
-                jtk_String_delete(functionName);
                 
                 if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
                     /* Log debugging information for assistance in debugging the interpreter. */
@@ -2487,9 +2473,8 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     (zen_ConstantPoolClass_t*)constantPool->m_entries[index];
                 zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[classEntry->m_nameIndex];
                 
-                jtk_String_t* classDescriptor = jtk_String_newEx(nameEntry->m_bytes, nameEntry->m_length);
-                zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine, classDescriptor);
-                jtk_String_delete(classDescriptor);
+                zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine,
+                    nameEntry->m_bytes, nameEntry->m_length);
 
                 if (targetClass != NULL) {
                     zen_Object_t* result = zen_VirtualMachine_allocateObject(interpreter->m_virtualMachine,
@@ -3671,12 +3656,12 @@ void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
     zen_ConstantPoolUtf8_t* name =
         (zen_ConstantPoolUtf8_t*)entityFile->m_constantPool.m_entries[
             entity->m_reference];
-    jtk_String_t* className = jtk_String_newEx(name->m_bytes, name->m_length);
 
     if (zen_Function_isNative(constructor)) {
         zen_NativeFunction_t* nativeConstructor = zen_VirtualMachine_getNativeFunction(
-            interpreter->m_virtualMachine, className, constructor->m_name,
-            constructor->m_descriptor);
+            interpreter->m_virtualMachine, name->m_bytes, name->m_length,
+            constructor->m_name, constructor->m_nameSize,
+            constructor->m_descriptor, constructor->m_descriptorSize);
 
         if (nativeConstructor != NULL) {
             zen_NativeFunction_InvokeConstructorFunction_t invokeConstructor =
@@ -3684,10 +3669,8 @@ void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
             invokeConstructor(interpreter->m_virtualMachine, object, arguments);
         }
         else {
-            printf("[error] Unknown native constructor (class=%.*s, name=%.*s, descriptor=%.*s)\n",
-                className->m_size, className->m_value, constructor->m_name->m_size,
-                constructor->m_name->m_value, constructor->m_descriptor->m_size,
-                constructor->m_descriptor->m_value);
+            printf("[error] Unknown native constructor (class=%s, name=%s, descriptor=%s)\n",
+                name->m_bytes, constructor->m_name, constructor->m_descriptor);
         }
     }
     else {
@@ -3696,7 +3679,6 @@ void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
         zen_Interpreter_interpret(interpreter);
     }
 
-    jtk_String_delete(className);
     zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
 }
 
@@ -3720,12 +3702,13 @@ zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interprete
     zen_ConstantPoolUtf8_t* name =
         (zen_ConstantPoolUtf8_t*)entityFile->m_constantPool.m_entries[
             entity->m_reference];
-    jtk_String_t* className = jtk_String_newEx(name->m_bytes, name->m_length);
 
     zen_Object_t* result = NULL;
     if (zen_Function_isNative(function)) {
         zen_NativeFunction_t* nativeFunction = zen_VirtualMachine_getNativeFunction(
-            interpreter->m_virtualMachine, className, function->m_name, function->m_descriptor);
+            interpreter->m_virtualMachine, name->m_bytes, name->m_length,
+            function->m_name, function->m_nameSize, function->m_descriptor,
+            function->m_descriptorSize);
 
         if (nativeFunction != NULL) {
             zen_NativeFunction_InvokeFunction_t invoke = nativeFunction->m_invoke;
@@ -3749,9 +3732,7 @@ zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interprete
         }
         else {
             printf("[error] Unknown native function (class=%.*s, name=%.*s, descriptor=%.*s)\n",
-                className->m_size, className->m_value, function->m_name->m_size,
-                function->m_name->m_value, function->m_descriptor->m_size,
-                function->m_descriptor->m_value);
+                name->m_bytes, function->m_name, function->m_descriptor);
         }
     }
     else {
@@ -3801,12 +3782,13 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
     zen_ConstantPoolUtf8_t* name =
         (zen_ConstantPoolUtf8_t*)entityFile->m_constantPool.m_entries[
             entity->m_reference];
-    jtk_String_t* className = jtk_String_newEx(name->m_bytes, name->m_length);
 
     zen_Object_t* result = NULL;
     if (zen_Function_isNative(function)) {
         zen_NativeFunction_t* nativeFunction = zen_VirtualMachine_getNativeFunction(
-            interpreter->m_virtualMachine, className, function->m_name, function->m_descriptor);
+            interpreter->m_virtualMachine, name->m_bytes, name->m_length,
+            function->m_name, function->m_nameSize,
+            function->m_descriptor, function->m_descriptorSize);
 
         if (nativeFunction != NULL) {
             zen_NativeFunction_InvokeFunction_t invoke = nativeFunction->m_invoke;
@@ -3829,10 +3811,8 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
             }
         }
         else {
-            printf("[error] Unknown native function (class=%.*s, name=%.*s, descriptor=%.*s)\n",
-                className->m_size, className->m_value, function->m_name->m_size,
-                function->m_name->m_value, function->m_descriptor->m_size,
-                function->m_descriptor->m_value);
+            printf("[error] Unknown native function (class=%s, name=%s, descriptor=%s)\n",
+                name->m_bytes, function->m_name, function->m_descriptor);
         }
     }
     else {
@@ -3862,8 +3842,8 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
 
 void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter) {
     zen_Class_t* exceptionClass = zen_Object_getClass(interpreter->m_exception);
-    printf("\033[1;31m[error]\033[0m An instance of \033[1;37m%.*s\033[0m was thrown as exception\n",
-        exceptionClass->m_descriptor->m_size, exceptionClass->m_descriptor->m_value);
+    printf("\033[1;31m[error]\033[0m An instance of \033[1;37m%s\033[0m was thrown as exception\n",
+        exceptionClass->m_descriptor);
 
     jtk_Iterator_t* iterator = jtk_DoublyLinkedList_getIterator(interpreter->m_invocationStack->m_trace);
     while (jtk_Iterator_hasNext(iterator)) {
@@ -3871,39 +3851,36 @@ void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter
         zen_Class_t* class0 = stackFrame->m_class;
         zen_Function_t* function = stackFrame->m_function;
         
-        int32_t descriptorSize = function->m_descriptor->m_size;
-        uint8_t* descriptor = function->m_descriptor->m_value;
-        uint8_t* friendlyDescriptor = jtk_Memory_allocate(uint8_t, descriptorSize + 1);
+        uint8_t* friendlyDescriptor = jtk_Memory_allocate(uint8_t, function->m_descriptorSize + 1);
         int32_t afterColon = -1;
         int32_t i;
         int32_t j = 0;
-        for (i = 0; i < descriptorSize; i++) {
-            if (descriptor[i] == ':') {
+        for (i = 0; i < function->m_descriptorSize; i++) {
+            if (function->m_descriptor[i] == ':') {
                 afterColon = i + 1;
             }
             else if (afterColon >= 0) {
-                if (descriptor[i] == '/') {
+                if (function->m_descriptor[i] == '/') {
                     friendlyDescriptor[j++] = '.';
                 }
-                else if (descriptor[i] == '(') {
+                else if (function->m_descriptor[i] == '(') {
                     // Do nothing
                 }
-                else if (descriptor[i] == ')') {
-                    if (i + 1 < descriptorSize) {
+                else if (function->m_descriptor[i] == ')') {
+                    if (i + 1 < function->m_descriptorSize) {
                         friendlyDescriptor[j++] = ',';
                         friendlyDescriptor[j++] = ' ';
                     }
                 }
                 else {
-                    friendlyDescriptor[j++] = descriptor[i];
+                    friendlyDescriptor[j++] = function->m_descriptor[i];
                 }
             }
         }
         friendlyDescriptor[j] = '\0';
 
-        printf("        at %.*s.%.*s(%s) %s\n", class0->m_descriptor->m_size,
-            class0->m_descriptor->m_value, function->m_name->m_size,
-            function->m_name->m_value, friendlyDescriptor,
+        printf("        at %s.%s(%s) %s\n", class0->m_descriptor,
+            function->m_name, friendlyDescriptor,
             zen_Function_isNative(function)? "\033[1;37m[native]\033[0m" : "");
 
         jtk_Memory_deallocate(friendlyDescriptor);
@@ -4100,9 +4077,8 @@ bool zen_Interpreter_throw(zen_Interpreter_t* interpreter,
                             (zen_ConstantPoolClass_t*)constantPool->m_entries[site->m_exceptionClassIndex];
                         zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[classEntry->m_nameIndex];
         
-                        jtk_String_t* classDescriptor = jtk_String_newEx(nameEntry->m_bytes, nameEntry->m_length);
-                        zen_Class_t* filterClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine, classDescriptor);
-                        jtk_String_delete(classDescriptor);
+                        zen_Class_t* filterClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine,
+                            nameEntry->m_bytes, nameEntry->m_length);
 
                         if (exceptionClass == filterClass) {
                             found = true;

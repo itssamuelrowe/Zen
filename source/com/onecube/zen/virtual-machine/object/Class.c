@@ -25,13 +25,6 @@
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolClass.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolUtf8.h>
 
-#warning "Move this function to String.c"
-
-jtk_String_t* jtk_String_append(jtk_String_t* string1, jtk_String_t* string2) {
-    return jtk_String_newFromJoinEx(string1->m_value, string1->m_size,
-        string2->m_value, string2->m_size);
-}
-
 /*******************************************************************************
  * Class                                                                       *
  *******************************************************************************/
@@ -75,18 +68,18 @@ void zen_Class_delete(zen_Class_t* class0) {
     while (jtk_Iterator_hasNext(fieldIterator)) {
         jtk_HashMapEntry_t* entry =
             (jtk_HashMapEntry_t*)jtk_Iterator_getNext(fieldIterator);
-        // jtk_String_t* key = (jtk_String_t*)jtk_HashMapEntry_getKey(entry);
+        // uint8_t* key = (uint8_t*)jtk_HashMapEntry_getKey(entry);
         zen_Field_t* value = (zen_Field_t*)jtk_HashMapEntry_getValue(entry);
 
         // Do not delete field keys because they belong to the Field class.
-        // jtk_String_delete(key);
+        // jtk_CString_delete(key);
         zen_Field_delete(value);
     }
     jtk_Iterator_delete(fieldIterator);
 
     jtk_HashMap_delete(class0->m_functions);
     jtk_HashMap_delete(class0->m_fields);
-    jtk_String_delete(class0->m_descriptor);
+    jtk_CString_delete(class0->m_descriptor);
     jtk_Memory_deallocate(class0);
 }
 
@@ -170,8 +163,8 @@ void zen_Class_initialize(zen_Class_t* class0, zen_EntityFile_t* entityFile) {
         zen_Field_t* field = zen_Field_new(class0, fieldEntity, class0->m_memoryRequirement);
         jtk_HashMap_put(class0->m_fields, field->m_name, field);
 
-        if (field->m_descriptor->m_size == 1) {
-            switch (field->m_descriptor->m_value[0]) {
+        if (field->m_descriptorSize == 1) {
+            switch (field->m_descriptor[0]) {
                 // TODO: What is the size of a character?
 
                 case 'z':
