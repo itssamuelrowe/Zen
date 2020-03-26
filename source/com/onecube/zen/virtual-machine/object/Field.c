@@ -18,6 +18,7 @@
 
 #include <com/onecube/zen/virtual-machine/object/Field.h>
 #include <com/onecube/zen/virtual-machine/object/Class.h>
+#include <jtk/core/CString.h>
 
 /*******************************************************************************
  * Field                                                                       *

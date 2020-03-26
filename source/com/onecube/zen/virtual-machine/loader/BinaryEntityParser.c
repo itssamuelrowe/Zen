@@ -201,8 +201,15 @@ void zen_BinaryEntityParser_parseConstantPool(
 
             case ZEN_CONSTANT_POOL_TAG_UTF8: {
                 uint16_t length = jtk_Tape_readUncheckedShort(parser->m_tape);
-                // The specification guarantees that an empty string is never stored in a constant pool.
-                uint8_t* bytes = jtk_Memory_allocate(uint8_t, length);
+                /* The specification guarantees that an empty string is never stored in a constant pool.
+                 *
+                 * Although the speciication does not specify the bytes to be null-terminated,
+                 * the reference implementation of the Zen Virtual Machine terminates
+                 * UTF8 constant pool entries for performance.
+                 */
+
+                uint8_t* bytes = jtk_Memory_allocate(uint8_t, length + 1);
+                bytes[length] = '\0';
                 jtk_Tape_readUncheckedBytes(parser->m_tape, bytes, length);
 
                 zen_ConstantPoolUtf8_t* constantPoolUtf8 = jtk_Memory_allocate(zen_ConstantPoolUtf8_t, 1);

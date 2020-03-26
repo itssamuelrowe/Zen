@@ -18,6 +18,7 @@
 
 #include <jtk/collection/Iterator.h>
 #include <jtk/core/CStringObjectAdapter.h>
+#include <jtk/core/CString.h>
 
 #include <com/onecube/zen/virtual-machine/loader/AttributeParseRules.h>
 #include <com/onecube/zen/virtual-machine/loader/BinaryEntityParser.h>
@@ -54,7 +55,7 @@ void zen_AttributeParseRules_delete(zen_AttributeParseRules_t* rules) {
     jtk_Iterator_t* keyIterator = jtk_HashMap_getKeyIterator(rules->m_map);
     while (jtk_Iterator_hasNext(keyIterator)) {
         uint8_t* key = (uint8_t*)jtk_Iterator_getNext(keyIterator);
-        jtk_String_delete(key);
+        jtk_CString_delete(key);
     }
     jtk_Iterator_delete(keyIterator);
 

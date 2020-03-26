@@ -17,6 +17,7 @@
 // Friday, June 08, 2018
 
 #include <jtk/core/CStringObjectAdapter.h>
+#include <jtk/core/CString.h>
 #include <com/onecube/zen/virtual-machine/VirtualMachineConfiguration.h>
 
 /*******************************************************************************

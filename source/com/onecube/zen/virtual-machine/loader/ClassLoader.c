@@ -19,6 +19,7 @@
 #include <jtk/collection/Iterator.h>
 #include <jtk/collection/map/HashMapEntry.h>
 #include <jtk/core/CStringObjectAdapter.h>
+#include <jtk/core/CString.h>
 
 #include <com/onecube/zen/virtual-machine/loader/ClassLoader.h>
 

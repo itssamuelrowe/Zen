@@ -21,6 +21,7 @@
 #include <jtk/collection/array/Arrays.h>
 #include <jtk/collection/list/DoublyLinkedList.h>
 #include <jtk/core/CStringObjectAdapter.h>
+#include <jtk/core/CString.h>
 #include <jtk/fs/Path.h>
 #include <jtk/fs/PathHandle.h>
 #include <jtk/fs/FileInputStream.h>
@@ -52,8 +53,8 @@ zen_EntityLoader_t* zen_EntityLoader_newWithEntityDirectories(jtk_Iterator_t* en
 
     zen_EntityLoader_t* loader = zen_EntityLoader_new();
     while (jtk_Iterator_hasNext(entityDirectoryIterator)) {
-        // jtk_String_t* directory = jtk_Iterator_getNext(entityDirectoryIterator);
-        // zen_EntityLoader_addDirectory_s(loader, directory);
+        uint8_t* directory = (uint8_t*)jtk_Iterator_getNext(entityDirectoryIterator);
+        zen_EntityLoader_addDirectory(loader, directory, -1);
     }
 
     return loader;
@@ -76,7 +77,7 @@ void zen_EntityLoader_delete(zen_EntityLoader_t* loader) {
         jtk_HashMapEntry_t* entry = (jtk_HashMapEntry_t*)jtk_Iterator_getNext(entryIterator);
 
         uint8_t* descriptor = (uint8_t*)jtk_HashMapEntry_getKey(entry);
-        jtk_String_delete(descriptor);
+        jtk_CString_delete(descriptor);
 
 #warning "Should the entity be destroyed this way?"
         zen_EntityFile_t* entityFile = (zen_EntityFile_t*)jtk_HashMapEntry_getValue(entry->m_value);

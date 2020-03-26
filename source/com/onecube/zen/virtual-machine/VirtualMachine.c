@@ -449,7 +449,7 @@ zen_Object_t* zen_String_multiply(zen_VirtualMachine_t* virtualMachine,
     }
     
     zen_Object_t* result = zen_VirtualMachine_newStringFromUtf8(virtualMachine, builder->m_value, builder->m_size);
-    jtk_String_delete(builder);
+    jtk_StringBuilder_delete(builder);
 
     return result;
 }
@@ -534,7 +534,7 @@ zen_Object_t* zen_ZenKernel_invoke(zen_VirtualMachine_t* virtualMachine,
     zen_Function_t* function = zen_VirtualMachine_getStaticFunction(virtualMachine,
         targetClass, name0, nameSize, "(zen/core/Object):v", 19);
 
-    jtk_String_delete(name0);
+    jtk_CString_delete(name0);
 
     return zen_Interpreter_invokeVirtualFunction(virtualMachine->m_interpreter, function, object, NULL);
 }
@@ -563,8 +563,8 @@ zen_Object_t* zen_ZenKernel_invokeEx(zen_VirtualMachine_t* virtualMachine,
         targetClass, targetFunctionName0, targetFunctionName0Size, targetFunctionDescriptor,
         targetFunctionDescriptorSize);
 
-    jtk_String_delete(targetFunctionName0);
-    jtk_String_delete(targetFunctionDescriptor);
+    jtk_CString_delete(targetFunctionName0);
+    jtk_CString_delete(targetFunctionDescriptor);
 
     return zen_Interpreter_invokeVirtualFunction(virtualMachine->m_interpreter, targetFunction,
         object, targetArguments);
@@ -743,7 +743,7 @@ zen_Object_t* zen_ZenKernel_storeField(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* name = (zen_Object_t*)jtk_Array_getValue(arguments, 2);
 
     int32_t name0Size;
-    uint8_t* name0 = zen_CString_toJTKString(virtualMachine, name, &name0Size);
+    uint8_t* name0 = zen_String_toCString(virtualMachine, name, &name0Size);
     zen_VirtualMachine_setObjectField(virtualMachine, self, name0, name0Size, value);
     jtk_CString_delete(name0);
 
@@ -756,7 +756,7 @@ zen_Object_t* zen_ZenKernel_loadField(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* name = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
 
     int32_t name0Size;
-    uint8_t* name0 = zen_CString_toJTKString(virtualMachine, name, &name0Size);
+    uint8_t* name0 = zen_String_toCString(virtualMachine, name, &name0Size);
     zen_Object_t* result = zen_VirtualMachine_getObjectField(virtualMachine,
         self, name0, name0Size);
     jtk_CString_delete(name0);
@@ -1267,7 +1267,7 @@ zen_NativeFunction_t* zen_VirtualMachine_registerNativeFunction(
         functionDescriptorSize
     };
     int32_t keySize;
-    uint8_t* key = jtk_String_joinAll(strings, sizes, 3, &keySize);
+    uint8_t* key = jtk_CString_joinAll(strings, sizes, 3, &keySize);
     jtk_HashMap_put(virtualMachine->m_nativeFunctions, key, nativeFunction);
 
     return nativeFunction;

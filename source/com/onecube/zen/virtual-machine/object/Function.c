@@ -16,6 +16,7 @@
 
 // Tuesday, March 26, 2019
 
+#include <jtk/core/CString.h>
 #include <com/onecube/zen/virtual-machine/feb/EntityFlag.h>
 #include <com/onecube/zen/virtual-machine/object/Function.h>
 #include <com/onecube/zen/virtual-machine/object/Class.h>

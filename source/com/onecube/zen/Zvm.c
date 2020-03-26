@@ -199,7 +199,5 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
     zen_VirtualMachine_delete(virtualMachine);
     zen_VirtualMachineConfiguration_delete(configuration);
     
-    jtk_String_delete(mainClassDescriptor);
-
     return 0;
 }

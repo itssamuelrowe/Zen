@@ -15,8 +15,8 @@
  */
 
 #include <com/onecube/zen/feb/Instruction.h>
-#include <com/onecube/zen/core/Integer.h>
-#include <com/onecube/zen/CString.h>
+#include <jtk/core/Integer.h>
+#include <jtk/core/CString.h>
 
 #define ZEN_ZVM_SPECIFICATION_VIEWER_MAJOR_VERSION 1
 #define ZEN_ZVM_SPECIFICATION_VIEWER_MINOR_VERSION 0

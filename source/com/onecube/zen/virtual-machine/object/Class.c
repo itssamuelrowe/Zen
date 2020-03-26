@@ -20,6 +20,7 @@
 #include <jtk/collection/Iterator.h>
 #include <jtk/collection/list/DoublyLinkedList.h>
 #include <jtk/core/CStringObjectAdapter.h>
+#include <jtk/core/CString.h>
 
 #include <com/onecube/zen/virtual-machine/object/Class.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolClass.h>
@@ -209,7 +210,7 @@ void zen_Class_initialize(zen_Class_t* class0, zen_EntityFile_t* entityFile) {
 
         int32_t keySize;
         uint8_t* key = jtk_CString_joinEx(function->m_name, function->m_nameSize,
-            function->m_descriptor, function->m_descriptorSize);
+            function->m_descriptor, function->m_descriptorSize, &keySize);
         jtk_HashMap_put(class0->m_functions, key, function);
     }
 }
