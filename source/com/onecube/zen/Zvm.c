@@ -108,11 +108,10 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
         }
     }
 
-    jtk_String_t* mainClassDescriptor = jtk_String_newEx("Test", 4);
+    const uint8_t* mainClassDescriptor = "Test";
+    int32_t mainClassDescriptorSize = 4;
     const uint8_t* stringClassDescriptor = "(zen/core/String)";
-    jtk_String_t* mainFunctionIdentifier = jtk_String_newEx("main", 4);
-    // jtk_String_t* mainFunctionSignature = jtk_String_newEx("v/@(zen.core.String)", 20);
-    jtk_String_t* mainFunctionSignature = jtk_String_newEx("(zen/core/Object):@(zen/core/Object)", 36);
+    int32_t stringClassDescriptorSize = 17;
 
 #warning "TODO: Implement support for both the signatures."
     /* The virtual machine supports two main function signatures, which are listed
@@ -127,13 +126,14 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
     zen_VirtualMachine_t* virtualMachine = zen_VirtualMachine_new(configuration);
 
     /* Find the main class. If the class is not found, an exception is thrown. */
-    zen_Class_t* mainClass = zen_VirtualMachine_getClass(virtualMachine, mainClassDescriptor);
+    zen_Class_t* mainClass = zen_VirtualMachine_getClass(virtualMachine,
+        mainClassDescriptor, mainClassDescriptorSize);
     if (zen_VirtualMachine_isClear(virtualMachine)) {
         /* Find the main function. If the function is not found, an exception is
          * thrown.
          */
         zen_Function_t* mainFunction = zen_VirtualMachine_getStaticFunction(virtualMachine,
-            mainClass, mainFunctionIdentifier, mainFunctionSignature);
+            mainClass, "main", 4, "(zen/core/Object):@(zen/core/Object)", 36);
 
         if (zen_VirtualMachine_isClear(virtualMachine)) {
             /* Find the String class. If the class is not found, an exception is thrown. */
@@ -191,9 +191,6 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
 
     /* Wait for other threds to complete and tear down the virtual machine. */
     zen_VirtualMachine_shutDown(virtualMachine);
-
-    jtk_String_delete(mainFunctionSignature);
-    jtk_String_delete(mainFunctionIdentifier);
 
     /* Destroy the virtual machine and its configuration. Objects allocated
      * via the VirtualMachine class are automatically collected by the garbage
