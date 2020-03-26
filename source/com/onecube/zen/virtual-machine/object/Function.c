@@ -20,6 +20,8 @@
 #include <com/onecube/zen/virtual-machine/feb/EntityFlag.h>
 #include <com/onecube/zen/virtual-machine/object/Function.h>
 #include <com/onecube/zen/virtual-machine/object/Class.h>
+#include <com/onecube/zen/virtual-machine/VirtualMachine.h>
+#include <com/onecube/zen/virtual-machine/feb/attribute/PredefinedAttribute.h>
 
 /*******************************************************************************
  * Function                                                                    *
@@ -27,8 +29,20 @@
 
 // Constructor
 
-zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
-    zen_FunctionEntity_t* functionEntity) {
+/* A native function can be loaded in two ways. If a native
+ * function is registered before the program begins execution,
+ * the native function is automatically associated with the
+ * function object when it is being loaded from the binary entity
+ * format. This ensures that native functions are always present
+ * throughtout the life cycle of a class. This is called as cold
+ * registration.
+ * 
+ * Alternatively, a native function can be registered after the
+ * class has been loaded. This is called as hot registration.
+ */
+
+zen_Function_t* zen_Function_new(zen_VirtualMachine_t* virtualMachine,
+    zen_Class_t* class0, zen_FunctionEntity_t* functionEntity) {
     zen_ConstantPool_t* constantPool = &class0->m_entityFile->m_constantPool;
     zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[functionEntity->m_nameIndex];
     zen_ConstantPoolUtf8_t* descriptorEntry = constantPool->m_entries[functionEntity->m_descriptorIndex];
@@ -41,6 +55,10 @@ zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
     function->m_class = class0;
     function->m_flags = 0;
     function->m_functionEntity = functionEntity;
+    function->m_nativeFunction = zen_VirtualMachine_getNativeFunction(virtualMachine,
+        class0->m_descriptor, class0->m_descriptorSize,
+        function->m_name, function->m_nameSize,
+        function->m_descriptor, function->m_descriptorSize);
 
     // type, startIndex
     int32_t afterColon = -1;
@@ -204,6 +222,25 @@ zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0,
     function->m_returnType = returnType;
     function->m_parameterCount = parameterCount;
     function->m_parameters = parameters;
+
+    function->m_instructionAttribute = NULL;
+    if ((function->m_functionEntity->m_flags & (1 << 7)) == 0) {
+        int32_t limit = functionEntity->m_attributeTable.m_size;
+        for (i = 0; i < limit; i++) {
+            zen_Attribute_t* attribute = functionEntity->m_attributeTable.m_attributes[i];
+            zen_ConstantPoolUtf8_t* nameEntry =
+                (zen_ConstantPoolUtf8_t*)constantPool->m_entries[attribute->m_nameIndex];
+
+            if (jtk_CString_equals(nameEntry->m_bytes, nameEntry->m_length,
+                ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION, ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION_SIZE)) {
+                function->m_instructionAttribute = (zen_InstructionAttribute_t*)attribute;
+                // maxStackSize = instructionAttribute->m_maxStackSize;
+
+                break;
+            }
+        }
+    }
+
 
     return function;
 }

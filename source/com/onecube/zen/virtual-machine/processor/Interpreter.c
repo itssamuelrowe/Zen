@@ -3648,8 +3648,10 @@ void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
     zen_StackFrame_t* stackFrame = zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack,
         constructor);
 
-    /* Pass the self reference to the constructor. */
-    zen_LocalVariableArray_setReference(stackFrame->m_localVariableArray, 0, object);
+    if (!zen_Function_isNative(constructor)) {
+        /* Pass the self reference to the constructor. */
+        zen_LocalVariableArray_setReference(stackFrame->m_localVariableArray, 0, object);
+    }
 
     zen_EntityFile_t* entityFile = constructor->m_class->m_entityFile;
     zen_Entity_t* entity = &entityFile->m_entity;
@@ -3658,10 +3660,7 @@ void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
             entity->m_reference];
 
     if (zen_Function_isNative(constructor)) {
-        zen_NativeFunction_t* nativeConstructor = zen_VirtualMachine_getNativeFunction(
-            interpreter->m_virtualMachine, name->m_bytes, name->m_length,
-            constructor->m_name, constructor->m_nameSize,
-            constructor->m_descriptor, constructor->m_descriptorSize);
+        zen_NativeFunction_t* nativeConstructor = constructor->m_nativeFunction;
 
         if (nativeConstructor != NULL) {
             zen_NativeFunction_InvokeConstructorFunction_t invokeConstructor =
@@ -3705,10 +3704,7 @@ zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interprete
 
     zen_Object_t* result = NULL;
     if (zen_Function_isNative(function)) {
-        zen_NativeFunction_t* nativeFunction = zen_VirtualMachine_getNativeFunction(
-            interpreter->m_virtualMachine, name->m_bytes, name->m_length,
-            function->m_name, function->m_nameSize, function->m_descriptor,
-            function->m_descriptorSize);
+        zen_NativeFunction_t* nativeFunction = function->m_nativeFunction;
 
         if (nativeFunction != NULL) {
             zen_NativeFunction_InvokeFunction_t invoke = nativeFunction->m_invoke;
@@ -3775,7 +3771,9 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
     zen_StackFrame_t* stackFrame = zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack,
         function);
 
-    zen_LocalVariableArray_setReference(stackFrame->m_localVariableArray, 0, object);
+    if (!zen_Function_isNative(function)) {
+        zen_LocalVariableArray_setReference(stackFrame->m_localVariableArray, 0, object);
+    }
 
     zen_EntityFile_t* entityFile = function->m_class->m_entityFile;
     zen_Entity_t* entity = &entityFile->m_entity;
@@ -3785,10 +3783,7 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
 
     zen_Object_t* result = NULL;
     if (zen_Function_isNative(function)) {
-        zen_NativeFunction_t* nativeFunction = zen_VirtualMachine_getNativeFunction(
-            interpreter->m_virtualMachine, name->m_bytes, name->m_length,
-            function->m_name, function->m_nameSize,
-            function->m_descriptor, function->m_descriptorSize);
+        zen_NativeFunction_t* nativeFunction = function->m_nativeFunction;
 
         if (nativeFunction != NULL) {
             zen_NativeFunction_InvokeFunction_t invoke = nativeFunction->m_invoke;

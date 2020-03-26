@@ -18,8 +18,6 @@
 
 #include <jtk/core/CString.h>
 #include <com/onecube/zen/virtual-machine/feb/EntityFile.h>
-#include <com/onecube/zen/virtual-machine/feb/attribute/Attribute.h>
-#include <com/onecube/zen/virtual-machine/feb/attribute/PredefinedAttribute.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolUtf8.h>
 #include <com/onecube/zen/virtual-machine/object/Class.h>
 #include <com/onecube/zen/virtual-machine/processor/StackFrame.h>
@@ -38,7 +36,7 @@ zen_StackFrame_t* zen_StackFrame_new(zen_Function_t* function) {
     zen_FunctionEntity_t* functionEntity = function->m_functionEntity;
     zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
 
-    int32_t maxStackSize = 0;
+    int32_t maxStackSize = 10;
     int32_t localVariableCount = 0;
 
     // Check if the function is native or not.
@@ -47,24 +45,11 @@ zen_StackFrame_t* zen_StackFrame_new(zen_Function_t* function) {
      * function. It is recommended that the compilers generate instruction attribute
      * as the first attribute for functions in general.
      */
-    zen_InstructionAttribute_t* instructionAttribute = NULL;
-    int32_t limit = functionEntity->m_attributeTable.m_size;
-    int32_t i;
-    for (i = 0; i < limit; i++) {
-        zen_Attribute_t* attribute = functionEntity->m_attributeTable.m_attributes[i];
-        zen_ConstantPoolUtf8_t* nameEntry =
-            (zen_ConstantPoolUtf8_t*)constantPool->m_entries[attribute->m_nameIndex];
-
-        if (jtk_CString_equals(nameEntry->m_bytes, nameEntry->m_length,
-            ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION, ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION_SIZE)) {
-            instructionAttribute = (zen_InstructionAttribute_t*)attribute;
-            // maxStackSize = instructionAttribute->m_maxStackSize;
-            maxStackSize = 4000; // TODO: Fix this!
-#warning "The max stack size specified in the binary entity file should be acknowledged."
-            localVariableCount = instructionAttribute->m_localVariableCount;
-
-            break;
-        }
+    zen_InstructionAttribute_t* instructionAttribute = function->m_instructionAttribute;
+    if (!zen_Function_isNative(function)) {
+        maxStackSize = 4000; // TODO: Fix this!
+        #warning "The max stack size specified in the binary entity file should be acknowledged."
+        localVariableCount = instructionAttribute->m_localVariableCount;
     }
 
     /* At this point, the instructionAttribute variable should hold a reference

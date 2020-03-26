@@ -22,6 +22,9 @@
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/virtual-machine/feb/FunctionEntity.h>
 #include <com/onecube/zen/virtual-machine/feb/Type.h>
+#include <com/onecube/zen/virtual-machine/object/NativeFunction.h>
+#include <com/onecube/zen/virtual-machine/feb/attribute/Attribute.h>
+#include <com/onecube/zen/virtual-machine/feb/attribute/InstructionAttribute.h>
 
 // Forward References
 
@@ -48,6 +51,8 @@ struct zen_Function_t {
     zen_Type_t m_returnType;
     int32_t* m_parameters;
     int32_t m_parameterCount;
+    zen_NativeFunction_t* m_nativeFunction;
+    zen_InstructionAttribute_t* m_instructionAttribute;
 };
 
 /**
@@ -57,8 +62,8 @@ typedef struct zen_Function_t zen_Function_t;
 
 // Constructor
 
-zen_Function_t* zen_Function_newFromFunctionEntity(zen_Class_t* class0, 
-    zen_FunctionEntity_t* functionEntity);
+zen_Function_t* zen_Function_new(zen_VirtualMachine_t* virtualmachine,
+    zen_Class_t* class0, zen_FunctionEntity_t* functionEntity);
 
 // Destructor
 

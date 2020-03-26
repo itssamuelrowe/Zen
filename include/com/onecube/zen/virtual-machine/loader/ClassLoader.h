@@ -44,6 +44,7 @@
 struct zen_ClassLoader_t {
     zen_EntityLoader_t* m_entityLoader;
     jtk_HashMap_t* m_classes;
+    zen_VirtualMachine_t* m_virtualMachine;
 };
 
 /**
@@ -53,7 +54,8 @@ typedef struct zen_ClassLoader_t zen_ClassLoader_t;
 
 // Constructor
 
-zen_ClassLoader_t* zen_ClassLoader_new(zen_EntityLoader_t* entityLoader);
+zen_ClassLoader_t* zen_ClassLoader_new(
+    zen_VirtualMachine_t* virtualMachine, zen_EntityLoader_t* entityLoader);
 
 // Destructor
 

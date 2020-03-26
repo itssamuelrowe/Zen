@@ -400,6 +400,7 @@ zen_Object_t* zen_Boolean_getValue(zen_VirtualMachine_t* virtualMachine,
     return (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
             self, "value", 5);
 }
+
 void zen_String_initialize(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* self, jtk_Array_t* arguments) {
     const uint8_t* valueDescriptor = "value";
@@ -566,10 +567,58 @@ zen_Object_t* zen_ZenKernel_invokeEx(zen_VirtualMachine_t* virtualMachine,
     jtk_CString_delete(targetFunctionName0);
     jtk_CString_delete(targetFunctionDescriptor);
 
+
     return zen_Interpreter_invokeVirtualFunction(virtualMachine->m_interpreter, targetFunction,
         object, targetArguments);
 }
 
+zen_Object_t* zen_ZenKernel_invokeStaticEx(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* class0, jtk_Array_t* arguments) {
+    zen_Object_t* entity = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
+    zen_Object_t* targetFunctionName = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
+    jtk_Array_t* targetArguments = (jtk_Array_t*)jtk_Array_getValue(arguments, 2);
+    int32_t argumentCount = jtk_Array_getSize(targetArguments);
+    
+    /*
+    jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+    jtk_StringBuilder_appendEx_z(builder, "(zen/core/Object):", 18);
+    int32_t i;
+    int32_t parameterCount = jtk_Array_getSize(targetArguments);
+    for (i = 0; i < parameterCount; i++) {
+        jtk_StringBuilder_appendEx_z(builder, "(zen/core/Object)", 17);
+    }
+    int32_t targetFunctionDescriptorSize;
+    uint8_t* targetFunctionDescriptor = jtk_StringBuilder_toCString(builder, &targetFunctionDescriptorSize);
+    */
+
+    int32_t entity0Size;
+    uint8_t* entity0 = zen_String_toCString(virtualMachine, entity, &entity0Size);
+    int32_t targetFunctionName0Size;
+    uint8_t* targetFunctionName0 = zen_String_toCString(virtualMachine, targetFunctionName, &targetFunctionName0Size);
+
+    zen_Class_t* targetClass = zen_VirtualMachine_getClass(virtualMachine,
+        entity0, entity0Size);
+    
+    zen_Function_t* targetFunction = NULL;
+    zen_Overload_t* overload = (zen_Overload_t*)jtk_HashMap_getValue(targetClass->m_overloads,
+        targetFunctionName0);
+    while (overload != NULL) {
+        if ((overload->m_function->m_parameterCount == argumentCount) &&
+            overload->m_function->m_returnType != ZEN_TYPE_VOID) {
+            targetFunction = overload->m_function;
+            break;
+        }
+        overload = overload->m_next;
+    }
+    
+    jtk_CString_delete(targetFunctionName0);
+    jtk_CString_delete(entity0);
+
+    return zen_Interpreter_invokeStaticFunction(virtualMachine->m_interpreter, targetFunction,
+        targetArguments);
+}
+
+/*
 zen_Object_t* zen_ZenKernel_invokeStaticEx(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* class0, jtk_Array_t* arguments) {
     zen_Object_t* entity = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
@@ -603,6 +652,7 @@ zen_Object_t* zen_ZenKernel_invokeStaticEx(zen_VirtualMachine_t* virtualMachine,
     return zen_Interpreter_invokeStaticFunction(virtualMachine->m_interpreter, targetFunction,
         targetArguments);
 }
+*/
 
 zen_Object_t* zen_ZenKernel_invokeStatic(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* class0, jtk_Array_t* arguments) {
@@ -779,7 +829,7 @@ zen_VirtualMachine_t* zen_VirtualMachine_new(zen_VirtualMachineConfiguration_t* 
     zen_VirtualMachine_t* virtualMachine = zen_Memory_allocate(zen_VirtualMachine_t, 1);
     virtualMachine->m_configuration = configuration;
     virtualMachine->m_entityLoader = zen_EntityLoader_newWithEntityDirectories(entityDirectoryIterator);
-    virtualMachine->m_classLoader = zen_ClassLoader_new(virtualMachine->m_entityLoader);
+    virtualMachine->m_classLoader = zen_ClassLoader_new(virtualMachine, virtualMachine->m_entityLoader);
     virtualMachine->m_interpreter = zen_Interpreter_new(NULL, virtualMachine, NULL);
     virtualMachine->m_nativeFunctions = jtk_HashMap_newEx(stringObjectAdapter, NULL,
         JTK_HASH_MAP_DEFAULT_CAPACITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);

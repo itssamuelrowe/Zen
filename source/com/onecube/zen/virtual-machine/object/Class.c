@@ -22,6 +22,7 @@
 #include <jtk/core/CStringObjectAdapter.h>
 #include <jtk/core/CString.h>
 
+#include <com/onecube/zen/virtual-machine/VirtualMachine.h>
 #include <com/onecube/zen/virtual-machine/object/Class.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolClass.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolUtf8.h>
@@ -32,18 +33,21 @@
 
 // Constructor
 
-zen_Class_t* zen_Class_new(zen_EntityFile_t* entityFile) {
+zen_Class_t* zen_Class_new(zen_VirtualMachine_t* virtualMachine,
+    zen_EntityFile_t* entityFile) {
     jtk_ObjectAdapter_t* stringObjectAdapter = jtk_CStringObjectAdapter_getInstance();
 
     zen_Class_t* class0 = jtk_Memory_allocate(zen_Class_t, 1);
     class0->m_entityFile = entityFile;
     class0->m_functions = jtk_HashMap_newEx(stringObjectAdapter, NULL,
         JTK_HASH_MAP_DEFAULT_CAPACITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
+    class0->m_overloads = jtk_HashMap_newEx(stringObjectAdapter, NULL,
+        JTK_HASH_MAP_DEFAULT_CAPACITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
     class0->m_fields = jtk_HashMap_newEx(stringObjectAdapter, NULL,
         JTK_HASH_MAP_DEFAULT_CAPACITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
     class0->m_memoryRequirement = 0;
 
-    zen_Class_initialize(class0, entityFile);
+    zen_Class_initialize(virtualMachine, class0, entityFile);
 
     return class0;
 }
@@ -78,6 +82,9 @@ void zen_Class_delete(zen_Class_t* class0) {
     }
     jtk_Iterator_delete(fieldIterator);
 
+    // TODO: Delete overloads
+
+    jtk_HashMap_delete(class0->m_overloads);
     jtk_HashMap_delete(class0->m_functions);
     jtk_HashMap_delete(class0->m_fields);
     jtk_CString_delete(class0->m_descriptor);
@@ -116,32 +123,43 @@ zen_Function_t* zen_Class_getConstructor(zen_Class_t* class0,
 zen_Function_t* zen_Class_getStaticFunction(zen_Class_t* class0,
     const uint8_t* name, int32_t nameSize, const uint8_t* descriptor,
     int32_t descriptorSize) {
-    int32_t keySize;
-    uint8_t* key = jtk_CString_joinEx(name, nameSize, descriptor,
-        descriptorSize, &keySize);
-    zen_Function_t* function = jtk_HashMap_getValue(class0->m_functions, key);
-    jtk_CString_delete(key);
-
-    // TODO: Filter for static function.
-    return function;
+    zen_Function_t* result = NULL;
+    zen_Overload_t* overload = (zen_Overload_t*)jtk_HashMap_getValue(class0->m_overloads,
+        name);
+    while (overload != NULL) {
+        if (jtk_CString_equals(overload->m_function->m_descriptor,
+            overload->m_function->m_descriptorSize, descriptor,
+            descriptorSize)) {
+            result = overload->m_function;
+            break;
+        }
+        overload = overload->m_next;
+    }
+    return result;
 }
 
 zen_Function_t* zen_Class_getInstanceFunction(zen_Class_t* class0,
     const uint8_t* name, int32_t nameSize, const uint8_t* descriptor,
     int32_t descriptorSize) {
-    int32_t keySize;
-    uint8_t* key = jtk_CString_joinEx(name, nameSize, descriptor,
-        descriptorSize, &keySize);
-    zen_Function_t* function = jtk_HashMap_getValue(class0->m_functions, key);
-    jtk_CString_delete(key);
-
-    // TODO: Filter for instance function.
-    return function;
+    zen_Function_t* result = NULL;
+    zen_Overload_t* overload = (zen_Overload_t*)jtk_HashMap_getValue(class0->m_overloads,
+        name);
+    while (overload != NULL) {
+        if (jtk_CString_equals(overload->m_function->m_descriptor,
+            overload->m_function->m_descriptorSize, descriptor,
+            descriptorSize)) {
+            result = overload->m_function;
+            break;
+        }
+        overload = overload->m_next;
+    }
+    return result;
 }
 
 // Initialize
 
-void zen_Class_initialize(zen_Class_t* class0, zen_EntityFile_t* entityFile) {
+void zen_Class_initialize(zen_VirtualMachine_t* virtualMachine,
+    zen_Class_t* class0, zen_EntityFile_t* entityFile) {
     jtk_Assert_assertObject(class0, "The specified class is null.");
     jtk_Assert_assertObject(entityFile, "The specified entity file is null.");
 
@@ -151,6 +169,7 @@ void zen_Class_initialize(zen_Class_t* class0, zen_EntityFile_t* entityFile) {
     zen_ConstantPoolUtf8_t* descriptorEntry =
         (zen_ConstantPoolUtf8_t*)constantPool->m_entries[entity->m_reference];
     class0->m_descriptor = jtk_CString_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
+    class0->m_descriptorSize = descriptorEntry->m_length;
 
     int32_t i;
     int32_t fieldCount = entity->m_fieldCount;
@@ -206,11 +225,28 @@ void zen_Class_initialize(zen_Class_t* class0, zen_EntityFile_t* entityFile) {
     int32_t functionCount = entity->m_functionCount;
     for (j = 0; j < functionCount; j++) {
         zen_FunctionEntity_t* functionEntity = (zen_FunctionEntity_t*)entity->m_functions[j];
-        zen_Function_t* function = zen_Function_newFromFunctionEntity(class0, functionEntity);
+        zen_Function_t* function = zen_Function_new(virtualMachine,
+            class0, functionEntity);
 
         int32_t keySize;
         uint8_t* key = jtk_CString_joinEx(function->m_name, function->m_nameSize,
             function->m_descriptor, function->m_descriptorSize, &keySize);
         jtk_HashMap_put(class0->m_functions, key, function);
+
+        zen_Overload_t* newOverload = jtk_Memory_allocate(zen_Overload_t, 1);
+        newOverload->m_function = function;
+        
+        zen_Overload_t* overload = (zen_Overload_t*)jtk_HashMap_getValue(class0->m_overloads, function->m_name);
+        if (overload == NULL) {
+            newOverload->m_next = NULL;
+            jtk_HashMap_put(class0->m_overloads, function->m_name, newOverload);
+        }
+        else {
+            zen_Overload_t* temporary = overload->m_next;
+            overload->m_next = newOverload;
+            newOverload->m_next = temporary;
+        }
+
+        // TODO: Delete overloads!
     }
 }

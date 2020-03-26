@@ -29,11 +29,13 @@
 
 // Constructor
 
-zen_ClassLoader_t* zen_ClassLoader_new(zen_EntityLoader_t* entityLoader) {
+zen_ClassLoader_t* zen_ClassLoader_new(zen_VirtualMachine_t* virtualMachine,
+    zen_EntityLoader_t* entityLoader) {
     jtk_ObjectAdapter_t* stringObjectAdapter = jtk_CStringObjectAdapter_getInstance();
 
     zen_ClassLoader_t* classLoader = jtk_Memory_allocate(zen_ClassLoader_t, 1);
     classLoader->m_entityLoader = entityLoader;
+    classLoader->m_virtualMachine = virtualMachine;
     classLoader->m_classes = jtk_HashMap_newEx(stringObjectAdapter, NULL,
         ZEN_CLASS_LOADER_DEFAULT_CLASSES_MAP_CAPCITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
 
@@ -95,7 +97,8 @@ zen_Class_t* zen_ClassLoader_loadFromEntityFile(zen_ClassLoader_t* classLoader,
     jtk_Assert_assertObject(descriptor, "The specified class descriptor is null.");
     jtk_Assert_assertObject(entityFile, "The specified entity file is null.");
 
-    zen_Class_t* class0 = zen_Class_new(entityFile);
+    zen_Class_t* class0 = zen_Class_new(classLoader->m_virtualMachine,
+        entityFile);
     uint8_t* descriptorCopy = jtk_CString_newEx(descriptor, descriptorSize);
     jtk_HashMap_put(classLoader->m_classes, descriptorCopy, class0);
 

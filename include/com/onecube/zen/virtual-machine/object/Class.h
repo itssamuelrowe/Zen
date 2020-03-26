@@ -26,9 +26,19 @@
 #include <com/onecube/zen/virtual-machine/object/Function.h>
 #include <com/onecube/zen/virtual-machine/object/Field.h>
 
+struct zen_VirtualMachine_t;
+typedef struct zen_VirtualMachine_t zen_VirtualMachine_t;
+
 /*******************************************************************************
  * Class                                                                       *
  *******************************************************************************/
+
+typedef struct zen_Overload_t zen_Overload_t;
+
+struct zen_Overload_t {
+    zen_Function_t* m_function;
+    zen_Overload_t* m_next;
+};
 
 /**
  * @class Class
@@ -39,6 +49,7 @@
 struct zen_Class_t {
     zen_EntityFile_t* m_entityFile;
     jtk_HashMap_t* m_functions;
+    jtk_HashMap_t* m_overloads;
     jtk_HashMap_t* m_fields;
     uint8_t* m_descriptor;
     int32_t m_descriptorSize;
@@ -55,7 +66,8 @@ typedef struct zen_Class_t zen_Class_t;
 /**
  * @memberof Class
  */
-zen_Class_t* zen_Class_new(zen_EntityFile_t* entityFile);
+zen_Class_t* zen_Class_new(zen_VirtualMachine_t* virtualMachine,
+    zen_EntityFile_t* entityFile);
 
 // Destructor
 
@@ -84,6 +96,6 @@ zen_Function_t* zen_Class_getInstanceFunction(zen_Class_t* class0,
 
 // Initialize
 
-void zen_Class_initialize(zen_Class_t* class0, zen_EntityFile_t* entityFile);
+void zen_Class_initialize(zen_VirtualMachine_t* virtualMachine, zen_Class_t* class0, zen_EntityFile_t* entityFile);
 
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_OBJECT_CLASS_H */
