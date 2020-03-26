@@ -25,17 +25,20 @@
 
 // Constructor
 
-zen_Field_t* zen_Field_newFromFieldEntity(zen_Class_t* class0,
-    zen_FieldEntity_t* fieldEntity, int32_t offset) {
+zen_Field_t* zen_Field_new(zen_Class_t* class0,
+    zen_FieldEntity_t* entity, int32_t offset) {
     zen_ConstantPool_t* constantPool = &class0->m_entityFile->m_constantPool;
-    zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[fieldEntity->m_nameIndex];
-    zen_ConstantPoolUtf8_t* descriptorEntry = constantPool->m_entries[fieldEntity->m_descriptorIndex];
+    zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[entity->m_nameIndex];
+    zen_ConstantPoolUtf8_t* descriptorEntry = constantPool->m_entries[entity->m_descriptorIndex];
 
     zen_Field_t* field = jtk_Memory_allocate(zen_Field_t, 1);
-    field->m_name = jtk_String_newEx(nameEntry->m_bytes, nameEntry->m_length);
-    field->m_descriptor = jtk_String_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
+    field->m_name = jtk_CString_newEx(nameEntry->m_bytes, nameEntry->m_length);
+    field->m_nameSize = nameEntry->m_length;
+    field->m_descriptor = jtk_CString_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
+    field->m_descriptorSize = descriptorEntry->m_length;
     field->m_class = class0;
     field->m_offset = offset;
+    field->m_entity = entity;
 
     return field;
 }
@@ -43,26 +46,8 @@ zen_Field_t* zen_Field_newFromFieldEntity(zen_Class_t* class0,
 // Destructor
 
 void zen_Field_delete(zen_Field_t* field) {
-    jtk_String_delete(field->m_name);
-    jtk_String_delete(field->m_descriptor);
+    jtk_CString_delete(field->m_name);
+    jtk_CString_delete(field->m_descriptor);
     jtk_Memory_deallocate(field);
 
-}
-
-// Class
-
-zen_Class_t* zen_Field_getClass(zen_Field_t* field) {
-    return field->m_class;
-}
-
-// Descriptor
-
-jtk_String_t* zen_Field_getDescriptor(zen_Field_t* field) {
-    return field->m_descriptor;
-}
-
-// Name
-
-jtk_String_t* zen_Field_getName(zen_Field_t* field) {
-    return field->m_name;
 }
