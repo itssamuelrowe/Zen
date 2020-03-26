@@ -20,7 +20,7 @@
 #include <jtk/core/VariableArguments.h>
 #include <jtk/core/CString.h>
 #include <jtk/core/StringBuilder.h>
-#include <jtk/core/StringObjectAdapter.h>
+#include <jtk/core/CStringObjectAdapter.h>
 #include <jtk/log/ConsoleLogger.h>
 
 #include <com/onecube/zen/virtual-machine/ExceptionManager.h>
@@ -55,7 +55,7 @@
 
 zen_Class_t* zen_Object_getClass(zen_Object_t* object);
 bool zen_VirtualMachine_isInstance(zen_VirtualMachine_t* virtualMachine,
-    zen_Object_t* object, jtk_String_t* classDescriptor);
+    zen_Object_t* object, const uint8_t* classDescriptor, int32_t classDescriptorSize);
 int32_t zen_VirtualMachine_getStringSize(zen_VirtualMachine_t* virtualMachine, zen_Object_t* string);
 uint8_t* zen_VirtualMachine_getStringBytes(zen_VirtualMachine_t* virtualMachine, zen_Object_t* string);
 
@@ -83,21 +83,20 @@ zen_Class_t* zen_Object_getClass(zen_Object_t* object) {
 }
 
 bool zen_VirtualMachine_isInstance(zen_VirtualMachine_t* virtualMachine,
-    zen_Object_t* object, jtk_String_t* classDescriptor) {
-    zen_Class_t* class0 = zen_VirtualMachine_getClass(virtualMachine, classDescriptor);
+    zen_Object_t* object, const uint8_t* classDescriptor,
+    int32_t classDescriptorSize) {
+    zen_Class_t* class0 = zen_VirtualMachine_getClass(virtualMachine,
+        classDescriptor, classDescriptorSize);
     zen_Class_t** classField = ((uint8_t*)object + ZEN_OBJECT_HEADER_CLASS_OFFSET);
     return *classField == class0;
 }
 
 void zen_print(zen_VirtualMachine_t* virtualMachine, zen_Object_t* self,
     jtk_Array_t* arguments) {
-    jtk_String_t* stringDescriptor = jtk_String_newEx("zen/core/String", 15);
-    jtk_String_t* integerDescriptor = jtk_String_newEx("zen/core/Integer", 16);
-    jtk_String_t* booleanDescriptor = jtk_String_newEx("zen/core/Boolean", 16);
-
+    
     zen_Object_t* argument = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
 
-    if (zen_VirtualMachine_isInstance(virtualMachine, argument, stringDescriptor)) {
+    if (zen_VirtualMachine_isInstance(virtualMachine, argument, "zen/core/String", 15)) {
         zen_Object_t* format = argument;
         zen_Object_t* array = zen_VirtualMachine_getObjectField(virtualMachine,
             format, "value", 5);
@@ -108,13 +107,13 @@ void zen_print(zen_VirtualMachine_t* virtualMachine, zen_Object_t* self,
         fwrite(values, 1, size, stdout);
         puts("");
     }
-    else if (zen_VirtualMachine_isInstance(virtualMachine, argument, integerDescriptor)) {
+    else if (zen_VirtualMachine_isInstance(virtualMachine, argument, "zen/core/Integer", 16)) {
         zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
         int64_t value0 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
             value, "value", 5);
         printf("%ld ", value0);
     }
-    else if (zen_VirtualMachine_isInstance(virtualMachine, argument, booleanDescriptor)) {
+    else if (zen_VirtualMachine_isInstance(virtualMachine, argument, "zen/core/Boolean", 16)) {
         zen_Object_t* value = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
         int64_t value0 = (int64_t)zen_VirtualMachine_getObjectField(virtualMachine,
             value, "value", 5);
@@ -422,11 +421,13 @@ zen_Object_t* zen_String_add(zen_VirtualMachine_t* virtualMachine,
     int32_t operand1Size = zen_VirtualMachine_getStringSize(virtualMachine, operand1);
     int32_t operand2Size = zen_VirtualMachine_getStringSize(virtualMachine, operand2);
 
-    jtk_String_t* string = jtk_String_newFromJoinEx(operand1Bytes, operand1Size,
-        operand2Bytes, operand2Size);
-    // printf("%.*s\n", string->m_size, string->m_value);
-    zen_Object_t* result = zen_VirtualMachine_newStringFromUtf8(virtualMachine, string->m_value, string->m_size);
-    jtk_String_delete(string);
+    // TODO: Implement a better algorithm.
+
+    int32_t resultSize;
+    uint8_t* string = jtk_CString_joinEx(operand1Bytes, operand1Size,
+        operand2Bytes, operand2Size, &resultSize);
+    zen_Object_t* result = zen_VirtualMachine_newStringFromUtf8(virtualMachine, string, resultSize);
+    jtk_CString_delete(string);
 
     return result;
 }
@@ -502,17 +503,22 @@ uint8_t* zen_VirtualMachine_getStringBytes(zen_VirtualMachine_t* virtualMachine,
     return bytes;
 }
 
-jtk_String_t* zen_ByteArray_toJTKString(zen_VirtualMachine_t* virtualMachine,
-    zen_Object_t* array) {
+uint8_t* zen_ByteArray_toCString(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* array, int32_t* resultSize) {
     uint8_t* bytes = zen_VirtualMachine_getObjectField(virtualMachine, array, "values", 6);
     int32_t size = (int32_t)zen_VirtualMachine_getObjectField(virtualMachine, array, "size", 4);
-    return jtk_String_newEx(bytes, size);
+
+    if (resultSize != NULL) {
+        *resultSize = size;
+    }
+
+    return jtk_CString_newEx(bytes, size);
 }
 
-jtk_String_t* zen_String_toJTKString(zen_VirtualMachine_t* virtualMachine,
-    zen_Object_t* string) {
+uint8_t* zen_String_toCString(zen_VirtualMachine_t* virtualMachine,
+    zen_Object_t* string, int32_t* resultSize) {
     zen_Object_t* value = zen_VirtualMachine_getObjectField(virtualMachine, string, "value", 5);
-    return zen_ByteArray_toJTKString(virtualMachine, value);
+    return zen_ByteArray_toCString(virtualMachine, value, resultSize);
 }
 
 zen_Object_t* zen_ZenKernel_invoke(zen_VirtualMachine_t* virtualMachine,
@@ -520,16 +526,15 @@ zen_Object_t* zen_ZenKernel_invoke(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* object = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* name = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     
-    jtk_String_t* descriptor = jtk_String_newEx("(zen/core/Object):v", 19);
-    jtk_String_t* name0 = zen_String_toJTKString(virtualMachine, name);
+    int32_t nameSize;
+    uint8_t* name0 = zen_String_toCString(virtualMachine, name, &nameSize);
 
     zen_Class_t* targetClass = zen_Object_getClass(object);
     // TODO: Change getStaticFunction() to getVirtualFunction()
     zen_Function_t* function = zen_VirtualMachine_getStaticFunction(virtualMachine,
-        targetClass, name0, descriptor);
+        targetClass, name0, nameSize, "(zen/core/Object):v", 19);
 
     jtk_String_delete(name0);
-    jtk_String_delete(descriptor);
 
     return zen_Interpreter_invokeVirtualFunction(virtualMachine->m_interpreter, function, object, NULL);
 }
@@ -548,12 +553,15 @@ zen_Object_t* zen_ZenKernel_invokeEx(zen_VirtualMachine_t* virtualMachine,
         jtk_StringBuilder_appendEx_z(builder, "(zen/core/Object)", 17);
     }
 
-    jtk_String_t* targetFunctionDescriptor = jtk_StringBuilder_toString(builder);
+    int32_t targetFunctionDescriptorSize;
+    uint8_t* targetFunctionDescriptor = jtk_StringBuilder_toCString(builder, &targetFunctionDescriptorSize);
     zen_Class_t* targetClass = zen_Object_getClass(object);
-    jtk_String_t* targetFunctionName0 = zen_String_toJTKString(virtualMachine, targetFunctionName);
+    int32_t targetFunctionName0Size;
+    uint8_t* targetFunctionName0 = zen_String_toCString(virtualMachine, targetFunctionName, &targetFunctionName0Size);
 
     zen_Function_t* targetFunction = zen_VirtualMachine_getStaticFunction(virtualMachine,
-        targetClass, targetFunctionName0, targetFunctionDescriptor);
+        targetClass, targetFunctionName0, targetFunctionName0Size, targetFunctionDescriptor,
+        targetFunctionDescriptorSize);
 
     jtk_String_delete(targetFunctionName0);
     jtk_String_delete(targetFunctionDescriptor);
@@ -575,18 +583,22 @@ zen_Object_t* zen_ZenKernel_invokeStaticEx(zen_VirtualMachine_t* virtualMachine,
         jtk_StringBuilder_appendEx_z(builder, "(zen/core/Object)", 17);
     }
 
-    jtk_String_t* targetFunctionDescriptor = jtk_StringBuilder_toString(builder);
-    jtk_String_t* entity0 = zen_String_toJTKString(virtualMachine, entity);
-    jtk_String_t* targetFunctionName0 = zen_String_toJTKString(virtualMachine, targetFunctionName);
+    int32_t targetFunctionDescriptorSize;
+    uint8_t* targetFunctionDescriptor = jtk_StringBuilder_toCString(builder, &targetFunctionDescriptorSize);
+    int32_t entity0Size;
+    uint8_t* entity0 = zen_String_toCString(virtualMachine, entity, &entity0Size);
+    int32_t targetFunctionName0Size;
+    uint8_t* targetFunctionName0 = zen_String_toCString(virtualMachine, targetFunctionName, &targetFunctionName0Size);
 
     zen_Class_t* targetClass = zen_VirtualMachine_getClass(virtualMachine,
-        entity0);
+        entity0, entity0Size);
     zen_Function_t* targetFunction = zen_VirtualMachine_getStaticFunction(virtualMachine,
-        targetClass, targetFunctionName0, targetFunctionDescriptor);
+        targetClass, targetFunctionName0, targetFunctionName0Size,
+        targetFunctionDescriptor, targetFunctionDescriptorSize);
 
-    jtk_String_delete(targetFunctionName0);
-    jtk_String_delete(entity0);
-    jtk_String_delete(targetFunctionDescriptor);
+    jtk_CString_delete(targetFunctionName0);
+    jtk_CString_delete(entity0);
+    jtk_CString_delete(targetFunctionDescriptor);
 
     return zen_Interpreter_invokeStaticFunction(virtualMachine->m_interpreter, targetFunction,
         targetArguments);
@@ -597,18 +609,19 @@ zen_Object_t* zen_ZenKernel_invokeStatic(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* entity = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* targetFunctionName = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     
-    jtk_String_t* targetFunctionDescriptor = jtk_String_newEx("(zen/core/Object):v", 19);
-    jtk_String_t* entity0 = zen_String_toJTKString(virtualMachine, entity);
-    jtk_String_t* targetFunctionName0 = zen_String_toJTKString(virtualMachine, targetFunctionName);
+    int32_t entity0Size;
+    uint8_t* entity0 = zen_String_toCString(virtualMachine, entity, &entity0Size);
+    int32_t targetFunctionName0Size;
+    uint8_t* targetFunctionName0 = zen_String_toCString(virtualMachine, targetFunctionName, &targetFunctionName0Size);
 
     zen_Class_t* targetClass = zen_VirtualMachine_getClass(virtualMachine,
-        entity0);
+        entity0, entity0Size);
     zen_Function_t* targetFunction = zen_VirtualMachine_getStaticFunction(virtualMachine,
-        targetClass, targetFunctionName0, targetFunctionDescriptor);
+        targetClass, targetFunctionName0, targetFunctionName0Size,
+        "(zen/core/Object):v", 19);
 
-    jtk_String_delete(targetFunctionName0);
-    jtk_String_delete(entity0);
-    jtk_String_delete(targetFunctionDescriptor);
+    jtk_CString_delete(targetFunctionName0);
+    jtk_CString_delete(entity0);
 
     return zen_Interpreter_invokeStaticFunction(virtualMachine->m_interpreter, targetFunction,
         NULL);
@@ -628,43 +641,50 @@ zen_Object_t* zen_ZenKernel_evaluate(zen_VirtualMachine_t* virtualMachine,
     int32_t symbolSize = zen_VirtualMachine_getStringSize(virtualMachine, symbol);
     zen_Class_t* targetClass = zen_Object_getClass(operand1);
 
-    jtk_String_t* targetFunctionName = NULL;
-    jtk_String_t* targetFunctionSignature = jtk_String_newEx("(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52);
+    int32_t targetFunctionNameSize = -1;
+    uint8_t* targetFunctionName = NULL;
 
     switch (symbolSize) {
         case 1: {
             switch (symbolBytes[0]) {
                 case '+': {
-                    targetFunctionName = jtk_String_newEx("add", 3);
+                    targetFunctionName = "add";
+                    targetFunctionNameSize = 3;
                     break;
                 }
                 case '-': {
-                    targetFunctionName = jtk_String_newEx("subtract", 8);
+                    targetFunctionName = "subtract";
+                    targetFunctionNameSize = 8;
                     break;
                 }
             
                 case '*': {
-                    targetFunctionName = jtk_String_newEx("multiply", 8);
+                    targetFunctionName = "multiply";
+                    targetFunctionNameSize = 8;
                     break;
                 }
             
                 case '/': {
-                    targetFunctionName = jtk_String_newEx("divide", 6);
+                    targetFunctionName = "divide";
+                    targetFunctionNameSize = 6;
                     break;
                 }
                 
                 case '%': {
-                    targetFunctionName = jtk_String_newEx("remainder", 9);
+                    targetFunctionName = "remainder";
+                    targetFunctionNameSize = 9;
                     break;
                 }
 
                 case '>': {
-                    targetFunctionName = jtk_String_newEx("greater", 7);
+                    targetFunctionName = "greater";
+                    targetFunctionNameSize = 7;
                     break;
                 }
 
                 case '<': {
-                    targetFunctionName = jtk_String_newEx("lesser", 6);
+                    targetFunctionName = "lesser";
+                    targetFunctionNameSize = 6;
                     break;
                 }
             }
@@ -673,16 +693,20 @@ zen_Object_t* zen_ZenKernel_evaluate(zen_VirtualMachine_t* virtualMachine,
 
         case 2: {
             if (jtk_CString_equals(symbolBytes, 2, "==", 2)) {
-                targetFunctionName = jtk_String_newEx("equals", 6);
+                targetFunctionName = "equals";
+                targetFunctionNameSize = 6;
             }
             else if (jtk_CString_equals(symbolBytes, 2, "!=", 2)) {
-                targetFunctionName = jtk_String_newEx("notEquals", 9);
+                targetFunctionName = "notEquals";
+                targetFunctionNameSize = 9;
             }
             else if (jtk_CString_equals(symbolBytes, 2, ">=", 2)) {
-                targetFunctionName = jtk_String_newEx("greaterOrEqual", 14);
+                targetFunctionName = "greaterOrEqual";
+                targetFunctionNameSize = 14;
             }
             else if (jtk_CString_equals(symbolBytes, 2, "<=", 2)) {
-                targetFunctionName = jtk_String_newEx("lesserOrEqual", 13);
+                targetFunctionName = "lesserOrEqual";
+                targetFunctionNameSize = 13;
             }
             
             break;
@@ -691,7 +715,9 @@ zen_Object_t* zen_ZenKernel_evaluate(zen_VirtualMachine_t* virtualMachine,
 
     void* result = NULL;
     if (targetFunctionName != NULL) {
-        zen_Function_t* targetFunction = zen_VirtualMachine_getStaticFunction(virtualMachine, targetClass, targetFunctionName, targetFunctionSignature);
+        zen_Function_t* targetFunction = zen_VirtualMachine_getStaticFunction(virtualMachine,
+            targetClass, targetFunctionName, targetFunctionNameSize,
+            "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52);
 
         /* NOTE: The arguments received by the evaluate() function are forwarded to the
          * target function as is, assuming that the target function uses only the
@@ -699,9 +725,6 @@ zen_Object_t* zen_ZenKernel_evaluate(zen_VirtualMachine_t* virtualMachine,
          */
         result = zen_Interpreter_invokeStaticFunction(virtualMachine->m_interpreter, targetFunction,
             arguments);
-
-        jtk_String_delete(targetFunctionSignature);
-        jtk_String_delete(targetFunctionName);
     }
     else {
         printf("[error] An exception was thrown.\n"
@@ -719,9 +742,10 @@ zen_Object_t* zen_ZenKernel_storeField(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* self = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
     zen_Object_t* name = (zen_Object_t*)jtk_Array_getValue(arguments, 2);
 
-    jtk_String_t* name0 = zen_String_toJTKString(virtualMachine, name);
-    zen_VirtualMachine_setObjectField(virtualMachine, self, name0->m_value, name0->m_size, value);
-    jtk_String_delete(name0);
+    int32_t name0Size;
+    uint8_t* name0 = zen_CString_toJTKString(virtualMachine, name, &name0Size);
+    zen_VirtualMachine_setObjectField(virtualMachine, self, name0, name0Size, value);
+    jtk_CString_delete(name0);
 
     return value;
 }
@@ -731,10 +755,11 @@ zen_Object_t* zen_ZenKernel_loadField(zen_VirtualMachine_t* virtualMachine,
     zen_Object_t* self = (zen_Object_t*)jtk_Array_getValue(arguments, 0);
     zen_Object_t* name = (zen_Object_t*)jtk_Array_getValue(arguments, 1);
 
-    jtk_String_t* name0 = zen_String_toJTKString(virtualMachine, name);
+    int32_t name0Size;
+    uint8_t* name0 = zen_CString_toJTKString(virtualMachine, name, &name0Size);
     zen_Object_t* result = zen_VirtualMachine_getObjectField(virtualMachine,
-        self, name0->m_value, name0->m_size);
-    jtk_String_delete(name0);
+        self, name0, name0Size);
+    jtk_CString_delete(name0);
 
     return result;
 }
@@ -748,7 +773,7 @@ zen_Object_t* zen_ZenKernel_loadField(zen_VirtualMachine_t* virtualMachine,
 zen_VirtualMachine_t* zen_VirtualMachine_new(zen_VirtualMachineConfiguration_t* configuration) {
     jtk_Assert_assertObject(configuration, "The specified virtual machine configuration is null.");
 
-    jtk_ObjectAdapter_t* stringObjectAdapter = jtk_StringObjectAdapter_getInstance();
+    jtk_ObjectAdapter_t* stringObjectAdapter = jtk_CStringObjectAdapter_getInstance();
     jtk_Iterator_t* entityDirectoryIterator = jtk_ArrayList_getIterator(configuration->m_entityDirectories);
 
     zen_VirtualMachine_t* virtualMachine = zen_Memory_allocate(zen_VirtualMachine_t, 1);
@@ -850,12 +875,12 @@ zen_Object_t* zen_VirtualMachine_newBoolean(zen_VirtualMachine_t* virtualMachine
 // Class
 
 zen_Class_t* zen_VirtualMachine_getClass(zen_VirtualMachine_t* virtualMachine,
-    jtk_String_t* descriptor) {
+    const uint8_t* descriptor, int32_t descriptorSize) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
     jtk_Assert_assertObject(descriptor, "The specified class descriptor is null.");
 
     zen_Class_t* class0 = zen_ClassLoader_findClass(
-        virtualMachine->m_classLoader, descriptor);
+        virtualMachine->m_classLoader, descriptor, descriptorSize);
 
     if (class0 == NULL) {
         zen_VirtualMachine_raiseClassNotFoundException(virtualMachine, descriptor);
@@ -1178,10 +1203,10 @@ void zen_VirtualMachine_unloadLibraries(zen_VirtualMachine_t* virtualMachine) {
     jtk_Iterator_t* entryIterator = jtk_HashMap_getEntryIterator(virtualMachine->m_nativeFunctions);
     while (jtk_Iterator_hasNext(entryIterator)) {
         jtk_HashMapEntry_t* entry = (jtk_HashMapEntry_t*)jtk_Iterator_getNext(entryIterator);
-        jtk_String_t* key = (jtk_String_t*)jtk_HashMapEntry_getKey(entry);
+        uint8_t* key = (uint8_t*)jtk_HashMapEntry_getKey(entry);
         zen_NativeFunction_t* value = (zen_NativeFunction_t*)jtk_HashMapEntry_getValue(entry);
 
-        jtk_String_delete(key);
+        jtk_CString_delete(key);
         zen_NativeFunction_delete(value);
     }
 }
@@ -1189,27 +1214,30 @@ void zen_VirtualMachine_unloadLibraries(zen_VirtualMachine_t* virtualMachine) {
 // Native Function
 
 zen_NativeFunction_t* zen_VirtualMachine_getNativeFunction(
-    zen_VirtualMachine_t* virtualMachine, jtk_String_t* className,
-    jtk_String_t* functionName, jtk_String_t* functionDescriptor) {
+    zen_VirtualMachine_t* virtualMachine,
+    const uint8_t* className, int32_t classNameSize,
+    const uint8_t* functionName, int32_t functionNameSize,
+    const uint8_t* functionDescriptor, int32_t functionDescriptorSize) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
     jtk_Assert_assertObject(className, "The specified class name is null.");
     jtk_Assert_assertObject(functionName, "The specified function name is null.");
     jtk_Assert_assertObject(functionDescriptor, "The specified function descriptor is null.");
 
     const uint8_t* strings[] = {
-        className->m_value,
-        functionName->m_value,
-        functionDescriptor->m_value
+        className,
+        functionName,
+        functionDescriptor
     };
     int32_t sizes[] = {
-        className->m_size,
-        functionName->m_size,
-        functionDescriptor->m_size
+        classNameSize,
+        functionNameSize,
+        functionDescriptorSize
     };
-    jtk_String_t* key = jtk_String_fromJoin(strings, sizes, 3);
+    int32_t keySize;
+    uint8_t* key = jtk_CString_joinAll(strings, sizes, 3, &keySize);
     zen_NativeFunction_t* result = (zen_NativeFunction_t*)jtk_HashMap_getValue(
         virtualMachine->m_nativeFunctions, key);
-    jtk_String_delete(key);
+    jtk_CString_delete(key);
 
     return result;
 }
@@ -1238,7 +1266,8 @@ zen_NativeFunction_t* zen_VirtualMachine_registerNativeFunction(
         functionNameSize,
         functionDescriptorSize
     };
-    jtk_String_t* key = jtk_String_fromJoin(strings, sizes, 3);
+    int32_t keySize;
+    uint8_t* key = jtk_String_joinAll(strings, sizes, 3, &keySize);
     jtk_HashMap_put(virtualMachine->m_nativeFunctions, key, nativeFunction);
 
     return nativeFunction;
@@ -1306,14 +1335,13 @@ zen_Object_t* zen_VirtualMachine_newObjectEx(zen_VirtualMachine_t* virtualMachin
     jtk_Assert_assertObject(classDescriptor, "The specified class descriptor is null.");
     jtk_Assert_assertObject(constructorDescriptor, "The specified constructor descriptor is null.");
 
-    jtk_String_t* classDescriptor0 = jtk_String_newEx(classDescriptor, classDescriptorSize);
-    zen_Class_t* class0 = zen_VirtualMachine_getClass(virtualMachine, classDescriptor0);
-    jtk_String_delete(classDescriptor0);
+    zen_Class_t* class0 = zen_VirtualMachine_getClass(virtualMachine, classDescriptor,
+        classDescriptorSize);
 
     zen_Object_t* result = NULL;
     if (zen_VirtualMachine_isClear(virtualMachine)) {
-        jtk_String_t* constructorDescriptor0 = jtk_String_newEx(constructorDescriptor, constructorDescriptorSize);
-        zen_Function_t* constructor = zen_Class_getConstructor(class0, constructorDescriptor0);
+        zen_Function_t* constructor = zen_Class_getConstructor(class0,
+            constructorDescriptor, constructorDescriptorSize);
         if (zen_VirtualMachine_isClear(virtualMachine)) {
             result = zen_VirtualMachine_makeObjectEx(virtualMachine, constructor, arguments);
         }
@@ -1417,16 +1445,20 @@ void zen_VirtualMachine_raiseFunctionNotFoundException(zen_VirtualMachine_t* vir
 
 // Static Function
 
-zen_Function_t* zen_VirtualMachine_getStaticFunction(zen_VirtualMachine_t* virtualMachine,
-    zen_Class_t* handle, jtk_String_t* identifier, jtk_String_t* signature) {
+zen_Function_t* zen_VirtualMachine_getStaticFunction(
+    zen_VirtualMachine_t* virtualMachine, zen_Class_t* handle,
+    const uint8_t* identifier, int32_t identifierSize,
+    const uint8_t* descriptor, int32_t descriptorSize) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
     jtk_Assert_assertObject(handle, "The specified class is null.");
     jtk_Assert_assertObject(identifier, "The specified identifier is null.");
-    jtk_Assert_assertObject(signature, "The specified signature is null.");
+    jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
 
-    zen_Function_t* function = zen_Class_getStaticFunction(handle, identifier, signature);
+    zen_Function_t* function = zen_Class_getStaticFunction(handle, identifier,
+        identifierSize, descriptor, descriptorSize);
     if (function == NULL) {
-        zen_VirtualMachine_raiseFunctionNotFoundException(virtualMachine, identifier, signature);
+        zen_VirtualMachine_raiseFunctionNotFoundException(virtualMachine,
+            identifier, descriptor);
     }
     return function;
 }

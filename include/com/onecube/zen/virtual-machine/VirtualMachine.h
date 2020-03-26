@@ -104,8 +104,10 @@ zen_Object_t* zen_VirtualMachine_newBoolean(zen_VirtualMachine_t* virtualMachine
 
 // Class
 
-zen_Class_t* zen_VirtualMachine_getClass(zen_VirtualMachine_t* context, jtk_String_t* descriptor);
-zen_Class_t* zen_VirtualMachine_getClassEx(zen_VirtualMachine_t* context, const uint8_t* descriptor, int32_t size);
+zen_Class_t* zen_VirtualMachine_getClass(zen_VirtualMachine_t* context, const uint8_t* descriptor,
+    int32_t descriptorSize);
+zen_Class_t* zen_VirtualMachine_getClassEx(zen_VirtualMachine_t* context,
+    const uint8_t* descriptor, int32_t descriptorSize);
 
 /* Clear */
 
@@ -145,8 +147,10 @@ zen_NativeFunction_t* zen_VirtualMachine_registerNativeFunction(
     zen_NativeFunction_InvokeFunction_t function);
 
 zen_NativeFunction_t* zen_VirtualMachine_getNativeFunction(
-    zen_VirtualMachine_t* virtualMachine, jtk_String_t* className,
-    jtk_String_t* functionName, jtk_String_t* functionDescriptor);
+    zen_VirtualMachine_t* virtualMachine, const uint8_t* className,
+    int32_t classNameSize, const uint8_t* functionName,
+    int32_t functionNameSize, const uint8_t* functionDescriptor,
+    int32_t functionDescriptorSize);
 
 // Object
 
@@ -197,7 +201,8 @@ void zen_VirtualMachine_tearDown(zen_VirtualMachine_t* virtualMachine);
 // Static Function
 
 zen_Function_t* zen_VirtualMachine_getStaticFunction(zen_VirtualMachine_t* virtualMachine,
-    zen_Class_t* handle, jtk_String_t* identifier, jtk_String_t* signature);
+    zen_Class_t* handle, const uint8_t* identifier, int32_t identifierSize,
+    const uint8_t* descriptor, int32_t descriptorSize);
 
 // String
 
