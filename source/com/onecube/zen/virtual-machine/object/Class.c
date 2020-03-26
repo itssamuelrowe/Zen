@@ -38,7 +38,7 @@ jtk_String_t* jtk_String_append(jtk_String_t* string1, jtk_String_t* string2) {
 
 // Constructor
 
-zen_Class_t* zen_Class_newFromEntityFile(zen_EntityFile_t* entityFile) {
+zen_Class_t* zen_Class_new(zen_EntityFile_t* entityFile) {
     jtk_ObjectAdapter_t* stringObjectAdapter = jtk_CStringObjectAdapter_getInstance();
 
     zen_Class_t* class0 = jtk_Memory_allocate(zen_Class_t, 1);

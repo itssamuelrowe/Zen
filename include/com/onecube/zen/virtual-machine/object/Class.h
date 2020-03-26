@@ -40,7 +40,8 @@ struct zen_Class_t {
     zen_EntityFile_t* m_entityFile;
     jtk_HashMap_t* m_functions;
     jtk_HashMap_t* m_fields;
-    jtk_String_t* m_descriptor;
+    uint8_t* m_descriptor;
+    int32_t m_descriptorSize;
     uint32_t m_memoryRequirement;
 };
 
@@ -54,7 +55,7 @@ typedef struct zen_Class_t zen_Class_t;
 /**
  * @memberof Class
  */
-zen_Class_t* zen_Class_newFromEntityFile(zen_EntityFile_t* entityFile);
+zen_Class_t* zen_Class_new(zen_EntityFile_t* entityFile);
 
 // Destructor
 
@@ -62,10 +63,6 @@ zen_Class_t* zen_Class_newFromEntityFile(zen_EntityFile_t* entityFile);
  * @memberof Class
  */
 void zen_Class_delete(zen_Class_t* class0);
-
-// Entity File
-
-zen_EntityFile_t* zen_Class_getEntityFile(zen_Class_t* class0);
 
 // Field Index
 
@@ -75,13 +72,15 @@ int32_t zen_Class_findFieldOffset(zen_Class_t* class0, const uint8_t* name,
 // Function
 
 zen_Function_t* zen_Class_getConstructor(zen_Class_t* class0,
-    jtk_String_t* descriptor);
+    const uint8_t* descriptor, int32_t descriptorSize);
 
-zen_Function_t* zen_Class_getStaticFunction(zen_Class_t* class0, jtk_String_t* name,
-    jtk_String_t* descriptor);
+zen_Function_t* zen_Class_getStaticFunction(zen_Class_t* class0,
+    const uint8_t* name, int32_t nameSize,
+    const uint8_t* descriptor, int32_t descriptorSize);
 
-zen_Function_t* zen_Class_getInstanceFunction(zen_Class_t* class0, jtk_String_t* name,
-    jtk_String_t* descriptor);
+zen_Function_t* zen_Class_getInstanceFunction(zen_Class_t* class0,
+    const uint8_t* name, int32_t nameSize,
+    const uint8_t* descriptor, int32_t descriptorSize);
 
 // Initialize
 

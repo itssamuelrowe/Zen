@@ -94,7 +94,7 @@ zen_Class_t* zen_ClassLoader_loadFromEntityFile(zen_ClassLoader_t* classLoader,
     jtk_Assert_assertObject(descriptor, "The specified class descriptor is null.");
     jtk_Assert_assertObject(entityFile, "The specified entity file is null.");
 
-    zen_Class_t* class0 = zen_Class_newFromEntityFile(entityFile);
+    zen_Class_t* class0 = zen_Class_new(entityFile);
     uint8_t* descriptorCopy = jtk_CString_newEx(descriptor, descriptorSize);
     jtk_HashMap_put(classLoader->m_classes, descriptorCopy, class0);
 
