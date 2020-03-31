@@ -1516,7 +1516,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
                 zen_Function_t* constructor = zen_Class_getConstructor(targetClass,
                     descriptorEntry->m_bytes, descriptorEntry->m_length);
-                
+
                 if (constructor != NULL) {
                     jtk_Array_t* arguments = NULL;
                     int32_t parameterCount = constructor->m_parameterCount;
@@ -1547,7 +1547,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Log debugging information for assistance in debugging the interpreter. */
                 jtk_Logger_debug(logger, "Executed instruction `invoke_special` (index = %d, operand stack = %d)",
                     index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
-                
+
                 break;
             }
 
@@ -1649,9 +1649,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                             jtk_Array_setValue(arguments, parameterIndex, argument);
                         }
                     }
-                    
+
                     zen_Interpreter_invokeStaticFunction(interpreter, function, arguments);
-                    
+
                     if (arguments != NULL) {
                         jtk_Array_delete(arguments);
                     }
@@ -1662,7 +1662,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         "[error] UnknownFunctionException: Cannot resolve function '%s' with signature '%s'.\n",
                         nameEntry->m_bytes, descriptorEntry->m_bytes);
                 }
-                
+
                 if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
                     /* Log debugging information for assistance in debugging the interpreter. */
                     jtk_Logger_debug(logger, "Executed instruction `invoke_static` (index = %d, operand stack = %d)",
@@ -2236,7 +2236,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
                         jtk_Logger_debug(logger, "Executed instruction `load_cpr` (index = %d, result = '%.*s', operand stack = %d)",
                             index, constantPoolUtf8->m_length, constantPoolUtf8->m_bytes, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
-                        
+
                         jtk_Logger_debug(logger, "String object at 0x%X, array object at 0x%x", value, array);
 
                         break;
@@ -2472,7 +2472,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_ConstantPoolClass_t* classEntry =
                     (zen_ConstantPoolClass_t*)constantPool->m_entries[index];
                 zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[classEntry->m_nameIndex];
-                
+
                 zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine,
                     nameEntry->m_bytes, nameEntry->m_length);
 
@@ -2489,7 +2489,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Log debugging information for assistance in debugging the interpreter. */
                 jtk_Logger_debug(logger, "Executed instruction `new` (index = %d, operand stack = %d)",
                     index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
-                
+
                 break;
             }
 
@@ -3742,7 +3742,7 @@ zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interprete
                 result = zen_OperandStack_popReference(stackFrame->m_operandStack);
                 zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
             }
-            
+
             /* Do not pop the stack frame if an exception is being thrown. The stack frames
              * would have already been popped off during the look up for a suitable exception
              * handler site.
@@ -3821,7 +3821,7 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
                 result = zen_OperandStack_popReference(stackFrame->m_operandStack);
                 zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
             }
-            
+
             /* Do not pop the stack frame if an exception is being thrown. The stack frames
              * would have already been popped off during the look up for a suitable exception
              * handler site.
@@ -3845,7 +3845,7 @@ void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter
         zen_StackFrame_t* stackFrame = (zen_StackFrame_t*)jtk_Iterator_getNext(iterator);
         zen_Class_t* class0 = stackFrame->m_class;
         zen_Function_t* function = stackFrame->m_function;
-        
+
         uint8_t* friendlyDescriptor = jtk_Memory_allocate(uint8_t, function->m_descriptorSize + 1);
         int32_t afterColon = -1;
         int32_t i;
@@ -3858,7 +3858,7 @@ void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter
                 if (function->m_descriptor[i] == '/') {
                     friendlyDescriptor[j++] = '.';
                 }
-                else if (function->m_descriptor[i] == '(') {
+                else if (function->m_descriptor[i] == '(' || function->m_descriptor[i] == 'v') {
                     // Do nothing
                 }
                 else if (function->m_descriptor[i] == ')') {
@@ -3965,7 +3965,7 @@ void zen_Interpreter_loadArguments(zen_Interpreter_t* interpreter,
                 j += 1;
                 break;
             }
-            
+
             case ZEN_TYPE_REFERENCE: {
                 void* argument = jtk_Array_getValue(arguments, i);
                 zen_LocalVariableArray_setReference(array, j, argument);
@@ -4004,7 +4004,7 @@ bool zen_Interpreter_throw(zen_Interpreter_t* interpreter,
     zen_Object_t* exception) {
     /* Retrieve the logger associated with the virtual machine. */
     jtk_Logger_t* logger = interpreter->m_virtualMachine->m_logger;
-    
+
     /* Keep track of all the stack frames that are being popped off. */
     zen_InvocationStack_startTracing(interpreter->m_invocationStack);
 
@@ -4027,7 +4027,7 @@ bool zen_Interpreter_throw(zen_Interpreter_t* interpreter,
     int32_t invocationStackSize = zen_InvocationStack_getSize(interpreter->m_invocationStack);
     while ((invocationStackSize > 0) && !found) {
         currentStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
-        
+
         /* When a native function is found on the invocation stack, the control
          * is passed to it. The native function is responsible to catch the
          * exception or let it propogate.
@@ -4040,7 +4040,7 @@ bool zen_Interpreter_throw(zen_Interpreter_t* interpreter,
          * function to determine if an exception is being thrown. After which,
          * it may choose to handle the exception or return control back to
          * the virtual machine.
-         * 
+         *
          * Note that, the native function is responsible to mark the exception
          * as handled. Otherwise, the virtual machine assumes that the
          * exception was unhandled and resumes searching for an exception
@@ -4071,7 +4071,7 @@ bool zen_Interpreter_throw(zen_Interpreter_t* interpreter,
                         zen_ConstantPoolClass_t* classEntry =
                             (zen_ConstantPoolClass_t*)constantPool->m_entries[site->m_exceptionClassIndex];
                         zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[classEntry->m_nameIndex];
-        
+
                         zen_Class_t* filterClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine,
                             nameEntry->m_bytes, nameEntry->m_length);
 
@@ -4102,7 +4102,7 @@ bool zen_Interpreter_throw(zen_Interpreter_t* interpreter,
         if (!found) {
             /* A suitable exception handler was not found. Move to the previous stack
             * frame and repeat.
-            * 
+            *
             * TODO: Create a stacktrace.
             */
             zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
