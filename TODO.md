@@ -1,7 +1,5 @@
- * Finalize things on operator associativity and ZenKernel.evaluate()
- * When I declare and use a single local variable, the virtual machine crashes.
-   However, declaring two local variables fixes this problem. :/
- * Implement the new operator in Zen.
- * Add support for 
-   `static native function invokeStatic(entity, name)`
-   Otherwise, static functions which do not accept arguments will not be invoked!
+ * Implement the import statement
+ * Implement default import strategy.
+ * Extend the compiler to generate output files to corresponding to directories.
+ * Implement a wildcard search
+ * Implement virtual function tables, static function tables, instance field tables, and static field tables.

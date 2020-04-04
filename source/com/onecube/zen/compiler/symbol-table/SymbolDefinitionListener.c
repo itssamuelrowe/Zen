@@ -34,6 +34,99 @@
 #include <com/onecube/zen/compiler/symbol-table/CompilationUnitScope.h>
 #include <com/onecube/zen/compiler/symbol-table/EnumerateSymbol.h>
 
+/*
+ * As new features are implemented, the source code of a project grows in
+ * complexity. It becomes hard to maintain the source code when everything is
+ * crammed into a single source file. Therefore, an intuitive feature of a
+ * programming language is to allow programmers to split their source code
+ * into multiple files. The symbols defined in these source files can be imported
+ * and exported outside a given source file or compilation unit as needed.
+ *
+ * In Zen, the import statement allows a compilation unit to refer to external
+ * entities such as functions and classes. Without the use of the import statement,
+ * the only way to refer to an entity outside the current compilatiin unit is to
+ * use a fully qualified name. Further, all top-level entities declared in Zen
+ * are exported by default. As of this writing, there is no way to override this
+ * behaviour.
+ *
+ * Albeit the import/export mechanism is complicated, it is an interesting topic.
+ * The following article describes the import/export mechanism employed by the
+ * Zen compiler behind the scenes.
+ *
+ * ## Entity Forms
+ *
+ * A compilation unit can import entities that are either compiled or non-compiled.
+ * (Note that the design assumes that the form of an entity is transparent
+ * to the end user, i.e., the programmer.)
+ *  1. Entities whose equivalent ".feb" files exist on the filsystem in the
+ *     entity lookup directories specified to the compiler. These entities are
+ *     referred to as compiled entities.
+ *  2. Entities that are part of the current compilation batch. These entites
+ *     are referred to as non-compiled entities.
+ *
+ * ## The Global Symbol Cache
+ *
+ * Given we are dealing with two forms of entities (compiled and non-compiled),
+ * the design should allow for an abstraction which allows layers above the
+ * import mechanism to work seamlessly without having to worry about an entities
+ * form. In order to implement such an abstraction, a central repository known
+ * as the global symbol cache is maintained by the compiler.
+ *
+ * The global symbol cache holds symbols which represent external entities. Here,
+ * an external entity refers to any entity that is defined outside a compilation
+ * unit. Internally, the global symbol cache uses a hash map to keep track of
+ * the registered symbols. The various phases of the compiler can request the
+ * global symbol cache to acquire symbols corresponding to entities. However,
+ * symbols exported from compilation units that are part of the current compilation
+ * batch are not available until the definition phase of the compiler is over.
+ * In other words, non-compiled entities are not available until the definition
+ * phase is complete.
+ *
+ * The global symbol cache satifies a symbol request in one of the following ways:
+ * 1. If the requested symbol is found in the internal hash map, it is
+ *    immediately returned.
+ * 2. If the requested symbol is not found in the internal hash map, the cache
+ *    searches the entity lookup directories to find a binary entity. If found,
+ *    it loads the binary entity using the embedded binary entity loader and a
+ *    corresponding symbol is created, inserted in the internal hash map, and
+ *    returned. Otherwise, the request fails and null is returned. This allows
+ *    the compiler to load external entities from their binary counterpart without
+ *    the requesting party to manually deal with external entities.
+ *
+ *    What about non-compiled external entities? We know that such entities are
+ *    part of the current compilation batch. The compiler can take advantage of
+ *    this fact. During the definition phase, the compiler registers any symbol
+ *    that is considered as an external symbol to the global symbol cache. This allows
+ *    compilation units in the current compilation batch to reference symbols
+ *    declared in another compilation unit. For example, consider two compilation
+ *    units `BirdWatch.zen` and `Sparrow.zen` in the current compilation batch which
+ *    declare the `BirdWatch` and `Sparrow` classes, respectively.
+ *    Further, assume that `BirdWatch.zen` imports `Sparrow`. During the definition
+ *    phase corresponding to `Sparrow.zen`, a class symbol for `Sparrow` is registered
+ *    in the global cache. This allows `BirdWatch` to refer to the external entity
+ *    `Sparrow` which is part of the current compilation batch.
+ *
+ * ## Phases of the Compiler
+ *
+ * For multiple input source files, the compiler takes a source file and subjects
+ * it to various phases in a parallel sequence, where the phases include, lexical
+ * analysis, syntax analysis, semantic analysis (which is divided into the
+ * defintion phase and the resolution phase), optimization, and code generation.
+ * However, the same flow might not be suitable for the mechanism described here.
+ * Why? If you think about it, the previous flow does not provide an oppurutunity
+ * to the compiler to register non-compiled entities. In other words, the phases
+ * of the compiler are specific  to each compilation unit which prevents exchange
+ * of symbols between compilation units.
+ *
+ * Therefore, in order to accomodate the mechanism described here, the flow of
+ * the compiler has to be altered. In the older flow, a source file was not
+ * processed until the previous source file was completely processed, i.e.,
+ * subjected to all the phases from lexical analysis to code generation. In the
+ * new flow, all the input source files are subjected to a single phase before
+ * moving on to the next phase. This allows the compiler to mediate the exchange
+ * of symbols between compilation units.
+ */
+
 void zen_ErrorHandler_reportError(void* handler, const char* message, zen_Token_t* token) {
     fprintf(stderr, "[error] %d:%d-%d: %s\n", token->m_startLine, token->m_startColumn, token->m_stopColumn, message);
     fflush(stdout);
@@ -748,11 +841,11 @@ void zen_SymbolDefinitionListener_onEnterTryStatement(
         zen_Scope_t* scope = zen_LocalScope_getScope(localScope);
         zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
         zen_ASTAnnotations_put(listener->m_scopes, catchClause, scope);
-        
+
         zen_ASTNode_t* identifier = catchClauseContext->m_identifier;
         int32_t identifierSize;
         uint8_t* identifierText = zen_ASTNode_toCString(identifier, &identifierSize);
-        
+
         zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
         if (symbol != NULL) {
             zen_ErrorHandler_reportError(NULL, "Redeclaration of symbol as catch parameter", (zen_Token_t*)identifier->m_context);
@@ -760,7 +853,7 @@ void zen_SymbolDefinitionListener_onEnterTryStatement(
         else {
             zen_VariableSymbol_t* variableSymbol = zen_VariableSymbol_new(identifier, scope);
             symbol = zen_VariableSymbol_getSymbol(variableSymbol);
-            
+
             zen_SymbolTable_define(listener->m_symbolTable, symbol);
         }
 
