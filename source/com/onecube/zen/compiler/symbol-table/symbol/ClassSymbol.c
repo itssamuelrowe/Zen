@@ -18,6 +18,7 @@
 
 #include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/ClassScope.h>
+#include <jtk/core/CString.h>
 
 /*******************************************************************************
  * ClassSymbol                                                                 *

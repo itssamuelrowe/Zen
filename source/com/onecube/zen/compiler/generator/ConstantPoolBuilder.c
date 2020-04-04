@@ -66,6 +66,34 @@ void zen_ConstantPoolBuilder_delete(zen_ConstantPoolBuilder_t* builder) {
     zen_Memory_deallocate(builder);
 }
 
+// Clear
+
+void zen_ConstantPoolBuilder_clear(zen_ConstantPoolBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
+
+    int32_t size = jtk_ArrayList_getSize(builder->m_entries);
+    int32_t i;
+    for (i = 1; i < size; i++) {
+        /* Retrieve the constant pool entry to destroy during this iteration. */
+        zen_ConstantPoolEntry_t* entry = (zen_ConstantPoolEntry_t*)jtk_ArrayList_getValue(
+            builder->m_entries, i);
+        /* If the entry is a constant pool UTF8 entry, then it needs to be destroyed
+         * specially.
+         */
+        if (entry->m_tag == ZEN_CONSTANT_POOL_TAG_UTF8) {
+            /* Convert the entry to zen_ConstantPoolUtf8_t, to destroy the bytes. */
+            zen_ConstantPoolUtf8_t* entry0 = (zen_ConstantPoolUtf8_t*)entry;
+            /* Destroy the memory used by the entry. */
+            zen_Memory_deallocate(entry0->m_bytes);
+        }
+
+        /* Destroy the entry. */
+        zen_Memory_deallocate(entry);
+    }
+
+    jtk_ArrayList_clear(builder->m_entries);
+}
+
 // Entries
 
 int32_t zen_ConstantPoolBuilder_countEntries(zen_ConstantPoolBuilder_t* builder) {

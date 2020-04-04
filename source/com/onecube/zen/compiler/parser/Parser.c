@@ -78,10 +78,10 @@ const char zen_Parser_ruleNames[][50] = {
     "classSuite",
     "classMember",
     // "constructorDeclaration",
-    "enumerationDeclaration",
-    "enumerationBaseClause",
-    "enumerationSuite",
-    "enumerate",
+    // "enumerationDeclaration",
+    // "enumerationBaseClause",
+    // "enumerationSuite",
+    // "enumerate",
     "expressions",
     "expression",
     "assignmentExpression",
@@ -395,7 +395,7 @@ void zen_Parser_importDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
 	 */
     zen_Token_t* identifier = zen_Parser_matchAndYield(parser, ZEN_TOKEN_IDENTIFIER);
     zen_ASTNode_t* identifierNode = zen_Parser_newTerminalNode(node, identifier);
-    
+
 	jtk_ArrayList_add(context->m_identifiers, identifierNode);
 
 	/* Optionally, the user may specify more identifiers (with each identifier
@@ -620,12 +620,12 @@ void zen_Parser_componentDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) 
             break;
         }
 
-        case ZEN_TOKEN_KEYWORD_ENUM: {
-            zen_ASTNode_t* enumerationDeclaration = zen_ASTNode_new(node);
-            context->m_component = enumerationDeclaration;
-            zen_Parser_enumerationDeclaration(parser, enumerationDeclaration);
-            break;
-        }
+        // case ZEN_TOKEN_KEYWORD_ENUM: {
+        //     zen_ASTNode_t* enumerationDeclaration = zen_ASTNode_new(node);
+        //     context->m_component = enumerationDeclaration;
+        //     zen_Parser_enumerationDeclaration(parser, enumerationDeclaration);
+        //     break;
+        // }
 
         default: {
             // Syntax error: Expected function, class, or enum
@@ -1966,7 +1966,7 @@ bool zen_Parser_isClassMemberFollow(zen_TokenType_t type) {
            (type == ZEN_TOKEN_KEYWORD_FUNCTION)   || /* classMember -> ... -> functionDeclaration */
            // (type == ZEN_TOKEN_IDENTIFIER)      || /* classMember -> ... -> constructorDeclaration */
            (type == ZEN_TOKEN_KEYWORD_CLASS)      || /* classMember -> ... -> classDeclaration */
-           (type == ZEN_TOKEN_KEYWORD_ENUM)       || /* classMember -> ... -> enumerationDeclaration */
+           // (type == ZEN_TOKEN_KEYWORD_ENUM)       || /* classMember -> ... -> enumerationDeclaration */
            (type == ZEN_TOKEN_AT);                   /* classMember -> ... -> annotatedClassMember */
 }
 
@@ -1981,7 +1981,7 @@ bool zen_Parser_isClassMemberFollow(zen_TokenType_t type) {
  * |	functionDeclaration
  * // |	constructorDeclaration
  * |	classDeclaration
- * |	enumerationDeclaration
+ * // |	enumerationDeclaration
  * ;
  *
  * The following function combines both the rules. This measure was
@@ -2055,13 +2055,13 @@ void zen_Parser_classMember(zen_Parser_t* parser, zen_ASTNode_t* node) {
             break;
         }
 
-        case ZEN_TOKEN_KEYWORD_ENUM: {
-            zen_ASTNode_t* enumerationDeclaration = zen_ASTNode_new(node);
-            context->m_declaration = enumerationDeclaration;
-            zen_Parser_enumerationDeclaration(parser, enumerationDeclaration);
+        // case ZEN_TOKEN_KEYWORD_ENUM: {
+        //     zen_ASTNode_t* enumerationDeclaration = zen_ASTNode_new(node);
+        //     context->m_declaration = enumerationDeclaration;
+        //     zen_Parser_enumerationDeclaration(parser, enumerationDeclaration);
 
-            break;
-        }
+        //     break;
+        // }
 
         default: {
             /* Syntax Error: Expected var, final, function, identifier, class, or enum. */
@@ -2123,102 +2123,102 @@ bool zen_Parser_isClassMemberModifier(zen_TokenType_t type) {
  * :   'enum' IDENTIFIER enumerationBaseClause? enumerationSuite
  * ;
  */
-void zen_Parser_enumerationDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    zen_StackTrace_enter();
+// void zen_Parser_enumerationDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
+//     zen_StackTrace_enter();
 
-    zen_EnumerationDeclarationContext_t* context = zen_EnumerationDeclarationContext_new(node);
+//     zen_EnumerationDeclarationContext_t* context = zen_EnumerationDeclarationContext_new(node);
 
-    /* Match and discard the 'enum' token. */
-    zen_Parser_match(parser, ZEN_TOKEN_KEYWORD_ENUM);
+//     /* Match and discard the 'enum' token. */
+//     zen_Parser_match(parser, ZEN_TOKEN_KEYWORD_ENUM);
 
-    zen_Token_t* identifier = zen_Parser_matchAndYield(parser, ZEN_TOKEN_IDENTIFIER);
-    context->m_identifier = zen_Parser_newTerminalNode(node, identifier);
+//     zen_Token_t* identifier = zen_Parser_matchAndYield(parser, ZEN_TOKEN_IDENTIFIER);
+//     context->m_identifier = zen_Parser_newTerminalNode(node, identifier);
 
-    if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_COLON) {
-        zen_ASTNode_t* enumerationBaseClause = zen_ASTNode_new(node);
-        context->m_enumerationBaseClause = enumerationBaseClause;
-        zen_Parser_enumerationBaseClause(parser, enumerationBaseClause);
-    }
+//     if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_COLON) {
+//         zen_ASTNode_t* enumerationBaseClause = zen_ASTNode_new(node);
+//         context->m_enumerationBaseClause = enumerationBaseClause;
+//         zen_Parser_enumerationBaseClause(parser, enumerationBaseClause);
+//     }
 
-    zen_ASTNode_t* enumerationSuite = zen_ASTNode_new(node);
-    context->m_enumerationSuite = enumerationSuite;
-    zen_Parser_enumerationSuite(parser, enumerationSuite);
+//     zen_ASTNode_t* enumerationSuite = zen_ASTNode_new(node);
+//     context->m_enumerationSuite = enumerationSuite;
+//     zen_Parser_enumerationSuite(parser, enumerationSuite);
 
-    zen_StackTrace_exit();
-}
+//     zen_StackTrace_exit();
+// }
 
 /*
  * enumerationBaseClause
  * :   ':' typeName
  * ;
  */
-void zen_Parser_enumerationBaseClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    zen_StackTrace_enter();
+// void zen_Parser_enumerationBaseClause(zen_Parser_t* parser, zen_ASTNode_t* node) {
+//     zen_StackTrace_enter();
 
-    zen_EnumerationBaseClauseContext_t* context = zen_EnumerationBaseClauseContext_new(node);
+//     zen_EnumerationBaseClauseContext_t* context = zen_EnumerationBaseClauseContext_new(node);
 
-    /* Match and discard the ':' token. */
-    zen_Parser_match(parser, ZEN_TOKEN_COLON);
+//     /* Match and discard the ':' token. */
+//     zen_Parser_match(parser, ZEN_TOKEN_COLON);
 
-    zen_ASTNode_t* typeName = zen_ASTNode_new(node);
-    context->m_typeName = typeName;
-    zen_Parser_typeName(parser, typeName);
+//     zen_ASTNode_t* typeName = zen_ASTNode_new(node);
+//     context->m_typeName = typeName;
+//     zen_Parser_typeName(parser, typeName);
 
-    zen_StackTrace_exit();
-}
+//     zen_StackTrace_exit();
+// }
 
 /*
  * enumerationSuite
  * :   NEWLINE INDENT enumerate+ DEDENT
  * ;
  */
-void zen_Parser_enumerationSuite(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    zen_StackTrace_enter();
+// void zen_Parser_enumerationSuite(zen_Parser_t* parser, zen_ASTNode_t* node) {
+//     zen_StackTrace_enter();
 
-    zen_EnumerationSuiteContext_t* context = zen_EnumerationSuiteContext_new(node);
+//     zen_EnumerationSuiteContext_t* context = zen_EnumerationSuiteContext_new(node);
 
-    /* Match and discard the newline token. */
-    zen_Parser_match(parser, ZEN_TOKEN_NEWLINE);
-    /* Match and discard the indent token. */
-    zen_Parser_match(parser, ZEN_TOKEN_INDENTATION);
+//     /* Match and discard the newline token. */
+//     zen_Parser_match(parser, ZEN_TOKEN_NEWLINE);
+//     /* Match and discard the indent token. */
+//     zen_Parser_match(parser, ZEN_TOKEN_INDENTATION);
 
-    do {
-        zen_ASTNode_t* enumerate = zen_ASTNode_new(node);
-        jtk_ArrayList_add(context->m_enumerates, enumerate);
-        zen_Parser_enumerate(parser, enumerate);
-    }
-    while (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_IDENTIFIER);
+//     do {
+//         zen_ASTNode_t* enumerate = zen_ASTNode_new(node);
+//         jtk_ArrayList_add(context->m_enumerates, enumerate);
+//         zen_Parser_enumerate(parser, enumerate);
+//     }
+//     while (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_IDENTIFIER);
 
-    /* Match and discard the dedent token. */
-    zen_Parser_match(parser, ZEN_TOKEN_DEDENTATION);
+//     /* Match and discard the dedent token. */
+//     zen_Parser_match(parser, ZEN_TOKEN_DEDENTATION);
 
-    zen_StackTrace_exit();
-}
+//     zen_StackTrace_exit();
+// }
 
 /*
  * enumerate
  * :   IDENTIFIER functionArguments? NEWLINE
  * ;
  */
-void zen_Parser_enumerate(zen_Parser_t* parser, zen_ASTNode_t* node) {
-    zen_StackTrace_enter();
+// void zen_Parser_enumerate(zen_Parser_t* parser, zen_ASTNode_t* node) {
+//     zen_StackTrace_enter();
 
-    zen_EnumerateContext_t* context = zen_EnumerateContext_new(node);
+//     zen_EnumerateContext_t* context = zen_EnumerateContext_new(node);
 
-    zen_Token_t* identifier = zen_Parser_matchAndYield(parser, ZEN_TOKEN_IDENTIFIER);
-    context->m_identifier = zen_Parser_newTerminalNode(node, identifier);
+//     zen_Token_t* identifier = zen_Parser_matchAndYield(parser, ZEN_TOKEN_IDENTIFIER);
+//     context->m_identifier = zen_Parser_newTerminalNode(node, identifier);
 
-    if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_LEFT_PARENTHESIS) {
-        zen_ASTNode_t* functionArguments = zen_ASTNode_new(node);
-        context->m_functionArguments = functionArguments;
-        zen_Parser_functionArguments(parser, functionArguments);
-    }
+//     if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_LEFT_PARENTHESIS) {
+//         zen_ASTNode_t* functionArguments = zen_ASTNode_new(node);
+//         context->m_functionArguments = functionArguments;
+//         zen_Parser_functionArguments(parser, functionArguments);
+//     }
 
-    /* Match and discard the newline token. */
-    zen_Parser_match(parser, ZEN_TOKEN_NEWLINE);
+//     /* Match and discard the newline token. */
+//     zen_Parser_match(parser, ZEN_TOKEN_NEWLINE);
 
-    zen_StackTrace_exit();
-}
+//     zen_StackTrace_exit();
+// }
 
 /*
  * expression

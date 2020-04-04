@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2020 Samuel Rowe
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -167,18 +167,18 @@ void zen_Interpreter_onLexerError(zen_LexerError_t* error) {
 
 const uint8_t* zen_ErrorCode_messages[] = {
     "None",
-    
+
     // Lexical Errors
-    
+
     "Unterminated string literal",
     "Unterminated multi-line comment",
     "Expected four hexadecimal digits",
     "Invalid escape sequence",
     "Unknown character",
     "Invalid prefix in integer literal",
-    
+
     // Syntactical Errors
-    
+
     "No viable alternative"
 };
 
@@ -255,7 +255,7 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
                     }
 
                     #ifdef JTK_LOGGER_DISABLE
-                        printf("[warning] The logger was disabled at compile time. Please consider building Zen without the `JTK_LOGGER_DISABLE` constant in 'Configuration.h'.");
+                        printf("[warning] The logger was disabled at compile time. Please consider building Zen without the `JTK_LOGGER_DISABLE` constant in 'Configuration.h'.\n");
                     #else
                         jtk_Logger_setLevel(compiler->m_logger, level);
                     #endif
@@ -292,7 +292,7 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
             else {
                 zen_ErrorHandler_t* errorHandler = zen_ErrorHandler_new();
                 jtk_ArrayList_t* errors = zen_ErrorHandler_getErrors(errorHandler);
-                
+
                 jtk_InputStream_t* stream = jtk_PathHelper_read(path);
                 zen_Lexer_t* lexer = zen_Lexer_new(errorHandler, stream);
                 zen_TokenStream_t* tokens = zen_TokenStream_new(lexer, ZEN_TOKEN_CHANNEL_DEFAULT);
@@ -302,7 +302,7 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
                     printTokens(tokens);
                 }
                 jtk_Logger_info(compiler->m_logger, "The lexical analysis phase is complete.");
-                
+
                 int32_t errorCount = jtk_ArrayList_getSize(errors);
                 if (errorCount == 0) {
                     zen_Parser_t* parser = zen_Parser_new(tokens);
@@ -362,7 +362,7 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
                 else {
                     printLexicalErrors(errors);
                 }
-                
+
                 zen_TokenStream_delete(tokens);
                 zen_Lexer_delete(lexer);
                 zen_ErrorHandler_delete(errorHandler);

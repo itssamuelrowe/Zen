@@ -48,10 +48,10 @@ void zen_ASTWalker_walk(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 
                 break;
             }
-            
+
             case ZEN_AST_WALKER_STATE_SKIP_CHILDREN: {
                 // Skip the children! Nothing to do here.
-                
+
                 break;
             }
 
@@ -83,7 +83,7 @@ void zen_ASTWalker_walk(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
         // please process it here. Further, do not reset to ZEN_AST_WALKER_STATE_VISIT_CHILDREN.
 
         zen_ASTListener_visitChildren(listener);
-        
+
         zen_ASTWalker_exitRule(listener, node);
     }
 
@@ -300,12 +300,12 @@ void zen_ASTWalker_enterRule(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
             listener->m_onEnterWithStatement(listener, node);
             break;
         }
-        
+
         case ZEN_AST_NODE_TYPE_WITH_PARAMETERS: {
             listener->m_onEnterWithParameters(listener, node);
             break;
         }
-        
+
         case ZEN_AST_NODE_TYPE_WITH_PARAMETER: {
             listener->m_onEnterWithParameter(listener, node);
             break;
@@ -336,25 +336,25 @@ void zen_ASTWalker_enterRule(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
             // break;
         // }
 
-        case ZEN_AST_NODE_TYPE_ENUMERATION_DECLARATION: {
-            listener->m_onEnterEnumerationDeclaration(listener, node);
-            break;
-        }
+        // case ZEN_AST_NODE_TYPE_ENUMERATION_DECLARATION: {
+        //     listener->m_onEnterEnumerationDeclaration(listener, node);
+        //     break;
+        // }
 
-        case ZEN_AST_NODE_TYPE_ENUMERATION_BASE_CLAUSE: {
-            listener->m_onEnterEnumerationBaseClause(listener, node);
-            break;
-        }
+        // case ZEN_AST_NODE_TYPE_ENUMERATION_BASE_CLAUSE: {
+        //     listener->m_onEnterEnumerationBaseClause(listener, node);
+        //     break;
+        // }
 
-        case ZEN_AST_NODE_TYPE_ENUMERATION_SUITE: {
-            listener->m_onEnterEnumerationSuite(listener, node);
-            break;
-        }
+        // case ZEN_AST_NODE_TYPE_ENUMERATION_SUITE: {
+        //     listener->m_onEnterEnumerationSuite(listener, node);
+        //     break;
+        // }
 
-        case ZEN_AST_NODE_TYPE_ENUMERATE: {
-            listener->m_onEnterEnumerate(listener, node);
-            break;
-        }
+        // case ZEN_AST_NODE_TYPE_ENUMERATE: {
+        //     listener->m_onEnterEnumerate(listener, node);
+        //     break;
+        // }
 
         case ZEN_AST_NODE_TYPE_EXPRESSIONS: {
             listener->m_onEnterExpressions(listener, node);
@@ -702,7 +702,7 @@ void zen_ASTWalker_exitRule(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
             listener->m_onExitWithParameters(listener, node);
             break;
         }
-        
+
         case ZEN_AST_NODE_TYPE_WITH_PARAMETER: {
             listener->m_onExitWithParameter(listener, node);
             break;
@@ -733,25 +733,25 @@ void zen_ASTWalker_exitRule(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 //            break;
 //        }
 
-        case ZEN_AST_NODE_TYPE_ENUMERATION_DECLARATION: {
-            listener->m_onExitEnumerationDeclaration(listener, node);
-            break;
-        }
+        // case ZEN_AST_NODE_TYPE_ENUMERATION_DECLARATION: {
+        //     listener->m_onExitEnumerationDeclaration(listener, node);
+        //     break;
+        // }
 
-        case ZEN_AST_NODE_TYPE_ENUMERATION_BASE_CLAUSE: {
-            listener->m_onExitEnumerationBaseClause(listener, node);
-            break;
-        }
+        // case ZEN_AST_NODE_TYPE_ENUMERATION_BASE_CLAUSE: {
+        //     listener->m_onExitEnumerationBaseClause(listener, node);
+        //     break;
+        // }
 
-        case ZEN_AST_NODE_TYPE_ENUMERATION_SUITE: {
-            listener->m_onExitEnumerationSuite(listener, node);
-            break;
-        }
+        // case ZEN_AST_NODE_TYPE_ENUMERATION_SUITE: {
+        //     listener->m_onExitEnumerationSuite(listener, node);
+        //     break;
+        // }
 
-        case ZEN_AST_NODE_TYPE_ENUMERATE: {
-            listener->m_onExitEnumerate(listener, node);
-            break;
-        }
+        // case ZEN_AST_NODE_TYPE_ENUMERATE: {
+        //     listener->m_onExitEnumerate(listener, node);
+        //     break;
+        // }
 
         case ZEN_AST_NODE_TYPE_EXPRESSIONS: {
             listener->m_onExitExpressions(listener, node);
