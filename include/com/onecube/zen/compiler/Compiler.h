@@ -67,7 +67,7 @@ void zen_Compiler_delete(zen_Compiler_t* compiler);
 void zen_Compiler_printErrors(zen_Compiler_t* compiler);
 
 // Phase
-
+void zen_Compiler_initialize(zen_Compiler_t* compiler);
 void zen_Compiler_buildAST(zen_Compiler_t* compiler);
 void zen_Compiler_analyze(zen_Compiler_t* compiler);
 void zen_Compiler_generate(zen_Compiler_t* compiler);

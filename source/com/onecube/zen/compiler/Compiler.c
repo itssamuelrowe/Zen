@@ -151,6 +151,10 @@ zen_Compiler_t* zen_Compiler_new() {
     compiler->m_footprint = false;
     compiler->m_inputFiles = jtk_ArrayList_new();
     compiler->m_currentFileIndex = -1;
+    compiler->m_errorHandler = zen_ErrorHandler_new();
+    compiler->m_compilationUnits = NULL;
+    compiler->m_symbolTables = NULL;
+    compiler->m_scopes = NULL;
 #ifdef JTK_LOGGER_DISABLE
     compiler->m_logger = NULL;
 #else
@@ -165,6 +169,18 @@ zen_Compiler_t* zen_Compiler_new() {
 
 void zen_Compiler_delete(zen_Compiler_t* compiler) {
     jtk_Assert_assertObject(compiler, "The specified compiler is null.");
+
+    if (compiler->m_compilationUnits != NULL) {
+        jtk_Memory_deallocate(compiler->m_compilationUnits);
+    }
+
+    if (compiler->m_symbolTables != NULL) {
+        jtk_Memory_deallocate(compiler->m_symbolTables);
+    }
+
+    if (compiler->m_scopes != NULL) {
+        jtk_Memory_deallocate(compiler->m_scopes);
+    }
 
 #ifndef JTK_LOGGER_DISABLE
     jtk_Logger_delete(compiler->m_logger);
@@ -209,6 +225,13 @@ void zen_Compiler_printErrors(zen_Compiler_t* compiler) {
 }
 
 /* lexer -> parser -> symbol table -> semantic errors -> byte code generator -> interpreter */
+
+void zen_Compiler_initialize(zen_Compiler_t* compiler) {
+    int32_t size = jtk_ArrayList_getSize(compiler->m_inputFiles);
+    compiler->m_compilationUnits = jtk_Memory_allocate(zen_ASTNode_t*, size);
+    compiler->m_symbolTables = jtk_Memory_allocate(zen_SymbolTable_t*, size);
+    compiler->m_scopes = jtk_Memory_allocate(zen_ASTAnnotations_t*, size);
+}
 
 void zen_Compiler_buildAST(zen_Compiler_t* compiler) {
     zen_Lexer_t* lexer = zen_Lexer_new(compiler);
@@ -644,6 +667,7 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
         fprintf(stderr, "[error] Please specify input files.\n");
     }
     else {
+        zen_Compiler_initialize(compiler);
         zen_Compiler_buildAST(compiler);
         if (!zen_ErrorHandler_hasErrors(compiler->m_errorHandler)) {
             zen_Compiler_analyze(compiler);
