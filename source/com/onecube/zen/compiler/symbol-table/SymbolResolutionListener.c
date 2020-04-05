@@ -360,6 +360,16 @@ zen_ASTListener_t* zen_SymbolResolutionListener_getASTListener(zen_SymbolResolut
     return listener->m_astListener;
 }
 
+// Reset
+
+void zen_SymbolResolutionListener_reset(zen_SymbolResolutionListener_t* listener,
+    zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes) {
+
+    listener->m_symbolTable = symbolTable;
+    listener->m_scopes = scopes;
+    listener->m_label = ZEN_EXPRESSION_ANNOTATION_UNKNOWN;
+}
+
 // Event Handlers
 
 void zen_SymbolResolutionListener_onVisitErrorNode(zen_ASTListener_t* astListener,
@@ -790,7 +800,7 @@ void zen_SymbolResolutionListener_onEnterIterativeStatement(zen_ASTListener_t* a
 void zen_SymbolResolutionListener_onExitIterativeStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
 }
 
-// listener->m_label
+// label
 
 void zen_SymbolResolutionListener_onEnterLabel(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {

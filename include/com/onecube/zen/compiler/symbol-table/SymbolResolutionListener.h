@@ -66,6 +66,11 @@ void zen_SymbolResolutionListener_delete(zen_SymbolResolutionListener_t* listene
 
 zen_ASTListener_t* zen_SymbolResolutionListener_getASTListener(zen_SymbolResolutionListener_t* listener);
 
+// Reset
+
+void zen_SymbolResolutionListener_reset(zen_SymbolResolutionListener_t* listener,
+    zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes);
+
 // Event Handlers
 
 /**
