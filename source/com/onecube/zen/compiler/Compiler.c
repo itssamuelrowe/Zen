@@ -43,16 +43,31 @@
 #include <com/onecube/zen/compiler/ast/ASTPrinter.h>
 #include <com/onecube/zen/compiler/generator/BinaryEntityBuilder.h>
 #include <com/onecube/zen/compiler/generator/BinaryEntityGenerator.h>
-#include <com/onecube/zen/compiler/symbol-table/SymbolDefinitionListener.h>
+
+
 #include <com/onecube/zen/compiler/symbol-table/SymbolResolutionListener.h>
+#include <com/onecube/zen/compiler/symbol-table/ClassScope.h>
+#include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/SymbolDefinitionListener.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
+#include <com/onecube/zen/compiler/symbol-table/FunctionScope.h>
+#include <com/onecube/zen/compiler/symbol-table/ConstantSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/LocalScope.h>
+#include <com/onecube/zen/compiler/symbol-table/VariableSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/LabelSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/EnumerationSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/EnumerationScope.h>
+#include <com/onecube/zen/compiler/symbol-table/CompilationUnitScope.h>
+#include <com/onecube/zen/compiler/symbol-table/EnumerateSymbol.h>
+
 #include <com/onecube/zen/compiler/support/ErrorHandler.h>
 
 #include <com/onecube/zen/virtual-machine/feb/Instruction.h>
 
 // Token
 
-void printToken(zen_Token_t* token) {
+void zen_Compiler_printToken(zen_Token_t* token) {
     printf("[%d-%d:%d-%d:%s:%s]", token->m_startLine, token->m_stopLine, token->m_startColumn + 1, token->m_stopColumn + 1, token->m_channel == ZEN_TOKEN_CHANNEL_DEFAULT? "default" : "hidden", zen_Lexer_getLiteralName(token->m_type));
     zen_TokenType_t type = zen_Token_getType(token);
     if ((type == ZEN_TOKEN_IDENTIFIER) || (type == ZEN_TOKEN_INTEGER_LITERAL) ||
@@ -62,9 +77,7 @@ void printToken(zen_Token_t* token) {
     puts("");
 }
 
-void zen_Compiler_printTokens(zen_Compiler_t* compiler, zen_TokenStream_t* stream) {
-    jtk_ArrayList_t* tokens = stream->m_tokens;
-
+void zen_Compiler_zen_Compiler_printTokens(zen_Compiler_t* compiler, jtk_ArrayList_t* tokens) {
     int32_t defaultChannel = 0;
     int32_t hiddenChannel = 0;
     int32_t otherChannel = 0;
@@ -83,7 +96,7 @@ void zen_Compiler_printTokens(zen_Compiler_t* compiler, zen_TokenStream_t* strea
         else {
             otherChannel++;
         }
-        printToken(token);
+        zen_Compiler_printToken(token);
     }
     fflush(stdout);
     fprintf(stdout, "[info] %d tokens were recognized on the default channel.\n", defaultChannel);
@@ -182,7 +195,7 @@ const uint8_t* zen_ErrorCode_messages[] = {
     "No viable alternative"
 };
 
-void zen_Compiler_printLexicalErrors(zen_Compiler_t* compiler) {
+void zen_Compiler_printErrors(zen_Compiler_t* compiler) {
     jtk_ArrayList_t* errors = zen_ErrorHandler_getErrors(compiler->m_errorHandler);
     int32_t errorCount = jtk_ArrayList_getSize(errors);
     int32_t i;
@@ -223,13 +236,15 @@ void zen_Compiler_buildAST(zen_Compiler_t* compiler) {
             zen_TokenStream_reset(tokens);
             zen_TokenStream_fill(tokens);
             if (compiler->m_dumpTokens) {
-                zen_Compiler_printTokens(compiler, tokens);
+                zen_Compiler_zen_Compiler_printTokens(compiler, tokens->m_tokens);
             }
             int32_t currentLexicalErrors = zen_ErrorHandler_getErrorCount(compiler->m_errorHandler);
 
             jtk_Logger_info(compiler->m_logger, "The lexical analysis phase is complete.");
 
-            /* Perform syntax analysis only if there are no lexical errors. */
+            /* Perform syntax analysis for the current input source file only if
+             * there are no lexical errors.
+             */
             if (previousLexicalErrors == currentLexicalErrors) {
                 jtk_Logger_info(compiler->m_logger, "The syntactical analysis phase has started.");
 
@@ -261,8 +276,7 @@ void zen_Compiler_buildAST(zen_Compiler_t* compiler) {
     zen_TokenStream_delete(tokens);
     zen_Lexer_delete(lexer);
 
-    zen_Compiler_printLexicalErrors(compiler);
-    zen_Compiler_printSyntaxErrors(compiler);
+    zen_Compiler_printErrors(compiler);
 }
 
 void zen_Compiler_analyze(zen_Compiler_t* compiler) {
@@ -298,7 +312,7 @@ void zen_Compiler_analyze(zen_Compiler_t* compiler) {
     zen_SymbolResolutionListener_delete(symbolResolutionListener);
     zen_SymbolDefinitionListener_delete(symbolDefinitionListener);
 
-    zen_Compiler_printSemanticalErrors(compiler);
+    zen_Compiler_printErrors(compiler);
 }
 
 void zen_Compiler_generate(zen_Compiler_t* compiler) {
@@ -327,7 +341,6 @@ void zen_Compiler_generate(zen_Compiler_t* compiler) {
     */
     zen_BinaryEntityGenerator_delete(generator);
 }
-
 
 void zen_Compiler_destroyNestedScopes(zen_ASTAnnotations_t* annotations) {
     jtk_Assert_assertObject(annotations, "The specified annotations is null.");
@@ -367,7 +380,7 @@ void zen_Compiler_destroyNestedScopes(zen_ASTAnnotations_t* annotations) {
         int32_t i;
         for (i = 0; i < limit; i++) {
             zen_Symbol_t* symbol = (zen_Symbol_t*)jtk_ArrayList_getValue(temporary, i);
-            zen_SymbolDefinitionListener_destroySymbol(symbol);
+            zen_Compiler_destroySymbol(symbol);
         }
 
         /* At this point, the symbols retrieved form the scope are destroyed.
@@ -376,7 +389,7 @@ void zen_Compiler_destroyNestedScopes(zen_ASTAnnotations_t* annotations) {
         jtk_ArrayList_clear(temporary);
 
         /* Destroy the current scope. */
-        zen_SymbolDefinitionListener_destroyScope(scope);
+        zen_Compiler_destroyScope(scope);
     }
     jtk_Iterator_delete(iterator);
     jtk_ArrayList_delete(temporary);

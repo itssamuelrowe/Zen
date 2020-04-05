@@ -62,4 +62,27 @@ zen_Compiler_t* zen_Compiler_new();
 
 void zen_Compiler_delete(zen_Compiler_t* compiler);
 
+// Error
+
+void zen_Compiler_printErrors(zen_Compiler_t* compiler);
+
+// Phase
+
+void zen_Compiler_buildAST(zen_Compiler_t* compiler);
+void zen_Compiler_analyze(zen_Compiler_t* compiler);
+void zen_Compiler_generate(zen_Compiler_t* compiler);
+void zen_Compiler_destroyNestedScopes(zen_ASTAnnotations_t* annotations);
+void zen_Compiler_destroySymbol(zen_Symbol_t* symbol);
+void zen_Compiler_destroyScope(zen_Scope_t* scope);
+
+// Token
+
+void zen_Compiler_printToken(zen_Token_t* token);
+void zen_Compiler_zen_Compiler_printTokens(zen_Compiler_t* compiler, jtk_ArrayList_t* tokens);
+
+// Compiler
+
+bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t length);
+bool zen_Compiler_compile(zen_Compiler_t* compiler);
+
 #endif /* COM_ONECUBE_ZEN_COMPILER_COMPILER_H */

@@ -2115,7 +2115,8 @@ void zen_Lexer_reset(zen_Lexer_t* lexer, jtk_InputStream_t* inputStream) {
 
     jtk_StringBuilder_clear(lexer->m_text);
     jtk_ArrayQueue_clear(lexer->m_tokens);
-    jtk_ArrayStack_clear(lexer->m_indentations);
+    // jtk_ArrayStack_clear(lexer->m_indentations);
+    jtk_ArrayList_clear(lexer->m_indentations->m_list);
 
     zen_Lexer_consume(lexer);
 }
