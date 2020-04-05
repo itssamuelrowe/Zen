@@ -7,10 +7,13 @@ function main(...arguments)
     print('Before sorting...')
     print(values)
 
-    for var i in range(0, n)
-        for var j in range(0, n - i - 1)
-            if values[j] > values[j + 1]
-                values.swap(j, j + 1)
+    for var i in range(0, n - 1)
+        var m = i
+        for var j in range(i + 1, n)
+            if values[j] < values[m]
+                m = j
+        if m != i
+            values.swap(m, i)
 
     print('After sorting...')
     print(values)
