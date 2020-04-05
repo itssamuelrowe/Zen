@@ -234,6 +234,13 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer);
  */
 void zen_Lexer_onNewline(zen_Lexer_t* lexer);
 
+// Reset
+
+/**
+ * @memberof Lexer
+ */
+void zen_Lexer_reset(zen_Lexer_t* lexer, jtk_InputStream_t* inputStream);
+
 // Misc.
 
 /**

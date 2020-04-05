@@ -215,7 +215,7 @@ void zen_Compiler_buildAST(zen_Compiler_t* compiler) {
         }
         else {
             jtk_InputStream_t* stream = jtk_PathHelper_read(path);
-            zen_Lexer_setInputStream(lexer, stream);
+            zen_Lexer_reset(lexer, stream);
 
 
             jtk_Logger_info(compiler->m_logger, "The lexical analysis phase has started.");
@@ -247,7 +247,6 @@ void zen_Compiler_buildAST(zen_Compiler_t* compiler) {
 
             zen_Parser_reset(parser);
             zen_TokenStream_reset(tokens);
-            zen_Lexer_reset(lexer);
             jtk_InputStream_delete(stream);
         }
     }

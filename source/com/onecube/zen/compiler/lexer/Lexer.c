@@ -216,30 +216,29 @@ zen_Lexer_t* zen_Lexer_new(zen_Compiler_t* compiler) {
     lexer->m_indentations = jtk_ArrayStack_new();
     lexer->m_enclosures = 0;
 
-    zen_Lexer_consume(lexer);
-
     return lexer;
 }
 
 /* Destructor */
 
-void zen_Lexer_delete(zen_Lexer_t* lexer) {
-    jtk_Assert_assertObject(lexer, "The specified lexer is null.");
-
-    jtk_StringBuilder_delete(lexer->m_text);
-
-    /* The lexer may have unretrieved tokens in the buffer.
-     * This destructor is responsible for the destruction of
-     * such tokens.
-     */
+/* The lexer may have unretrieved tokens in the buffer.
+* This function is responsible for the destruction of
+* such tokens.
+*/
+void zen_Lexer_destroyStaleTokens(zen_Lexer_t* lexer) {
     int32_t size = jtk_ArrayList_getSize(lexer->m_tokens->m_list);
     int32_t i;
     for (i = 0; i < size; i++) {
         zen_Token_t* token = (zen_Token_t*)jtk_ArrayList_getValue(lexer->m_tokens->m_list, i);
         zen_Token_delete(token);
     }
-    jtk_ArrayQueue_delete(lexer->m_tokens);
+}
 
+void zen_Lexer_delete(zen_Lexer_t* lexer) {
+    jtk_Assert_assertObject(lexer, "The specified lexer is null.");
+
+    jtk_StringBuilder_delete(lexer->m_text);
+    jtk_ArrayQueue_delete(lexer->m_tokens);
     jtk_ArrayStack_delete(lexer->m_indentations);
     jtk_Memory_deallocate(lexer);
 }
@@ -2091,6 +2090,37 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
     jtk_ArrayQueue_dequeue(lexer->m_tokens);
     return next;
 }
+
+// Reset
+
+void zen_Lexer_reset(zen_Lexer_t* lexer, jtk_InputStream_t* inputStream) {
+    jtk_Assert_assertObject(lexer, "The specified lexer is null.");
+    jtk_Assert_assertObject(inputStream, "The specified input stream is null.");
+
+    zen_Lexer_destroyStaleTokens(lexer);
+
+    lexer->m_inputStream = inputStream;
+    lexer->m_la1 = 0;
+    lexer->m_index = -1;
+    lexer->m_line = 1;
+    lexer->m_column = -1;
+    lexer->m_startIndex = 0;
+    lexer->m_startLine = 0;
+    lexer->m_startColumn = 0;
+    lexer->m_hitEndOfStream = false;
+    lexer->m_token = NULL;
+    lexer->m_channel = ZEN_TOKEN_CHANNEL_DEFAULT;
+    lexer->m_type = ZEN_TOKEN_UNKNOWN;
+    lexer->m_enclosures = 0;
+
+    jtk_StringBuilder_clear(lexer->m_text);
+    jtk_ArrayQueue_clear(lexer->m_tokens);
+    jtk_ArrayStack_clear(lexer->m_indentations);
+
+    zen_Lexer_consume(lexer);
+}
+
+// Misc.
 
 bool zen_Lexer_isBinaryPrefix(int32_t codePoint) {
     return (codePoint == 'b') || (codePoint == 'B');
