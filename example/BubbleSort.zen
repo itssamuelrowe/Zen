@@ -1,0 +1,18 @@
+function main(...arguments)
+    var n = 30
+    var values = array(n)
+    for var k in range(0, n)
+        values[k] = random()
+
+    print('Before sorting...')
+    print(values)
+
+    for var i in range(0, n)
+        for var j in range(0, n - i - 1)
+            if values[j] > values[j + 1]
+                var temporary = values[j]
+                values[j] = values[j + 1]
+                values[j + 1] = values[j]
+
+    print('After sorting...')
+    print(values)
