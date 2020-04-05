@@ -189,7 +189,7 @@ void zen_Compiler_delete(zen_Compiler_t* compiler) {
     jtk_Memory_deallocate(compiler);
 }
 
-void zen_Interpreter_onLexerError(zen_LexerError_t* error) {
+void zen_Compiler_onLexerError(zen_LexerError_t* error) {
     fprintf(stderr, "[error] %s:%d:%d -- %s\n", error->m_path, error->m_line, error->m_column, error->m_message);
     fflush(stderr);
 }
@@ -218,8 +218,8 @@ void zen_Compiler_printErrors(zen_Compiler_t* compiler) {
     for (i = 0; i < errorCount; i++) {
         zen_Error_t* error = (zen_Error_t*)jtk_ArrayList_getValue(errors, i);
         zen_Token_t* token = error->m_token;
-        fprintf(stderr, "[error] %d-%d:%d-%d: %s\n", token->m_startLine,
-            token->m_stopLine, token->m_startColumn + 1, token->m_stopColumn + 1,
+        fprintf(stderr, "\033[1;31m[error]\033[0m %d-%d:%d-%d: %s\n", token->m_startLine,
+            token->m_stopLine, token->m_startColumn, token->m_stopColumn,
             zen_ErrorCode_messages[(int32_t)error->m_code]);
     }
 }
@@ -682,14 +682,20 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
         /* The ASTAnnotations that stores the scopes is not required anymore.
         * Therefore, destroy it and release the resources it holds.
         */
-        zen_Compiler_destroyNestedScopes(compiler->m_scopes[i]);
+        if (compiler->m_scopes[i] != NULL) {
+            zen_Compiler_destroyNestedScopes(compiler->m_scopes[i]);
+        }
 
         /* The symbol table is not required anymore. Therefore, destroy it
          * and release the resources it holds.
          */
-        zen_SymbolTable_delete(compiler->m_symbolTables[i]);
+        if (compiler->m_symbolTables[i] != NULL) {
+            zen_SymbolTable_delete(compiler->m_symbolTables[i]);
+        }
 
-        zen_ASTNode_delete(compiler->m_compilationUnits[i]);
+        if (compiler->m_compilationUnits[i] != NULL) {
+            zen_ASTNode_delete(compiler->m_compilationUnits[i]);
+        }
     }
 
     if (compiler->m_footprint) {
