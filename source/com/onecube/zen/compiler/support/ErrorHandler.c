@@ -171,3 +171,15 @@ jtk_ArrayList_t* zen_ErrorHandler_getErrors(zen_ErrorHandler_t* handler) {
 
     return handler->m_errors;
 }
+
+int32_t zen_ErrorHandler_getErrorCount(zen_ErrorHandler_t* handler) {
+    jtk_Assert_assertObject(handler, "The specified error handler is null.");
+
+    return jtk_ArrayList_getSize(handler->m_errors);
+}
+
+bool zen_ErrorHandler_hasErrors(zen_ErrorHandler_t* handler) {
+    jtk_Assert_assertObject(handler, "The specified error handler is null.");
+
+    return !jtk_ArrayList_isEmpty(handler->m_errors);
+}

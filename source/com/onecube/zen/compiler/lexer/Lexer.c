@@ -191,15 +191,15 @@ const uint8_t* zen_Lexer_getLiteralName(zen_TokenType_t type) {
 
 /* Constructor */
 
-zen_Lexer_t* zen_Lexer_new(zen_ErrorHandler_t* errorHandler,
-    jtk_InputStream_t* inputStream) {
+zen_Lexer_t* zen_Lexer_new(zen_Compiler_t* compiler) {
     /* The constructor invokes zen_Lexer_consume() to initialize
      * the LA(1) character. Therefore, we assign negative values
      * to certain attributes.
      */
 
     zen_Lexer_t* lexer = zen_Memory_allocate(zen_Lexer_t, 1);
-    lexer->m_inputStream = inputStream;
+    lexer->m_compiler = compiler;
+    lexer->m_inputStream = NULL;
     lexer->m_la1 = 0;
     lexer->m_index = -1;
     lexer->m_line = 1;
@@ -215,7 +215,6 @@ zen_Lexer_t* zen_Lexer_new(zen_ErrorHandler_t* errorHandler,
     lexer->m_tokens = jtk_ArrayQueue_new();
     lexer->m_indentations = jtk_ArrayStack_new();
     lexer->m_enclosures = 0;
-    lexer->m_errorHandler = errorHandler;
 
     zen_Lexer_consume(lexer);
 
@@ -364,7 +363,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
      */
     if (jtk_ArrayQueue_isEmpty(lexer->m_tokens)) {
         zen_ErrorCode_t errorCode = ZEN_ERROR_CODE_NONE;
-        
+
         /* We don't exit the loop until
          * -- We have a token.
          * -- We have reached the end of the stream.
@@ -380,7 +379,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
             lexer->m_startIndex = lexer->m_index;
             lexer->m_startLine = lexer->m_line;
             lexer->m_startColumn = lexer->m_column;
-            
+
 
             switch (lexer->m_la1) {
                 case ZEN_END_OF_STREAM : {
@@ -2065,7 +2064,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                     }
                     else {
                         errorCode = ZEN_ERROR_CODE_UNKNOWN_CHARACTER;
-                        
+
                         /* Consume and discard the unknown character. */
                         zen_Lexer_consume(lexer);
                         /* The lexer has encountered an unrecognized character. */
@@ -2078,13 +2077,13 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
 
         zen_Token_t* newToken = zen_Lexer_createToken(lexer);
         zen_Lexer_emit(lexer, newToken);
-        
+
         /* Unlike the parser, the lexer does not support error recovery strategies.
-         * Therefore, all types of errors are collectively recorded at this point. 
+         * Therefore, all types of errors are collectively recorded at this point.
          */
         if (errorCode != ZEN_ERROR_CODE_NONE) {
-            zen_ErrorHandler_handleLexicalError(lexer->m_errorHandler, lexer,
-                errorCode, newToken);
+            zen_ErrorHandler_handleLexicalError(lexer->m_compiler->m_errorHandler,
+                lexer, errorCode, newToken);
         }
     }
 

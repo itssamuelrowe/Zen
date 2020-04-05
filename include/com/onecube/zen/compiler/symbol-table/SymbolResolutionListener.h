@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_SYMBOL_RESOLUTION_LISTENER_H
 #define COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_SYMBOL_RESOLUTION_LISTENER_H
 
+#include <com/onecube/zen/compiler/Compiler.h>
 #include <com/onecube/zen/compiler/ast/ASTAnnotations.h>
 #include <com/onecube/zen/compiler/ast/ASTListener.h>
 #include <com/onecube/zen/compiler/ast/ExpressionAnnotation.h>
@@ -35,6 +36,7 @@
  * @since zen 1.0
  */
 struct zen_SymbolResolutionListener_t {
+    zen_Compiler_t* m_compiler;
     zen_ASTListener_t* m_astListener;
     zen_SymbolTable_t* m_symbolTable;
     zen_ASTAnnotations_t* m_scopes;
@@ -51,7 +53,7 @@ typedef struct zen_SymbolResolutionListener_t zen_SymbolResolutionListener_t;
 /**
  * @memberof SymbolResolutionListener
  */
-zen_SymbolResolutionListener_t* zen_SymbolResolutionListener_new(zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes);
+zen_SymbolResolutionListener_t* zen_SymbolResolutionListener_new(zen_Compiler_t* compiler);
 
 // Destructor
 

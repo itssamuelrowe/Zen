@@ -24,12 +24,15 @@
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/compiler/support/Error.h>
 #include <com/onecube/zen/compiler/support/ErrorCode.h>
-#include <com/onecube/zen/compiler/lexer/Lexer.h>
-#include <com/onecube/zen/compiler/parser/Parser.h>
 
 /*******************************************************************************
  * ErrorHandler                                                                *
  *******************************************************************************/
+
+struct zen_Lexer_t;
+struct zen_Parser_t;
+typedef struct zen_Lexer_t zen_Lexer_t;
+typedef struct zen_Parser_t zen_Parser_t;
 
 /**
  * @memberof ErrorHandler
@@ -178,5 +181,9 @@ void zen_ErrorHandler_handleSemanticalError(zen_ErrorHandler_t* handler,
  * @memberof ErrorHandler
  */
 jtk_ArrayList_t* zen_ErrorHandler_getErrors(zen_ErrorHandler_t* handler);
+
+int32_t zen_ErrorHandler_getErrorCount(zen_ErrorHandler_t* handler);
+
+bool zen_ErrorHandler_hasErrors(zen_ErrorHandler_t* handler);
 
 #endif /* COM_ONECUBE_ZEN_COMPILER_SUPPORT_ERROR_HANDLER_H */

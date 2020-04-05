@@ -132,11 +132,13 @@ void zen_ErrorHandler_reportError(void* handler, const char* message, zen_Token_
     fflush(stdout);
 }
 
-zen_SymbolDefinitionListener_t* zen_SymbolDefinitionListener_new(zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes) {
+zen_SymbolDefinitionListener_t* zen_SymbolDefinitionListener_new(
+    zen_Compiler_t* compiler) {
     zen_SymbolDefinitionListener_t* listener = zen_Memory_allocate(zen_SymbolDefinitionListener_t, 1);
+    listener->m_compiler = compiler;
     listener->m_astListener = zen_ASTListener_newWithContext(listener);
-    listener->m_symbolTable = symbolTable;
-    listener->m_scopes = scopes;
+    listener->m_symbolTable = NULL;
+    listener->m_scopes = NULL;
     listener->m_package = NULL;
 
     zen_ASTListener_t* astListener = listener->m_astListener;

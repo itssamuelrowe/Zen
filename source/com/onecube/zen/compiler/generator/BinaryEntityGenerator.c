@@ -53,18 +53,16 @@ bool lhs = false;
 
 // Constructor
 
-zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_newEx(
-    zen_Compiler_t* compiler, zen_SymbolTable_t* symbolTable,
-    zen_ASTAnnotations_t* scopes, zen_ASTNode_t* compilationUnit,
-    jtk_OutputStream_t* outputStream) {
+zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_new(
+    zen_Compiler_t* compiler) {
     zen_BinaryEntityGenerator_t* generator = zen_Memory_allocate(zen_BinaryEntityGenerator_t, 1);
     generator->m_compiler = compiler;
     generator->m_astListener = zen_ASTListener_newWithContext(generator);
     generator->m_builder = zen_BinaryEntityBuilder_new();
-    generator->m_symbolTable = symbolTable;
-    generator->m_scopes = scopes;
-    generator->m_compilationUnit = compilationUnit;
-    generator->m_outputStream = outputStream;
+    generator->m_symbolTable = NULL;
+    generator->m_scopes = NULL;
+    generator->m_compilationUnit = NULL;
+    generator->m_outputStream = NULL;
     generator->m_entityFile = zen_Memory_allocate(zen_EntityFile_t, 1);
     generator->m_constantPoolBuilder = zen_ConstantPoolBuilder_new();
     generator->m_package = NULL;
@@ -8373,7 +8371,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
 
     if (!zen_Symbol_isClass(symbol)) {
         printf("[error] %s is a non-class symbol\n", typeNameText);
-        printf("[warning] Looks like the syntatical phase or the resolution phase failed.\n");
+        printf("[warning] Looks like the syntactical phase or the resolution phase failed.\n");
     }
 
     zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
@@ -8381,7 +8379,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
     zen_Scope_t* scope = zen_ClassSymbol_getClassScope(classSymbol);
     if (!zen_Scope_isClassScope(scope)) {
         printf("[error] %s is a non-class scope\n", typeNameText);
-        printf("[warning] Looks like the syntatical phase or the resolution phase failed.\n");
+        printf("[warning] Looks like the syntactical phase or the resolution phase failed.\n");
     }
 
     zen_ClassScope_t* classScope = (zen_ClassScope_t*)scope->m_context;
@@ -8395,7 +8393,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
 
     if (!zen_Symbol_isFunction(constructorSymbol)) {
         printf("[error] 'new' declared as non-constructor symbol in class %s.\n", typeNameText);
-        printf("[warning] Looks like the syntatical phase or the resolution phase failed.\n");
+        printf("[warning] Looks like the syntactical phase or the resolution phase failed.\n");
     }
 
     /* The binary entity format requires the identifiers of a class to be separated

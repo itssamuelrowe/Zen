@@ -100,11 +100,13 @@
  *   y   5
  */
 
-zen_SymbolResolutionListener_t* zen_SymbolResolutionListener_new(zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes) {
+zen_SymbolResolutionListener_t* zen_SymbolResolutionListener_new(
+    zen_Compiler_t* compiler) {
     zen_SymbolResolutionListener_t* listener = zen_Memory_allocate(zen_SymbolResolutionListener_t, 1);
+    listener->m_compiler = compiler;
     listener->m_astListener = zen_ASTListener_newWithContext(listener);
-    listener->m_symbolTable = symbolTable;
-    listener->m_scopes = scopes;
+    listener->m_symbolTable = NULL;
+    listener->m_scopes = NULL;
     listener->m_label = ZEN_EXPRESSION_ANNOTATION_UNKNOWN;
 
     zen_ASTListener_t* astListener = listener->m_astListener;
@@ -844,7 +846,7 @@ void zen_SymbolResolutionListener_onEnterTryStatement(zen_ASTListener_t* astList
 
         zen_Scope_t* scope = zen_ASTAnnotations_get(listener->m_scopes, catchClause);
         zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
-        
+
         /* Visit the scopes of the statement suite specified to the
          * catch clause.
          */
@@ -1062,7 +1064,7 @@ void zen_SymbolResolutionListener_onEnterExpression(zen_ASTListener_t* astListen
 
     /* Restore the previous label saved on the function stack. */
     listener->m_label = previous;
-    
+
     zen_ASTListener_skipChildren(astListener);
 }
 
@@ -1361,7 +1363,7 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
         (expression->m_type == ZEN_AST_NODE_TYPE_LIST_EXPRESSION) ||
         (expression->m_type == ZEN_AST_NODE_TYPE_EXPRESSION)) {
         zen_ASTWalker_walk(astListener, expression);
-        
+
         /* Annotate the AST node as value. */
         listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
     }

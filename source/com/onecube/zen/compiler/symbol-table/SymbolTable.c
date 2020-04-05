@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,7 @@
 
 #include <jtk/collection/stack/LinkedStack.h>
 
+#include <com/onecube/zen/compiler/Compiler.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
 #include <com/onecube/zen/compiler/symbol-table/AnnotationSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
@@ -58,7 +59,7 @@ zen_Scope_t* zen_SymbolTable_getCurrentScope(zen_SymbolTable_t* symbolTable) {
 
 void zen_SymbolTable_invalidateCurrentScope(zen_SymbolTable_t* symbolTable) {
     jtk_Assert_assertObject(symbolTable, "The specified symbol table is null.");
-    
+
     jtk_Logger_t* logger = symbolTable->m_compiler->m_logger;
     jtk_Logger_debug(logger, "<exit> %s", zen_Scope_getName(symbolTable->m_currentScope));
     symbolTable->m_currentScope = zen_Scope_getEnclosingScope(symbolTable->m_currentScope);

@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,10 +17,12 @@
 #include <jtk/collection/array/Arrays.h>
 #include <com/onecube/zen/compiler/lexer/TokenStream.h>
 
-zen_TokenStream_t* zen_TokenStream_new(zen_Lexer_t* lexer, zen_TokenChannel_t channel) {
+zen_TokenStream_t* zen_TokenStream_new(zen_Compiler_t* compiler,
+    zen_Lexer_t* lexer, zen_TokenChannel_t channel) {
     jtk_Assert_assertObject(lexer, "The specified lexer is null.");
 
     zen_TokenStream_t* stream = zen_Memory_allocate(zen_TokenStream_t, 1);
+    stream->m_compiler = compiler;
     stream->m_lexer = lexer;
     stream->m_tokens = jtk_ArrayList_new(100);
     stream->m_p = -1;
@@ -105,7 +107,7 @@ int32_t zen_TokenStream_fetch(zen_TokenStream_t* stream, int32_t n) {
     if (stream->m_hitEndOfStream) {
         return 0;
     }
-    
+
     int32_t oldSize = jtk_ArrayList_getSize(stream->m_tokens);
     int32_t i;
     for (i = 0; i < n; i++) {
@@ -223,7 +225,7 @@ int32_t zen_TokenStream_getPreviousTokenOnChannel(zen_TokenStream_t* stream,
         }
         i--;
     }
-    
+
     return -1;
 }
 
@@ -285,12 +287,12 @@ void zen_TokenStream_fill(zen_TokenStream_t* stream) {
 int32_t zen_TokenStream_getNumberOfTokens(zen_TokenStream_t* stream,
     zen_TokenChannel_t channel) {
     jtk_Assert_assertObject(stream, "The specified token source is null.");
-    
+
     /* Fetch all the tokens from the input stream before computing
      * the number of tokens on the specified channel.
      */
     zen_TokenStream_fill(stream);
-    
+
     int32_t n = 0;
     int32_t size = jtk_ArrayList_getSize(stream->m_tokens);
     int32_t i;

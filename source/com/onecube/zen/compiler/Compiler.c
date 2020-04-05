@@ -220,25 +220,25 @@ void zen_Compiler_buildAST(zen_Compiler_t* compiler) {
 
             jtk_Logger_info(compiler->m_logger, "The lexical analysis phase has started.");
 
-            int32_t previousLexicalErrors = zen_ErrorHandler_getLexicalErrorCount(compiler->m_errorHandler);
+            int32_t previousLexicalErrors = zen_ErrorHandler_getErrorCount(compiler->m_errorHandler);
             zen_TokenStream_fill(tokens);
             if (compiler->m_dumpTokens) {
                 zen_Compiler_printTokens(compiler, tokens);
             }
-            int32_t currentLexicalErrors = zen_ErrorHandler_getLexicalErrorCount(compiler->m_errorHandler);
+            int32_t currentLexicalErrors = zen_ErrorHandler_getErrorCount(compiler->m_errorHandler);
 
             jtk_Logger_info(compiler->m_logger, "The lexical analysis phase is complete.");
 
 
             /* Perform syntax analysis only if there are no lexical errors. */
             if (previousLexicalErrors == currentLexicalErrors) {
-                jtk_Logger_info(compiler->m_logger, "The syntatical analysis phase has started.");
+                jtk_Logger_info(compiler->m_logger, "The syntactical analysis phase has started.");
 
                 zen_ASTNode_t* compilationUnit = zen_ASTNode_new(NULL);
                 zen_Parser_compilationUnit(parser, compilationUnit);
                 compiler->m_compilationUnits[i] = compilationUnit;
 
-                jtk_Logger_info(compiler->m_logger, "The syntatical analysis phase is complete.");
+                jtk_Logger_info(compiler->m_logger, "The syntactical analysis phase is complete.");
 
                 if (compiler->m_dumpNodes) {
                     zen_ASTWalker_walk(astPrinterASTListener, compilationUnit);
@@ -262,15 +262,16 @@ void zen_Compiler_buildAST(zen_Compiler_t* compiler) {
 }
 
 void zen_Compiler_analyze(zen_Compiler_t* compiler) {
-    zen_SymbolDefinitionListener_t* symbolDefinitionListener = zen_SymbolDefinitionListener_new();
+    zen_SymbolDefinitionListener_t* symbolDefinitionListener = zen_SymbolDefinitionListener_new(compiler);
     zen_ASTListener_t* symbolDefinitionASTListener = zen_SymbolDefinitionListener_getASTListener(symbolDefinitionListener);
 
-    zen_SymbolResolutionListener_t* symbolResolutionListener = zen_SymbolResolutionListener_new();
+    zen_SymbolResolutionListener_t* symbolResolutionListener = zen_SymbolResolutionListener_new(compiler);
     zen_ASTListener_t* symbolResolutionASTListener = zen_SymbolResolutionListener_getASTListener(symbolResolutionListener);
 
     int32_t size = jtk_ArrayList_getSize(compiler->m_inputFiles);
     int32_t i;
     for (i = 0; i < size; i++) {
+        compiler->m_currentFileIndex = i;
         zen_ASTNode_t* compilationUnit = compiler->m_compilationUnits[i];
 
         zen_SymbolTable_t* symbolTable = zen_SymbolTable_new(compiler);
@@ -301,11 +302,13 @@ void zen_Compiler_analyze(zen_Compiler_t* compiler) {
 }
 
 void zen_Compiler_generate(zen_Compiler_t* compiler) {
-    zen_BinaryEntityGenerator_t* generator = zen_BinaryEntityGenerator_newEx(compiler);
+    zen_BinaryEntityGenerator_t* generator = zen_BinaryEntityGenerator_new(compiler);
 
     int32_t size = jtk_ArrayList_getSize(compiler->m_inputFiles);
     int32_t i;
     for (i = 0; i < size; i++) {
+        compiler->m_currentFileIndex = i;
+
         jtk_Logger_info(compiler->m_logger, "Starting code generation phase...");
 
         zen_SymbolTable_t* symbolTable = compiler->m_symbolTables[i];
@@ -408,11 +411,10 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
     }
     else {
         zen_Compiler_buildAST(compiler);
-        if (!zen_ErrorHandler_hasLexicalErrors(compiler->m_errorHandler) &&
-            !zen_ErrorHandler_hasSyntaticalErrors(compiler->m_errorHandler)) {
+        if (!zen_ErrorHandler_hasErrors(compiler->m_errorHandler)) {
             zen_Compiler_analyze(compiler);
 
-            if (!zen_ErrorHandler_hasSemanticalErrors(compiler->m_errorHandler)) {
+            if (!zen_ErrorHandler_hasErrors(compiler->m_errorHandler)) {
                 zen_Compiler_generate(compiler);
             }
         }
@@ -436,6 +438,9 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
         int32_t footprint = zen_Memory_getFootprint();
         printf("Memory Footprint = %.2f KB\n", footprint / 1024.0f);
     }
+
+    // TODO: Return true only if the compilation suceeded.
+    return true;
 }
 
 bool zen_Compiler_compile(zen_Compiler_t* compiler) {

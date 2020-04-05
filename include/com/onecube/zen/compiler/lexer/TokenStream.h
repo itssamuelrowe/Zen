@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,7 @@
 #include <jtk/collection/list/ArrayList.h>
 
 #include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/compiler/Compiler.h>
 #include <com/onecube/zen/compiler/lexer/Lexer.h>
 #include <com/onecube/zen/compiler/lexer/Token.h>
 #include <com/onecube/zen/compiler/lexer/TokenType.h>
@@ -37,6 +38,8 @@
 // typedef void (*zen_OnLexicalError_t)(zen_LexicalError_t* error);
 
 struct zen_TokenStream_t {
+
+    zen_Compiler_t* m_compiler;
 
     /**
      * The lexer which recognizes and produces tokens on this
@@ -61,7 +64,7 @@ struct zen_TokenStream_t {
      * produced by the lexer.
      */
     bool m_hitEndOfStream;
-    
+
     /**
      * The channel on which the token stream filters tokens
      * from.
@@ -71,7 +74,8 @@ struct zen_TokenStream_t {
 
 typedef struct zen_TokenStream_t zen_TokenStream_t;
 
-zen_TokenStream_t* zen_TokenStream_new(zen_Lexer_t* lexer, zen_TokenChannel_t channel);
+zen_TokenStream_t* zen_TokenStream_new(zen_Compiler_t* compiler, zen_Lexer_t* lexer,
+    zen_TokenChannel_t channel);
 void zen_TokenStream_delete(zen_TokenStream_t* stream);
 int32_t zen_TokenStream_getIndex(zen_TokenStream_t* stream);
 int32_t zen_TokenStream_getSize(zen_TokenStream_t* stream);

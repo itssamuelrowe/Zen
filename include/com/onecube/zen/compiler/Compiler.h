@@ -19,11 +19,14 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_COMPILER_H
 #define COM_ONECUBE_ZEN_COMPILER_COMPILER_H
 
+#include <jtk/collection/list/ArrayList.h>
+#include <jtk/log/Logger.h>
 
 #include <com/onecube/zen/Configuration.h>
-#include <jtk/collection/list/ArrayList.h>
-
-#include <jtk/log/Logger.h>
+#include <com/onecube/zen/compiler/ast/ASTNode.h>
+#include <com/onecube/zen/compiler/ast/ASTAnnotations.h>
+#include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
+#include <com/onecube/zen/compiler/support/ErrorHandler.h>
 
 /******************************************************************************
  * Compiler                                                                   *
@@ -37,11 +40,10 @@ struct zen_Compiler_t {
     bool m_dumpTokens;
     bool m_dumpNodes;
     bool m_footprint;
+    jtk_Logger_t* m_logger;
     jtk_ArrayList_t* m_inputFiles;
     int32_t m_currentFileIndex;
     zen_ErrorHandler_t* m_errorHandler;
-    jtk_Logger_t* m_logger;
-
     zen_ASTNode_t** m_compilationUnits;
     zen_SymbolTable_t** m_symbolTables;
     zen_ASTAnnotations_t** m_scopes;

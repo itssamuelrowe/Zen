@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -55,19 +55,19 @@ struct zen_BinaryEntityGenerator_t {
     zen_SymbolTable_t* m_symbolTable;
     zen_ASTAnnotations_t* m_scopes;
     zen_ASTNode_t* m_compilationUnit;
-    
+
     /**
      * The output stream where the generated binary entity will be written to.
      */
     jtk_OutputStream_t* m_outputStream;
-    
+
     zen_EntityFile_t* m_entityFile;
     zen_ConstantPoolBuilder_t* m_constantPoolBuilder;
     uint8_t* m_package;
     int32_t m_packageSize;
     jtk_ArrayList_t* m_fields;
     jtk_ArrayList_t* m_functions;
-    
+
     /* The following attributes are used to generate the instruction attribute.
      * Unfortunately, these fields are overwritten when multiple functions are being
      * declared simultaneously. For example, this situation may arise in nested
@@ -76,14 +76,14 @@ struct zen_BinaryEntityGenerator_t {
      * be stored in a hash map or stack contingent on the design of the code
      * generator.
      */
-    
+
     // TODO: Rename this class!
     /**
      * The builder holds the channels where the instructions of the function
      * are written as they are generated.
      */
     zen_BinaryEntityBuilder_t* m_instructions;
-    
+
     /**
      * The maximum number of operands the operand stack can store.
      * A simple way to count this is to increment this field whenever
@@ -94,7 +94,7 @@ struct zen_BinaryEntityGenerator_t {
      *
      */
     uint16_t m_maxStackSize;
-    
+
     /**
      * The total number of local variables declared within the function being
      * declared.
@@ -103,7 +103,7 @@ struct zen_BinaryEntityGenerator_t {
      * a variable is declared within a function scope.
      */
     int32_t m_localVariableCount;
-    
+
     /**
      * The list of exception handler sites within the function being declared.
      */
@@ -132,10 +132,7 @@ typedef struct zen_BinaryEntityGenerator_t zen_BinaryEntityGenerator_t;
 /**
  * @memberof BinaryEntityGenerator
  */
-zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_newEx(
-    zen_Compiler_t* compiler, zen_SymbolTable_t* symbolTable,
-    zen_ASTAnnotations_t* scopes, zen_ASTNode_t* compilationUnit,
-    jtk_OutputStream_t* outputStream);
+zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_new(zen_Compiler_t* compiler);
 
 // Destructor
 

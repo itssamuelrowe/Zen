@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,6 +26,7 @@
 #include <jtk/io/InputStream.h>
 
 #include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/compiler/Compiler.h>
 #include <com/onecube/zen/compiler/lexer/LexerError.h>
 #include <com/onecube/zen/compiler/lexer/Token.h>
 #include <com/onecube/zen/compiler/lexer/TokenChannel.h>
@@ -52,6 +53,8 @@ typedef struct zen_ErrorHandler_t zen_ErrorHandler_t;
  * @since  zen 1.0
  */
 struct zen_Lexer_t {
+
+    zen_Compiler_t* m_compiler;
 
     /**
      * The input stream of characters.
@@ -156,8 +159,6 @@ struct zen_Lexer_t {
      *       in undefined lexical behaviour.
      */
     int32_t m_enclosures;
-    
-    zen_ErrorHandler_t* m_errorHandler;
 };
 
 /**
@@ -174,7 +175,7 @@ const uint8_t* zen_Lexer_getLiteralName(zen_TokenType_t type);
  *
  * @return A new lexer.
  */
-zen_Lexer_t* zen_Lexer_new(zen_ErrorHandler_t* errorHandler, jtk_InputStream_t* stream);
+zen_Lexer_t* zen_Lexer_new(zen_Compiler_t* compiler);
 
 // Destructor
 
