@@ -34,6 +34,11 @@ struct zen_Parser_t;
 typedef struct zen_Lexer_t zen_Lexer_t;
 typedef struct zen_Parser_t zen_Parser_t;
 
+/* NOTE: The handlers should not maintain any reference to the origin
+ * object that they receive. Because errors may persist beyond the lifetime
+ * of an origin object.
+ */
+
 /**
  * @memberof ErrorHandler
  */

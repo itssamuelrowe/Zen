@@ -229,7 +229,6 @@ void zen_Compiler_buildAST(zen_Compiler_t* compiler) {
 
             jtk_Logger_info(compiler->m_logger, "The lexical analysis phase is complete.");
 
-
             /* Perform syntax analysis only if there are no lexical errors. */
             if (previousLexicalErrors == currentLexicalErrors) {
                 jtk_Logger_info(compiler->m_logger, "The syntactical analysis phase has started.");
@@ -282,22 +281,18 @@ void zen_Compiler_analyze(zen_Compiler_t* compiler) {
         zen_SymbolTable_t* symbolTable = zen_SymbolTable_new(compiler);
         zen_ASTAnnotations_t* scopes = zen_ASTAnnotations_new();
 
-        zen_SymbolDefinitionListener_setSymbolTable(symbolDefinitionListener, symbolTable);
-        zen_SymbolDefinitionListener_setScopes(symbolDefinitionListener, scopes);
-
         jtk_Logger_info(compiler->m_logger, "Starting definition phase...");
+        zen_SymbolDefinitionListener_reset(symbolDefinitionListener, symbolTable, scopes);
         zen_ASTWalker_walk(symbolDefinitionASTListener, compilationUnit);
         jtk_Logger_info(compiler->m_logger, "The symbol definition phase is complete.");
 
-        zen_SymbolResolutionListener_setSymbolTable(symbolResolutionListener, symbolTable);
-        zen_SymbolResolutionListener_setScopes(symbolResolutionListener, scopes);
-
         jtk_Logger_info(compiler->m_logger, "Starting symbol resolution phase...");
+        zen_SymbolResolutionListener_reset(symbolResolutionListener, symbolTable, scopes);
         zen_ASTWalker_walk(symbolResolutionASTListener, compilationUnit);
         jtk_Logger_info(compiler->m_logger, "The symbol resolution phase is complete.");
 
-        zen_SymbolResolutionListener_reset(symbolResolutionListener);
-        zen_SymbolDefinitionListener_reset(symbolDefinitionListener);
+        compiler->m_symbolTables[i] = symbolTable;
+        compiler->m_scopes[i] = scopes;
     }
 
     zen_SymbolResolutionListener_delete(symbolResolutionListener);
@@ -331,6 +326,227 @@ void zen_Compiler_generate(zen_Compiler_t* compiler) {
     * it and release the resources it holds.
     */
     zen_BinaryEntityGenerator_delete(generator);
+}
+
+
+void zen_Compiler_destroyNestedScopes(zen_ASTAnnotations_t* annotations) {
+    jtk_Assert_assertObject(annotations, "The specified annotations is null.");
+
+    /* There are three algorithms that can help us in the destruction of the
+     * symbols and scopes.
+     * 1. The symbols are destructed by their enclosing scopes when the scopes
+     *    themselves are destroyed.
+     * 2. The compilation unit scope can be queried for children. These children
+     *    are destroyed in a recursive fashion. During each recursion a symbol
+     *    is tested to see if it also represents a scope. In which case,
+     *    the scope is queried for its children. The scope part of the symbol
+     *    is also destroyed here. The cycle repeats until there are no symbols
+     *    and scopes left to destroy.
+     * 3. The AST annotations are iterated over to retrieve the scopes.
+     *    In each iteration, the children symbols are retrieved and destroyed.
+     *    It should be noted that the scopes are also destroyed here.
+     *
+     * Here, I have chosen to implement the third algorithm due to certain
+     * circumstances.
+     */
+
+    jtk_ArrayList_t* temporary = jtk_ArrayList_new();
+    jtk_Iterator_t* iterator = jtk_HashMap_getValueIterator(annotations->m_map);
+    while (jtk_Iterator_hasNext(iterator)) {
+        /* The scopes are created during the definition phase of the symbol table.
+         * Therefore, we destroy them here before destroying the
+         * jtk_SymbolDefinitionListener_t class instance itself.
+         */
+        zen_Scope_t* scope = (zen_Scope_t*)jtk_Iterator_getNext(iterator);
+
+        /* Retrieve the children symbols declared in the current scope. */
+        zen_Scope_getChildrenSymbols(scope, temporary);
+
+        /* Iterate over the children symbols and destroy them. */
+        int32_t limit = jtk_ArrayList_getSize(temporary);
+        int32_t i;
+        for (i = 0; i < limit; i++) {
+            zen_Symbol_t* symbol = (zen_Symbol_t*)jtk_ArrayList_getValue(temporary, i);
+            zen_SymbolDefinitionListener_destroySymbol(symbol);
+        }
+
+        /* At this point, the symbols retrieved form the scope are destroyed.
+         * Therefore, remove references to them from the temporary list.
+         */
+        jtk_ArrayList_clear(temporary);
+
+        /* Destroy the current scope. */
+        zen_SymbolDefinitionListener_destroyScope(scope);
+    }
+    jtk_Iterator_delete(iterator);
+    jtk_ArrayList_delete(temporary);
+
+    zen_ASTAnnotations_delete(annotations);
+}
+
+void zen_Compiler_destroySymbol(zen_Symbol_t* symbol) {
+    /* I could have designed the zen_Symbol_t and its "descendant" classes that
+     * implement specific symbols like the jtk_Iterator_t and its "descendant"
+     * classes such as jtk_ArrayListIterator_t. This would have helped
+     * us delete specific symbols by simply invoking the zen_Symbol_delete()
+     * function. However, to implement such a design would require me to
+     * modify a few files for which I can spare no time. Further, the likelihood
+     * of introducing new symbol categories is very rare. Therefore, I have chosen
+     * to manually cast the context of the symbol before invoking a specific
+     * destructor.
+     *
+     * NOTE: If a new symbol category is added and its instance is created during
+     * the definition phase to the symbol table, then please add a respective
+     * destructor call here.
+     */
+    zen_SymbolCategory_t category = zen_Symbol_getCategory(symbol);
+    switch (category) {
+        /* TODO: Should annotations simply be classes? In which case the
+         * ZEN_SYMBOL_CATEGORY_ANNOTATION would be useless.
+         */
+
+        case ZEN_SYMBOL_CATEGORY_CLASS: {
+            zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
+            zen_ClassSymbol_delete(classSymbol);
+
+            // printf("[debug] Destroyed a class symbol.\n");
+
+            break;
+        }
+
+        // case ZEN_SYMBOL_CATEGORY_ENUMERATE: {
+        //     zen_EnumerateSymbol_t* enumerateSymbol = (zen_EnumerateSymbol_t*)symbol->m_context;
+        //     zen_EnumerateSymbol_delete(enumerateSymbol);
+
+        //     // printf("[debug] Destroyed a enumerate symbol.\n");
+
+        //     break;
+        // }
+
+        // case ZEN_SYMBOL_CATEGORY_ENUMERATION: {
+        //     zen_EnumerationSymbol_t* enumerationSymbol = (zen_EnumerationSymbol_t*)symbol->m_context;
+        //     zen_EnumerationSymbol_delete(enumerationSymbol);
+
+        //     // printf("[debug] Destroyed a enumeration symbol.\n");
+
+        //     break;
+        // }
+
+        case ZEN_SYMBOL_CATEGORY_FUNCTION: {
+            zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)symbol->m_context;
+            zen_FunctionSymbol_delete(functionSymbol);
+
+            // printf("[debug] Destroyed a function symbol.\n");
+
+            break;
+        }
+
+        case ZEN_SYMBOL_CATEGORY_CONSTANT: {
+            zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
+            zen_ConstantSymbol_delete(constantSymbol);
+
+            // printf("[debug] Destroyed a constant symbol.\n");
+
+            break;
+        }
+
+        case ZEN_SYMBOL_CATEGORY_VARIABLE: {
+            zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)symbol->m_context;
+            zen_VariableSymbol_delete(variableSymbol);
+
+            // printf("[debug] Destroyed a variable symbol.\n");
+
+            break;
+        }
+
+        case ZEN_SYMBOL_CATEGORY_LABEL: {
+            zen_LabelSymbol_t* labelSymbol = (zen_LabelSymbol_t*)symbol->m_context;
+            zen_LabelSymbol_delete(labelSymbol);
+
+            // printf("[debug] Destroyed a label symbol.\n");
+
+            break;
+        }
+    }
+}
+
+void zen_Compiler_destroyScope(zen_Scope_t* scope) {
+    /* I could have designed the zen_Scope_t and its "descendant" classes that
+     * implement specific scopes like the jtk_Iterator_t and its "descendant"
+     * classes such as jtk_ArrayListIterator_t. This would have helped
+     * us delete specific scopes by simply invoking the zen_Scope_delete()
+     * function. However, to implement such a design would require me to
+     * modify a few files for which I can spare no time. Further, the likelihood
+     * of introducing new scope types is very rare. Therefore, I have chosen
+     * to manually cast the context of the scope before invoking a specific
+     * destructor.
+     *
+     * Since the jtk_HashMap_t class does not store the order in which the
+     * scopes were inserted, the scopes are deleted in "random" order. With
+     * the currently available scopes, this behavior should not really affect
+     * the program in unexpected ways.
+     *
+     * NOTE: If a new scope type is added and its instance is created during
+     * the definition phase to the symbol table, then please add a respective
+     * destructor call here.
+     */
+    zen_ScopeType_t type = zen_Scope_getType(scope);
+    switch (type) {
+        /* TODO: Should annotations simply be classes? In which case the
+         * ZEN_SCOPE_ANNOTATION would be useless.
+         */
+
+        case ZEN_SCOPE_COMPILATION_UNIT: {
+            zen_CompilationUnitScope_t* compilationUnitScope =
+                (zen_CompilationUnitScope_t*)scope->m_context;
+            zen_CompilationUnitScope_delete(compilationUnitScope);
+
+            // printf("[debug] Compilation unit scope deleted.\n");
+
+            break;
+        }
+
+
+        // case ZEN_SCOPE_ENUMERATION: {
+        //     zen_EnumerationScope_t* enumerationScope =
+        //         (zen_EnumerationScope_t*)scope->m_context;
+        //     zen_EnumerationScope_delete(enumerationScope);
+
+        //     // printf("[debug] Enumeration scope deleted.\n");
+
+        //     break;
+        // }
+
+        case ZEN_SCOPE_FUNCTION: {
+            zen_FunctionScope_t* functionScope =
+                (zen_FunctionScope_t*)scope->m_context;
+            zen_FunctionScope_delete(functionScope);
+
+            // printf("[debug] Function scope deleted.\n");
+
+            break;
+        }
+
+        case ZEN_SCOPE_CLASS: {
+            zen_ClassScope_t* classScope =
+                (zen_ClassScope_t*)scope->m_context;
+            zen_ClassScope_delete(classScope);
+
+            // printf("[debug] Class scope deleted.\n");
+
+            break;
+        }
+
+        case ZEN_SCOPE_LOCAL: {
+            zen_LocalScope_t* localScope =
+                (zen_LocalScope_t*)scope->m_context;
+            zen_LocalScope_delete(localScope);
+
+            // printf("[debug] Local scope deleted.\n");
+
+            break;
+        }
+    }
 }
 
 bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t length) {
@@ -429,7 +645,7 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
         /* The ASTAnnotations that stores the scopes is not required anymore.
         * Therefore, destroy it and release the resources it holds.
         */
-        zen_ASTAnnotations_delete(compiler->m_scopes[i]);
+        zen_Compiler_destroyNestedScopes(compiler->m_scopes[i]);
 
         /* The symbol table is not required anymore. Therefore, destroy it
          * and release the resources it holds.
