@@ -200,7 +200,7 @@ void zen_Compiler_printLexicalErrors(zen_Compiler_t* compiler) {
 void zen_Compiler_buildAST(zen_Compiler_t* compiler) {
     zen_Lexer_t* lexer = zen_Lexer_new(compiler);
     zen_TokenStream_t* tokens = zen_TokenStream_new(compiler, lexer, ZEN_TOKEN_CHANNEL_DEFAULT);
-    zen_Parser_t* parser = zen_Parser_new(compiler);
+    zen_Parser_t* parser = zen_Parser_new(compiler, tokens);
     zen_ASTPrinter_t* astPrinter = zen_ASTPrinter_new();
     zen_ASTListener_t* astPrinterASTListener = zen_ASTPrinter_getASTListener(astPrinter);
 
@@ -217,10 +217,10 @@ void zen_Compiler_buildAST(zen_Compiler_t* compiler) {
             jtk_InputStream_t* stream = jtk_PathHelper_read(path);
             zen_Lexer_reset(lexer, stream);
 
-
             jtk_Logger_info(compiler->m_logger, "The lexical analysis phase has started.");
 
             int32_t previousLexicalErrors = zen_ErrorHandler_getErrorCount(compiler->m_errorHandler);
+            zen_TokenStream_reset(tokens);
             zen_TokenStream_fill(tokens);
             if (compiler->m_dumpTokens) {
                 zen_Compiler_printTokens(compiler, tokens);
@@ -235,6 +235,14 @@ void zen_Compiler_buildAST(zen_Compiler_t* compiler) {
                 jtk_Logger_info(compiler->m_logger, "The syntactical analysis phase has started.");
 
                 zen_ASTNode_t* compilationUnit = zen_ASTNode_new(NULL);
+                /* We do not have to reset the parser because the same token stream
+                 * provides the tokens to the parser. Further, as of this writing,
+                 * the parser actually does not maintain any internal state.
+                 * If the parser is extended to maintain some kind of internal
+                 * state, please make sure that the zen_Parser_reset() function
+                 * is invoked.
+                 */
+                // zen_Parser_reset(parser, tokens);
                 zen_Parser_compilationUnit(parser, compilationUnit);
                 compiler->m_compilationUnits[i] = compilationUnit;
 
@@ -245,8 +253,6 @@ void zen_Compiler_buildAST(zen_Compiler_t* compiler) {
                 }
             }
 
-            zen_Parser_reset(parser);
-            zen_TokenStream_reset(tokens);
             jtk_InputStream_delete(stream);
         }
     }

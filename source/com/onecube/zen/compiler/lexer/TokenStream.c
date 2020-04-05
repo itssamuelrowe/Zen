@@ -24,7 +24,7 @@ zen_TokenStream_t* zen_TokenStream_new(zen_Compiler_t* compiler,
     zen_TokenStream_t* stream = zen_Memory_allocate(zen_TokenStream_t, 1);
     stream->m_compiler = compiler;
     stream->m_lexer = lexer;
-    stream->m_tokens = jtk_ArrayList_new(100);
+    stream->m_tokens = jtk_ArrayList_newWithCapacity(128);
     stream->m_p = -1;
     stream->m_hitEndOfStream = false;
     stream->m_channel = channel;
@@ -32,23 +32,35 @@ zen_TokenStream_t* zen_TokenStream_new(zen_Compiler_t* compiler,
     return stream;
 }
 
+void zen_TokenStream_destroyStaleTokens(zen_TokenStream_t* stream) {
+}
+
+// TODO: The tokens must be destroyed!
 void zen_TokenStream_delete(zen_TokenStream_t* stream) {
     jtk_Assert_assertObject(stream, "The specified token stream is null.");
 
-    int32_t size = jtk_ArrayList_getSize(stream->m_tokens);
-    int32_t i;
-    for (i = 0; i < size; i++) {
-        /* The ownership of the tokens produced by the lexer
-         * is transfered to the token stream which demanded
-         * their creation. Therefore, the token stream
-         * has to destroy the buffered tokens.
-         */
-        zen_Token_t* token = (zen_Token_t*)jtk_ArrayList_getValue(stream->m_tokens, i);
-        zen_Token_delete(token);
-    }
+    // int32_t size = jtk_ArrayList_getSize(stream->m_tokens);
+    // int32_t i;
+    // for (i = 0; i < size; i++) {
+    //     /* The ownership of the tokens produced by the lexer
+    //      * is transfered to the token stream which demanded
+    //      * their creation. Therefore, the token stream
+    //      * has to destroy the buffered tokens.
+    //      */
+    //     zen_Token_t* token = (zen_Token_t*)jtk_ArrayList_getValue(stream->m_tokens, i);
+    //     zen_Token_delete(token);
+    // }
     jtk_ArrayList_delete(stream->m_tokens);
 
     jtk_Memory_deallocate(stream);
+}
+
+void zen_TokenStream_reset(zen_TokenStream_t* stream) {
+    jtk_Assert_assertObject(stream, "The specified token stream is null.");
+
+    jtk_ArrayList_clear(stream->m_tokens);
+    stream->m_p = -1;
+    stream->m_hitEndOfStream = false;
 }
 
 int32_t zen_TokenStream_getIndex(zen_TokenStream_t* stream) {

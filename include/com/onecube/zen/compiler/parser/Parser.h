@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 OneCube
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,8 +36,8 @@
  * @since zen 1.0
  */
 struct zen_Parser_t {
+    zen_Compiler_t* m_compiler;
     zen_TokenStream_t* m_tokens;
-    jtk_ArrayList_t* m_errors;
 };
 
 /**
@@ -50,7 +50,7 @@ typedef struct zen_Parser_t zen_Parser_t;
 /**
  * @memberof Parser
  */
-zen_Parser_t* zen_Parser_new(zen_TokenStream_t* tokens);
+zen_Parser_t* zen_Parser_new(zen_Compiler_t* compiler, zen_TokenStream_t* tokens);
 
 // Destructor
 
@@ -84,6 +84,13 @@ void zen_Paresr_match(zen_Parser_t* parser, zen_TokenType_t type);
  * @memberof Parser
  */
 zen_Token_t* zen_Parser_matchAndYield(zen_Parser_t* parser, zen_TokenType_t type);
+
+// Reset
+
+/**
+ * @memberof Parser
+ */
+void zen_Parser_reset(zen_Parser_t* parser, zen_TokenStream_t* tokens);
 
 // Rules
 

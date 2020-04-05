@@ -112,10 +112,13 @@ const char zen_Parser_ruleNames[][50] = {
 
 /* Constructor */
 
-zen_Parser_t* zen_Parser_new(zen_TokenStream_t* tokens) {
-    jtk_Assert_assertObject(tokens, "The specified token stream is null.");
+zen_Parser_t* zen_Parser_new(zen_Compiler_t* compiler, zen_TokenStream_t* tokens) {
+    jtk_Assert_assertObject(compiler, "The specified compiler is null.");
+
     zen_Parser_t* parser = zen_Memory_allocate(zen_Parser_t, 1);
+    parser->m_compiler = compiler;
     parser->m_tokens = tokens;
+
     return parser;
 }
 
@@ -123,6 +126,7 @@ zen_Parser_t* zen_Parser_new(zen_TokenStream_t* tokens) {
 
 void zen_Parser_delete(zen_Parser_t* parser) {
     jtk_Assert_assertObject(parser, "The specified parser is null.");
+
     jtk_Memory_deallocate(parser);
 }
 
@@ -179,6 +183,7 @@ void zen_Parser_match(zen_Parser_t* parser, zen_TokenType_t type) {
 
 zen_Token_t* zen_Parser_matchAndYield(zen_Parser_t* parser, zen_TokenType_t type) {
     jtk_Assert_assertObject(parser, "The specified parser is null.");
+
     zen_Token_t* token = zen_TokenStream_lt(parser->m_tokens, 1);
     if (token->m_type == type) {
         zen_TokenStream_consume(parser->m_tokens);
@@ -187,6 +192,14 @@ zen_Token_t* zen_Parser_matchAndYield(zen_Parser_t* parser, zen_TokenType_t type
         // TODO: ...
     }
     return token;
+}
+
+// Reset
+
+void zen_Parser_reset(zen_Parser_t* parser, zen_TokenStream_t* tokens) {
+    jtk_Assert_assertObject(parser, "The specified parser is null.");
+
+    parser->m_tokens = tokens;
 }
 
 /*

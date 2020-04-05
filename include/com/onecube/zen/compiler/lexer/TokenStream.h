@@ -77,6 +77,7 @@ typedef struct zen_TokenStream_t zen_TokenStream_t;
 zen_TokenStream_t* zen_TokenStream_new(zen_Compiler_t* compiler, zen_Lexer_t* lexer,
     zen_TokenChannel_t channel);
 void zen_TokenStream_delete(zen_TokenStream_t* stream);
+void zen_TokenStream_reset(zen_TokenStream_t* stream);
 int32_t zen_TokenStream_getIndex(zen_TokenStream_t* stream);
 int32_t zen_TokenStream_getSize(zen_TokenStream_t* stream);
 void zen_TokenStream_consume(zen_TokenStream_t* stream);
