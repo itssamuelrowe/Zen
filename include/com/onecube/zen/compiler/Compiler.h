@@ -40,6 +40,7 @@ struct zen_Compiler_t {
     bool m_dumpTokens;
     bool m_dumpNodes;
     bool m_footprint;
+    bool m_dumpInstructions;
     jtk_Logger_t* m_logger;
     jtk_ArrayList_t* m_inputFiles;
     int32_t m_currentFileIndex;

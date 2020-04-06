@@ -149,6 +149,7 @@ zen_Compiler_t* zen_Compiler_new() {
     compiler->m_dumpTokens = false;
     compiler->m_dumpNodes = false;
     compiler->m_footprint = false;
+    compiler->m_dumpInstructions = false;
     compiler->m_inputFiles = jtk_ArrayList_new();
     compiler->m_currentFileIndex = -1;
     compiler->m_errorHandler = zen_ErrorHandler_new();
@@ -598,6 +599,9 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
             }
             else if (strcmp(arguments[i], "--internal-footprint") == 0) {
                 compiler->m_footprint = true;
+            }
+            else if (strcmp(arguments[i], "--internal-dump-instructions") == 0) {
+                compiler->m_dumpInstructions = true;
             }
             else if (strcmp(arguments[i], "--log") == 0) {
                 if ((i + 1) < length) {

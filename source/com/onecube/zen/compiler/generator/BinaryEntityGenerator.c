@@ -1045,12 +1045,12 @@ zen_InstructionAttribute_t* zen_BinaryEntityGenerator_makeInstructionAttribute(
             exceptionHandlerSite;
     }
 
-    /*
-    jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
-    zen_BinaryEntityDisassember_disassembleInstructions(instructionBytes, instructionLength, builder);
-    printf("%.*s", builder->m_size, builder->m_value);
-    jtk_StringBuilder_delete(builder);
-    */
+    if (generator->m_compiler->m_dumpInstructions) {
+        jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+        zen_BinaryEntityDisassember_disassembleInstructions(instructionBytes, instructionLength, builder);
+        printf("%.*s---\n", builder->m_size, builder->m_value);
+        jtk_StringBuilder_delete(builder);
+    }
 
     return instructionAttribute;
 }
