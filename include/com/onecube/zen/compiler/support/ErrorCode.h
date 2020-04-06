@@ -48,6 +48,7 @@ enum zen_ErrorCode_t {
     // Semantical Errors
 
     ZEN_ERROR_CODE_UNDECLARED_CLASS,
+    ZEN_ERROR_CODE_INVALID_LVALUE,
 
     ZEN_ERROR_CODE_COUNT
 };

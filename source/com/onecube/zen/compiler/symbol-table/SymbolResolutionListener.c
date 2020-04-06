@@ -1091,12 +1091,16 @@ void zen_SymbolResolutionListener_onEnterAssignmentExpression(zen_ASTListener_t*
     zen_ASTNode_t* node) {
     zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
     zen_AssignmentExpressionContext_t* context = (zen_AssignmentExpressionContext_t*)node->m_context;
+    zen_Compiler_t* compiler = listener->m_compiler;
+    zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
 
     zen_ASTNode_t* assignmentOperator = context->m_assignmentOperator;
     if (assignmentOperator != NULL) {
         zen_ASTWalker_walk(astListener, context->m_conditionalExpression);
         if (listener->m_label == ZEN_EXPRESSION_ANNOTATION_VALUE) {
-            fprintf(stderr, "[error] The specified left value is invalid.\n");
+            zen_Token_t* assignmentOperatorToken = (zen_Token_t*)assignmentOperator->m_context;
+            zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
+            ZEN_ERROR_CODE_INVALID_LVALUE, assignmentOperatorToken);
         }
         else {
             /* Do not walk through the assignment expression when the left value

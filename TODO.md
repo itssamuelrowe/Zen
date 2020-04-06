@@ -10,3 +10,4 @@
  * Native code should be able throw and catch exceptions.
  * Implement line numbers for exceptions.
  * Generate default constructors when no constructor is provided.
+ * The compiler crashes for `new Example() = 1`
