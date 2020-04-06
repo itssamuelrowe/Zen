@@ -6753,21 +6753,21 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                     }
                 }
 
-                bool longLiteral = (integerText[actualIntegerLength - 1] == 'L') ||
-                    (integerText[actualIntegerLength - 1] == 'l');
+                // bool longLiteral = (integerText[actualIntegerLength - 1] == 'L') ||
+                    // (integerText[actualIntegerLength - 1] == 'l');
 
-                if (longLiteral) {
-                    integerLength--;
-                }
+                // if (longLiteral) {
+                    // integerLength--;
+                // }
 
                 int64_t value = zen_Long_convert(integerText, integerLength, radix);
 
-                if (longLiteral) {
+                // if (longLiteral) {
                     zen_BinaryEntityGenerator_loadLong(generator, value);
-                }
-                else {
-                    zen_BinaryEntityGenerator_loadInteger(generator, value);
-                }
+                // }
+                // else {
+                    // zen_BinaryEntityGenerator_loadInteger(generator, value);
+                // }
 
                 // TODO: Implement integer interning.
 
