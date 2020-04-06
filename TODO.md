@@ -11,6 +11,7 @@
  * Implement line numbers for exceptions.
  * Generate default constructors when no constructor is provided.
  * The compiler crashes for `new Example() = 1`
+ * Implement a recovery strategy
 
  * The compiler generates error for
 ```

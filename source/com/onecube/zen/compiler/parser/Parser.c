@@ -118,6 +118,10 @@ zen_Parser_t* zen_Parser_new(zen_Compiler_t* compiler, zen_TokenStream_t* tokens
     zen_Parser_t* parser = zen_Memory_allocate(zen_Parser_t, 1);
     parser->m_compiler = compiler;
     parser->m_tokens = tokens;
+    parser->m_followSet = jtk_Memory_allocate(zen_TokenType_t, 128);
+    parser->m_followSetSize = 0;
+    parser->m_followSetCapacity = 128;
+    parser->m_recovery = false;
 
     return parser;
 }
@@ -127,6 +131,7 @@ zen_Parser_t* zen_Parser_new(zen_Compiler_t* compiler, zen_TokenStream_t* tokens
 void zen_Parser_delete(zen_Parser_t* parser) {
     jtk_Assert_assertObject(parser, "The specified parser is null.");
 
+    jtk_Memory_deallocate(parser->m_followSet);
     jtk_Memory_deallocate(parser);
 }
 
@@ -157,12 +162,120 @@ zen_ASTNode_t* zen_Parser_newTerminalNode(zen_ASTNode_t* node, zen_Token_t* toke
     return terminalNode;
 }
 
+/* Recover */
+
+/* When the parser encounters an invalid input, the current rule cannot continue,
+ * so the parser recovers by skipping tokens until it a possible resynchronized
+ * state is achived. The control is then returned to the calling rule.
+ * This technique is known as the panic mode strategy.
+ *
+ * The trick here is to discard tokens only until the lookahead token is
+ * something that the parent rule of the current rule expects. For example,
+ * if there is a syntax error within a throw statement, the parser discards
+ * tokens until a newline token or other relevant token is encountered.
+ */
+void zen_Parser_recover(zen_Parser_t* parser) {
+    /* The parser is now in recovery mode; flag other parts of the parser. */
+    parser->m_recovery = true;
+
+    if (parser->m_followSetSize > 0) {
+        zen_Token_t* lt1 = zen_TokenStream_lt(parser->m_tokens, 1);
+        /* The parser tries to recover until a token from the follow set or
+         * the end-of-stream token is encountered.
+         */
+        while (lt1->m_type != ZEN_TOKEN_END_OF_STREAM) {
+            /* When searching for a follow token, the parser prioritizes tokens
+             * that are expected by the nearest rule in the rule invocation
+             * stack. This is why, the linear search algorithm is applied in a
+             * reverse fashion over the follow set.
+             */
+            int32_t i;
+            for (i = parser->m_followSetSize - 1; i >= 0; i--) {
+                if (lt1->m_type == parser->m_followSet[i]) {
+                    /* A token from the follow set was encountered. The parser
+                     * may have resynchronized with the input.
+                     */
+                    goto afterDiscard;
+                }
+            }
+            /* Consume and discard the current token. */
+            zen_TokenStream_consume(parser->m_tokens);
+            /* Update the lookahead token. */
+            lt1 = zen_TokenStream_lt(parser->m_tokens, 1);
+        }
+        afterDiscard:
+    }
+}
+
+bool zen_Parser_ensureFollowSetSpace(zen_Parser_t* parser, int32_t capacity) {
+    jtk_Assert_assertObject(parser, "The specified parser is null.");
+
+    bool result = false;
+    if (capacity > 0) {
+        int32_t currentCapacity = parser->m_followSetCapacity;
+        int32_t minimumCapacity = (parser->m_followSetSize + capacity);
+        int32_t requiredCapacity = minimumCapacity - currentCapacity;
+        if (requiredCapacity > 0) {
+            int32_t newCapacity = (currentCapacity * 2) + 2;
+            if ((newCapacity - minimumCapacity) < 0) {
+                newCapacity = minimumCapacity;
+            }
+
+            if (newCapacity < 0) {
+                if (minimumCapacity < 0) {
+                    /* Report an error, the requested capacity is too big. */
+                    printf("[internal error] The requested capacity is too big. The parser has run out of memory.\n");
+                }
+                else {
+                    /* Fall back, the new capacity was recommened by this function. */
+                    newCapacity = JTK_INTEGER_MAX_VALUE;
+                }
+            }
+
+            /* Do not allocate a new buffer if an out-of-memory error was
+             * reported.
+             */
+            if (newCapacity > 0) {
+                uint8_t* temporary = parser->m_followSet;
+                parser->m_followSet = (uint8_t*)jtk_Arrays_copyOfEx_b(
+                    parser->m_followSet, parser->m_followSet, newCapacity, 0,
+                    false);
+                parser->m_followSetCapacity = newCapacity;
+                jtk_Memory_deallocate(temporary);
+            }
+        }
+    }
+    return result;
+}
+
+void zen_Parser_pushFollowToken(zen_Parser_t* parser, zen_TokenType_t type) {
+    jtk_Assert_assertObject(parser, "The specified parser is null.");
+
+    /* Make sure that the set is large enough to hold another token type. */
+    zen_Parser_ensureFollowSetSpace(parser, parser->m_followSetSize + 1);
+    /* Insert the follow token to the set. */
+    parser->m_followSet[parser->m_followSetSize] = type;
+    /* Increment the size of the follow set. */
+    parser->m_followSetSize++;
+}
+
+void zen_Parser_popFollowToken(zen_Parser_t* parser) {
+    jtk_Assert_assertTrue(parser->m_followSetSize > 0, "The follow set is empty.");
+
+    parser->m_followSetSize--;
+}
+
 /* Match */
 
 void zen_Parser_match(zen_Parser_t* parser, zen_TokenType_t type) {
     jtk_Assert_assertObject(parser, "The specified parser is null.");
     zen_Token_t* lt1 = zen_TokenStream_lt(parser->m_tokens, 1);
     if (lt1->m_type == type) {
+        /* The token expected by the parser was found. If we the parser is
+         * in error recovery, turn it off.
+         */
+        parser->m_recovery = false;
+
         /* The token stream prohibts consumption of end-of-stream
          * token.
          */
@@ -178,10 +291,17 @@ void zen_Parser_match(zen_Parser_t* parser, zen_TokenType_t type) {
             // expectedName, actualName);
         // zen_Parser_reportSyntaxError(parser, lt1, buffer);
 
-        zen_Compiler_t* compiler = parser->m_compiler;
-        zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
-        zen_ErrorHandler_handleSyntacticalError(errorHandler, parser,
-            ZEN_ERROR_CODE_UNEXPECTED_TOKEN, lt1);
+        /* Do not report the error if the parser is in recovery mode. Otherwise,
+         * duplicate syntax errors will be reported to the end user.
+         */
+        if (parser->m_recovery) {
+            zen_Compiler_t* compiler = parser->m_compiler;
+            zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
+            zen_ErrorHandler_handleSyntacticalError(errorHandler, parser,
+                ZEN_ERROR_CODE_UNEXPECTED_TOKEN, lt1);
+        }
+        /* Try to resychronize the parser with the input. */
+        zen_Parser_recover(parser);
     }
 }
 

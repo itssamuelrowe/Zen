@@ -38,6 +38,10 @@
 struct zen_Parser_t {
     zen_Compiler_t* m_compiler;
     zen_TokenStream_t* m_tokens;
+    zen_TokenType_t* m_followSet;
+    int32_t m_followSetSize;
+    int32_t m_followSetCapacity;
+    bool m_recovery;
 };
 
 /**
@@ -78,12 +82,18 @@ void zen_Parser_parse(zen_Parser_t* parser);
 /**
  * @memberof Parser
  */
-void zen_Paresr_match(zen_Parser_t* parser, zen_TokenType_t type);
+void zen_Parser_match(zen_Parser_t* parser, zen_TokenType_t type);
 
 /**
  * @memberof Parser
  */
 zen_Token_t* zen_Parser_matchAndYield(zen_Parser_t* parser, zen_TokenType_t type);
+
+// Recovery
+
+void zen_Parser_pushFollowToken(zen_Parser_t* parser, zen_TokenType_t type);
+void zen_Parser_popFollowToken(zen_Parser_t* parser);
+void zen_Parser_recover(zen_Parser_t* parser);
 
 // Reset
 
