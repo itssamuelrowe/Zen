@@ -210,7 +210,7 @@ const uint8_t* zen_ErrorCode_messages[] = {
 
     // Syntactical Errors
 
-    "No viable alternative",
+    "Unexpected token",
 
     // Semantical Errors
 

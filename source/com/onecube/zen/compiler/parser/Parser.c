@@ -138,12 +138,12 @@ const char* zen_Parser_getRuleName(zen_ASTNodeType_t type) {
 
 /* Syntax Error */
 
-void zen_Parser_reportSyntaxError(zen_Parser_t* parser, zen_Token_t* token,
-    const char* message) {
-    fprintf(stderr, "[error] %d-%d:%d-%d: %s\n", token->m_startLine + 1,
-        token->m_stopLine + 1, token->m_startColumn + 1, token->m_stopColumn + 1,
-        message);
-}
+// void zen_Parser_reportSyntaxError(zen_Parser_t* parser, zen_Token_t* token,
+//     const char* message) {
+//     fprintf(stderr, "[error] %d-%d:%d-%d: %s\n", token->m_startLine + 1,
+//         token->m_stopLine + 1, token->m_startColumn + 1, token->m_stopColumn + 1,
+//         message);
+// }
 
 /* Terminal Node */
 
@@ -171,13 +171,17 @@ void zen_Parser_match(zen_Parser_t* parser, zen_TokenType_t type) {
         }
     }
     else {
-        char buffer[200];
-        const uint8_t* expectedName = zen_Lexer_getLiteralName(type);
-        const uint8_t* actualName = zen_Lexer_getLiteralName(lt1->m_type);
-        sprintf(buffer, "Expected token '%s', encountered token '%s'",
-            expectedName, actualName);
-        zen_Parser_reportSyntaxError(parser, lt1, buffer);
-        // TODO: ...
+        // char buffer[200];
+        // const uint8_t* expectedName = zen_Lexer_getLiteralName(type);
+        // const uint8_t* actualName = zen_Lexer_getLiteralName(lt1->m_type);
+        // sprintf(buffer, "Expected token '%s', encountered token '%s'",
+            // expectedName, actualName);
+        // zen_Parser_reportSyntaxError(parser, lt1, buffer);
+
+        zen_Compiler_t* compiler = parser->m_compiler;
+        zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
+        zen_ErrorHandler_handleSyntacticalError(errorHandler, parser,
+            ZEN_ERROR_CODE_UNEXPECTED_TOKEN, lt1);
     }
 }
 
@@ -759,7 +763,10 @@ void zen_Parser_functionParameters(zen_Parser_t* parser, zen_ASTNode_t* node) {
                     }
 
 					default: {
-						zen_Parser_reportSyntaxError(parser, zen_TokenStream_lt(parser->m_tokens, 1), "Expected identifier or ...");
+                        zen_Token_t* lt1 = zen_TokenStream_lt(parser->m_tokens, 1);
+                        zen_ErrorHandler_t* errorHandler = parser->m_compiler->m_errorHandler;
+						zen_ErrorHandler_handleSyntacticalError(
+                            errorHandler, parser, ZEN_ERROR_CODE_UNEXPECTED_TOKEN, lt1);
                         break;
 					}
                 }
@@ -1341,8 +1348,8 @@ bool zen_Parser_isCompoundStatementFollow(zen_TokenType_t type) {
 		case ZEN_TOKEN_KEYWORD_TRY: /* compoundStatement -> tryStatement */
 		case ZEN_TOKEN_KEYWORD_SYNCHRONIZE: /* compoundStatement -> synchronizeStatement */
 		case ZEN_TOKEN_KEYWORD_WITH: /* compoundStatement -> withStatement */
-		case ZEN_TOKEN_KEYWORD_FUNCTION: /* compoundStatement -> functionDeclaration */
-		case ZEN_TOKEN_KEYWORD_CLASS: /* compoundStatement -> classDeclaration */
+		// case ZEN_TOKEN_KEYWORD_FUNCTION: /* compoundStatement -> functionDeclaration */
+		// case ZEN_TOKEN_KEYWORD_CLASS: /* compoundStatement -> classDeclaration */
 		{
             result = true;
 			break;

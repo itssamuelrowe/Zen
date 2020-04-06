@@ -7540,7 +7540,9 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
                 else {
                     // zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)primarySymbol->m_context;
                     // index = constantSymbol->m_index;
-                    zen_Parser_reportSyntaxError(NULL, identifierToken, "Invalid assignment of constant after declaration.");
+                    // zen_Parser_reportSyntaxError(NULL, identifierToken, "Invalid assignment of constant after declaration.");
+
+                    printf("[error] Invalid assignment of constant after declaration.\n");
 
                 }
             }
