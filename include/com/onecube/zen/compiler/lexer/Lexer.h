@@ -159,6 +159,8 @@ struct zen_Lexer_t {
      *       in undefined lexical behaviour.
      */
     int32_t m_enclosures;
+
+    zen_ErrorCode_t m_errorCode;
 };
 
 /**

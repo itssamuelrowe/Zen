@@ -215,6 +215,7 @@ zen_Lexer_t* zen_Lexer_new(zen_Compiler_t* compiler) {
     lexer->m_tokens = jtk_ArrayQueue_new();
     lexer->m_indentations = jtk_ArrayStack_new();
     lexer->m_enclosures = 0;
+    lexer->m_errorCode = ZEN_ERROR_CODE_NONE;
 
     return lexer;
 }
@@ -437,7 +438,7 @@ void zen_Lexer_emit(zen_Lexer_t* lexer, zen_Token_t* token) {
 *
 */
 
-void zen_Lexer_decimalIntegerLiteral(zen_Lexer_t* lexer, zen_ErrorCode_t* errorCode) {
+void zen_Lexer_decimalIntegerLiteral(zen_Lexer_t* lexer) {
     /* Consume and discard the decimal digit character. */
     zen_Lexer_consume(lexer);
 
@@ -457,7 +458,7 @@ void zen_Lexer_decimalIntegerLiteral(zen_Lexer_t* lexer, zen_ErrorCode_t* errorC
             }
 
             if (previous == '_') {
-                *errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
                 /* Consume and discard the invalid character. */
                 zen_Lexer_consume(lexer);
             }
@@ -482,13 +483,13 @@ void zen_Lexer_decimalIntegerLiteral(zen_Lexer_t* lexer, zen_ErrorCode_t* errorC
             }
 
                 if (previous == '_') {
-                    *errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                    lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
                     /* Consume and discard the invalid character. */
                     zen_Lexer_consume(lexer);
                 }
         }
         else {
-            *errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+            lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
             /* Consume and discard the invalid character. */
             zen_Lexer_consume(lexer);
         }
@@ -592,7 +593,7 @@ void zen_Lexer_decimalIntegerLiteral(zen_Lexer_t* lexer, zen_ErrorCode_t* errorC
  * ;
  *
  */
-void zen_Lexer_integerLiteral(zen_Lexer_t* lexer, zen_ErrorCode_t* errorCode) {
+void zen_Lexer_integerLiteral(zen_Lexer_t* lexer) {
     /* The lexer has recognized an integer literal. */
     lexer->m_type = ZEN_TOKEN_INTEGER_LITERAL;
 
@@ -622,14 +623,14 @@ void zen_Lexer_integerLiteral(zen_Lexer_t* lexer, zen_ErrorCode_t* errorCode) {
                     }
 
                     if (previous == '_') {
-                        *errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                        lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
                         /* Consume and discard the invalid character. */
                         zen_Lexer_consume(lexer);
                     }
                 }
             }
             else {
-                *errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
                 /* Consume and discard the invalid character. */
                 zen_Lexer_consume(lexer);
             }
@@ -656,14 +657,14 @@ void zen_Lexer_integerLiteral(zen_Lexer_t* lexer, zen_ErrorCode_t* errorCode) {
                     }
 
                     if (previous == '_') {
-                        *errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                        lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
                         /* Consume and discard the invalid character. */
                         zen_Lexer_consume(lexer);
                     }
                 }
             }
             else {
-                *errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
                 /* Consume and discard the invalid character. */
                 zen_Lexer_consume(lexer);
             }
@@ -690,27 +691,27 @@ void zen_Lexer_integerLiteral(zen_Lexer_t* lexer, zen_ErrorCode_t* errorCode) {
                     }
 
                     if (previous == '_') {
-                        *errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                        lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
                         /* Consume and discard the invalid character. */
                         zen_Lexer_consume(lexer);
                     }
                 }
             }
             else {
-                *errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
                 /* Consume and discard the invalid character. */
                 zen_Lexer_consume(lexer);
             }
         }
         else if (zen_Lexer_isDecimalDigit(lexer->m_la1) || lexer->m_la1 == '_') {
-            zen_Lexer_decimalIntegerLiteral(lexer, errorCode);
+            zen_Lexer_decimalIntegerLiteral(lexer);
         }
         else if (zen_Lexer_isLetter(lexer->m_la1)) {
-            *errorCode = ZEN_ERROR_CODE_INVALID_INTEGER_LITERAL_PREFIX;
+            lexer->m_errorCode = ZEN_ERROR_CODE_INVALID_INTEGER_LITERAL_PREFIX;
         }
     }
     else {
-        zen_Lexer_decimalIntegerLiteral(lexer, errorCode);
+        zen_Lexer_decimalIntegerLiteral(lexer);
     }
 }
 
@@ -766,8 +767,6 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
      * from the input stream unless necessary.
      */
     if (jtk_ArrayQueue_isEmpty(lexer->m_tokens)) {
-        zen_ErrorCode_t errorCode = ZEN_ERROR_CODE_NONE;
-
         /* We don't exit the loop until
          * -- We have a token.
          * -- We have reached the end of the stream.
@@ -783,6 +782,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
             lexer->m_startIndex = lexer->m_index;
             lexer->m_startLine = lexer->m_line;
             lexer->m_startColumn = lexer->m_column;
+            lexer->m_errorCode = ZEN_ERROR_CODE_NONE;
 
 
             switch (lexer->m_la1) {
@@ -1362,7 +1362,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                         do {
                             while (lexer->m_la1 != '*') {
                                 if (lexer->m_la1 == ZEN_END_OF_STREAM) {
-                                    errorCode = ZEN_ERROR_CODE_UNTERMINATED_MULTI_LINE_COMMENT;
+                                    lexer->m_errorCode = ZEN_ERROR_CODE_UNTERMINATED_MULTI_LINE_COMMENT;
                                     break;
                                 }
 
@@ -1810,7 +1810,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
 
                     while (lexer->m_la1 != terminator) {
                         if ((lexer->m_la1 == ZEN_END_OF_STREAM) || (lexer->m_la1 == '\n')) {
-                            errorCode = ZEN_ERROR_CODE_UNTERMINATED_STRING_LITERAL;
+                            lexer->m_errorCode = ZEN_ERROR_CODE_UNTERMINATED_STRING_LITERAL;
                             break;
                         }
                         else if (lexer->m_la1 == '\\') {
@@ -1834,13 +1834,13 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                         zen_Lexer_consume(lexer);
                                     }
                                     else {
-                                        errorCode = ZEN_ERROR_CODE_MALFORMED_UNICODE_CHARACTER_SEQUENCE;
+                                        lexer->m_errorCode = ZEN_ERROR_CODE_MALFORMED_UNICODE_CHARACTER_SEQUENCE;
                                         break;
                                     }
                                 }
                             }
                             else {
-                                errorCode = ZEN_ERROR_CODE_INVALID_ESCAPE_SEQUENCE;
+                                lexer->m_errorCode = ZEN_ERROR_CODE_INVALID_ESCAPE_SEQUENCE;
 
                                 /* Consume and discard the unknown escape sequence. */
                                 zen_Lexer_consume(lexer);
@@ -2072,7 +2072,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                         // jtk_CString_delete(text);
                     }
                     else if (zen_Lexer_isDecimalDigit(lexer->m_la1)) {
-                        zen_Lexer_integerLiteral(lexer, &errorCode);
+                        zen_Lexer_integerLiteral(lexer);
 
                         /* Check for integer type suffix. */
 
@@ -2089,7 +2089,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                         // }
                     }
                     else {
-                        errorCode = ZEN_ERROR_CODE_UNKNOWN_CHARACTER;
+                        lexer->m_errorCode = ZEN_ERROR_CODE_UNKNOWN_CHARACTER;
 
                         /* Consume and discard the unknown character. */
                         zen_Lexer_consume(lexer);
@@ -2107,9 +2107,9 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
         /* Unlike the parser, the lexer does not support error recovery strategies.
          * Therefore, all types of errors are collectively recorded at this point.
          */
-        if (errorCode != ZEN_ERROR_CODE_NONE) {
+        if (lexer->m_errorCode != ZEN_ERROR_CODE_NONE) {
             zen_ErrorHandler_handleLexicalError(lexer->m_compiler->m_errorHandler,
-                lexer, errorCode, newToken);
+                lexer, lexer->m_errorCode, newToken);
         }
     }
 
@@ -2139,6 +2139,7 @@ void zen_Lexer_reset(zen_Lexer_t* lexer, jtk_InputStream_t* inputStream) {
     lexer->m_channel = ZEN_TOKEN_CHANNEL_DEFAULT;
     lexer->m_type = ZEN_TOKEN_UNKNOWN;
     lexer->m_enclosures = 0;
+    lexer->m_errorCode = ZEN_ERROR_CODE_NONE;
 
     jtk_StringBuilder_clear(lexer->m_text);
     jtk_ArrayQueue_clear(lexer->m_tokens);
