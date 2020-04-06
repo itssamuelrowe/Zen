@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2020 Samuel Rowe
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -136,7 +136,7 @@ zen_EntityFile_t* zen_EntityLoader_getEntity(zen_EntityLoader_t* loader,
     jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
 
     zen_EntityFile_t* entity = (zen_EntityFile_t*)jtk_HashMap_getValue(loader->m_entities, descriptor);
-    
+
     return entity;
 }
 
@@ -250,7 +250,7 @@ jtk_ByteArray_t* jtk_ByteArray_fromRawArray(int8_t* array, int32_t size) {
 
 void jtk_ByteArray_delete(jtk_ByteArray_t* array) {
     jtk_Assert_assertObject(array, "The specified byte array is null.");
-    
+
     jtk_Memory_deallocate(array->m_values);
     jtk_Memory_deallocate(array);
 }
@@ -262,26 +262,26 @@ jtk_ByteArray_t* jtk_InputStreamHelper_toArray(jtk_InputStream_t* stream) {
     while (true) {
         int32_t count = jtk_InputStream_readBytesEx(stream, result, size,
             index, size);
-            
+
         if (count <= 0) {
             break;
         }
-        
+
         index += count;
-        
+
         if (index >= (int32_t)(size * 0.85f)) {
             uint8_t* temporary = result;
             int32_t newSize = size * 2;
             result = jtk_Arrays_copyOfEx_b(result, size, newSize, 0, false);
             jtk_Memory_deallocate(temporary);
-            
+
             size = newSize;
         }
     }
     jtk_Array_t* array = (index == 0)? NULL : jtk_ByteArray_fromRawArray(result, index);
-    
+
     jtk_Memory_deallocate(result);
-    
+
     return array;
 }
 
