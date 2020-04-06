@@ -1334,10 +1334,11 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
     int32_t postfixPartCount = jtk_ArrayList_getSize(context->m_postfixParts);
 
     zen_ASTNode_t* expression = primaryExpressionContext->m_expression;
+    zen_Token_t* token = NULL;
     /* Check if the primary expression is a literal or an identifier. */
     if (zen_ASTNode_isTerminal(expression)) {
         /* Retrieve the token that the primary expression represents. */
-        zen_Token_t* token = (zen_Token_t*)expression->m_context;
+        token = (zen_Token_t*)expression->m_context;
 
         switch (zen_Token_getType(token)) {
             case ZEN_TOKEN_IDENTIFIER: {
@@ -1379,7 +1380,6 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
             case ZEN_TOKEN_KEYWORD_FALSE:
             case ZEN_TOKEN_KEYWORD_THIS:
             case ZEN_TOKEN_KEYWORD_TRUE: {
-
                 /* Annotate the AST node as value. */
                 listener->m_label = ZEN_EXPRESSION_ANNOTATION_VALUE;
 
@@ -1434,7 +1434,8 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
 
                 if (i == 0) {
                     if (primarySymbol == NULL) {
-                        printf("[error] Variable treated as function.\n");
+                        zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
+                            ZEN_ERROR_CODE_VARIABLE_TREATED_AS_FUNCTION, token);
                     }
                     else if (zen_Symbol_isFunction(primarySymbol)) {
                         zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)primarySymbol->m_context;

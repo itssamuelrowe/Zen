@@ -11,3 +11,25 @@
  * Implement line numbers for exceptions.
  * Generate default constructors when no constructor is provided.
  * The compiler crashes for `new Example() = 1`
+
+ * The compiler generates error for
+```
+class Example
+    ...
+
+class Main
+    function main(...arguments)
+        var Example
+```
+
+But does not generate error for
+```
+class Main
+    function main(...arguments)
+        var Example
+
+class Example
+    ...
+```
+
+ * Destory the tokens created by the lexer.
