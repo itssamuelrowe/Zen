@@ -438,6 +438,105 @@ void zen_Lexer_emit(zen_Lexer_t* lexer, zen_Token_t* token) {
 *
 */
 
+void zen_Lexer_binaryIntegerLiteral(zen_Lexer_t* lexer) {
+    /* Consume and discard the binary prefix character. */
+    zen_Lexer_consume(lexer);
+
+    if (zen_Lexer_isBinaryDigit(lexer->m_la1)) {
+        /* Consume and discard the binary digit character. */
+        zen_Lexer_consume(lexer);
+
+        if (zen_Lexer_isBinaryDigitOrUnderscore(lexer->m_la1)) {
+            uint8_t previous = '\0';
+            while (zen_Lexer_isBinaryDigitOrUnderscore(lexer->m_la1)) {
+                previous = lexer->m_la1;
+
+                /* Consume and discard a binary digit or an underscore
+                    * character.
+                    */
+                zen_Lexer_consume(lexer);
+            }
+
+            if (previous == '_') {
+                lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                /* Consume and discard the invalid character. */
+                zen_Lexer_consume(lexer);
+            }
+        }
+    }
+    else {
+        lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+        /* Consume and discard the invalid character. */
+        zen_Lexer_consume(lexer);
+    }
+}
+
+void zen_Lexer_octalIntegerLiteral(zen_Lexer_t* lexer) {
+    /* Consume and discard the octal prefix character. */
+    zen_Lexer_consume(lexer);
+
+    if (zen_Lexer_isOctalDigit(lexer->m_la1)) {
+        /* Consume and discard the octal digit character. */
+        zen_Lexer_consume(lexer);
+
+        if (zen_Lexer_isOctalDigitOrUnderscore(lexer->m_la1)) {
+            uint8_t previous = '\0';
+            while (zen_Lexer_isOctalDigitOrUnderscore(lexer->m_la1)) {
+                previous = lexer->m_la1;
+
+                /* Consume and discard a octal digit or an underscore
+                    * character.
+                    */
+                zen_Lexer_consume(lexer);
+            }
+
+            if (previous == '_') {
+                lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                /* Consume and discard the invalid character. */
+                zen_Lexer_consume(lexer);
+            }
+        }
+    }
+    else {
+        lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+        /* Consume and discard the invalid character. */
+        zen_Lexer_consume(lexer);
+    }
+}
+
+void zen_Lexer_hexadecimalIntegerLiteral(zen_Lexer_t* lexer) {
+    /* Consume and discard the binary prefix character. */
+    zen_Lexer_consume(lexer);
+
+    if (zen_Lexer_isHexadecimalDigit(lexer->m_la1)) {
+        /* Consume and discard the hexadecimal digit character. */
+        zen_Lexer_consume(lexer);
+
+        if (zen_Lexer_isHexadecimalDigitOrUnderscore(lexer->m_la1)) {
+            uint8_t previous = '\0';
+            while (zen_Lexer_isHexadecimalDigitOrUnderscore(lexer->m_la1)) {
+                previous = lexer->m_la1;
+
+                /* Consume and discard a binary digit or an underscore
+                    * character.
+                    */
+                zen_Lexer_consume(lexer);
+            }
+
+            if (previous == '_') {
+                lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                /* Consume and discard the invalid character. */
+                zen_Lexer_consume(lexer);
+            }
+        }
+    }
+    else {
+        lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+        /* Consume and discard the invalid character. */
+        zen_Lexer_consume(lexer);
+    }
+}
+
 void zen_Lexer_decimalIntegerLiteral(zen_Lexer_t* lexer) {
     /* Consume and discard the decimal digit character. */
     zen_Lexer_consume(lexer);
@@ -602,106 +701,13 @@ void zen_Lexer_integerLiteral(zen_Lexer_t* lexer) {
         zen_Lexer_consume(lexer);
 
         if (zen_Lexer_isBinaryPrefix(lexer->m_la1)) {
-            /* Binary Integer Literal */
-
-            /* Consume and discard the binary prefix character. */
-            zen_Lexer_consume(lexer);
-
-            if (zen_Lexer_isBinaryDigit(lexer->m_la1)) {
-                /* Consume and discard the binary digit character. */
-                zen_Lexer_consume(lexer);
-
-                if (zen_Lexer_isBinaryDigitOrUnderscore(lexer->m_la1)) {
-                    uint8_t previous = '\0';
-                    while (zen_Lexer_isBinaryDigitOrUnderscore(lexer->m_la1)) {
-                        previous = lexer->m_la1;
-
-                        /* Consume and discard a binary digit or an underscore
-                            * character.
-                            */
-                        zen_Lexer_consume(lexer);
-                    }
-
-                    if (previous == '_') {
-                        lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
-                        /* Consume and discard the invalid character. */
-                        zen_Lexer_consume(lexer);
-                    }
-                }
-            }
-            else {
-                lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
-                /* Consume and discard the invalid character. */
-                zen_Lexer_consume(lexer);
-            }
+            zen_Lexer_binaryIntegerLiteral(lexer);
         }
         else if (zen_Lexer_isOctalPrefix(lexer->m_la1)) {
-            /* Octal Integer Literal */
-
-            /* Consume and discard the octal prefix character. */
-            zen_Lexer_consume(lexer);
-
-            if (zen_Lexer_isOctalDigit(lexer->m_la1)) {
-                /* Consume and discard the octal digit character. */
-                zen_Lexer_consume(lexer);
-
-                if (zen_Lexer_isOctalDigitOrUnderscore(lexer->m_la1)) {
-                    uint8_t previous = '\0';
-                    while (zen_Lexer_isOctalDigitOrUnderscore(lexer->m_la1)) {
-                        previous = lexer->m_la1;
-
-                        /* Consume and discard a octal digit or an underscore
-                            * character.
-                            */
-                        zen_Lexer_consume(lexer);
-                    }
-
-                    if (previous == '_') {
-                        lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
-                        /* Consume and discard the invalid character. */
-                        zen_Lexer_consume(lexer);
-                    }
-                }
-            }
-            else {
-                lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
-                /* Consume and discard the invalid character. */
-                zen_Lexer_consume(lexer);
-            }
+            zen_Lexer_octalIntegerLiteral(lexer);
         }
         else if (zen_Lexer_isHexadecimalPrefix(lexer->m_la1)) {
-            /* Hexadecimal Integer Literal */
-
-            /* Consume and discard the binary prefix character. */
-            zen_Lexer_consume(lexer);
-
-            if (zen_Lexer_isHexadecimalDigit(lexer->m_la1)) {
-                /* Consume and discard the hexadecimal digit character. */
-                zen_Lexer_consume(lexer);
-
-                if (zen_Lexer_isHexadecimalDigitOrUnderscore(lexer->m_la1)) {
-                    uint8_t previous = '\0';
-                    while (zen_Lexer_isHexadecimalDigitOrUnderscore(lexer->m_la1)) {
-                        previous = lexer->m_la1;
-
-                        /* Consume and discard a binary digit or an underscore
-                            * character.
-                            */
-                        zen_Lexer_consume(lexer);
-                    }
-
-                    if (previous == '_') {
-                        lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
-                        /* Consume and discard the invalid character. */
-                        zen_Lexer_consume(lexer);
-                    }
-                }
-            }
-            else {
-                lexer->m_errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
-                /* Consume and discard the invalid character. */
-                zen_Lexer_consume(lexer);
-            }
+            zen_Lexer_hexadecimalIntegerLiteral(lexer);
         }
         else if (zen_Lexer_isDecimalDigit(lexer->m_la1) || lexer->m_la1 == '_') {
             zen_Lexer_decimalIntegerLiteral(lexer);
