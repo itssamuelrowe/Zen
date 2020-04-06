@@ -1389,7 +1389,8 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
     }
     else if ((expression->m_type == ZEN_AST_NODE_TYPE_MAP_EXPRESSION) ||
         (expression->m_type == ZEN_AST_NODE_TYPE_LIST_EXPRESSION) ||
-        (expression->m_type == ZEN_AST_NODE_TYPE_EXPRESSION)) {
+        (expression->m_type == ZEN_AST_NODE_TYPE_EXPRESSION) ||
+        (expression->m_type == ZEN_AST_NODE_TYPE_NEW_EXPRESSION)) {
         zen_ASTWalker_walk(astListener, expression);
 
         /* Annotate the AST node as value. */
