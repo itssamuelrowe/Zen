@@ -1314,7 +1314,7 @@ void zen_SymbolResolutionListener_onEnterPostfixExpression(zen_ASTListener_t* as
      * function which causes the AST walker to skip iterating over the children
      * nodes.
      */
-    zen_ASTListener_skipChildren(astListener);
+    // zen_ASTListener_skipChildren(astListener);
 }
 
 void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* astListener,
@@ -1622,6 +1622,65 @@ void zen_SymbolResolutionListener_onExitListExpression(zen_ASTListener_t* astLis
 
 void zen_SymbolResolutionListener_onEnterNewExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
+    // TODO: Debug this function when superclasses are implemented!
+
+    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_Compiler_t* compiler = listener->m_compiler;
+    zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
+    /* Retrieve the logger from the compiler. */
+    jtk_Logger_t* logger = compiler->m_logger;
+
+    zen_NewExpressionContext_t* context = (zen_NewExpressionContext_t*)node->m_context;
+
+    /* Retrieve the scope within which the new expression appears. */
+    // zen_Scope_t* scope = zen_SymbolTable_getCurrentScope(generator->m_symbolTable);
+
+    /* Retrieve the string equivalent of the type name node. */
+    int32_t typeNameSize;
+    uint8_t* typeNameText = zen_ASTNode_toCString(context->m_typeName, &typeNameSize);
+    zen_TypeNameContext_t* typeName = (zen_TypeNameContext_t*)context->m_typeName->m_context;
+    int32_t identifierCount = jtk_ArrayList_getSize(typeName->m_identifiers);
+    zen_ASTNode_t* lastIdentifier = jtk_ArrayList_getValue(typeName->m_identifiers, identifierCount - 1);
+    zen_Token_t* lastIdentifierToken = (zen_Token_t*)lastIdentifier->m_context;
+
+    /* Resolve the class symbol for the type name. */
+    zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, typeNameText);
+
+    if (symbol == NULL) {
+        zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
+            ZEN_ERROR_CODE_UNDECLARED_CLASS, lastIdentifierToken);
+    }
+    else {
+        if (!zen_Symbol_isClass(symbol)) {
+            printf("[error] %s is a non-class symbol\n", typeNameText);
+        }
+
+        zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
+        /* Retrieve the scope corresponding to the class symbol. */
+        zen_Scope_t* scope = zen_ClassSymbol_getClassScope(classSymbol);
+        if (!zen_Scope_isClassScope(scope)) {
+            printf("[error] %s is a non-class scope\n", typeNameText);
+            printf("[warning] Looks like the syntactical phase failed.\n");
+        }
+
+        zen_ClassScope_t* classScope = (zen_ClassScope_t*)scope->m_context;
+        /* Retrieve the constructor declared in this class. */
+        zen_Symbol_t* constructorSymbol = zen_ClassScope_resolve(classScope, "new");
+
+        if (zen_Symbol_getEnclosingScope(constructorSymbol) != scope) {
+            printf("[error] No constructor defined in class %s, neither explicitly nor implicity.\n", typeNameText);
+        }
+
+        if (!zen_Symbol_isFunction(constructorSymbol)) {
+            printf("[error] 'new' declared as non-constructor symbol in class %s.\n", typeNameText);
+            printf("[warning] Looks like the syntactical phase failed.\n");
+        }
+    }
+
+    /* Delete the type name text. The typeNameText is used to generate the constructor
+     * entry in the constant pool. Therefore, we delay its destruction.
+     */
+    jtk_CString_delete(typeNameText);
 }
 
 void zen_SymbolResolutionListener_onExitNewExpression(zen_ASTListener_t* astListener,

@@ -9,3 +9,4 @@
  * The errors should be reported to the error handler.
  * Native code should be able throw and catch exceptions.
  * Implement line numbers for exceptions.
+ * Generate default constructors when no constructor is provided.

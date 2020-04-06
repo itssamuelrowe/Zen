@@ -202,14 +202,18 @@ const uint8_t* zen_ErrorCode_messages[] = {
 
     "Unterminated string literal",
     "Unterminated multi-line comment",
-    "Expected four hexadecimal digits",
+    "Malformed unicode character sequence; expected four hexadecimal digits",
     "Invalid escape sequence",
     "Unknown character",
     "Invalid prefix in integer literal",
 
     // Syntactical Errors
 
-    "No viable alternative"
+    "No viable alternative",
+
+    // Semantical Errors
+
+    "Undeclared class"
 };
 
 void zen_Compiler_printErrors(zen_Compiler_t* compiler) {
