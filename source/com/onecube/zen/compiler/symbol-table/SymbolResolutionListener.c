@@ -1318,13 +1318,15 @@ void zen_SymbolResolutionListener_onEnterPostfixExpression(zen_ASTListener_t* as
      * function which causes the AST walker to skip iterating over the children
      * nodes.
      */
-    // zen_ASTListener_skipChildren(astListener);
+    zen_ASTListener_skipChildren(astListener);
 }
 
 void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
     zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
     zen_PostfixExpressionContext_t* context = (zen_PostfixExpressionContext_t*)node->m_context;
+    zen_Compiler_t* compiler = listener->m_compiler;
+    zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
     zen_ASTNode_t* primaryExpression = context->m_primaryExpression;
     zen_PrimaryExpressionContext_t* primaryExpressionContext = (zen_PrimaryExpressionContext_t*)primaryExpression->m_context;
 
@@ -1340,20 +1342,32 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
         switch (zen_Token_getType(token)) {
             case ZEN_TOKEN_IDENTIFIER: {
                 /* Retrieve the string equivalent to the identifier node. */
-                int32_t identifierSize;
-                uint8_t* identifierText = zen_ASTNode_toCString(expression, &identifierSize);
-
+                const uint8_t* identifierText = zen_Token_getText(token);
                 /* Resolve the symbol in the symbol table. */
                 zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
 
-                zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(symbol);
-                if (zen_Symbol_isVariable(symbol) || zen_Symbol_isConstant(symbol)) {
-                    /* Annotate the AST node as placeholder. */
-                    listener->m_label = ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER;
+                if (symbol != NULL) {
+                    zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(symbol);
+                    if (zen_Symbol_isVariable(symbol) || zen_Symbol_isConstant(symbol)) {
+                        /* Annotate the AST node as placeholder. */
+                        listener->m_label = ZEN_EXPRESSION_ANNOTATION_PLACEHOLDER;
+                    }
+                    else {
+                        /* Pass the reference to the symbol to the next phase. */
+                        primarySymbol = symbol;
+                    }
+
+                    if (zen_Scope_isLocalScope(enclosingScope)) {
+                        zen_Token_t* symbolToken = (zen_Token_t*)symbol->m_identifier->m_context;
+                        if (token->m_startIndex <= symbolToken->m_startIndex) {
+                            zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
+                                    ZEN_ERROR_CODE_UNDECLARED_IDENTIFIER, token);
+                        }
+                    }
                 }
                 else {
-                    /* Pass the reference to the symbol to the next phase. */
-                    primarySymbol = symbol;
+                    zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
+                            ZEN_ERROR_CODE_UNDECLARED_IDENTIFIER, token);
                 }
 
                 break;
@@ -1556,32 +1570,6 @@ void zen_SymbolResolutionListener_onExitPostfixOperator(zen_ASTListener_t* astLi
 
 void zen_SymbolResolutionListener_onEnterPrimaryExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
-        /*
-    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
-    zen_PrimaryExpressionContext_t* primaryExpressionContext = (zen_PrimaryExpressionContext_t*)node->m_context;
-
-    if (primaryExpressionContext->m_expression->m_type == ZEN_AST_NODE_TYPE_TERMINAL) {
-        zen_Token_t* identifierToken = (zen_Token_t*)primaryExpressionContext->m_expression->m_context;
-        if (zen_Token_getType(identifierToken) == ZEN_TOKEN_IDENTIFIER) {
-            const uint8_t* identifierText = zen_Token_getText(identifierToken);
-            zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
-
-            if (symbol != NULL) {
-                zen_Scope_t* scope = zen_Symbol_getEnclosingScope(symbol);
-
-                if (zen_Scope_isLocalScope(scope)) {
-                    zen_Token_t* symbolToken = (zen_Token_t*)symbol->m_identifier->m_context;
-                    if (identifierToken->m_startIndex <= symbolToken->m_startIndex) {
-                        zen_ErrorHandler_reportError(NULL, "Undeclared identifier", identifierToken);
-                    }
-                }
-            }
-            else {
-                zen_ErrorHandler_reportError(NULL, "Undeclared identifier", identifierToken);
-            }
-        }
-    }
-    */
 }
 
 void zen_SymbolResolutionListener_onExitPrimaryExpression(zen_ASTListener_t* astListener,
