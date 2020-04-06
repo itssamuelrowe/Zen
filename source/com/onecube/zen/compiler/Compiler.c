@@ -206,6 +206,7 @@ const uint8_t* zen_ErrorCode_messages[] = {
     "Invalid escape sequence",
     "Unknown character",
     "Invalid prefix in integer literal",
+    "Expected digit after underscore in integer literal",
 
     // Syntactical Errors
 

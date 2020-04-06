@@ -309,6 +309,411 @@ void zen_Lexer_emit(zen_Lexer_t* lexer, zen_Token_t* token) {
     jtk_ArrayQueue_enqueue(lexer->m_tokens, token);
 }
 
+/* NOTE: The design for the integer literal was adopted from Java 8's lexer. The actual rules
+* were borrowed and adopted from the grammars-v4/Java8 repository in ANTLR's GitHub profile.
+*
+* One of the advantages of hand written lexers over generated lexers is that the code may be
+* optimized with the domain knowledge. This is exactly what I have done here. In other words,
+* the following grammar disallows underscores at the very end of an integer literal.
+* To support this, the designer has taken a longer path. However, I have simply used a
+* variable called previous, which stores the last character consumed by the integer literal
+* recognizing code, to prevent such inappropriate occurrences. After the simplified code
+* executes, the previous variable is tested for an underscore. If the test succeeds, a lexical
+* error is generated; otherwise, the integer literal is emitted by the lexer.
+*
+* IntegerLiteral
+* : BinaryIntegerLiteral
+* | OctalIntegerLiteral
+* | HexadecimalIntegerLiteral
+* | DecimalIntegerLiteral
+* ;
+*
+* BinaryIntegerLiteral
+* :    '0' [bB] BinaryNumeral IntegerTypeSuffix?
+* ;
+*
+* DecimalIntegerLiteral
+* :    DecimalNumeral IntegerTypeSuffix?
+* ;
+*
+*
+* OctalIntegerLiteral
+* :    '0' [cC] OctalNumeral IntegerTypeSuffix?
+* ;
+*
+* HexadecimalIntegerLiteral
+* :    '0' [xX] HexadecimalNumeral IntegerTypeSuffix?
+* ;
+*
+* IntegerTypeSuffix
+* :    [lL]
+* ;
+*
+* -----------------------------------------------------
+*
+* BinaryNumeral
+* :    BinaryDigit (BinaryDigitsAndUnderscores? BinaryDigit)?
+* ;
+*
+* BinaryDigit
+* :    [01]
+* ;
+*
+* BinaryDigitsAndUnderscores
+* :    BinaryDigitOrUnderscore+
+* ;
+*
+* BinaryDigitOrUnderscore
+* :    BinaryDigit
+* |    '_'
+* ;
+*
+* -----------------------------------------------------
+*
+* OctalNumeral
+* :    OctalDigit (OctalDigitsAndUnderscores? OctalDigit)?
+* ;
+*
+* OctalDigit
+* :    [0-7]
+* ;
+*
+* OctalDigitsAndUnderscores
+* :    OctalDigitOrUnderscore+
+* ;
+*
+* OctalDigitOrUnderscore
+* :    OctalDigit
+* |    '_'
+* ;
+*
+* -----------------------------------------------------
+*
+* DecimalNumeral
+* :    '0'
+* |    DecimalNonZeroDigit (Digits? Undscores Digits)
+* ;
+*
+* DecimalDigits
+* :    Digit (DecimalDigitsAndUnderscores? DecimalDigit)?
+* ;
+*
+* DecimalDigit
+* :    '0'
+* |    NonZeroDigit
+* ;
+*
+* DecimalNonZeroDigit
+* :    [1-9]
+* ;
+*
+* DecimalDigitsAndUnderscores
+* :    DecimalDigitOrUnderscore+
+* ;
+*
+* DecimalDigitOrUnderscore
+* :    DecimalDigit
+* |    '_'
+* ;
+*
+* -----------------------------------------------------
+*
+* HexadecimalNumeral
+* :    HexadecimalDigit (HexadecimalDigitsAndUnderscores? HexadecimalDigit)?
+* ;
+*
+* HexadecimalDigit
+* :    [0-9a-f-A-F]
+* ;
+*
+* HexadecimalDigitsAndUnderscores
+* :    HexadecimalDigitOrUnderscore+
+* ;
+*
+* HexadecimalDigitOrUnderscore
+* :    HexadecimalDigit
+* |    '_'
+* ;
+*
+*/
+
+void zen_Lexer_decimalIntegerLiteral(zen_Lexer_t* lexer, zen_ErrorCode_t* errorCode) {
+    /* Consume and discard the decimal digit character. */
+    zen_Lexer_consume(lexer);
+
+    if (zen_Lexer_isDecimalDigit(lexer->m_la1)) {
+        /* Consume and discard the decimal digit character. */
+        zen_Lexer_consume(lexer);
+
+        if (zen_Lexer_isDecimalDigitOrUnderscore(lexer->m_la1)) {
+            uint8_t previous = '\0';
+            while (zen_Lexer_isDecimalDigitOrUnderscore(lexer->m_la1)) {
+                previous = lexer->m_la1;
+
+                /* Consume and discard the decimal digit or underscore
+                    * character.
+                    */
+                zen_Lexer_consume(lexer);
+            }
+
+            if (previous == '_') {
+                *errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                /* Consume and discard the invalid character. */
+                zen_Lexer_consume(lexer);
+            }
+        }
+    }
+    else if (lexer->m_la1 == '_') {
+        do {
+            /* Consume and discard the '_' character. */
+            zen_Lexer_consume(lexer);
+        }
+        while (lexer->m_la1 == '_');
+
+        if (zen_Lexer_isDecimalDigitOrUnderscore(lexer->m_la1)) {
+            uint8_t previous = '\0';
+            while (zen_Lexer_isDecimalDigitOrUnderscore(lexer->m_la1)) {
+                previous = lexer->m_la1;
+
+                /* Consume and discard the decimal digit or underscore
+                    * character.
+                    */
+                zen_Lexer_consume(lexer);
+            }
+
+                if (previous == '_') {
+                    *errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                    /* Consume and discard the invalid character. */
+                    zen_Lexer_consume(lexer);
+                }
+        }
+        else {
+            *errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+            /* Consume and discard the invalid character. */
+            zen_Lexer_consume(lexer);
+        }
+    }
+}
+
+/* Here is the simplified grammar which allows underscore characters at the
+ * end of the integer literal. This grammar has simplified the decimal integer
+ * literal rule, too. This type of integer literals are the last to be recognized,
+ * given the order in which they are written. This allows us to implement
+ * the longest-match-wins behaviour, the same technique that helps us differentiate
+ * keywords and identifiers with similar prefixes.
+ *
+ * PS: I am not sure what the "longest-match-wins behaviour" is actually called. :")
+ *
+ * IntegerLiteral
+ * : BinaryIntegerLiteral
+ * | OctalIntegerLiteral
+ * | HexadecimalIntegerLiteral
+ * | DecimalIntegerLiteral
+ * ;
+ *
+ * BinaryIntegerLiteral
+ * :    '0' [bB] BinaryNumeral IntegerTypeSuffix?
+ * ;
+ *
+ * DecimalIntegerLiteral
+ * :    DecimalNumeral IntegerTypeSuffix?
+ * ;
+ *
+ * OctalIntegerLiteral
+ * :    '0' [cC] OctalNumeral IntegerTypeSuffix?
+ * ;
+ *
+ * HexadecimalIntegerLiteral
+ * :    '0' [xX] HexadecimalNumeral IntegerTypeSuffix?
+ * ;
+ *
+ * IntegerTypeSuffix
+ * :    [lL]
+ * ;
+ *
+ * -----------------------------------------------------
+ *
+ * BinaryNumeral
+ * :    BinaryDigit BinaryDigitOrUnderscore*
+ * ;
+ *
+ * BinaryDigitOrUnderscore
+ * :    BinaryDigit
+ * |    '_'
+ * ;
+ *
+ * BinaryDigit
+ * :    [01]
+ * ;
+ *
+ * -----------------------------------------------------
+ *
+ * OctalNumeral
+ * :    OctalDigit OctalDigitOrUnderscore*
+ * ;
+ *
+ * OctalDigit
+ * :    [0-7]
+ * ;
+ *
+ * OctalDigitOrUnderscore
+ * :    OctalDigit
+ *  |    '_'
+ * ;
+ *
+ * -----------------------------------------------------
+ *
+ * HexadecimalNumeral
+ * :    HexadecimalDigit HexadecimalDigitOrUnderscore*
+ * ;
+ *
+ * HexadecimalDigit
+ * :    [0-9a-f-A-F]
+ * ;
+ *
+ * HexadecimalDigitOrUnderscore
+ * :    HexadecimalDigit
+ * |    '_'
+ * ;
+ *
+ * -----------------------------------------------------
+ *
+ * DecimalNumeral
+ * :    DecimalDigit DecimalDigitOrUnderscore*
+ * ;
+ *
+ * DecimalDigit
+ * :    [0-9]
+ * ;
+ *
+ * DecimalDigitOrUnderscore
+ * :    DecimalDigit
+ * |    '_'
+ * ;
+ *
+ */
+void zen_Lexer_integerLiteral(zen_Lexer_t* lexer, zen_ErrorCode_t* errorCode) {
+    /* The lexer has recognized an integer literal. */
+    lexer->m_type = ZEN_TOKEN_INTEGER_LITERAL;
+
+    if (lexer->m_la1 == '0') {
+        /* Consume and discard the '0' character. */
+        zen_Lexer_consume(lexer);
+
+        if (zen_Lexer_isBinaryPrefix(lexer->m_la1)) {
+            /* Binary Integer Literal */
+
+            /* Consume and discard the binary prefix character. */
+            zen_Lexer_consume(lexer);
+
+            if (zen_Lexer_isBinaryDigit(lexer->m_la1)) {
+                /* Consume and discard the binary digit character. */
+                zen_Lexer_consume(lexer);
+
+                if (zen_Lexer_isBinaryDigitOrUnderscore(lexer->m_la1)) {
+                    uint8_t previous = '\0';
+                    while (zen_Lexer_isBinaryDigitOrUnderscore(lexer->m_la1)) {
+                        previous = lexer->m_la1;
+
+                        /* Consume and discard a binary digit or an underscore
+                            * character.
+                            */
+                        zen_Lexer_consume(lexer);
+                    }
+
+                    if (previous == '_') {
+                        *errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                        /* Consume and discard the invalid character. */
+                        zen_Lexer_consume(lexer);
+                    }
+                }
+            }
+            else {
+                *errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                /* Consume and discard the invalid character. */
+                zen_Lexer_consume(lexer);
+            }
+        }
+        else if (zen_Lexer_isOctalPrefix(lexer->m_la1)) {
+            /* Octal Integer Literal */
+
+            /* Consume and discard the octal prefix character. */
+            zen_Lexer_consume(lexer);
+
+            if (zen_Lexer_isOctalDigit(lexer->m_la1)) {
+                /* Consume and discard the octal digit character. */
+                zen_Lexer_consume(lexer);
+
+                if (zen_Lexer_isOctalDigitOrUnderscore(lexer->m_la1)) {
+                    uint8_t previous = '\0';
+                    while (zen_Lexer_isOctalDigitOrUnderscore(lexer->m_la1)) {
+                        previous = lexer->m_la1;
+
+                        /* Consume and discard a octal digit or an underscore
+                            * character.
+                            */
+                        zen_Lexer_consume(lexer);
+                    }
+
+                    if (previous == '_') {
+                        *errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                        /* Consume and discard the invalid character. */
+                        zen_Lexer_consume(lexer);
+                    }
+                }
+            }
+            else {
+                *errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                /* Consume and discard the invalid character. */
+                zen_Lexer_consume(lexer);
+            }
+        }
+        else if (zen_Lexer_isHexadecimalPrefix(lexer->m_la1)) {
+            /* Hexadecimal Integer Literal */
+
+            /* Consume and discard the binary prefix character. */
+            zen_Lexer_consume(lexer);
+
+            if (zen_Lexer_isHexadecimalDigit(lexer->m_la1)) {
+                /* Consume and discard the hexadecimal digit character. */
+                zen_Lexer_consume(lexer);
+
+                if (zen_Lexer_isHexadecimalDigitOrUnderscore(lexer->m_la1)) {
+                    uint8_t previous = '\0';
+                    while (zen_Lexer_isHexadecimalDigitOrUnderscore(lexer->m_la1)) {
+                        previous = lexer->m_la1;
+
+                        /* Consume and discard a binary digit or an underscore
+                            * character.
+                            */
+                        zen_Lexer_consume(lexer);
+                    }
+
+                    if (previous == '_') {
+                        *errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                        /* Consume and discard the invalid character. */
+                        zen_Lexer_consume(lexer);
+                    }
+                }
+            }
+            else {
+                *errorCode = ZEN_ERROR_CODE_EXPECTED_DIGIT_AFTER_UNDERSCORE;
+                /* Consume and discard the invalid character. */
+                zen_Lexer_consume(lexer);
+            }
+        }
+        else if (zen_Lexer_isDecimalDigit(lexer->m_la1) || lexer->m_la1 == '_') {
+            zen_Lexer_decimalIntegerLiteral(lexer, errorCode);
+        }
+        else if (zen_Lexer_isLetter(lexer->m_la1)) {
+            *errorCode = ZEN_ERROR_CODE_INVALID_INTEGER_LITERAL_PREFIX;
+        }
+    }
+    else {
+        zen_Lexer_decimalIntegerLiteral(lexer, errorCode);
+    }
+}
+
 /*
  * ALGORITHM
  * ---------
@@ -1667,383 +2072,7 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                         // jtk_CString_delete(text);
                     }
                     else if (zen_Lexer_isDecimalDigit(lexer->m_la1)) {
-                        /* NOTE: The design for the integer literal was adopted from Java 8's lexer. The actual rules
-                         * were borrowed and adopted from the grammars-v4/Java8 repository in ANTLR's GitHub profile.
-                         *
-                         * One of the advantages of hand written lexers over generated lexers is that the code may be
-                         * optimized with the domain knowledge. This is exactly what I have done here. In other words,
-                         * the following grammar disallows underscores at the very end of an integer literal.
-                         * To support this, the designer has taken a longer path. However, I have simply used a
-                         * variable called previous, which stores the last character consumed by the integer literal
-                         * recognizing code, to prevent such inappropriate occurrences. After the simplified code
-                         * executes, the previous variable is tested for an underscore. If the test succeeds, a lexical
-                         * error is generated; otherwise, the integer literal is emitted by the lexer.
-                         *
-                         * IntegerLiteral
-                         * : BinaryIntegerLiteral
-                         * | OctalIntegerLiteral
-                         * | HexadecimalIntegerLiteral
-                         * | DecimalIntegerLiteral
-                         * ;
-                         *
-                         * BinaryIntegerLiteral
-                         * :    '0' [bB] BinaryNumeral IntegerTypeSuffix?
-                         * ;
-                         *
-                         * DecimalIntegerLiteral
-                         * :    DecimalNumeral IntegerTypeSuffix?
-                         * ;
-                         *
-                         *
-                         * OctalIntegerLiteral
-                         * :    '0' [cC] OctalNumeral IntegerTypeSuffix?
-                         * ;
-                         *
-                         * HexadecimalIntegerLiteral
-                         * :    '0' [xX] HexadecimalNumeral IntegerTypeSuffix?
-                         * ;
-                         *
-                         * IntegerTypeSuffix
-                         * :    [lL]
-                         * ;
-                         *
-                         * -----------------------------------------------------
-                         *
-                         * BinaryNumeral
-                         * :    BinaryDigit (BinaryDigitsAndUnderscores? BinaryDigit)?
-                         * ;
-                         *
-                         * BinaryDigit
-                         * :    [01]
-                         * ;
-                         *
-                         * BinaryDigitsAndUnderscores
-                         * :    BinaryDigitOrUnderscore+
-                         * ;
-                         *
-                         * BinaryDigitOrUnderscore
-                         * :    BinaryDigit
-                         * |    '_'
-                         * ;
-                         *
-                         * -----------------------------------------------------
-                         *
-                         * OctalNumeral
-                         * :    OctalDigit (OctalDigitsAndUnderscores? OctalDigit)?
-                         * ;
-                         *
-                         * OctalDigit
-                         * :    [0-7]
-                         * ;
-                         *
-                         * OctalDigitsAndUnderscores
-                         * :    OctalDigitOrUnderscore+
-                         * ;
-                         *
-                         * OctalDigitOrUnderscore
-                         * :    OctalDigit
-                         * |    '_'
-                         * ;
-                         *
-                         * -----------------------------------------------------
-                         *
-                         * DecimalNumeral
-                         * :    '0'
-                         * |    DecimalNonZeroDigit (Digits? Undscores Digits)
-                         * ;
-                         *
-                         * DecimalDigits
-                         * :    Digit (DecimalDigitsAndUnderscores? DecimalDigit)?
-                         * ;
-                         *
-                         * DecimalDigit
-                         * :    '0'
-                         * |    NonZeroDigit
-                         * ;
-                         *
-                         * DecimalNonZeroDigit
-                         * :    [1-9]
-                         * ;
-                         *
-                         * DecimalDigitsAndUnderscores
-                         * :    DecimalDigitOrUnderscore+
-                         * ;
-                         *
-                         * DecimalDigitOrUnderscore
-                         * :    DecimalDigit
-                         * |    '_'
-                         * ;
-                         *
-                         * -----------------------------------------------------
-                         *
-                         * HexadecimalNumeral
-                         * :    HexadecimalDigit (HexadecimalDigitsAndUnderscores? HexadecimalDigit)?
-                         * ;
-                         *
-                         * HexadecimalDigit
-                         * :    [0-9a-f-A-F]
-                         * ;
-                         *
-                         * HexadecimalDigitsAndUnderscores
-                         * :    HexadecimalDigitOrUnderscore+
-                         * ;
-                         *
-                         * HexadecimalDigitOrUnderscore
-                         * :    HexadecimalDigit
-                         * |    '_'
-                         * ;
-                         *
-                         */
-
-                        /* Here is the simplified grammar which allows underscore characters at the
-                         * end of the integer literal. This grammar has simplified the decimal integer
-                         * literal rule, too. This type of integer literals are the last to be recognized,
-                         * given the order in which they are written. This allows us to implement
-                         * the longest-match-wins behaviour, the same technique that helps us differentiate
-                         * keywords and identifiers with similar prefixes.
-                         *
-                         * PS: I am not sure what the "longest-match-wins behaviour" is actually called. :")
-                         *
-                         * IntegerLiteral
-                         * : BinaryIntegerLiteral
-                         * | OctalIntegerLiteral
-                         * | HexadecimalIntegerLiteral
-                         * | DecimalIntegerLiteral
-                         * ;
-                         *
-                         * BinaryIntegerLiteral
-                         * :    '0' [bB] BinaryNumeral IntegerTypeSuffix?
-                         * ;
-                         *
-                         * DecimalIntegerLiteral
-                         * :    DecimalNumeral IntegerTypeSuffix?
-                         * ;
-                         *
-                         * OctalIntegerLiteral
-                         * :    '0' [cC] OctalNumeral IntegerTypeSuffix?
-                         * ;
-                         *
-                         * HexadecimalIntegerLiteral
-                         * :    '0' [xX] HexadecimalNumeral IntegerTypeSuffix?
-                         * ;
-                         *
-                         * IntegerTypeSuffix
-                         * :    [lL]
-                         * ;
-                         *
-                         * -----------------------------------------------------
-                         *
-                         * BinaryNumeral
-                         * :    BinaryDigit BinaryDigitOrUnderscore*
-                         * ;
-                         *
-                         * BinaryDigitOrUnderscore
-                         * :    BinaryDigit
-                         * |    '_'
-                         * ;
-                         *
-                         * BinaryDigit
-                         * :    [01]
-                         * ;
-                         *
-                         * -----------------------------------------------------
-                         *
-                         * OctalNumeral
-                         * :    OctalDigit OctalDigitOrUnderscore*
-                         * ;
-                         *
-                         * OctalDigit
-                         * :    [0-7]
-                         * ;
-                         *
-                         * OctalDigitOrUnderscore
-                         * :    OctalDigit
-                         * |    '_'
-                         * ;
-                         *
-                         * -----------------------------------------------------
-                         *
-                         * HexadecimalNumeral
-                         * :    HexadecimalDigit HexadecimalDigitOrUnderscore*
-                         * ;
-                         *
-                         * HexadecimalDigit
-                         * :    [0-9a-f-A-F]
-                         * ;
-                         *
-                         * HexadecimalDigitOrUnderscore
-                         * :    HexadecimalDigit
-                         * |    '_'
-                         * ;
-                         *
-                         * -----------------------------------------------------
-                         *
-                         * DecimalNumeral
-                         * :    DecimalDigit DecimalDigitOrUnderscore*
-                         * ;
-                         *
-                         * DecimalDigit
-                         * :    [0-9]
-                         * ;
-                         *
-                         * DecimalDigitOrUnderscore
-                         * :    DecimalDigit
-                         * |    '_'
-                         * ;
-                         *
-                         */
-                        if (lexer->m_la1 == '0') {
-                            /* Consume and discard the '0' character. */
-                            zen_Lexer_consume(lexer);
-
-                            if (zen_Lexer_isBinaryPrefix(lexer->m_la1)) {
-                                /* Binary Integer Literal */
-
-                                /* Consume and discard the binary prefix character. */
-                                zen_Lexer_consume(lexer);
-
-                                if (zen_Lexer_isBinaryDigit(lexer->m_la1)) {
-                                    /* Consume and discard the binary digit character. */
-                                    zen_Lexer_consume(lexer);
-
-                                    if (zen_Lexer_isBinaryDigitOrUnderscore(lexer->m_la1)) {
-                                        uint8_t previous = '\0';
-                                        while (zen_Lexer_isBinaryDigitOrUnderscore(lexer->m_la1)) {
-                                            previous = lexer->m_la1;
-
-                                            /* Consume and discard a binary digit or an underscore
-                                             * character.
-                                             */
-                                            zen_Lexer_consume(lexer);
-                                        }
-
-                                        if (previous == '_') {
-                                            printf("[error] Expected digit after underscore in integer literal\n");
-                                        }
-                                    }
-                                }
-                                else {
-                                    // Error: Expected binary digit
-                                }
-                            }
-                            else if (zen_Lexer_isOctalPrefix(lexer->m_la1)) {
-                                /* Octal Integer Literal */
-
-                                /* Consume and discard the octal prefix character. */
-                                zen_Lexer_consume(lexer);
-
-                                if (zen_Lexer_isOctalDigit(lexer->m_la1)) {
-                                    /* Consume and discard the octal digit character. */
-                                    zen_Lexer_consume(lexer);
-
-                                    if (zen_Lexer_isOctalDigitOrUnderscore(lexer->m_la1)) {
-                                        uint8_t previous = '\0';
-                                        while (zen_Lexer_isOctalDigitOrUnderscore(lexer->m_la1)) {
-                                            previous = lexer->m_la1;
-
-                                            /* Consume and discard a octal digit or an underscore
-                                             * character.
-                                             */
-                                            zen_Lexer_consume(lexer);
-                                        }
-
-                                        if (previous == '_') {
-                                            printf("[error] Expected digit after underscore in integer literal\n");
-                                        }
-                                    }
-                                }
-                                else {
-                                    // Error: Expected binary digit
-                                }
-                            }
-                            else if (zen_Lexer_isHexadecimalPrefix(lexer->m_la1)) {
-                                /* Hexadecimal Integer Literal */
-
-                                /* Consume and discard the binary prefix character. */
-                                zen_Lexer_consume(lexer);
-
-                                if (zen_Lexer_isHexadecimalDigit(lexer->m_la1)) {
-                                    /* Consume and discard the hexadecimal digit character. */
-                                    zen_Lexer_consume(lexer);
-
-                                    if (zen_Lexer_isHexadecimalDigitOrUnderscore(lexer->m_la1)) {
-                                        uint8_t previous = '\0';
-                                        while (zen_Lexer_isHexadecimalDigitOrUnderscore(lexer->m_la1)) {
-                                            previous = lexer->m_la1;
-
-                                            /* Consume and discard a binary digit or an underscore
-                                             * character.
-                                             */
-                                            zen_Lexer_consume(lexer);
-                                        }
-
-                                        if (previous == '_') {
-                                            printf("[error] Expected digit after underscore in integer literal\n");
-                                        }
-                                    }
-                                }
-                                else {
-                                    // Error: Expected hexadecimal digit
-                                }
-                            }
-                            else if (!jtk_CString_equals(lexer->m_text->m_value, lexer->m_text->m_size, "0", 1)) {
-                                // TODO: Implement jtk_StringBuilder_equals_z() function. */
-                                errorCode = ZEN_ERROR_CODE_INVALID_INTEGER_LITERAL_PREFIX;
-                            }
-                        }
-                        else {
-                            /* Decimal Integer Literal */
-
-                            /* Consume and discard the decimal digit character. */
-                            zen_Lexer_consume(lexer);
-
-                            if (zen_Lexer_isDecimalDigit(lexer->m_la1)) {
-                                /* Consume and discard the decimal digit character. */
-                                zen_Lexer_consume(lexer);
-
-                                if (zen_Lexer_isDecimalDigitOrUnderscore(lexer->m_la1)) {
-                                    uint8_t previous = '\0';
-                                    while (zen_Lexer_isDecimalDigitOrUnderscore(lexer->m_la1)) {
-                                        previous = lexer->m_la1;
-
-                                        /* Consume and discard the decimal digit or underscore
-                                         * character.
-                                         */
-                                        zen_Lexer_consume(lexer);
-                                    }
-
-                                    if (previous == '_') {
-                                        printf("[error] Expected digit after underscore in integer literal\n");
-                                    }
-                                }
-                            }
-                            else if (lexer->m_la1 == '_') {
-                                do {
-                                    /* Consume and discard the '_' character. */
-                                    zen_Lexer_consume(lexer);
-                                }
-                                while (lexer->m_la1 == '_');
-
-                                if (zen_Lexer_isDecimalDigitOrUnderscore(lexer->m_la1)) {
-                                    uint8_t previous = '\0';
-                                    while (zen_Lexer_isDecimalDigitOrUnderscore(lexer->m_la1)) {
-                                        previous = lexer->m_la1;
-
-                                        /* Consume and discard the decimal digit or underscore
-                                         * character.
-                                         */
-                                        zen_Lexer_consume(lexer);
-                                    }
-
-                                        if (previous == '_') {
-                                            printf("[error] Expected digit after underscore in integer literal\n");
-                                        }
-                                }
-                                else {
-                                    // Error: Expected digit
-                                }
-                            }
-                        }
+                        zen_Lexer_integerLiteral(lexer, &errorCode);
 
                         /* Check for integer type suffix. */
 
@@ -2058,9 +2087,6 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
 
                             // printf("[error] Invalid integer literal suffix\n");
                         // }
-
-                        /* The lexer has recognized an integer literal. */
-                        lexer->m_type = ZEN_TOKEN_INTEGER_LITERAL;
                     }
                     else {
                         errorCode = ZEN_ERROR_CODE_UNKNOWN_CHARACTER;
