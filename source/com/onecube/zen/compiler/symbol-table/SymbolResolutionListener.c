@@ -1655,29 +1655,35 @@ void zen_SymbolResolutionListener_onEnterNewExpression(zen_ASTListener_t* astLis
             ZEN_ERROR_CODE_UNDECLARED_CLASS, lastIdentifierToken);
     }
     else {
-        if (!zen_Symbol_isClass(symbol)) {
-            printf("[error] %s is a non-class symbol\n", typeNameText);
+        if (zen_Symbol_isClass(symbol)) {
+            zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
+            /* Retrieve the scope corresponding to the class symbol. */
+            zen_Scope_t* scope = zen_ClassSymbol_getClassScope(classSymbol);
+            if (zen_Scope_isClassScope(scope)) {
+                zen_ClassScope_t* classScope = (zen_ClassScope_t*)scope->m_context;
+                /* Retrieve the constructor declared in this class. */
+                zen_Symbol_t* constructorSymbol = zen_ClassScope_resolve(classScope, "new");
+
+                if ((constructorSymbol == NULL) ||
+                    (zen_Symbol_getEnclosingScope(constructorSymbol) != scope)) {
+                    zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
+                        ZEN_ERROR_CODE_NO_SUITABLE_CONSTRUCTOR, lastIdentifierToken);
+                }
+                else {
+                    if (!zen_Symbol_isFunction(constructorSymbol)) {
+                        printf("[internal error] 'new' declared as non-constructor symbol in class %s.\n", typeNameText);
+                        printf("[warning] Looks like the syntactical phase failed.\n");
+                    }
+                }
+            }
+            else {
+                printf("[internal error] %s is a non-class scope\n", typeNameText);
+                printf("[warning] Looks like the syntactical phase failed.\n");
+            }
         }
-
-        zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
-        /* Retrieve the scope corresponding to the class symbol. */
-        zen_Scope_t* scope = zen_ClassSymbol_getClassScope(classSymbol);
-        if (!zen_Scope_isClassScope(scope)) {
-            printf("[error] %s is a non-class scope\n", typeNameText);
-            printf("[warning] Looks like the syntactical phase failed.\n");
-        }
-
-        zen_ClassScope_t* classScope = (zen_ClassScope_t*)scope->m_context;
-        /* Retrieve the constructor declared in this class. */
-        zen_Symbol_t* constructorSymbol = zen_ClassScope_resolve(classScope, "new");
-
-        if (zen_Symbol_getEnclosingScope(constructorSymbol) != scope) {
-            printf("[error] No constructor defined in class %s, neither explicitly nor implicity.\n", typeNameText);
-        }
-
-        if (!zen_Symbol_isFunction(constructorSymbol)) {
-            printf("[error] 'new' declared as non-constructor symbol in class %s.\n", typeNameText);
-            printf("[warning] Looks like the syntactical phase failed.\n");
+        else {
+            zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
+                ZEN_ERROR_CODE_INSTANTIATION_OF_NON_CLASS_SYMBOL, lastIdentifierToken);
         }
     }
 
