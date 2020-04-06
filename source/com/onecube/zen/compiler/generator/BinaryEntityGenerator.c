@@ -502,109 +502,112 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
         zen_ConstantPoolEntry_t* entry = zen_ConstantPoolBuilder_getEntry(generator->m_constantPoolBuilder, i);
         zen_BinaryEntityBuilder_writeConstantPoolEntry(generator->m_builder, entry);
 
-        switch (entry->m_tag) {
-            case ZEN_CONSTANT_POOL_TAG_INTEGER: {
-                zen_ConstantPoolInteger_t* constantPoolInteger =
-                    (zen_ConstantPoolInteger_t*)entry;
+        if (generator->m_compiler->m_dumpInstructions) {
+            switch (entry->m_tag) {
+                case ZEN_CONSTANT_POOL_TAG_INTEGER: {
+                    zen_ConstantPoolInteger_t* constantPoolInteger =
+                        (zen_ConstantPoolInteger_t*)entry;
 
-                jtk_Logger_debug(logger, "#%d Integer (value* = %d)", i,
-                    constantPoolInteger->m_bytes);
+                    printf("#%d Integer (value* = %d)", i,
+                        constantPoolInteger->m_bytes);
 
-                break;
+                    break;
+                }
+
+                case ZEN_CONSTANT_POOL_TAG_LONG: {
+                    zen_ConstantPoolLong_t* constantPoolLong =
+                        (zen_ConstantPoolLong_t*)entry;
+
+                    printf("#%d Long (value* = %d)", i,
+                        (constantPoolLong->m_highBytes << 32) | constantPoolLong->m_lowBytes);
+
+                    break;
+                }
+
+                case ZEN_CONSTANT_POOL_TAG_FLOAT: {
+                    zen_ConstantPoolFloat_t* constantPoolFloat =
+                        (zen_ConstantPoolFloat_t*)entry;
+
+                    printf("#%d Float (value* = %f)", i,
+                        jtk_Float_pack(constantPoolFloat->m_bytes));
+
+                    break;
+                }
+
+                case ZEN_CONSTANT_POOL_TAG_DOUBLE: {
+                    zen_ConstantPoolDouble_t* constantPoolDouble =
+                        (zen_ConstantPoolDouble_t*)entry;
+
+                    printf("#%d Double (value* = %f)", i,
+                        jtk_Double_pack((constantPoolDouble->m_highBytes << 32) |
+                            constantPoolDouble->m_lowBytes));
+
+                    break;
+                }
+
+                case ZEN_CONSTANT_POOL_TAG_UTF8: {
+                    zen_ConstantPoolUtf8_t* constantPoolUtf8 =
+                        (zen_ConstantPoolUtf8_t*)entry;
+
+                    printf("#%d UTF-8 (length = %d, bytes = \"%.*s\")", i,
+                        constantPoolUtf8->m_length, constantPoolUtf8->m_length,
+                        constantPoolUtf8->m_bytes);
+
+                    break;
+                }
+
+                case ZEN_CONSTANT_POOL_TAG_STRING: {
+                    zen_ConstantPoolString_t* constantPoolString =
+                        (zen_ConstantPoolString_t*)entry;
+
+                    printf("#%d String (string = %d)", i, constantPoolString->m_stringIndex);
+
+                    break;
+                }
+
+                case ZEN_CONSTANT_POOL_TAG_FUNCTION: {
+                    zen_ConstantPoolFunction_t* constantPoolFunction =
+                        (zen_ConstantPoolFunction_t*)entry;
+
+                    printf("#%d Function (class = %d, descriptor = %d, name = %d)",
+                        i, constantPoolFunction->m_classIndex, constantPoolFunction->m_descriptorIndex,
+                        constantPoolFunction->m_nameIndex);
+
+                    break;
+                }
+
+                case ZEN_CONSTANT_POOL_TAG_FIELD: {
+                    zen_ConstantPoolField_t* constantPoolField =
+                        (zen_ConstantPoolField_t*)entry;
+
+                    printf("#%d Field (class = %d, descriptor = %d, name = %d)",
+                        i, constantPoolField->m_classIndex, constantPoolField->m_descriptorIndex,
+                        constantPoolField->m_nameIndex);
+
+                    break;
+                }
+
+                case ZEN_CONSTANT_POOL_TAG_CLASS: {
+                    zen_ConstantPoolClass_t* constantPoolClass =
+                        (zen_ConstantPoolClass_t*)entry;
+
+                    printf("#%d Class (name = %d)", i, constantPoolClass->m_nameIndex);
+
+                    break;
+                }
+
+                default: {
+                    printf("[error] Unknown constant pool tag %d", entry->m_tag);
+                }
             }
-
-            case ZEN_CONSTANT_POOL_TAG_LONG: {
-                zen_ConstantPoolLong_t* constantPoolLong =
-                    (zen_ConstantPoolLong_t*)entry;
-
-                jtk_Logger_debug(logger, "#%d Long (value* = %d)", i,
-                    (constantPoolLong->m_highBytes << 32) | constantPoolLong->m_lowBytes);
-
-                break;
-            }
-
-            case ZEN_CONSTANT_POOL_TAG_FLOAT: {
-                zen_ConstantPoolFloat_t* constantPoolFloat =
-                    (zen_ConstantPoolFloat_t*)entry;
-
-                jtk_Logger_debug(logger, "#%d Float (value* = %f)", i,
-                    jtk_Float_pack(constantPoolFloat->m_bytes));
-
-                break;
-            }
-
-            case ZEN_CONSTANT_POOL_TAG_DOUBLE: {
-                zen_ConstantPoolDouble_t* constantPoolDouble =
-                    (zen_ConstantPoolDouble_t*)entry;
-
-                jtk_Logger_debug(logger, "#%d Double (value* = %f)", i,
-                    jtk_Double_pack((constantPoolDouble->m_highBytes << 32) |
-                        constantPoolDouble->m_lowBytes));
-
-                break;
-            }
-
-            case ZEN_CONSTANT_POOL_TAG_UTF8: {
-                zen_ConstantPoolUtf8_t* constantPoolUtf8 =
-                    (zen_ConstantPoolUtf8_t*)entry;
-
-                jtk_Logger_debug(logger, "#%d UTF-8 (length = %d, bytes = \"%.*s\")", i,
-                    constantPoolUtf8->m_length, constantPoolUtf8->m_length,
-                    constantPoolUtf8->m_bytes);
-
-                break;
-            }
-
-            case ZEN_CONSTANT_POOL_TAG_STRING: {
-                zen_ConstantPoolString_t* constantPoolString =
-                    (zen_ConstantPoolString_t*)entry;
-
-                jtk_Logger_debug(logger, "#%d String (string = %d)", i, constantPoolString->m_stringIndex);
-
-                break;
-            }
-
-            case ZEN_CONSTANT_POOL_TAG_FUNCTION: {
-                zen_ConstantPoolFunction_t* constantPoolFunction =
-                    (zen_ConstantPoolFunction_t*)entry;
-
-                jtk_Logger_debug(logger, "#%d Function (class = %d, descriptor = %d, name = %d)",
-                    i, constantPoolFunction->m_classIndex, constantPoolFunction->m_descriptorIndex,
-                    constantPoolFunction->m_nameIndex);
-
-                break;
-            }
-
-            case ZEN_CONSTANT_POOL_TAG_FIELD: {
-                zen_ConstantPoolField_t* constantPoolField =
-                    (zen_ConstantPoolField_t*)entry;
-
-                jtk_Logger_debug(logger, "#%d Field (class = %d, descriptor = %d, name = %d)",
-                    i, constantPoolField->m_classIndex, constantPoolField->m_descriptorIndex,
-                    constantPoolField->m_nameIndex);
-
-                break;
-            }
-
-            case ZEN_CONSTANT_POOL_TAG_CLASS: {
-                zen_ConstantPoolClass_t* constantPoolClass =
-                    (zen_ConstantPoolClass_t*)entry;
-
-                jtk_Logger_debug(logger, "#%d Class (name = %d)", i, constantPoolClass->m_nameIndex);
-
-                break;
-            }
-
-            default: {
-                printf("[error] Unknown constant pool tag %d", entry->m_tag);
-            }
+            puts("");
         }
     }
 
     /* Log the constant pool details, including the number of entries and the trends
-     * seen among the entries.
-     */
-    jtk_Logger_debug(logger, "Constant pool size is %d.", entryCount);
+    * seen among the entries.
+    */
+    printf("Constant pool size is %d.\n", entryCount);
 
     /* Retrieve the entity to write. */
     zen_Entity_t* entity = &generator->m_entityFile->m_entity;

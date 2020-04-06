@@ -8,3 +8,4 @@
  * The pop instruction should be generated for expression statements that are not assignments.
  * The errors should be reported to the error handler.
  * Native code should be able throw and catch exceptions.
+ * Implement line numbers for exceptions.
