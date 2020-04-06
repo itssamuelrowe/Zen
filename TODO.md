@@ -1,3 +1,4 @@
+ * Remove the long suffix. All integers in Zen are 64-bit!
  * Implement the import statement
  * Implement default import strategy.
  * Extend the compiler to generate output files to corresponding to directories.

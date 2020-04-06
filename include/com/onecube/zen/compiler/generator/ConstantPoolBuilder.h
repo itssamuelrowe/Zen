@@ -68,6 +68,10 @@ void zen_ConstantPoolBuilder_delete(zen_ConstantPoolBuilder_t* builder);
 
 void zen_ConstantPoolBuilder_clear(zen_ConstantPoolBuilder_t* builder);
 
+// Reset
+
+void zen_ConstantPoolBuilder_reset(zen_ConstantPoolBuilder_t* builder);
+
 // Entries
 
 /**

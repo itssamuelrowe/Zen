@@ -4994,7 +4994,7 @@ void zen_BinaryEntityGenerator_onExitClassDeclaration(zen_ASTListener_t* astList
     parentChannel->m_index = 0;
 
     // TODO: Reset m_entityFile
-    zen_ConstantPoolBuilder_clear(generator->m_constantPoolBuilder);
+    zen_ConstantPoolBuilder_reset(generator->m_constantPoolBuilder);
     zen_BinaryEntityGenerator_clearFields(generator);
     zen_BinaryEntityGenerator_clearFunctions(generator);
     zen_BinaryEntityGenerator_clearExceptionHandlerSites(generator);
@@ -7286,21 +7286,22 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
                     }
                 }
 
-                bool longLiteral = (integerText[actualIntegerLength - 1] == 'L') ||
-                    (integerText[actualIntegerLength - 1] == 'l');
+                // bool longLiteral = (integerText[actualIntegerLength - 1] == 'L') ||
+                //     (integerText[actualIntegerLength - 1] == 'l');
 
-                if (longLiteral) {
-                    integerLength--;
-                }
+                // if (longLiteral) {
+                //     integerLength--;
+                // }
 
                 int64_t value = zen_Long_convert(integerText, integerLength, radix);
 
-                if (longLiteral) {
+                // if (longLiteral) {
+                    /* All integers in Zen are 64-bit. */
                     zen_BinaryEntityGenerator_loadLong(generator, value);
-                }
-                else {
-                    zen_BinaryEntityGenerator_loadInteger(generator, value);
-                }
+                // }
+                // else {
+                //     zen_BinaryEntityGenerator_loadInteger(generator, value);
+                // }
 
                 break;
             }

@@ -2047,16 +2047,17 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
 
                         /* Check for integer type suffix. */
 
-                        if (zen_Lexer_isIntegerSuffix(lexer->m_la1)) {
+                        /* All integers in Zen occupy 64-bits. */
+                        // if (zen_Lexer_isIntegerSuffix(lexer->m_la1)) {
                             /* Consume and discard the integer suffix character. */
-                            zen_Lexer_consume(lexer);
-                        }
-                        else if (zen_Lexer_isLetter(lexer->m_la1)) {
+                            // zen_Lexer_consume(lexer);
+                        // }
+                        // else if (zen_Lexer_isLetter(lexer->m_la1)) {
                             /* Consume and discard the invalid suffix. */
-                            zen_Lexer_consume(lexer);
+                            // zen_Lexer_consume(lexer);
 
-                            printf("[error] Invalid integer literal suffix\n");
-                        }
+                            // printf("[error] Invalid integer literal suffix\n");
+                        // }
 
                         /* The lexer has recognized an integer literal. */
                         lexer->m_type = ZEN_TOKEN_INTEGER_LITERAL;

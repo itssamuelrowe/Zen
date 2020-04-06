@@ -224,8 +224,6 @@ void zen_Compiler_printErrors(zen_Compiler_t* compiler) {
     }
 }
 
-/* lexer -> parser -> symbol table -> semantic errors -> byte code generator -> interpreter */
-
 void zen_Compiler_initialize(zen_Compiler_t* compiler) {
     int32_t size = jtk_ArrayList_getSize(compiler->m_inputFiles);
     compiler->m_compilationUnits = jtk_Memory_allocate(zen_ASTNode_t*, size);

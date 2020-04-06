@@ -94,6 +94,16 @@ void zen_ConstantPoolBuilder_clear(zen_ConstantPoolBuilder_t* builder) {
     jtk_ArrayList_clear(builder->m_entries);
 }
 
+// Reset
+
+void zen_ConstantPoolBuilder_reset(zen_ConstantPoolBuilder_t* builder) {
+    jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
+
+    zen_ConstantPoolBuilder_clear(builder);
+    /* The first slot of the constant pool is reserved. */
+    jtk_ArrayList_add(builder->m_entries, NULL);
+}
+
 // Entries
 
 int32_t zen_ConstantPoolBuilder_countEntries(zen_ConstantPoolBuilder_t* builder) {
