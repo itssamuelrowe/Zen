@@ -1,12 +1,12 @@
 /*
- * Copyright 2018-2019 OneCube
- * 
+ * Copyright 2017-2020 Samuel Rowe
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,7 +42,7 @@ int8_t* zen_FirstFitAllocator_allocate0(zen_FirstFitAllocator_t* allocator,
 void* zen_FirstFitAllocator_allocate(zen_FirstFitAllocator_t* allocator,
     int32_t size) {
     jtk_Assert_assertObject(allocator, "The specified allocator is null.");
-    
+
     // previous may be null!
     int8_t* previous = allocator->m_head;
     while (result == NULL) {
@@ -58,13 +58,13 @@ void* zen_FirstFitAllocator_allocate(zen_FirstFitAllocator_t* allocator,
             break;
         }
     }
-    
+
     return result;
 }
 
 uint8_t* zen_FirstFitAllocator_findFreeBlock(zen_FirstFitAllocator_t* allocator) {
     jtk_Assert_assertObject(allocator, "The specified first-fit allocator is null.");
-    
+
     int8_t* result = NULL;
     /* The previous pointer may be null if the `allocator->m_head` evaluates to null. */
     int8_t* previous = allocator->m_head;
@@ -104,7 +104,7 @@ void zen_FirstFitAllocator_deallocate(zen_FirstFitAllocator_t* allocator,
     void* pointer) {
     jtk_Assert_assertObject(allocator, "The specified first-fit allocator is null.");
     // jtk_Logger_warningEx(pointer == NULL, "The specified pointer is null.");
-    
+
     if (pointer != NULL) {
         zen_FirstFitBlock_setAvailable(block, true);
         zen_FirstFitAllocator_addBlock(allocator, pointer);

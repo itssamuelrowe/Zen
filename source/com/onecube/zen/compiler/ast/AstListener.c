@@ -1,12 +1,12 @@
 /*
- * Copyright 2018-2019 OneCube
- * 
+ * Copyright 2017-2020 Samuel Rowe
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +27,7 @@ zen_ASTListener_t* zen_ASTListener_newWithContext(void* context) {
     // listener->m_walkerState = ZEN_AST_WALKER_STATE_INVALID;
     listener->m_walkerState = ZEN_AST_WALKER_STATE_VISIT_CHILDREN;
     listener->m_context = context;
-    
+
     listener->m_onVisitErrorNode = zen_ASTListener_onVisitErrorNode;
     listener->m_onVisitTerminal = zen_ASTListener_onVisitTerminal;
 
@@ -177,22 +177,22 @@ zen_ASTListener_t* zen_ASTListener_newWithContext(void* context) {
 
     // listener->m_onEnterConstructorDeclaration = zen_ASTListener_onEnterConstructorDeclaration;
     // listener->m_onExitConstructorDeclaration = zen_ASTListener_onExitConstructorDeclaration;
-    
+
     listener->m_onEnterEnumerationDeclaration = zen_ASTListener_onEnterEnumerationDeclaration;
     listener->m_onExitEnumerationDeclaration = zen_ASTListener_onExitEnumerationDeclaration;
-    
+
     listener->m_onEnterEnumerationBaseClause = zen_ASTListener_onEnterEnumrationBaseClass;
     listener->m_onExitEnumerationBaseClause = zen_ASTListener_onExitEnumerationBaseClause;
-    
+
     listener->m_onEnterEnumerationSuite = zen_ASTListener_onEnterEnumerationSuite;
     listener->m_onExitEnumerationSuite = zen_ASTListener_onExitEnumerationSuite;
-    
+
     listener->m_onEnterEnumerate = zen_ASTListener_onEnterEnumerate;
     listener->m_onExitEnumerate = zen_ASTListener_onExitEnumerate;
-    
+
     listener->m_onEnterExpressions = zen_ASTListener_onEnterExpressions;
     listener->m_onExitExpressions = zen_ASTListener_onExitExpressions;
-    
+
     listener->m_onEnterExpression = zen_ASTListener_onEnterExpression;
     listener->m_onExitExpression = zen_ASTListener_onExitExpression;
 
@@ -267,7 +267,7 @@ zen_ASTListener_t* zen_ASTListener_newWithContext(void* context) {
 
     listener->m_onEnterNewExpression = zen_ASTListener_onEnterNewExpression;
     listener->m_onExitNewExpression = zen_ASTListener_onExitNewExpression;
-    
+
     return listener;
 }
 
@@ -696,7 +696,7 @@ void zen_ASTListener_onExitEnumerationSuite(zen_ASTListener_t* listener, zen_AST
 }
 
 // enumerate
-    
+
 void zen_ASTListener_onEnterEnumerate(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
@@ -704,7 +704,7 @@ void zen_ASTListener_onExitEnumerate(zen_ASTListener_t* listener, zen_ASTNode_t*
 }
 
 // expressions
-    
+
 void zen_ASTListener_onEnterExpressions(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
@@ -712,7 +712,7 @@ void zen_ASTListener_onExitExpressions(zen_ASTListener_t* listener, zen_ASTNode_
 }
 
 // expression
-    
+
 void zen_ASTListener_onEnterExpression(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
 }
 
@@ -913,13 +913,13 @@ void zen_ASTListener_onExitNewExpression(zen_ASTListener_t* listener, zen_ASTNod
 
 void zen_ASTListener_skipChildren(zen_ASTListener_t* listener) {
     jtk_Assert_assertObject(listener, "The specified listener is null.");
-    
+
     listener->m_walkerState = ZEN_AST_WALKER_STATE_SKIP_CHILDREN;
 }
 
 void zen_ASTListener_visitChildren(zen_ASTListener_t* listener) {
     jtk_Assert_assertObject(listener, "The specified listener is null.");
-    
+
     listener->m_walkerState = ZEN_AST_WALKER_STATE_VISIT_CHILDREN;
 }
 
@@ -927,6 +927,6 @@ void zen_ASTListener_visitChildren(zen_ASTListener_t* listener) {
 
 void zen_ASTListener_visitFirstChild(zen_ASTListener_t* listener) {
     jtk_Assert_assertObject(listener, "The specified listener is null.");
-    
+
     listener->m_walkerState = ZEN_AST_WALKER_STATE_VISIT_FIRST_CHILD;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 OneCube
+ * Copyright 2017-2020 Samuel Rowe
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -140,10 +140,10 @@ uint8_t* zen_ASTNode_toCString(zen_ASTNode_t* node, int32_t* size) {
      * node.
      */
     jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
-    
+
     /* Recursively construct the string equivalent of the given node. */
     zen_ASTNode_toString0(node, builder);
-    
+
     /* Build and retrieve the string. */
     uint8_t* result = jtk_StringBuilder_toCString(builder, size);
 

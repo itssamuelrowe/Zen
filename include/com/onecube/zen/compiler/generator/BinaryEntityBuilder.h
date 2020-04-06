@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 OneCube
+ * Copyright 2017-2020 Samuel Rowe
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,7 +84,7 @@ void zen_BinaryEntityBuilder_delete(zen_BinaryEntityBuilder_t* builder);
 
 zen_DataChannel_t* zen_BinaryEntityBuilder_getChannel(zen_BinaryEntityBuilder_t* builder,
     int32_t index);
-    
+
 int32_t zen_BinaryEntityBuilder_pushChannel(zen_BinaryEntityBuilder_t* builder);
 
 void zen_BinaryEntityBuilder_popChannel(zen_BinaryEntityBuilder_t* builder);

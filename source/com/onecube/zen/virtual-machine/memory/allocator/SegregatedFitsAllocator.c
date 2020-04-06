@@ -1,12 +1,12 @@
 /*
- * Copyright 2018-2019 OneCube
- * 
+ * Copyright 2017-2020 Samuel Rowe
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -83,7 +83,7 @@ uint8_t* zen_SegregatedFitsAllocator_allocateWithFirstFit(
         result = zen_FirstFitAllocator_allocate(firstFitAllocator, headSize, bodySize);
 
         if (result == NULL) {
-            /* At this point, the allocation request could not satisfied using 
+            /* At this point, the allocation request could not satisfied using
              * the first-fit allocator. The allocator will try again to
              * allocate using the next first-fit allocator.
              */
@@ -119,7 +119,7 @@ uint8_t* zen_SegregatedFitsAllocator_allocateWithBestFit(
         result = zen_BestFitAllocator_allocate(bestFitAllocator, headSize, bodySize);
 
         if (result == NULL) {
-            /* At this point, the allocation request could not satisfied using 
+            /* At this point, the allocation request could not satisfied using
              * the best-fit allocator. The allocator will try again to
              * allocate using the next best-fit allocator.
              */
@@ -198,7 +198,7 @@ zen_SizeClass_t* zen_SegregatedFitsAllocator_findSizeClass(
     int32_t index = -1;
     int32_t leftIndex = 0;
     int32_t rightIndex = allocator->m_balanceFactor; /* Alternatively, `allocator->m_sizeClassesSize - 1` */
-    
+
     /* The size of a free cell, represented by `size`, is limited to
      * `classes[i - 1] < size <= classes[i]`. We assume that `classes[-1] = 0`
      * and `classes[k] = JTK_INTEGER_MAX_VALUE`.
@@ -228,7 +228,7 @@ zen_SizeClass_t* zen_SegregatedFitsAllocator_findSizeClass(
             break;
         }
     }
-    
+
     return (result < 0)? leftIndex : result;
 
     /* The following code segment implements a linear search algorithm.

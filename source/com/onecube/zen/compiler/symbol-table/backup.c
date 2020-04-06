@@ -1,12 +1,12 @@
 /*
- * Copyright 2018-2019 OneCube
- * 
+ * Copyright 2017-2020 Samuel Rowe
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +27,7 @@ zen_SymbolDefinitionListener_t* zen_SymbolDefinitionListener_new(zen_SymbolTable
     listener->m_symbolTable = symbolTable;
     listener->m_astListener = zen_ASTListener_newWithContext(listener);
     listener->m_functionDeclarationContext = NULL;
-    
+
     zen_ASTListener_t* astListener = listener->m_astListener;
 
     astListener->m_onEnterFunctionDeclaration = zen_SymbolDefinitionListener_onEnterFunctionDeclaration;
@@ -134,7 +134,7 @@ void zen_SymbolDefinitionListener_onEnterFunctionParameters(
                      * Where, k is known as the parameter threshold of function X.
                      */
                     int32_t parameterThreshold = zen_FunctionSymbol_getParameterThreshold(memberFunctionSymbol);
-                    
+
                     /* If currently there is no parameter threshold, try to update the
                      * threshold.
                      */
@@ -148,7 +148,7 @@ void zen_SymbolDefinitionListener_onEnterFunctionParameters(
                             zen_FunctionSymbol_setParameterThreshold(memberFunctionSymbol, parameterThreshold);
                         }
                     }
-                    
+
                     /* Determine the number of signatures. */
                     int32_t size = jtk_ArrayList_getSize(signatures);
                     /* Iterate over the signatures to determine if the signature of the

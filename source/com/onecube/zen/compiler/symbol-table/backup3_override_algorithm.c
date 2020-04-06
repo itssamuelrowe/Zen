@@ -1,12 +1,12 @@
 /*
- * Copyright 2018-2019 OneCube
- * 
+ * Copyright 2017-2020 Samuel Rowe
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -74,7 +74,7 @@ else if () {
                 if (zen_Symbol_isFunction(oldSymbol)) {
                     zen_Scope_t* oldSymbolEnclosingScope = zen_Symbol_getEnclosingScope(oldSymbol);
                     zen_FunctionSymbol_t* oldFunctionSymbol = (zen_FunctionSymbol_t*)oldSymbol->m_context;
-                    
+
                     if (oldSymbolEnclosingScope == currentScope) {
                         /* If currently there is no parameter threshold, try to update the
                          * threshold.
@@ -90,14 +90,14 @@ else if () {
                             }
                         }
                     }
-                    
+
                     jtk_ArrayList_t* oldSignatures = zen_FunctionSymbol_getSignatures(oldFunctionSymbol);
                     int32_t oldSignaturesSize = jtk_ArrayList_getSize(oldSignatures);
                     int32_t i;
                     for (i = 0; i < oldSignaturesSize; i++) {
                         zen_FunctionSignature_t* oldSignature = (zen_FunctionSignature_t*)jtk_ArrayList_getValue(oldSignatures, i);
                         int32_t fixedParameterCount0 = jtk_ArrayList_getSize(oldSignature->m_fixedParameters);
-                        
+
                         if ((oldSignature->m_variableParameter != NULL) && (variableParameter != NULL)) {
                             if ((oldSymbolEnclosingScope == currentScope) || (fixedParameterCount != fixedParameterCount0))
                             zen_ErrorHandler_reportError(NULL, "Multiple overloads with variable parameter", (zen_Token_t*)(variableParameter->m_context));

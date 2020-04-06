@@ -1,12 +1,12 @@
 /*
- * Copyright 2018-2019 OneCube
- * 
+ * Copyright 2017-2020 Samuel Rowe
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,7 +39,7 @@ struct zen_LocalVariable_t {
      * instructions.
      */
     uint16_t m_startIndex;
-    
+
     /**
      * The number of instructions that can "access" the local variable. In reality,
      * the binary entity format does not acknowledge the concept of local varaibles.
@@ -52,21 +52,21 @@ struct zen_LocalVariable_t {
      * `m_startIndex + m_count < instructionAttribute.m_numberOfInstructions`
      */
     uint16_t m_count;
-    
+
     /**
      * A valid index into the constant pool. The entry at the specified index
      * should be a `ConstantPoolUtf8` instance. The descriptor represents the
      * type of the local variable.
      */
     uint16_t m_descriptorIndex;
-    
+
     /**
      * A valid index into the constant pool. The entry at the specified index
      * should be a `ConstantPoolUtf8` instance. The name represents the identifier
      * of the local variable as it appears in the source code.
      */
     uint16_t m_nameIndex;
-    
+
     /**
      * A valid index into the local variable array in the current frame. The entry
      * at the specified index contains the value of the variable. The entry may

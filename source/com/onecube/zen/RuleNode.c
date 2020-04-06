@@ -1,12 +1,12 @@
 /*
- * Copyright 2018-2019 OneCube
- * 
+ * Copyright 2017-2020 Samuel Rowe
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,13 +26,13 @@ zen_RuleNode_t* zen_RuleNode_new(zen_ASTNode_t* node) {
     ruleNode->m_start = NULL;
     ruleNode->m_stop = NULL;
     ruleNode->m_node = node;
-    
+
     return ruleNode;
 }
 
 void zen_RuleNode_delete(zen_RuleNode_t* ruleNode) {
     jtk_Assert_assertObject(ruleNode, "The specified rule node is null.");
-    
+
     if (ruleNode->m_children != NULL) {
         int32_t size = jtk_ArrayList_getSize(ruleNode->m_children);
         int32_t i;
@@ -42,20 +42,20 @@ void zen_RuleNode_delete(zen_RuleNode_t* ruleNode) {
         }
         jtk_ArrayList_delete(ruleNode->m_children);
     }
-    
+
     /* At this point, ruleNode->m_node should be destroyed.
      * Therefore, we ignore it.
      * We cannot destroy ruleNode->m_start and ruleNode->m_stop.
      * Because they belong to the TokenStream that demaned
      * their creation.
      */
-    
+
     jtk_Memory_deallocate(ruleNode);
 }
 
 void zen_RuleNode_addRule(zen_RuleNode_t* ruleNode, zen_ASTNode_t* rule) {
     jtk_Assert_assertObject(ruleNode, "The specified rule node is null.");
-    
+
     if (ruleNode->m_children == NULL) {
         ruleNode->m_children = jtk_ArrayList_new();
     }
@@ -64,7 +64,7 @@ void zen_RuleNode_addRule(zen_RuleNode_t* ruleNode, zen_ASTNode_t* rule) {
 
 void zen_RuleNode_addTerminal(zen_RuleNode_t* ruleNode, zen_ASTNode_t* terminal) {
     jtk_Assert_assertObject(ruleNode, "The specified rule node is null.");
-    
+
     if (ruleNode->m_children == NULL) {
         ruleNode->m_children = jtk_ArrayList_new();
     }

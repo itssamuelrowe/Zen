@@ -1,12 +1,12 @@
 /*
- * Copyright 2018-2019 OneCube
- * 
+ * Copyright 2017-2020 Samuel Rowe
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -65,12 +65,12 @@ void zen_Class_delete(zen_Class_t* class0) {
             (jtk_HashMapEntry_t*)jtk_Iterator_getNext(functionIterator);
         jtk_CString_t* key = (jtk_CString_t*)jtk_HashMapEntry_getKey(entry);
         zen_Function_t* value = (zen_Function_t*)jtk_HashMapEntry_getValue(entry);
-        
+
         jtk_CString_delete(key);
         zen_Function_delete(value);
     }
     jtk_Iterator_delete(functionIterator);
-    
+
     // Destroy fields
     jtk_Iterator_t* fieldIterator = jtk_HashMap_getEntryIterator(class0->m_fields);
     while (jtk_Iterator_hasNext(fieldIterator)) {
@@ -78,13 +78,13 @@ void zen_Class_delete(zen_Class_t* class0) {
             (jtk_HashMapEntry_t*)jtk_Iterator_getNext(fieldIterator);
         // jtk_CString_t* key = (jtk_CString_t*)jtk_HashMapEntry_getKey(entry);
         zen_Field_t* value = (zen_Field_t*)jtk_HashMapEntry_getValue(entry);
-        
+
         // Do not delete field keys because they belong to the Field class.
         // jtk_CString_delete(key);
         zen_Field_delete(value);
     }
     jtk_Iterator_delete(fieldIterator);
-    
+
     jtk_HashMap_delete(class0->m_functions);
     jtk_HashMap_delete(class0->m_fields);
     jtk_CString_delete(class0->m_descriptor);
@@ -104,7 +104,7 @@ zen_Function_t* zen_Class_getStaticFunction(zen_Class_t* class0, jtk_CString_t* 
     jtk_CString_t* key = jtk_CString_append(name, descriptor);
     zen_Function_t* function = jtk_HashMap_getValue(class0->m_functions, key);
     jtk_CString_delete(key);
-    
+
     // TODO: Filter for static function.
     return function;
 }
@@ -114,7 +114,7 @@ zen_Function_t* zen_Class_getInstanceFunction(zen_Class_t* class0, jtk_CString_t
     jtk_CString_t* key = jtk_CString_append(name, descriptor);
     zen_Function_t* function = jtk_HashMap_getValue(class0->m_functions, key);
     jtk_CString_delete(key);
-    
+
     // TODO: Filter for instance function.
     return function;
 }

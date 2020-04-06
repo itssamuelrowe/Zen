@@ -1,12 +1,12 @@
 /*
- * Copyright 2018-2019 OneCube
- * 
+ * Copyright 2017-2020 Samuel Rowe
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,28 +39,28 @@ struct zen_ConstantDeclarationContext_t {
     jtk_ArrayList_t* m_constantDeclarators;
 };
 
-/** 
+/**
  * @membeof ConstantDeclarationContext
  */
 typedef struct zen_ConstantDeclarationContext_t zen_ConstantDeclarationContext_t;
 
 // Constructor
 
-/** 
+/**
  * @membeof ConstantDeclarationContext
  */
 zen_ConstantDeclarationContext_t* zen_ConstantDeclarationContext_new(zen_ASTNode_t* node);
 
 // Destructor
 
-/** 
+/**
  * @membeof ConstantDeclarationContext
  */
 void zen_ConstantDeclarationContext_delete(zen_ConstantDeclarationContext_t* context);
 
 // Children
 
-/** 
+/**
  * @membeof ConstantDeclarationContext
  */
 void zen_ConstantDeclarationContext_getChildren(zen_ConstantDeclarationContext_t* context, jtk_ArrayList_t* children);

@@ -1,12 +1,12 @@
 /*
- * Copyright 2018-2019 OneCube
- * 
+ * Copyright 2017-2020 Samuel Rowe
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,11 +24,11 @@
 /*******************************************************************************
  * ASTHelper                                                                   *
  *******************************************************************************/
- 
+
 bool zen_ASTHelper_isAncestor(zen_ASTNode_t* node, zen_ASTNode_t* subject) {
     jtk_Assert_assertObject(node, "The specified node is null.");
     jtk_Assert_assertObject(subject, "The specified subject is null.");
-    
+
     zen_ASTNode_t* parent = zen_ASTNode_getParent(subject);
     bool result = false;
     while (parent != NULL) {
@@ -43,7 +43,7 @@ bool zen_ASTHelper_isAncestor(zen_ASTNode_t* node, zen_ASTNode_t* subject) {
 
 zen_ASTNode_t* zen_ASTHelper_getAncestor(zen_ASTNode_t* node, zen_ASTNodeType_t type) {
     jtk_Assert_assertObject(node, "The specified node is null.");
-    
+
     zen_ASTNode_t* parent = zen_ASTNode_getParent(node);
     zen_ASTNode_t* result = NULL;
     while (parent != NULL) {
@@ -75,7 +75,7 @@ void zen_ASTHelper_getTerminalNodes(zen_ASTNode_t* node, jtk_ArrayList_t* list) 
 void zen_ASTHelper_getFilteredTerminalNodes(zen_ASTNode_t* node, jtk_ArrayList_t* list, zen_TokenType_t type) {
     zen_ASTHelper_getNodes(node, list, (int32_t)type, true, false);
 }
- 
+
 void zen_ASTHelper_getNodes(zen_ASTNode_t* node, jtk_ArrayList_t* list,
     int32_t filter, bool captureTerminals, bool strip) {
     jtk_LinkedStack_t* stack = jtk_LinkedStack_new();

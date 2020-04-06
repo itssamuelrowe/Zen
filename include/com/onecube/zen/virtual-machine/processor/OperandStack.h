@@ -1,12 +1,12 @@
 /*
- * Copyright 2018-2019 OneCube
- * 
+ * Copyright 2017-2020 Samuel Rowe
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -92,7 +92,7 @@ double zen_OperandStack_popDouble(zen_OperandStack_t* operandStack);
  * @memberof OperandStack
  */
 float zen_OperandStack_peekFloat(zen_OperandStack_t* operandStack);
- 
+
 /**
  * @memberof OperandStack
  */
@@ -126,7 +126,7 @@ int32_t zen_OperandStack_popInteger(zen_OperandStack_t* operandStack);
  * @memberof OperandStack
  */
 int64_t zen_OperandStack_peekLong(zen_OperandStack_t* operandStack);
- 
+
 /**
  * @memberof OperandStack
  */
@@ -143,7 +143,7 @@ int64_t zen_OperandStack_popLong(zen_OperandStack_t* operandStack);
  * @memberof OperandStack
  */
 uintptr_t zen_OperandStack_peekReference(zen_OperandStack_t* operandStack);
- 
+
 /**
  * @memberof OperandStack
  */

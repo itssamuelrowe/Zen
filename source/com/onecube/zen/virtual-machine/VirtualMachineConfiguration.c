@@ -1,12 +1,12 @@
 /*
- * Copyright 2018-2019 OneCube
- * 
+ * Copyright 2017-2020 Samuel Rowe
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,7 +45,7 @@ void zen_VirtualMachineConfiguration_delete(zen_VirtualMachineConfiguration_t* c
         jtk_CString_delete(string);
     }
     jtk_ArrayList_delete(configuration->m_entityDirectories);
-    
+
     jtk_HashMap_delete(configuration->m_variables);
     jtk_Memory_deallocate(configuration);
 }
@@ -56,7 +56,7 @@ void zen_VirtualMachineConfiguration_addEntityDirectory(
     zen_VirtualMachineConfiguration_t* virtualMachine, const uint8_t* directory) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
     jtk_Assert_assertObject(directory, "The specified directory is null.");
-    
+
     jtk_CString_t* directoryAsString = jtk_CString_new(directory);
     jtk_ArrayList_add(virtualMachine->m_entityDirectories, directoryAsString);
 }

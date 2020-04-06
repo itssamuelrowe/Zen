@@ -1,12 +1,12 @@
 /*
- * Copyright 2018-2019 OneCube
- * 
+ * Copyright 2017-2020 Samuel Rowe
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -71,7 +71,7 @@ void zen_FebParser_parse(zen_FebParser_t* parser) {
     uint16_t majorVersion = zen_FebParser_readMajorVersion(parser);
     uint16_t minorVersion = zen_FebParser_readMinorVersion(parser);
     zen_ConstantPool_t* constantPool = zen_FebParser_readConstantPool(parser);
-    zen_Entity_t* entity = 
+    zen_Entity_t* entity =
 
     zen_BinaryEntityFormat_t* format = zen_BinaryEntityFormat_new();
     format->m_magicNumber = magicNumber;

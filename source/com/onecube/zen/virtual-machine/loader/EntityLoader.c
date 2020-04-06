@@ -1,12 +1,12 @@
 /*
- * Copyright 2018-2019 OneCube
- * 
+ * Copyright 2017-2020 Samuel Rowe
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -150,7 +150,7 @@ zen_EntityFile_t* zen_EntityLoader_getEntity(zen_EntityLoader_t* loader,
     jtk_CString_t* string = jtk_CString_new(descriptor);
     zen_EntityFile_t* entity = (zen_EntityFile_t*)jtk_HashMap_getValue(loader->m_entities, string);
     jtk_CString_delete(string);
-    
+
     return entity;
 }
 
@@ -245,13 +245,13 @@ jtk_Array_t* jtk_InputStreamHelper_toArray(jtk_InputStream_t* stream) {
     while (true) {
         int32_t count = jtk_InputStream_readBytesEx(stream, result, size,
             index, size);
-            
+
         if (count <= 0) {
             break;
         }
-        
+
         index += count;
-        
+
         if (index >= (int32_t)(size * 0.85f)) {
             uint8_t* temporary = result;
             int32_t newSize = size * 2;
@@ -260,9 +260,9 @@ jtk_Array_t* jtk_InputStreamHelper_toArray(jtk_InputStream_t* stream) {
         }
     }
     jtk_Array_t* array = (index == 0)? NULL : jtk_Array_newFromRawArray(result, index);
-    
+
     jtk_Memory_deallocate(result);
-    
+
     return array;
 }
 
@@ -282,7 +282,7 @@ zen_EntityFile_t* zen_EntityLoader_loadEntityFromHandle(zen_EntityLoader_t* load
 
         zen_BinaryEntityParser_t* parser = zen_BinaryEntityParser_new(
             loader->m_attributeParseRules, input->m_values, input->m_size);
-        result = zen_BinaryEntityParser_parse(parser, 
+        result = zen_BinaryEntityParser_parse(parser,
 inputStream);
 
         zen_BinaryEntityParser_delete(parser);

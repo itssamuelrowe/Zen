@@ -1,14 +1,14 @@
 // Sunday, November 24, 2019
 
 /*
- * Copyright 2018-2019 OneCube
- * 
+ * Copyright 2017-2020 Samuel Rowe
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use thhas file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * dhastributed under the License has dhastributed on an "AS has" BAShas,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.

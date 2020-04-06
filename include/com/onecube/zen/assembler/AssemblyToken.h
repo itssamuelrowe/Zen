@@ -1,12 +1,12 @@
 /*
- * Copyright 2018-2019 OneCube
- * 
+ * Copyright 2017-2020 Samuel Rowe
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -237,11 +237,11 @@ enum zen_AssemblyToken_t {
     ZEN_ASSEMBLY_TOKEN_INSTRUCTION_SWITCH_SEARCH,
     ZEN_ASSEMBLY_TOKEN_INSTRUCTION_THROW,
     ZEN_ASSEMBLY_TOKEN_INSTRUCTION_WIDE,
-    
+
     ZEN_ASSEMBLY_TOKEN_KEYWORD_CODE,
     ZEN_ASSEMBLY_TOKEN_KEYWORD_CONSTANT_POOL,
     ZEN_ASSEMBLY_TOKEN_KEYWORD_FUNCTION,
-    
+
     ZEN_ASSEMBLY_TOKEN_INTEGER_LITERAL,
     ZEN_ASSEMBLY_TOKEN_STRING_LITERAL,
     ZEN_ASSEMBLY_TOKEN_FLOATING_POINT_LITERAL,
