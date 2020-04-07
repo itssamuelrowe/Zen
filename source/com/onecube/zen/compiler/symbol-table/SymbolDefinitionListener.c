@@ -127,11 +127,6 @@
  * of symbols between compilation units.
  */
 
-void zen_ErrorHandler_reportError(void* handler, const char* message, zen_Token_t* token) {
-    fprintf(stderr, "[error] %d:%d-%d: %s\n", token->m_startLine, token->m_startColumn, token->m_stopColumn, message);
-    fflush(stdout);
-}
-
 zen_SymbolDefinitionListener_t* zen_SymbolDefinitionListener_new(
     zen_Compiler_t* compiler) {
     zen_SymbolDefinitionListener_t* listener = zen_Memory_allocate(zen_SymbolDefinitionListener_t, 1);
@@ -778,74 +773,74 @@ void zen_SymbolDefinitionListener_onExitClassDeclaration(
 void zen_SymbolDefinitionListener_onEnterEnumerationDeclaration(
     zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
 
-    zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
-    zen_EnumerationDeclarationContext_t* enumerationDeclarationContext = (zen_EnumerationDeclarationContext_t*)node->m_context;
+    // zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
+    // zen_EnumerationDeclarationContext_t* enumerationDeclarationContext = (zen_EnumerationDeclarationContext_t*)node->m_context;
 
-    zen_ASTNode_t* identifier = enumerationDeclarationContext->m_identifier;
-    zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
-    const uint8_t* identifierText = zen_Token_getText(identifierToken);
+    // zen_ASTNode_t* identifier = enumerationDeclarationContext->m_identifier;
+    // zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+    // const uint8_t* identifierText = zen_Token_getText(identifierToken);
 
-    zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
-    if (symbol != NULL) {
-        zen_ErrorHandler_reportError(NULL, "Redeclaration of symbol as enumeration", (zen_Token_t*)identifier->m_context);
-    }
-    else {
-        zen_EnumerationScope_t* enumerationScope = zen_EnumerationScope_new(listener->m_symbolTable->m_currentScope);
+    // zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
+    // if (symbol != NULL) {
+    //     zen_ErrorHandler_reportError(NULL, "Redeclaration of symbol as enumeration", (zen_Token_t*)identifier->m_context);
+    // }
+    // else {
+    //     zen_EnumerationScope_t* enumerationScope = zen_EnumerationScope_new(listener->m_symbolTable->m_currentScope);
 
-        zen_EnumerationSymbol_t* enumerationSymbol = zen_EnumerationSymbol_new(identifier, listener->m_symbolTable->m_currentScope, zen_EnumerationScope_getScope(enumerationScope));
-        symbol = zen_EnumerationSymbol_getSymbol(enumerationSymbol);
-        zen_SymbolTable_define(listener->m_symbolTable, symbol);
+    //     zen_EnumerationSymbol_t* enumerationSymbol = zen_EnumerationSymbol_new(identifier, listener->m_symbolTable->m_currentScope, zen_EnumerationScope_getScope(enumerationScope));
+    //     symbol = zen_EnumerationSymbol_getSymbol(enumerationSymbol);
+    //     zen_SymbolTable_define(listener->m_symbolTable, symbol);
 
-        enumerationScope->m_enumerationSymbol = symbol;
+    //     enumerationScope->m_enumerationSymbol = symbol;
 
-        zen_Scope_t* scope = zen_EnumerationScope_getScope(enumerationScope);
+    //     zen_Scope_t* scope = zen_EnumerationScope_getScope(enumerationScope);
 
-        zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
-        zen_ASTAnnotations_put(listener->m_scopes, node, scope);
-    }
+    //     zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
+    //     zen_ASTAnnotations_put(listener->m_scopes, node, scope);
+    // }
 }
 
 void zen_SymbolDefinitionListener_onExitEnumerationDeclaration(
     zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
 
-    zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
-    zen_EnumerationDeclarationContext_t* enumerationDeclarationContext = (zen_EnumerationDeclarationContext_t*)node->m_context;
+    // zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
+    // zen_EnumerationDeclarationContext_t* enumerationDeclarationContext = (zen_EnumerationDeclarationContext_t*)node->m_context;
 
-    zen_SymbolTable_invalidateCurrentScope(listener->m_symbolTable);
+    // zen_SymbolTable_invalidateCurrentScope(listener->m_symbolTable);
 }
 
 void zen_SymbolDefinitionListener_onEnterEnumerate(
     zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
 
-    zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
-    zen_EnumerationDeclarationContext_t* enumerationDeclarationContext = (zen_EnumerationDeclarationContext_t*)node->m_context;
+    // zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
+    // zen_EnumerationDeclarationContext_t* enumerationDeclarationContext = (zen_EnumerationDeclarationContext_t*)node->m_context;
 
-    zen_ASTNode_t* identifier = enumerationDeclarationContext->m_identifier;
-    zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
-    const uint8_t* identifierText = zen_Token_getText(identifierToken);
+    // zen_ASTNode_t* identifier = enumerationDeclarationContext->m_identifier;
+    // zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+    // const uint8_t* identifierText = zen_Token_getText(identifierToken);
 
-    zen_Scope_t* currentScope = zen_SymbolTable_getCurrentScope(listener->m_symbolTable);
-    if (zen_Scope_isEnumerationScope(currentScope)) {
-        zen_Symbol_t* symbol = zen_Scope_resolve(currentScope, identifierText);
-        if (symbol != NULL) {
-            zen_ErrorHandler_reportError(NULL, "Duplicate enumerate", (zen_Token_t*)identifier->m_context);
-        }
-        else {
-            zen_EnumerateSymbol_t* enumerateSymbol = zen_EnumerateSymbol_new(identifier, listener->m_symbolTable->m_currentScope);
-            symbol = zen_EnumerateSymbol_getSymbol(enumerateSymbol);
-            zen_SymbolTable_define(listener->m_symbolTable, symbol);
-        }
-    }
-    else {
-        fprintf(stderr, "[internal error] Declaration of enumerate in unsuitable scope.\n");
-    }
+    // zen_Scope_t* currentScope = zen_SymbolTable_getCurrentScope(listener->m_symbolTable);
+    // if (zen_Scope_isEnumerationScope(currentScope)) {
+    //     zen_Symbol_t* symbol = zen_Scope_resolve(currentScope, identifierText);
+    //     if (symbol != NULL) {
+    //         zen_ErrorHandler_reportError(NULL, "Duplicate enumerate", (zen_Token_t*)identifier->m_context);
+    //     }
+    //     else {
+    //         zen_EnumerateSymbol_t* enumerateSymbol = zen_EnumerateSymbol_new(identifier, listener->m_symbolTable->m_currentScope);
+    //         symbol = zen_EnumerateSymbol_getSymbol(enumerateSymbol);
+    //         zen_SymbolTable_define(listener->m_symbolTable, symbol);
+    //     }
+    // }
+    // else {
+    //     fprintf(stderr, "[internal error] Declaration of enumerate in unsuitable scope.\n");
+    // }
 }
 
 void zen_SymbolDefinitionListener_onExitEnumerate(
     zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
 
-    zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
-    zen_EnumerationDeclarationContext_t* enumerationDeclarationContext = (zen_EnumerationDeclarationContext_t*)node->m_context;
+    // zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
+    // zen_EnumerationDeclarationContext_t* enumerationDeclarationContext = (zen_EnumerationDeclarationContext_t*)node->m_context;
 }
 
 /* When an error occurs in a nested function, it prevents the listener from

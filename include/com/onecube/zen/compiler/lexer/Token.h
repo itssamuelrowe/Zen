@@ -48,6 +48,7 @@ struct zen_Token_t {
     int32_t m_startColumn;
     int32_t m_stopColumn;
     int32_t m_index;
+    const char* m_file;
 };
 
 /**
@@ -62,7 +63,8 @@ typedef struct zen_Token_t zen_Token_t;
  */
 zen_Token_t* zen_Token_new(zen_TokenChannel_t channel, zen_TokenType_t type,
     const uint8_t* text, int32_t length, int32_t startIndex, int32_t stopIndex,
-    int32_t startLine, int32_t stopLine, int32_t startColumn, int32_t stopColumn);
+    int32_t startLine, int32_t stopLine, int32_t startColumn, int32_t stopColumn,
+    const char* file);
 
 // Destructor
 

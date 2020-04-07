@@ -27,7 +27,8 @@ zen_Token_t* zen_Token_new(
     int32_t startLine,
     int32_t stopLine,
     int32_t startColumn,
-    int32_t stopColumn) {
+    int32_t stopColumn,
+    const char* file) {
     zen_Token_t* token = zen_Memory_allocate(zen_Token_t, 1);
     token->m_channel = channel;
     token->m_type = type;
@@ -39,6 +40,7 @@ zen_Token_t* zen_Token_new(
     token->m_stopLine = stopLine;
     token->m_startColumn = startColumn;
     token->m_stopColumn = stopColumn;
+    token->m_file = file;
 
     return token;
 }

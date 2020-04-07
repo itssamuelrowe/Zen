@@ -252,9 +252,9 @@ void zen_Compiler_printErrors(zen_Compiler_t* compiler) {
                 expectedName, actualName);
             message = message0;
         }
-        fprintf(stderr, "\033[1;31m[error]\033[0m %d-%d:%d-%d: %s\n", token->m_startLine,
-            token->m_stopLine, token->m_startColumn, token->m_stopColumn,
-            message);
+        fprintf(stderr, "\033[1;31m[error]\033[0m %s:%d-%d:%d-%d: %s\n",
+            token->m_file, token->m_startLine, token->m_stopLine,
+            token->m_startColumn, token->m_stopColumn, message);
     }
 }
 

@@ -250,6 +250,9 @@ zen_Token_t* zen_Lexer_createToken(zen_Lexer_t* lexer) {
     uint8_t* text = jtk_CString_newEx(lexer->m_text->m_value, lexer->m_text->m_size); // jtk_StringBuilder_toCString(lexer->m_text);
     int32_t length = jtk_StringBuilder_getSize(lexer->m_text);
 
+    zen_Compiler_t* compiler = lexer->m_compiler;
+    const char* file = jtk_ArrayList_getValue(compiler->m_inputFiles,
+        compiler->m_currentFileIndex);
     zen_Token_t* token =
         zen_Token_new(
             lexer->m_channel,
@@ -261,7 +264,8 @@ zen_Token_t* zen_Lexer_createToken(zen_Lexer_t* lexer) {
             lexer->m_startLine,     /* inclusive */
             lexer->m_line,          /* inclusive */
             lexer->m_startColumn,   /* inclusive */
-            lexer->m_column         /* inclusive */
+            lexer->m_column,        /* inclusive */
+            file
         );
 
     /* Destroy the text; not required anymore. */
@@ -769,6 +773,10 @@ void zen_Lexer_integerLiteral(zen_Lexer_t* lexer) {
 zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
     jtk_Assert_assertObject(lexer, "The specified lexer is null.");
 
+    zen_Compiler_t* compiler = lexer->m_compiler;
+    const char* file = jtk_ArrayList_getValue(compiler->m_inputFiles,
+        compiler->m_currentFileIndex);
+
     /* The lexer does not bother to recognize a token
      * from the input stream unless necessary.
      */
@@ -814,7 +822,8 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                             lexer->m_startLine,     /* inclusive */
                             lexer->m_line,          /* inclusive */
                             lexer->m_startColumn,   /* inclusive */
-                            lexer->m_column         /* inclusive */
+                            lexer->m_column,         /* inclusive */
+                            file
                         );
                         zen_Lexer_emit(lexer, newlineToken);
 
@@ -833,7 +842,8 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                     lexer->m_startLine,     /* inclusive */
                                     lexer->m_line,          /* inclusive */
                                     lexer->m_startColumn,   /* inclusive */
-                                    lexer->m_column         /* inclusive */
+                                    lexer->m_column,        /* inclusive */
+                                    file
                                 );
                             zen_Lexer_emit(lexer, dedentationToken);
                             jtk_ArrayStack_pop(lexer->m_indentations);
@@ -918,7 +928,8 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                 lexer->m_startLine,     /* inclusive */
                                 lexer->m_line,          /* inclusive */
                                 lexer->m_startColumn,   /* inclusive */
-                                lexer->m_column         /* inclusive */
+                                lexer->m_column,        /* inclusive */
+                                file
                             );
                             zen_Lexer_emit(lexer, newlineToken);
 
@@ -953,7 +964,8 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                         lexer->m_startLine,     /* inclusive */
                                         lexer->m_line,          /* inclusive */
                                         lexer->m_startColumn,   /* inclusive */
-                                        lexer->m_column         /* inclusive */
+                                        lexer->m_column,        /* inclusive */
+                                        file
                                     );
                                 zen_Lexer_emit(lexer, indentationToken);
                             }
@@ -983,7 +995,8 @@ zen_Token_t* zen_Lexer_nextToken(zen_Lexer_t* lexer) {
                                         lexer->m_startLine,     /* inclusive */
                                         lexer->m_line,          /* inclusive */
                                         lexer->m_startColumn,   /* inclusive */
-                                        lexer->m_column         /* inclusive */
+                                        lexer->m_column,        /* inclusive */
+                                        file
                                     );
                                     zen_Lexer_emit(lexer, dedentationToken);
                                     jtk_ArrayStack_pop(lexer->m_indentations);
