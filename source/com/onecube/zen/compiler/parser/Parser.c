@@ -1496,7 +1496,8 @@ void zen_Parser_compoundStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
          */
 
 		default: {
-			// Syntax Error: What?
+			printf("Control should not reach here.");
+
 			break;
 		}
 	}

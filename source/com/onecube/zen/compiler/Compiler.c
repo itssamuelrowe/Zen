@@ -216,7 +216,7 @@ const uint8_t* zen_ErrorCode_messages[] = {
     // Semantical Errors
 
     "Undeclared class",
-    "Invalid lvalue",
+    "Variable required on left-hand side of assignment",
     "Name refers to a non-class symbol",
     "No suitable constructor found",
     "Undeclared identifier",
