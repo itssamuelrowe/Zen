@@ -152,7 +152,7 @@ void zen_AnnotatedComponentDeclarationContext_getChildren(zen_AnnotatedComponent
     // }
 
 
-    jtk_ArrayList_addPredicatively(children, context->m_annotations, jtk_Object_isNotNull);
+    jtk_ArrayList_add(children, context->m_annotations);
     jtk_ArrayList_add(children, context->m_componentDeclaration);
 }
 
@@ -339,11 +339,11 @@ void zen_FunctionDeclarationContext_getChildren(zen_FunctionDeclarationContext_t
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_addPredicatively(children, context->m_identifier, jtk_Object_isNotNull);
+    jtk_ArrayList_add(children, context->m_identifier);
     if (context->m_functionParameters != NULL) {
         jtk_ArrayList_add(children, context->m_functionParameters);
     }
-    jtk_ArrayList_addPredicatively(children, context->m_functionBody, jtk_Object_isNotNull);
+    jtk_ArrayList_add(children, context->m_functionBody);
 }
 
 /*******************************************************************************
@@ -707,8 +707,8 @@ void zen_AssertStatementContext_getChildren(zen_AssertStatementContext_t* contex
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_addPredicatively(children, context->m_conditionExpression, jtk_Object_isNotNull);
-    jtk_ArrayList_addPredicatively(children, context->m_messageExpression, jtk_Object_isNotNull);
+    jtk_ArrayList_add(children, context->m_conditionExpression);
+    jtk_ArrayList_add(children, context->m_messageExpression);
 }
 
 /*******************************************************************************
@@ -1159,7 +1159,7 @@ void zen_ForParameterContext_getChildren(zen_ForParameterContext_t* context,
     jtk_ArrayList_t* children) {
     jtk_Assert_assertObject(context, "The specified context is null.");
 
-    jtk_ArrayList_addPredicatively(children, context->m_identifier, jtk_Object_isNotNull);
+    jtk_ArrayList_add(children, context->m_identifier);
 }
 
 /*******************************************************************************
@@ -1479,8 +1479,8 @@ void zen_WithParameterContext_getChildren(zen_WithParameterContext_t* context,
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_addPredicatively(children, context->m_identifier, jtk_Object_isNotNull);
-    jtk_ArrayList_addPredicatively(children, context->m_expression, jtk_Object_isNotNull);
+    jtk_ArrayList_add(children, context->m_identifier);
+    jtk_ArrayList_add(children, context->m_expression);
 }
 
 /*******************************************************************************
@@ -1611,9 +1611,9 @@ void zen_ClassMemberContext_getChildren(zen_ClassMemberContext_t* context,
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_addPredicatively(children, context->m_annotations, jtk_Object_isNotNull);
+    jtk_ArrayList_add(children, context->m_annotations);
     jtk_ArrayList_addAll(children, JTK_COLLECTION_ARRAY_LIST, context->m_modifiers);
-    jtk_ArrayList_addPredicatively(children, context->m_declaration, jtk_Object_isNotNull);
+    jtk_ArrayList_add(children, context->m_declaration);
 }
 
 /*******************************************************************************
@@ -1946,7 +1946,7 @@ void zen_LogicalOrExpressionContext_getChildren(zen_LogicalOrExpressionContext_t
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_addPredicatively(children, context->m_logicalAndExpression, jtk_Object_isNotNull);
+    jtk_ArrayList_add(children, context->m_logicalAndExpression);
     jtk_ArrayList_addAll(children, JTK_COLLECTION_ARRAY_LIST, context->m_logicalAndExpressions);
 }
 
@@ -1979,7 +1979,7 @@ void zen_LogicalAndExpressionContext_getChildren(zen_LogicalAndExpressionContext
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_addPredicatively(children, context->m_inclusiveOrExpression, jtk_Object_isNotNull);
+    jtk_ArrayList_add(children, context->m_inclusiveOrExpression);
     jtk_ArrayList_addAll(children, JTK_COLLECTION_ARRAY_LIST, context->m_inclusiveOrExpressions);
 }
 
@@ -2012,7 +2012,7 @@ void zen_InclusiveOrExpressionContext_getChildren(zen_InclusiveOrExpressionConte
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_addPredicatively(children, context->m_exclusiveOrExpression, jtk_Object_isNotNull);
+    jtk_ArrayList_add(children, context->m_exclusiveOrExpression);
     jtk_ArrayList_addAll(children, JTK_COLLECTION_ARRAY_LIST, context->m_exclusiveOrExpressions);
 }
 
@@ -2045,7 +2045,7 @@ void zen_ExclusiveOrExpressionContext_getChildren(zen_ExclusiveOrExpressionConte
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_addPredicatively(children, context->m_andExpression, jtk_Object_isNotNull);
+    jtk_ArrayList_add(children, context->m_andExpression);
     jtk_ArrayList_addAll(children, JTK_COLLECTION_ARRAY_LIST, context->m_andExpressions);
 }
 
@@ -2078,7 +2078,7 @@ void zen_AndExpressionContext_getChildren(zen_AndExpressionContext_t* context,
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_addPredicatively(children, context->m_equalityExpression, jtk_Object_isNotNull);
+    jtk_ArrayList_add(children, context->m_equalityExpression);
     jtk_ArrayList_addAll(children, JTK_COLLECTION_ARRAY_LIST, context->m_equalityExpressions);
 }
 
@@ -2117,14 +2117,14 @@ void zen_EqualityExpressionContext_getChildren(zen_EqualityExpressionContext_t* 
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_addPredicatively(children, context->m_relationalExpression, jtk_Object_isNotNull);
+    jtk_ArrayList_add(children, context->m_relationalExpression);
 
     int32_t size = jtk_ArrayList_getSize(context->m_relationalExpressions);
     int32_t i;
     for (i = 0; i < size; i++) {
         jtk_Pair_t* pair = (jtk_Pair_t*)jtk_ArrayList_getValue(context->m_relationalExpressions, i);
-        jtk_ArrayList_addPredicatively(children, pair->m_left, jtk_Object_isNotNull);
-        jtk_ArrayList_addPredicatively(children, pair->m_right, jtk_Object_isNotNull);
+        jtk_ArrayList_add(children, pair->m_left);
+        jtk_ArrayList_add(children, pair->m_right);
     }
 }
 
@@ -2164,7 +2164,7 @@ void zen_RelationalExpressionContext_getChildren(zen_RelationalExpressionContext
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_addPredicatively(children, context->m_shiftExpression, jtk_Object_isNotNull);
+    jtk_ArrayList_add(children, context->m_shiftExpression);
 
     int32_t size = jtk_ArrayList_getSize(context->m_shiftExpressions);
     int32_t i;
@@ -2211,7 +2211,7 @@ void zen_ShiftExpressionContext_getChildren(zen_ShiftExpressionContext_t* contex
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_addPredicatively(children, context->m_additiveExpression, jtk_Object_isNotNull);
+    jtk_ArrayList_add(children, context->m_additiveExpression);
 
     int32_t size = jtk_ArrayList_getSize(context->m_additiveExpressions);
     int32_t i;
@@ -2561,7 +2561,7 @@ void zen_MapExpressionContext_getChildren(zen_MapExpressionContext_t* context,
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_addPredicatively(children, context->m_mapEntries, jtk_Object_isNotNull);
+    jtk_ArrayList_add(children, context->m_mapEntries);
 }
 
 /*******************************************************************************
@@ -2654,7 +2654,7 @@ void zen_ListExpressionContext_getChildren(zen_ListExpressionContext_t* context,
     jtk_Assert_assertObject(context, "The specified context is null.");
     jtk_Assert_assertObject(children, "The specified children is null.");
 
-    jtk_ArrayList_addPredicatively(children, context->m_expressions, jtk_Object_isNotNull);
+    jtk_ArrayList_add(children, context->m_expressions);
 }
 
 /*******************************************************************************

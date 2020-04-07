@@ -42,7 +42,9 @@ void zen_ASTNode_delete(zen_ASTNode_t* node) {
         int32_t i;
         for (i = 0; i < size; i++) {
             zen_ASTNode_t* child = (zen_ASTNode_t*)jtk_ArrayList_getValue(children, i);
-            zen_ASTNode_delete(child);
+            if (child != NULL) {
+                zen_ASTNode_delete(child);
+            }
         }
         node->m_contextDestructor(node->m_context);
     }

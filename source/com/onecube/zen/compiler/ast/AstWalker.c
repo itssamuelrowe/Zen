@@ -20,71 +20,73 @@
 
 void zen_ASTWalker_walk(zen_ASTListener_t* listener, zen_ASTNode_t* node) {
     jtk_Assert_assertObject(listener, "The specified listener is null.");
-    jtk_Assert_assertObject(node, "The specified root is null.");
+    // jtk_Assert_assertObject(node, "The specified root is null.");
 
     /*printf("[node enter] %s\n", zen_Parser_getRuleName(node->m_type));
     fflush(stdout);
     */
 
-    if (zen_ASTNode_isErroneous(node)) {
-        listener->m_onVisitErrorNode(listener, node);
-    }
-    else if (zen_ASTNode_isTerminal(node)) {
-        listener->m_onVisitTerminal(listener, node);
-    }
-    else {
-        zen_ASTWalker_enterRule(listener, node);
-
-        jtk_ArrayList_t* children = zen_ASTNode_getChildren(node);
-        int32_t size = jtk_ArrayList_getSize(children);
-        switch (listener->m_walkerState) {
-            case ZEN_AST_WALKER_STATE_VISIT_CHILDREN: {
-                // TODO: Use a stack based traversal.
-                int32_t i;
-                for (i = 0; i < size; i++) {
-                    zen_ASTNode_t* child = (zen_ASTNode_t*)jtk_ArrayList_getValue(children, i);
-                    zen_ASTWalker_walk(listener, child);
-                }
-
-                break;
-            }
-
-            case ZEN_AST_WALKER_STATE_SKIP_CHILDREN: {
-                // Skip the children! Nothing to do here.
-
-                break;
-            }
-
-            case ZEN_AST_WALKER_STATE_VISIT_FIRST_CHILD: {
-                if (size > 0) {
-                    zen_ASTNode_t* firstChild = (zen_ASTNode_t*)jtk_ArrayList_getValue(children, 0);
-                    zen_ASTWalker_walk(listener, firstChild);
-                }
-
-                break;
-            }
-
-            case ZEN_AST_WALKER_STATE_VISIT_LAST_CHILD: {
-                if (size > 0) {
-                    zen_ASTNode_t* lastChild = (zen_ASTNode_t*)jtk_ArrayList_getValue(
-                        children, size - 1);
-                    zen_ASTWalker_walk(listener, lastChild);
-                }
-
-                break;
-            }
-
-            default: {
-                printf("[warning] Ignored a walker state in ASTWalker.\n");
-            }
+    if (node != NULL) {
+        if (zen_ASTNode_isErroneous(node)) {
+            listener->m_onVisitErrorNode(listener, node);
         }
+        else if (zen_ASTNode_isTerminal(node)) {
+            listener->m_onVisitTerminal(listener, node);
+        }
+        else {
+            zen_ASTWalker_enterRule(listener, node);
 
-        // TODO: If the walker allows a node to prevent its siblings from being visited
-        // please process it here. Further, do not reset to ZEN_AST_WALKER_STATE_VISIT_CHILDREN.
+            jtk_ArrayList_t* children = zen_ASTNode_getChildren(node);
+            int32_t size = jtk_ArrayList_getSize(children);
+            switch (listener->m_walkerState) {
+                case ZEN_AST_WALKER_STATE_VISIT_CHILDREN: {
+                    // TODO: Use a stack based traversal.
+                    int32_t i;
+                    for (i = 0; i < size; i++) {
+                        zen_ASTNode_t* child = (zen_ASTNode_t*)jtk_ArrayList_getValue(children, i);
+                        zen_ASTWalker_walk(listener, child);
+                    }
 
-        zen_ASTListener_visitChildren(listener);
+                    break;
+                }
 
-        zen_ASTWalker_exitRule(listener, node);
+                case ZEN_AST_WALKER_STATE_SKIP_CHILDREN: {
+                    // Skip the children! Nothing to do here.
+
+                    break;
+                }
+
+                case ZEN_AST_WALKER_STATE_VISIT_FIRST_CHILD: {
+                    if (size > 0) {
+                        zen_ASTNode_t* firstChild = (zen_ASTNode_t*)jtk_ArrayList_getValue(children, 0);
+                        zen_ASTWalker_walk(listener, firstChild);
+                    }
+
+                    break;
+                }
+
+                case ZEN_AST_WALKER_STATE_VISIT_LAST_CHILD: {
+                    if (size > 0) {
+                        zen_ASTNode_t* lastChild = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+                            children, size - 1);
+                        zen_ASTWalker_walk(listener, lastChild);
+                    }
+
+                    break;
+                }
+
+                default: {
+                    printf("[warning] Ignored a walker state in ASTWalker.\n");
+                }
+            }
+
+            // TODO: If the walker allows a node to prevent its siblings from being visited
+            // please process it here. Further, do not reset to ZEN_AST_WALKER_STATE_VISIT_CHILDREN.
+
+            zen_ASTListener_visitChildren(listener);
+
+            zen_ASTWalker_exitRule(listener, node);
+        }
     }
 
     // printf("[node exit] %s\n", zen_Parser_getRuleName(node->m_type));

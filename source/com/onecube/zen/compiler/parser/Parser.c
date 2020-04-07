@@ -274,6 +274,22 @@ void zen_Parser_match(zen_Parser_t* parser, zen_TokenType_t type) {
     zen_Parser_matchAndYield(parser, type);
 }
 
+void zen_Parser_reportAndRecover(zen_Parser_t* parser, zen_TokenType_t expected) {
+    /* Do not report the error if the parser is in recovery mode. Otherwise,
+    * duplicate syntax errors will be reported to the end user.
+    */
+    if (!parser->m_recovery) {
+        zen_Token_t* lt1 = zen_TokenStream_lt(parser->m_tokens, 1);
+        zen_Compiler_t* compiler = parser->m_compiler;
+        zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
+        zen_ErrorHandler_handleSyntacticalError(errorHandler, parser,
+            ZEN_ERROR_CODE_UNEXPECTED_TOKEN, lt1, expected);
+    }
+
+    /* Try to resychronize the parser with the input. */
+    zen_Parser_recover(parser);
+}
+
 zen_Token_t* zen_Parser_matchAndYield(zen_Parser_t* parser, zen_TokenType_t type) {
     jtk_Assert_assertObject(parser, "The specified parser is null.");
 
@@ -294,25 +310,7 @@ zen_Token_t* zen_Parser_matchAndYield(zen_Parser_t* parser, zen_TokenType_t type
         }
     }
     else {
-        // char buffer[200];
-        // const uint8_t* expectedName = zen_Lexer_getLiteralName(type);
-        // const uint8_t* actualName = zen_Lexer_getLiteralName(lt1->m_type);
-        // sprintf(buffer, "Expected token '%s', encountered token '%s'",
-            // expectedName, actualName);
-        // zen_Parser_reportSyntaxError(parser, lt1, buffer);
-
-        /* Do not report the error if the parser is in recovery mode. Otherwise,
-         * duplicate syntax errors will be reported to the end user.
-         */
-        if (!parser->m_recovery) {
-            zen_Compiler_t* compiler = parser->m_compiler;
-            zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
-            zen_ErrorHandler_handleSyntacticalError(errorHandler, parser,
-                ZEN_ERROR_CODE_UNEXPECTED_TOKEN, lt1, type);
-        }
-
-        /* Try to resychronize the parser with the input. */
-        zen_Parser_recover(parser);
+        zen_Parser_reportAndRecover(parser, type);
     }
     return lt1;
 }
@@ -646,6 +644,11 @@ void zen_Parser_annotation(zen_Parser_t* parser, zen_ASTNode_t* node) {
     /* We are expecting the '@' token here. */
     zen_Parser_match(parser, ZEN_TOKEN_AT);
 
+    /* If annotationType fails, discard tokens until the newline token is
+     * encountered.
+     */
+    zen_Parser_pushFollowToken(parser, ZEN_TOKEN_NEWLINE);
+
     /* We are expecting an annotation type here. */
     zen_ASTNode_t* annotationType = zen_ASTNode_new(node);
 	context->m_annotationType = annotationType;
@@ -659,6 +662,9 @@ void zen_Parser_annotation(zen_Parser_t* parser, zen_ASTNode_t* node) {
 		jtk_ArrayList_add(context->m_annotationAttributes, annotationAttribute);
         zen_Parser_annotationAttribute(parser, annotationAttribute);
     }
+
+    /* Pop the newline token from the follow set. */
+    zen_Parser_popFollowToken(parser);
 
     /* We are expecting a newline token here. The newline token marks the
 	 * end of an annotation.
@@ -773,7 +779,8 @@ void zen_Parser_componentDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) 
         // }
 
         default: {
-            // Syntax error: Expected function, class, or enum
+            // TODO: Expected function or class
+            zen_Parser_reportAndRecover(parser, ZEN_TOKEN_KEYWORD_CLASS);
             break;
         }
     }
