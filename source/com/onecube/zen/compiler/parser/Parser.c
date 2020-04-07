@@ -791,7 +791,7 @@ void zen_Parser_componentDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) 
 
 /*
  * functionDeclaration
- * :    'function' functionIdentifier functionParameters? (functionBody | NEWLINE)
+ * :    'function' functionIdentifier functionParameters (functionBody | NEWLINE)
  * ;
  *
  * functionIdentifier
@@ -819,7 +819,8 @@ void zen_Parser_functionDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node,
         }
 
         default: {
-            // Syntax error: Expected identifier, new, or static
+            // TODO: Expected identifier, new, or static
+            zen_Parser_reportAndRecover(parser, ZEN_TOKEN_IDENTIFIER);
         }
     }
 
@@ -829,11 +830,23 @@ void zen_Parser_functionDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node,
     // zen_Token_t* identifier = zen_Parser_matchAndYield(parser, ZEN_TOKEN_IDENTIFIER);
     // context->m_identifier = zen_Parser_newTerminalNode(node, identifier);
 
-    if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_LEFT_PARENTHESIS) {
-		zen_ASTNode_t* functionParameters = zen_ASTNode_new(node);
-		context->m_functionParameters = functionParameters;
-        zen_Parser_functionParameters(parser, functionParameters);
-    }
+    /* If functionParameters fails, discard tokens until the newline token is
+     * encountered.
+     */
+    zen_Parser_pushFollowToken(parser, ZEN_TOKEN_NEWLINE);
+
+    /* TODO:
+     * The parenthesis are considered as enclosures by the lexer. Any
+     * newline token in between parenthesis are generated on the hidden
+     * channel. Therefore, the error recovery strategy does not work
+     * well unless the hidden channel is also considered.
+     */
+    zen_ASTNode_t* functionParameters = zen_ASTNode_new(node);
+    context->m_functionParameters = functionParameters;
+    zen_Parser_functionParameters(parser, functionParameters);
+
+    /* Pop the newline token from the follow set. */
+    zen_Parser_popFollowToken(parser);
 
     if (!zen_Modifier_hasNative(modifiers) && !zen_Modifier_hasAbstract(modifiers)) {
         zen_ASTNode_t* functionBody = zen_ASTNode_new(node);
@@ -955,7 +968,7 @@ void zen_Parser_statementSuite(zen_Parser_t* parser, zen_ASTNode_t* node) {
 
 	zen_StatementSuiteContext_t* context = zen_StatementSuiteContext_new(node);
 
-    zen_TokenType_t la1 = zen_TokenStream_la(parser->m_tokens, 1);
+    // zen_TokenType_t la1 = zen_TokenStream_la(parser->m_tokens, 1);
 
     /* if (zen_Parser_isSimpleStatementFollow(la1)) {
         zen_ASTNode_t* simpleStatement = zen_ASTNode_new(node);
@@ -964,11 +977,17 @@ void zen_Parser_statementSuite(zen_Parser_t* parser, zen_ASTNode_t* node) {
     }
     */
 
-    if (la1 == ZEN_TOKEN_NEWLINE) {
+    // if (la1 == ZEN_TOKEN_NEWLINE) {
         /* Consume and discard the newline token. */
-        zen_TokenStream_consume(parser->m_tokens);
+        zen_Parser_match(parser, ZEN_TOKEN_NEWLINE);
         /* Consume and discard the dedent token. */
         zen_Parser_match(parser, ZEN_TOKEN_INDENTATION);
+
+        /* If statement fails, discard tokens until the dedentation token is
+         * encountered.
+         */
+        zen_Parser_pushFollowToken(parser, ZEN_TOKEN_DEDENTATION);
+
         do {
             zen_ASTNode_t* statement = zen_ASTNode_new(node);
             jtk_ArrayList_add(context->m_statements, statement);
@@ -976,9 +995,12 @@ void zen_Parser_statementSuite(zen_Parser_t* parser, zen_ASTNode_t* node) {
         }
         while (zen_Parser_isStatementFollow(zen_TokenStream_la(parser->m_tokens, 1)));
 
+        /* Pop the dedentation token from the follow set. */
+        zen_Parser_popFollowToken(parser);
+
         /* Consume and discard the dedent token. */
         zen_Parser_match(parser, ZEN_TOKEN_DEDENTATION);
-    }
+    // }
 
     zen_StackTrace_exit();
 }
