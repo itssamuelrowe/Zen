@@ -738,7 +738,8 @@ void zen_Parser_annotationAttribute(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_TokenStream_consume(parser->m_tokens);
     }
     else {
-        // Syntax error: Expected literal
+        // TODO: string, integer, decimal, boolean, or null literal
+        zen_Parser_reportAndRecover(parser, ZEN_TOKEN_STRING_LITERAL);
     }
 
     zen_StackTrace_exit();
@@ -898,10 +899,7 @@ void zen_Parser_functionParameters(zen_Parser_t* parser, zen_ASTNode_t* node) {
                     }
 
 					default: {
-                        zen_Token_t* lt1 = zen_TokenStream_lt(parser->m_tokens, 1);
-                        zen_ErrorHandler_t* errorHandler = parser->m_compiler->m_errorHandler;
-						zen_ErrorHandler_handleSyntacticalError(
-                            errorHandler, parser, ZEN_ERROR_CODE_UNEXPECTED_TOKEN, lt1, ZEN_TOKEN_IDENTIFIER);
+                        zen_Parser_reportAndRecover(parser, ZEN_TOKEN_IDENTIFIER);
                         break;
 					}
                 }
