@@ -222,7 +222,9 @@ const uint8_t* zen_ErrorCode_messages[] = {
     "Undeclared identifier",
     "Variable treated as function",
     "Static initializer with parameters",
-    "Redeclaration of symbol as function"
+    "Redeclaration of symbol as function",
+    "Redeclaration of symbol as parameter",
+    "Redeclaration of symbol as variable parameter"
 };
 
 void zen_Compiler_printErrors(zen_Compiler_t* compiler) {

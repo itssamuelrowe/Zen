@@ -317,7 +317,9 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
         const uint8_t* parameterText = zen_Token_getText((zen_Token_t*)(parameter->m_context));
         zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, parameterText);
         if (symbol != NULL) {
-            zen_ErrorHandler_reportError(NULL, "Redeclaration of symbol as parameter", (zen_Token_t*)(parameter->m_context));
+            zen_ErrorHandler_handleSemanticalError(errorHandler,
+                listener, ZEN_ERROR_CODE_REDECLARATION_OF_SYMBOL_AS_PARAMETER,
+                (zen_Token_t*)(parameter->m_context));
         }
         else {
             zen_ConstantSymbol_t* constantSymbol = zen_ConstantSymbol_new(parameter, symbolTable->m_currentScope);
@@ -330,7 +332,10 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
         const uint8_t* parameterText = zen_Token_getText((zen_Token_t*)(variableParameter->m_context));
         zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, parameterText);
         if (symbol != NULL) {
-            zen_ErrorHandler_reportError(NULL, "Redeclaration of symbol as variable parameter", (zen_Token_t*)(variableParameter->m_context));
+
+            zen_ErrorHandler_handleSemanticalError(errorHandler,
+                listener, ZEN_ERROR_CODE_REDECLARATION_OF_SYMBOL_AS_VARIABLE_PARAMETER,
+                (zen_Token_t*)(variableParameter->m_context));
         }
         else {
             zen_ConstantSymbol_t* constantSymbol = zen_ConstantSymbol_new(variableParameter, symbolTable->m_currentScope);
