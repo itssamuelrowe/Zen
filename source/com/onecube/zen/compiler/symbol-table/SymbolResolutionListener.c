@@ -941,48 +941,54 @@ void zen_SymbolResolutionListener_onEnterClassDeclaration(zen_ASTListener_t* ast
     zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
     /* Retrieve the scope associated with the class being declared. */
     zen_Scope_t* scope = zen_ASTAnnotations_get(listener->m_scopes, node);
-    /* Update the current scope in the symbol table. */
-    zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
+    /* If the definition of the class is duplicate, a scope is not associated with
+     * it.
+     */
+    if (scope != NULL) {
+        /* Update the current scope in the symbol table. */
+        zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
 
-    zen_ClassDeclarationContext_t* classDeclarationContext = (zen_ClassDeclarationContext_t*)node->m_context;
-    if (classDeclarationContext->m_classExtendsClause != NULL) {
-        zen_ClassExtendsClauseContext_t* classExtendsClauseContext = classExtendsClauseContext = (zen_ClassExtendsClauseContext_t*)classDeclarationContext->m_classExtendsClause->m_context;
+        zen_ClassDeclarationContext_t* classDeclarationContext = (zen_ClassDeclarationContext_t*)node->m_context;
+        if (classDeclarationContext->m_classExtendsClause != NULL) {
+            zen_ClassExtendsClauseContext_t* classExtendsClauseContext = classExtendsClauseContext = (zen_ClassExtendsClauseContext_t*)classDeclarationContext->m_classExtendsClause->m_context;
 
-        // TODO: Use a node annotation
+            // TODO: Use a node annotation
 
-        zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, zen_Token_getText((zen_Token_t*)classDeclarationContext->m_identifier->m_context));
-        zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
-        jtk_ArrayList_t* superClasses = zen_ClassSymbol_getSuperClasses(classSymbol);
+            zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, zen_Token_getText((zen_Token_t*)classDeclarationContext->m_identifier->m_context));
+            zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
+            jtk_ArrayList_t* superClasses = zen_ClassSymbol_getSuperClasses(classSymbol);
 
-        int32_t superClassCount = jtk_ArrayList_getSize(classExtendsClauseContext->m_typeNames);
-        int32_t i;
-        for (i = 0; i < superClassCount; i++) {
-            zen_ASTNode_t* typeName = (zen_ASTNode_t*)jtk_ArrayList_getValue(classExtendsClauseContext->m_typeNames, i);
-            // const uint8_t* qualifiedTypeName = zen_SymbolResolutionListener_getQualifiedTypeName(typeName);
-            // TODO!!
-            zen_TypeNameContext_t* typeNameContext = (zen_TypeNameContext_t*)(typeName->m_context);
-            jtk_ArrayList_t* identifiers = typeNameContext->m_identifiers;
-            zen_Token_t* first = ((zen_ASTNode_t*)jtk_ArrayList_getValue(identifiers, 0))->m_context;
-            const uint8_t* firstText = zen_Token_getText(first);
-            zen_Symbol_t* superClassSymbol = zen_SymbolTable_resolve(listener->m_symbolTable, firstText);
-            if (superClassSymbol == NULL) {
-                fprintf(stderr, "[semantic error] Unknown class\n");
-            }
-            else {
-                jtk_ArrayList_add(superClasses, superClassSymbol);
+            int32_t superClassCount = jtk_ArrayList_getSize(classExtendsClauseContext->m_typeNames);
+            int32_t i;
+            for (i = 0; i < superClassCount; i++) {
+                zen_ASTNode_t* typeName = (zen_ASTNode_t*)jtk_ArrayList_getValue(classExtendsClauseContext->m_typeNames, i);
+                // const uint8_t* qualifiedTypeName = zen_SymbolResolutionListener_getQualifiedTypeName(typeName);
+                // TODO!!
+                zen_TypeNameContext_t* typeNameContext = (zen_TypeNameContext_t*)(typeName->m_context);
+                jtk_ArrayList_t* identifiers = typeNameContext->m_identifiers;
+                zen_Token_t* first = ((zen_ASTNode_t*)jtk_ArrayList_getValue(identifiers, 0))->m_context;
+                const uint8_t* firstText = zen_Token_getText(first);
+                zen_Symbol_t* superClassSymbol = zen_SymbolTable_resolve(listener->m_symbolTable, firstText);
+                if (superClassSymbol == NULL) {
+                    fprintf(stderr, "[semantic error] Unknown class\n");
+                }
+                else {
+                    jtk_ArrayList_add(superClasses, superClassSymbol);
+                }
             }
         }
+
+        zen_ASTWalker_walk(astListener, classDeclarationContext->m_classSuite);
+
+        zen_SymbolTable_invalidateCurrentScope(listener->m_symbolTable);
     }
+    zen_ASTListener_skipChildren(astListener);
 }
 
 void zen_SymbolResolutionListener_onExitClassDeclaration(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
     jtk_Assert_assertObject(node, "The specified AST node is null.");
-
-    zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
-
-    zen_SymbolTable_invalidateCurrentScope(listener->m_symbolTable);
 }
 
 // classExtends

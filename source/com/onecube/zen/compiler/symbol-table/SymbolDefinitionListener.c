@@ -411,7 +411,6 @@ void zen_SymbolDefinitionListener_declareOverloadedFunction(
     for (i = 0; i < size; i++) {
         zen_FunctionSignature_t* signature = (zen_FunctionSignature_t*)jtk_ArrayList_getValue(signatures, i);
         if ((signature->m_variableParameter != NULL) && (variableParameter != NULL)) {
-
             zen_ErrorHandler_handleSemanticalError(errorHandler,
                 listener, ZEN_ERROR_CODE_MULTIPLE_FUNCTION_OVERLOADS_WITH_VARIABLE_PARAMETER,
                 (zen_Token_t*)(variableParameter->m_context));
@@ -527,6 +526,8 @@ void zen_SymbolDefinitionListener_onEnterVariableDeclaration(
     jtk_Assert_assertObject(node, "The specified AST node is null.");
 
     zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
+    zen_Compiler_t* compiler = listener->m_compiler;
+    zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
     zen_VariableDeclarationContext_t* variableDeclarationContext = (zen_VariableDeclarationContext_t*)node->m_context;
 
     int32_t size = jtk_ArrayList_getSize(variableDeclarationContext->m_variableDeclarators);
@@ -540,7 +541,9 @@ void zen_SymbolDefinitionListener_onEnterVariableDeclaration(
 
         zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
         if (symbol != NULL) {
-            zen_ErrorHandler_reportError(NULL, "Redeclaration of symbol as variable", (zen_Token_t*)identifier->m_context);
+            zen_ErrorHandler_handleSemanticalError(errorHandler,
+                listener, ZEN_ERROR_CODE_REDECLARATION_OF_SYMBOL_AS_VARIABLE,
+                (zen_Token_t*)identifier->m_context);
         }
         else {
             zen_VariableSymbol_t* variableSymbol = zen_VariableSymbol_new(identifier, listener->m_symbolTable->m_currentScope);
@@ -556,6 +559,8 @@ void zen_SymbolDefinitionListener_onEnterConstantDeclaration(
     jtk_Assert_assertObject(node, "The specified AST node is null.");
 
     zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
+    zen_Compiler_t* compiler = listener->m_compiler;
+    zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
     zen_ConstantDeclarationContext_t* constantDeclarationContext = (zen_ConstantDeclarationContext_t*)node->m_context;
 
     int32_t size = jtk_ArrayList_getSize(constantDeclarationContext->m_constantDeclarators);
@@ -569,7 +574,9 @@ void zen_SymbolDefinitionListener_onEnterConstantDeclaration(
 
         zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
         if (symbol != NULL) {
-            zen_ErrorHandler_reportError(NULL, "Redeclaration of symbol as constant", (zen_Token_t*)identifier->m_context);
+            zen_ErrorHandler_handleSemanticalError(errorHandler,
+                listener, ZEN_ERROR_CODE_REDECLARATION_OF_SYMBOL_AS_CONSTANT,
+                (zen_Token_t*)identifier->m_context);
         }
         else {
             zen_ConstantSymbol_t* constantSymbol = zen_ConstantSymbol_new(identifier, listener->m_symbolTable->m_currentScope);
@@ -585,6 +592,8 @@ void zen_SymbolDefinitionListener_onEnterLabelClause(
     jtk_Assert_assertObject(node, "The specified AST node is null.");
 
     zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
+    zen_Compiler_t* compiler = listener->m_compiler;
+    zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
     zen_LabelClauseContext_t* LabelClauseContext = (zen_LabelClauseContext_t*)node->m_context;
 
     zen_ASTNode_t* identifier = LabelClauseContext->m_identifier;
@@ -592,7 +601,9 @@ void zen_SymbolDefinitionListener_onEnterLabelClause(
 
     zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
     if (symbol != NULL) {
-        zen_ErrorHandler_reportError(NULL, "Redeclaration of symbol as label", (zen_Token_t*)identifier->m_context);
+        zen_ErrorHandler_handleSemanticalError(errorHandler,
+            listener, ZEN_ERROR_CODE_REDECLARATION_OF_SYMBOL_AS_LABEL,
+            (zen_Token_t*)identifier->m_context);
     }
     else {
         zen_LabelSymbol_t* labelSymbol = zen_LabelSymbol_new(identifier, listener->m_symbolTable->m_currentScope);
@@ -609,6 +620,8 @@ void zen_SymbolDefinitionListener_onEnterForParameters(
     jtk_Assert_assertObject(node, "The specified AST node is null.");
 
     zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
+    zen_Compiler_t* compiler = listener->m_compiler;
+    zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
     zen_ForParameterContext_t* forParametersContext = (zen_ForParameterContext_t*)node->m_context;
 
     if (forParametersContext->m_declaration) {
@@ -617,7 +630,9 @@ void zen_SymbolDefinitionListener_onEnterForParameters(
 
         zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
         if (symbol != NULL) {
-            zen_ErrorHandler_reportError(NULL, "Redeclaration of symbol as loop parameter", (zen_Token_t*)identifier->m_context);
+        zen_ErrorHandler_handleSemanticalError(errorHandler,
+            listener, ZEN_ERROR_CODE_REDECLARATION_OF_SYMBOL_AS_LOOP_PARAMETER,
+            (zen_Token_t*)identifier->m_context);
         }
         else {
             if (forParametersContext->m_variable) {
@@ -639,6 +654,8 @@ void zen_SymbolDefinitionListener_onEnterTryStatement(
     jtk_Assert_assertObject(node, "The specified AST node is null.");
 
     zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
+    zen_Compiler_t* compiler = listener->m_compiler;
+    zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
     zen_TryStatementContext_t* context = (zen_TryStatementContext_t*)node->m_context;
     zen_ASTWalker_walk(astListener, context->m_tryClause);
 
@@ -662,7 +679,9 @@ void zen_SymbolDefinitionListener_onEnterTryStatement(
 
         zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
         if (symbol != NULL) {
-            zen_ErrorHandler_reportError(NULL, "Redeclaration of symbol as catch parameter", (zen_Token_t*)identifier->m_context);
+        zen_ErrorHandler_handleSemanticalError(errorHandler,
+            listener, ZEN_ERROR_CODE_REDECLARATION_OF_SYMBOL_AS_CATCH_PARAMETER,
+            (zen_Token_t*)identifier->m_context);
         }
         else {
             zen_VariableSymbol_t* variableSymbol = zen_VariableSymbol_new(identifier, scope);
@@ -691,6 +710,8 @@ void zen_SymbolDefinitionListener_onEnterClassDeclaration(
     jtk_Assert_assertObject(node, "The specified AST node is null.");
 
     zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
+    zen_Compiler_t* compiler = listener->m_compiler;
+    zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
     zen_ClassDeclarationContext_t* classDeclarationContext = (zen_ClassDeclarationContext_t*)node->m_context;
 
     zen_ASTNode_t* identifier = classDeclarationContext->m_identifier;
@@ -699,7 +720,9 @@ void zen_SymbolDefinitionListener_onEnterClassDeclaration(
 
     zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
     if (symbol != NULL) {
-        zen_ErrorHandler_reportError(NULL, "Redeclaration of symbol as class", (zen_Token_t*)identifier->m_context);
+        zen_ErrorHandler_handleSemanticalError(errorHandler,
+            listener, ZEN_ERROR_CODE_REDECLARATION_OF_SYMBOL_AS_CLASS,
+            (zen_Token_t*)identifier->m_context);
     }
     else {
         uint8_t* qualifiedName = NULL;
@@ -734,18 +757,22 @@ void zen_SymbolDefinitionListener_onEnterClassDeclaration(
 
         zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
         zen_ASTAnnotations_put(listener->m_scopes, node, scope);
+
+        zen_ASTWalker_walk(astListener, classDeclarationContext->m_classSuite);
+
+        zen_SymbolTable_invalidateCurrentScope(listener->m_symbolTable);
     }
+
+    /* If the definition of a class is duplicate, then do not visit the children
+     * nodes.
+     */
+    zen_ASTListener_skipChildren(astListener);
 }
 
 void zen_SymbolDefinitionListener_onExitClassDeclaration(
     zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
     jtk_Assert_assertObject(node, "The specified AST node is null.");
-
-    zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
-    zen_ClassDeclarationContext_t* classDeclarationContext = (zen_ClassDeclarationContext_t*)node->m_context;
-
-    zen_SymbolTable_invalidateCurrentScope(listener->m_symbolTable);
 }
 
 void zen_SymbolDefinitionListener_onEnterEnumerationDeclaration(

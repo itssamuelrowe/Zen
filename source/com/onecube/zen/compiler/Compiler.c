@@ -227,7 +227,13 @@ const uint8_t* zen_ErrorCode_messages[] = {
     "Redeclaration of symbol as variable parameter",
     "Multiple function overloads with variable parameter",
     "Duplicate function overload",
-    "Function declaration exceeds parameter threshold"
+    "Function declaration exceeds parameter threshold",
+    "Redeclaration of symbol as variable",
+    "Redeclaration of symbol as constant",
+    "Redeclaration of symbol as label",
+    "Redeclaration of symbol as loop parameter",
+    "Redeclaration of symbol as catch parameter",
+    "Redeclaration of symbol as class"
 };
 
 void zen_Compiler_printErrors(zen_Compiler_t* compiler) {
