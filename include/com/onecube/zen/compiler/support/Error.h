@@ -33,6 +33,7 @@
 struct zen_Error_t {
     zen_ErrorCode_t m_code;
     zen_Token_t* m_token;
+    zen_TokenType_t m_expected;
 };
 
 /**
@@ -43,6 +44,7 @@ typedef struct zen_Error_t zen_Error_t;
 // Constructor
 
 zen_Error_t* zen_Error_new(zen_ErrorCode_t errorCode, zen_Token_t* token);
+zen_Error_t* zen_Error_newEx(zen_ErrorCode_t errorCode, zen_Token_t* token, zen_TokenType_t expected);
 
 // Destructor
 

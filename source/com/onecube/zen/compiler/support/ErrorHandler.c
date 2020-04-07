@@ -85,10 +85,11 @@ zen_ErrorHandler_OnSyntacticalErrorFunction_t zen_ErrorHandler_getOnSyntacticalE
 }
 
 void zen_ErrorHandler_handleSyntacticalError(zen_ErrorHandler_t* handler,
-    zen_Parser_t* parser, zen_ErrorCode_t errorCode, zen_Token_t* token) {
+    zen_Parser_t* parser, zen_ErrorCode_t errorCode, zen_Token_t* token,
+    zen_TokenType_t expected) {
     jtk_Assert_assertObject(handler, "The specified error handler is null.");
 
-    zen_Error_t* error = zen_Error_new(errorCode, token);
+    zen_Error_t* error = zen_Error_newEx(errorCode, token, expected);
     jtk_ArrayList_add(handler->m_errors, error);
 
     if (handler->m_handleSyntacticalError != NULL) {
@@ -96,7 +97,7 @@ void zen_ErrorHandler_handleSyntacticalError(zen_ErrorHandler_t* handler,
     }
 
     if (handler->m_active && (handler->m_onSyntacticalError != NULL)) {
-        handler->m_onSyntacticalError(handler->m_context, parser, error);
+        handler->m_onSyntacticalError(handler->m_context, parser, error, expected);
     }
 }
 

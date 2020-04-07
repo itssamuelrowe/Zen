@@ -62,7 +62,7 @@ typedef void (*zen_ErrorHandler_OnLexicalErrorFunction_t)(void* context, zen_Lex
 /**
  * @memberof ErrorHandler
  */
-typedef void (*zen_ErrorHandler_OnSyntacticalErrorFunction_t)(void* context, zen_Parser_t* parser, zen_Error_t* error);
+typedef void (*zen_ErrorHandler_OnSyntacticalErrorFunction_t)(void* context, zen_Parser_t* parser, zen_Error_t* error, zen_TokenType_t expected);
 
 /**
  * @memberof ErrorHandler
@@ -138,7 +138,8 @@ zen_ErrorHandler_OnSyntacticalErrorFunction_t zen_ErrorHandler_getOnSyntacticalE
  * @memberof ErrorHandler
  */
 void zen_ErrorHandler_handleSyntacticalError(zen_ErrorHandler_t* handler,
-    zen_Parser_t* parser, zen_ErrorCode_t errorCode, zen_Token_t* token);
+    zen_Parser_t* parser, zen_ErrorCode_t errorCode, zen_Token_t* token,
+    zen_TokenType_t expected);
 
 // Lexical Error
 

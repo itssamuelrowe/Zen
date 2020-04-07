@@ -308,7 +308,7 @@ zen_Token_t* zen_Parser_matchAndYield(zen_Parser_t* parser, zen_TokenType_t type
             zen_Compiler_t* compiler = parser->m_compiler;
             zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
             zen_ErrorHandler_handleSyntacticalError(errorHandler, parser,
-                ZEN_ERROR_CODE_UNEXPECTED_TOKEN, lt1);
+                ZEN_ERROR_CODE_UNEXPECTED_TOKEN, lt1, type);
         }
 
         /* Try to resychronize the parser with the input. */
@@ -894,7 +894,7 @@ void zen_Parser_functionParameters(zen_Parser_t* parser, zen_ASTNode_t* node) {
                         zen_Token_t* lt1 = zen_TokenStream_lt(parser->m_tokens, 1);
                         zen_ErrorHandler_t* errorHandler = parser->m_compiler->m_errorHandler;
 						zen_ErrorHandler_handleSyntacticalError(
-                            errorHandler, parser, ZEN_ERROR_CODE_UNEXPECTED_TOKEN, lt1);
+                            errorHandler, parser, ZEN_ERROR_CODE_UNEXPECTED_TOKEN, lt1, ZEN_TOKEN_IDENTIFIER);
                         break;
 					}
                 }

@@ -229,9 +229,18 @@ void zen_Compiler_printErrors(zen_Compiler_t* compiler) {
     for (i = 0; i < errorCount; i++) {
         zen_Error_t* error = (zen_Error_t*)jtk_ArrayList_getValue(errors, i);
         zen_Token_t* token = error->m_token;
+        const char* message = zen_ErrorCode_messages[(int32_t)error->m_code];
+        char message0[128];
+        if (error->m_expected != ZEN_TOKEN_UNKNOWN) {
+            const uint8_t* expectedName = zen_Lexer_getLiteralName(error->m_expected);
+            const uint8_t* actualName = zen_Lexer_getLiteralName(token->m_type);
+            sprintf(message0, "Expected token '%s', encountered token '%s'",
+                expectedName, actualName);
+            message = message0;
+        }
         fprintf(stderr, "\033[1;31m[error]\033[0m %d-%d:%d-%d: %s\n", token->m_startLine,
             token->m_stopLine, token->m_startColumn, token->m_stopColumn,
-            zen_ErrorCode_messages[(int32_t)error->m_code]);
+            message);
     }
 }
 

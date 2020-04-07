@@ -23,9 +23,15 @@
 // Constructor
 
 zen_Error_t* zen_Error_new(zen_ErrorCode_t code, zen_Token_t* token) {
+    return zen_Error_newEx(code, token, ZEN_TOKEN_UNKNOWN);
+}
+
+zen_Error_t* zen_Error_newEx(zen_ErrorCode_t code, zen_Token_t* token,
+    zen_TokenType_t expected) {
     zen_Error_t* error = jtk_Memory_allocate(zen_Error_t, 1);
     error->m_code = code;
     error->m_token = token;
+    error->m_expected = expected;
 
     return error;
 }
