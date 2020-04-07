@@ -30,6 +30,7 @@
 #include <jtk/io/BufferedInputStream.h>
 #include <jtk/io/InputStream.h>
 #include <jtk/log/ConsoleLogger.h>
+#include <jtk/core/CStringObjectAdapter.h>
 
 #include <com/onecube/zen/compiler/Compiler.h>
 #include <com/onecube/zen/compiler/lexer/Lexer.h>
@@ -64,6 +65,18 @@
 #include <com/onecube/zen/compiler/support/ErrorHandler.h>
 
 #include <com/onecube/zen/virtual-machine/feb/Instruction.h>
+
+// Register
+
+void zen_Compiler_registerSymbol(zen_Compiler_t* compiler, const uint8_t* identifier,
+    zen_Symbol_t* symbol) {
+    jtk_HashMap_put(compiler->m_repository, identifier, symbol);
+}
+
+zen_Symbol_t* zen_Compiler_resolveSymbol(zen_Compiler_t* compiler,
+    const uint8_t* identifier) {
+    return jtk_HashMap_getValue(compiler->m_repository, identifier);
+}
 
 // Token
 
@@ -145,6 +158,8 @@ jtk_InputStream_t* jtk_PathHelper_readEx(const uint8_t* path, uint32_t flags) {
 // Constructor
 
 zen_Compiler_t* zen_Compiler_new() {
+    jtk_ObjectAdapter_t* stringObjectAdapter = jtk_CStringObjectAdapter_getInstance();
+
     zen_Compiler_t* compiler = jtk_Memory_allocate(zen_Compiler_t, 1);
     compiler->m_dumpTokens = false;
     compiler->m_dumpNodes = false;
@@ -156,6 +171,7 @@ zen_Compiler_t* zen_Compiler_new() {
     compiler->m_compilationUnits = NULL;
     compiler->m_symbolTables = NULL;
     compiler->m_scopes = NULL;
+    compiler->m_repository = jtk_HashMap_new(stringObjectAdapter, NULL);
 #ifdef JTK_LOGGER_DISABLE
     compiler->m_logger = NULL;
 #else
@@ -233,7 +249,8 @@ const uint8_t* zen_ErrorCode_messages[] = {
     "Redeclaration of symbol as label",
     "Redeclaration of symbol as loop parameter",
     "Redeclaration of symbol as catch parameter",
-    "Redeclaration of symbol as class"
+    "Redeclaration of symbol as class",
+    "Unknown class"
 };
 
 void zen_Compiler_printErrors(zen_Compiler_t* compiler) {

@@ -20,6 +20,7 @@
 #define COM_ONECUBE_ZEN_COMPILER_COMPILER_H
 
 #include <jtk/collection/list/ArrayList.h>
+#include <jtk/collection/map/HashMap.h>
 #include <jtk/log/Logger.h>
 
 #include <com/onecube/zen/Configuration.h>
@@ -48,6 +49,8 @@ struct zen_Compiler_t {
     zen_ASTNode_t** m_compilationUnits;
     zen_SymbolTable_t** m_symbolTables;
     zen_ASTAnnotations_t** m_scopes;
+
+    jtk_HashMap_t* m_repository;
 };
 
 /**
@@ -76,6 +79,14 @@ void zen_Compiler_generate(zen_Compiler_t* compiler);
 void zen_Compiler_destroyNestedScopes(zen_ASTAnnotations_t* annotations);
 void zen_Compiler_destroySymbol(zen_Symbol_t* symbol);
 void zen_Compiler_destroyScope(zen_Scope_t* scope);
+
+// Register
+
+void zen_Compiler_registerSymbol(zen_Compiler_t* compiler, const uint8_t* identifier,
+    zen_Symbol_t* symbol);
+
+zen_Symbol_t* zen_Compiler_resolveSymbol(zen_Compiler_t* compiler,
+    const uint8_t* identifier);
 
 // Token
 

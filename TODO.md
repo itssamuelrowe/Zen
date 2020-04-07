@@ -6,7 +6,6 @@
  * Static functions should not go through ZenKernel.invokeStatic()!
  * Fix memory leaks in the compiler.
  * The pop instruction should be generated for expression statements that are not assignments.
- * The errors should be reported to the error handler.
  * Native code should be able throw and catch exceptions.
  * Implement line numbers for exceptions.
  * Generate default constructors when no constructor is provided.

@@ -409,7 +409,31 @@ void zen_SymbolResolutionListener_onExitCompilationUnit(zen_ASTListener_t* astLi
 
 // importDeclaration
 
-void zen_SymbolResolutionListener_onEnterImportDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_SymbolResolutionListener_onEnterImportDeclaration(
+    zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+    zen_SymbolResolutionListener_t* listener =
+        (zen_SymbolResolutionListener_t*)astListener->m_context;
+    zen_Compiler_t* compiler = listener->m_compiler;
+    zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
+    zen_ImportDeclarationContext_t* context = (zen_ImportDeclarationContext_t*)node->m_context;
+
+    int32_t qualifiedNameSize;
+    uint8_t* qualifiedName = zen_ASTNode_toCString(node, &qualifiedNameSize);
+
+    zen_Symbol_t* symbol = zen_Compiler_resolveSymbol(compiler, qualifiedName);
+    if (symbol == NULL) {
+        int32_t identifierCount = jtk_ArrayList_getSize(context->m_identifiers);
+        zen_ASTNode_t* lastIdentifier = jtk_ArrayList_getValue(context->m_identifiers,
+            identifierCount - 1);
+        zen_Token_t* lastIdentifierToken = (zen_Token_t*)lastIdentifier->m_context;
+        zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
+            ZEN_ERROR_CODE_UNKNOWN_CLASS, lastIdentifierToken);
+    }
+    else {
+        // TODO: Define an external symbol in the symbol table.
+    }
+
+    jtk_CString_delete(qualifiedName);
 }
 
 void zen_SymbolResolutionListener_onExitImportDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {

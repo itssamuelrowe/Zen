@@ -741,6 +741,7 @@ void zen_SymbolDefinitionListener_onEnterClassDeclaration(
             qualifiedName, qualifiedNameSize);
         symbol = zen_ClassSymbol_getSymbol(classSymbol);
         zen_SymbolTable_define(listener->m_symbolTable, symbol);
+        zen_Compiler_registerSymbol(compiler, qualifiedName, symbol);
 
         if (qualifiedName0 != NULL) {
             jtk_CString_delete(qualifiedName0);
