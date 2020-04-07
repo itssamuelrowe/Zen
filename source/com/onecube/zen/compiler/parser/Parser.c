@@ -811,7 +811,7 @@ void zen_Parser_functionDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node,
     switch (zen_TokenStream_la(parser->m_tokens, 1)) {
         case ZEN_TOKEN_IDENTIFIER:
         case ZEN_TOKEN_KEYWORD_NEW:
-        /* case ZEN_TOKEN_KEYWORD_STATIC: */ {
+        case ZEN_TOKEN_KEYWORD_STATIC: {
             zen_Token_t* identifierOrKeyword = zen_TokenStream_lt(parser->m_tokens, 1);
             context->m_identifier = zen_Parser_newTerminalNode(node, identifierOrKeyword);
             zen_TokenStream_consume(parser->m_tokens);

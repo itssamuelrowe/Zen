@@ -219,6 +219,8 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
     jtk_Assert_assertObject(node, "The specified AST node is null.");
 
     zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
+    zen_Compiler_t* compiler = listener->m_compiler;
+    zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
     zen_FunctionDeclarationContext_t* functionDeclarationContext = (zen_FunctionDeclarationContext_t*)node->m_context;
     zen_FunctionParametersContext_t* functionParametersContext = NULL;
 
@@ -249,8 +251,10 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
     /* Retrieve the current scope of the symbol table. */
     zen_Scope_t* currentScope = zen_SymbolTable_getCurrentScope(symbolTable);
 
-    if ((zen_Token_getType(identifierToken) == ZEN_TOKEN_KEYWORD_STATIC) && ((fixedParameterCount > 0) || (variableParameter != NULL))) {
-        zen_ErrorHandler_reportError(NULL, "Static initializer with parameters", identifierToken);
+    if ((zen_Token_getType(identifierToken) == ZEN_TOKEN_KEYWORD_STATIC) &&
+        ((fixedParameterCount > 0) || (variableParameter != NULL))) {
+        zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
+            ZEN_ERROR_CODE_STATIC_INITIALIZER_WITH_PARAMETERS, identifierToken);
     }
     else {
         if (zen_Scope_isCompilationUnitScope(currentScope) || zen_Scope_isClassScope(currentScope) || zen_Scope_isLocalScope(currentScope)) {

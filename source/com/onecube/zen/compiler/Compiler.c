@@ -220,7 +220,8 @@ const uint8_t* zen_ErrorCode_messages[] = {
     "Name refers to a non-class symbol",
     "No suitable constructor found",
     "Undeclared identifier",
-    "Variable treated as function"
+    "Variable treated as function",
+    "Static initializer with parameters"
 };
 
 void zen_Compiler_printErrors(zen_Compiler_t* compiler) {
