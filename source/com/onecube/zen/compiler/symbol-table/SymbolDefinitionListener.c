@@ -280,7 +280,9 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
                     zen_SymbolDefinitionListener_declareOverloadedFunction(functionSymbol, fixedParameters, variableParameter);
                 }
                 else {
-                    zen_ErrorHandler_reportError(NULL, "Redeclaration of symbol as function", identifierToken);
+                    zen_ErrorHandler_handleSemanticalError(errorHandler,
+                        listener, ZEN_ERROR_CODE_REDECLARATION_OF_SYMBOL_AS_FUNCTION,
+                        identifierToken);
                 }
             }
             else {
@@ -298,7 +300,7 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
             }
         }
         else {
-            fprintf(stderr, "[internal error] Declaring function in unsuitable scope\n");
+            printf("[internal error] Declaring function in unsuitable scope\n");
         }
     }
 
