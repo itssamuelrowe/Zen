@@ -2158,7 +2158,7 @@ bool zen_Parser_isClassMemberFollow(zen_TokenType_t type) {
            (type == ZEN_TOKEN_KEYWORD_FINAL)      || /* classMember -> ... -> constantDeclaration */
            (type == ZEN_TOKEN_KEYWORD_FUNCTION)   || /* classMember -> ... -> functionDeclaration */
            // (type == ZEN_TOKEN_IDENTIFIER)      || /* classMember -> ... -> constructorDeclaration */
-           (type == ZEN_TOKEN_KEYWORD_CLASS)      || /* classMember -> ... -> classDeclaration */
+           // (type == ZEN_TOKEN_KEYWORD_CLASS)      || /* classMember -> ... -> classDeclaration */
            // (type == ZEN_TOKEN_KEYWORD_ENUM)       || /* classMember -> ... -> enumerationDeclaration */
            (type == ZEN_TOKEN_AT);                   /* classMember -> ... -> annotatedClassMember */
 }
@@ -2173,7 +2173,7 @@ bool zen_Parser_isClassMemberFollow(zen_TokenType_t type) {
  * |	constantDeclaration
  * |	functionDeclaration
  * // |	constructorDeclaration
- * |	classDeclaration
+ * // |	classDeclaration
  * // |	enumerationDeclaration
  * ;
  *
@@ -2240,13 +2240,13 @@ void zen_Parser_classMember(zen_Parser_t* parser, zen_ASTNode_t* node) {
 //             break;
 //         }
 
-        case ZEN_TOKEN_KEYWORD_CLASS: {
-            zen_ASTNode_t* classDeclaration = zen_ASTNode_new(node);
-            context->m_declaration = classDeclaration;
-            zen_Parser_classDeclaration(parser, classDeclaration);
+        // case ZEN_TOKEN_KEYWORD_CLASS: {
+        //     zen_ASTNode_t* classDeclaration = zen_ASTNode_new(node);
+        //     context->m_declaration = classDeclaration;
+        //     zen_Parser_classDeclaration(parser, classDeclaration);
 
-            break;
-        }
+        //     break;
+        // }
 
         // case ZEN_TOKEN_KEYWORD_ENUM: {
         //     zen_ASTNode_t* enumerationDeclaration = zen_ASTNode_new(node);
@@ -2257,7 +2257,8 @@ void zen_Parser_classMember(zen_Parser_t* parser, zen_ASTNode_t* node) {
         // }
 
         default: {
-            /* Syntax Error: Expected var, final, function, identifier, class, or enum. */
+            /* TODO: Expected var, final, or function. */
+            zen_Parser_reportAndRecover(parser, ZEN_TOKEN_KEYWORD_FUNCTION);
             break;
         }
     }
@@ -2532,16 +2533,16 @@ void zen_Parser_conditionalExpression(zen_Parser_t* parser, zen_ASTNode_t* node)
     context->m_logicalOrExpression = logicalOrExpression;
     zen_Parser_logicalOrExpression(parser, logicalOrExpression);
 
-    if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_KEYWORD_THEN) {
-        /* Consume and discard the 'then' token. */
+    if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_HOOK) {
+        /* Consume and discard the '?' token. */
         zen_TokenStream_consume(parser->m_tokens);
 
         zen_ASTNode_t* expression = zen_ASTNode_new(node);
         context->m_thenExpression = expression;
         zen_Parser_expression(parser, expression);
 
-		/* Consume and discard the 'else' token. */
-        zen_Parser_match(parser, ZEN_TOKEN_KEYWORD_ELSE);
+		/* Consume and discard the ':' token. */
+        zen_Parser_match(parser, ZEN_TOKEN_COLON);
 
         zen_ASTNode_t* conditionalExpression = zen_ASTNode_new(node);
         context->m_elseExpression = conditionalExpression;
