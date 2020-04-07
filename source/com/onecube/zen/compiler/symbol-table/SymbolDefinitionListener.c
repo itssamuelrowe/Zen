@@ -277,7 +277,8 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
                      * function symbol.
                      */
                     zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)symbol->m_context;
-                    zen_SymbolDefinitionListener_declareOverloadedFunction(functionSymbol, fixedParameters, variableParameter);
+                    zen_SymbolDefinitionListener_declareOverloadedFunction(listener,
+                        functionSymbol, fixedParameters, variableParameter);
                 }
                 else {
                     zen_ErrorHandler_handleSemanticalError(errorHandler,
@@ -332,7 +333,6 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
         const uint8_t* parameterText = zen_Token_getText((zen_Token_t*)(variableParameter->m_context));
         zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, parameterText);
         if (symbol != NULL) {
-
             zen_ErrorHandler_handleSemanticalError(errorHandler,
                 listener, ZEN_ERROR_CODE_REDECLARATION_OF_SYMBOL_AS_VARIABLE_PARAMETER,
                 (zen_Token_t*)(variableParameter->m_context));
@@ -362,8 +362,12 @@ void zen_SymbolDefinitionListener_onExitFunctionDeclaration(
 
 // TODO: Declare function even if it has no parameters.
 
-void zen_SymbolDefinitionListener_declareOverloadedFunction(zen_FunctionSymbol_t* functionSymbol,
+void zen_SymbolDefinitionListener_declareOverloadedFunction(
+    zen_SymbolDefinitionListener_t* listener, zen_FunctionSymbol_t* functionSymbol,
     jtk_ArrayList_t* fixedParameters, zen_ASTNode_t* variableParameter) {
+
+    zen_Compiler_t* compiler = listener->m_compiler;
+    zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
 
     zen_Token_t* identifierToken = (zen_Token_t*)functionSymbol->m_symbol->m_identifier->m_context;
 
@@ -407,7 +411,11 @@ void zen_SymbolDefinitionListener_declareOverloadedFunction(zen_FunctionSymbol_t
     for (i = 0; i < size; i++) {
         zen_FunctionSignature_t* signature = (zen_FunctionSignature_t*)jtk_ArrayList_getValue(signatures, i);
         if ((signature->m_variableParameter != NULL) && (variableParameter != NULL)) {
-            zen_ErrorHandler_reportError(NULL, "Multiple overloads with variable parameter", (zen_Token_t*)(variableParameter->m_context));
+
+            zen_ErrorHandler_handleSemanticalError(errorHandler,
+                listener, ZEN_ERROR_CODE_MULTIPLE_FUNCTION_OVERLOADS_WITH_VARIABLE_PARAMETER,
+                (zen_Token_t*)(variableParameter->m_context));
+
             error = true;
         }
         else {
@@ -418,7 +426,8 @@ void zen_SymbolDefinitionListener_declareOverloadedFunction(zen_FunctionSymbol_t
             if ((fixedParameterCount0 == fixedParameterCount) &&
                 ((signature->m_variableParameter == NULL) &&
                  (variableParameter == NULL))) {
-                zen_ErrorHandler_reportError(NULL, "Duplicate overload", identifierToken);
+                zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
+                    ZEN_ERROR_CODE_DUPLICATE_FUNCTION_OVERLOAD, identifierToken);
                 error = true;
                 break;
             }
@@ -432,7 +441,9 @@ void zen_SymbolDefinitionListener_declareOverloadedFunction(zen_FunctionSymbol_t
                     if (fixedParameterCount0 >= parameterThreshold) {
                         // BUG: The error report does not point to the actual error.
                         // We should do something about FunctionSignature.
-                        zen_ErrorHandler_reportError(NULL, "Exceeds parameter threshold", identifierToken);
+                        zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
+                            ZEN_ERROR_CODE_FUNCTION_DECLARATION_EXCEEDS_PARAMETER_THRESHOLD,
+                            identifierToken);
                         error = true;
                         /* TODO: Flag the section that is concerened with handling identification
                          * of function violating the parameter threshold.
@@ -445,7 +456,9 @@ void zen_SymbolDefinitionListener_declareOverloadedFunction(zen_FunctionSymbol_t
                      * that the function obliges the parameter threshold.
                      */
                     if ((parameterThreshold >= 0) && (fixedParameterCount >= parameterThreshold)) {
-                        zen_ErrorHandler_reportError(NULL, "Exceeds parameter threshold", identifierToken);
+                        zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
+                            ZEN_ERROR_CODE_FUNCTION_DECLARATION_EXCEEDS_PARAMETER_THRESHOLD,
+                            identifierToken);
                         error = true;
                         break;
                     }

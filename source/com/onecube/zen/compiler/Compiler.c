@@ -224,7 +224,10 @@ const uint8_t* zen_ErrorCode_messages[] = {
     "Static initializer with parameters",
     "Redeclaration of symbol as function",
     "Redeclaration of symbol as parameter",
-    "Redeclaration of symbol as variable parameter"
+    "Redeclaration of symbol as variable parameter",
+    "Multiple function overloads with variable parameter",
+    "Duplicate function overload",
+    "Function declaration exceeds parameter threshold"
 };
 
 void zen_Compiler_printErrors(zen_Compiler_t* compiler) {
