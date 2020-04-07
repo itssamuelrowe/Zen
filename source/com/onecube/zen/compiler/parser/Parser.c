@@ -279,19 +279,19 @@ zen_Token_t* zen_Parser_matchAndYield(zen_Parser_t* parser, zen_TokenType_t type
 
     zen_Token_t* lt1 = zen_TokenStream_lt(parser->m_tokens, 1);
 
-    /* The token stream prohibts consumption of end-of-stream
-    * token.
-    */
-    if (lt1->m_type != ZEN_TOKEN_END_OF_STREAM) {
-        /* Remove the lookahead(1) regardless of a matching token. */
-        zen_TokenStream_consume(parser->m_tokens);
-    }
-
     if (lt1->m_type == type) {
         /* The token expected by the parser was found. If we the parser is
          * in error recovery, turn it off.
          */
         parser->m_recovery = false;
+
+
+        /* The token stream prohibts consumption of end-of-stream
+         * token.
+         */
+        if (lt1->m_type != ZEN_TOKEN_END_OF_STREAM) {
+            zen_TokenStream_consume(parser->m_tokens);
+        }
     }
     else {
         // char buffer[200];
@@ -310,6 +310,7 @@ zen_Token_t* zen_Parser_matchAndYield(zen_Parser_t* parser, zen_TokenType_t type
             zen_ErrorHandler_handleSyntacticalError(errorHandler, parser,
                 ZEN_ERROR_CODE_UNEXPECTED_TOKEN, lt1);
         }
+
         /* Try to resychronize the parser with the input. */
         zen_Parser_recover(parser);
     }
@@ -527,6 +528,11 @@ void zen_Parser_importDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
 	 */
 	context->m_wildcard = false;
 
+    /* If importTarget fails, discard tokens until the newline token is
+     * encountered.
+     */
+    zen_Parser_pushFollowToken(parser, ZEN_TOKEN_NEWLINE);
+
 	/* The user is expected to specify at least, one identifier.
 	 * Consume it. The consumed identifier saved for later inspection.
 	 */
@@ -539,7 +545,7 @@ void zen_Parser_importDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
 	 * separated by the '.' token. Therefore, we repeatedly consume the '.' and
 	 * identifier tokens as long as LA(1) is the '.' token and LA(2) is the
 	 * identifier token.
-	 s*/
+	 */
     while ((zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_DOT) &&
            (zen_TokenStream_la(parser->m_tokens, 2) == ZEN_TOKEN_IDENTIFIER)) {
 		/* Consume and discard the '.' token. */
@@ -556,12 +562,14 @@ void zen_Parser_importDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
 	/* Optionally, the user may specify a wildcard; recognized when
 	 * LA(1) is the '.' token and LA(2) is the '*' token.
 	 */
-    if ((zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_DOT) &&
-        (zen_TokenStream_la(parser->m_tokens, 2) == ZEN_TOKEN_ASTERISK)) {
+    if (zen_TokenStream_la(parser->m_tokens, 1) == ZEN_TOKEN_DOT) {
 		zen_TokenStream_consume(parser->m_tokens);
-		zen_TokenStream_consume(parser->m_tokens);
+		zen_Parser_match(parser, ZEN_TOKEN_ASTERISK);
         context->m_wildcard = true;
     }
+
+    /* Pop the newline token from the follow set. */
+    zen_Parser_popFollowToken(parser);
 
 	/* The import declaration is terminated with a newline.
 	 * Therefore, we are expecting it here.
