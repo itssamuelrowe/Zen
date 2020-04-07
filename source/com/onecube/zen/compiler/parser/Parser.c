@@ -2971,7 +2971,8 @@ void zen_Parser_unaryExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_Parser_postfixExpression(parser, postfixExpression);
     }
     else {
-        // Syntax Error: Expected ...
+        // Error: Expected unary operator or postfix expression follow
+        zen_Parser_reportAndRecover(parser, ZEN_TOKEN_INTEGER_LITERAL);
     }
 
     zen_StackTrace_exit();
@@ -3053,13 +3054,13 @@ void zen_Parser_postfixExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
                 break;
             }
 
-            case ZEN_TOKEN_PLUS_2:
-            case ZEN_TOKEN_DASH_2: {
-                zen_ASTNode_t* postfixOperator = zen_ASTNode_new(node);
-                jtk_ArrayList_add(context->m_postfixParts, postfixOperator);
-                zen_Parser_postfixOperator(parser, postfixOperator);
-                break;
-            }
+            // case ZEN_TOKEN_PLUS_2:
+            // case ZEN_TOKEN_DASH_2: {
+            //     zen_ASTNode_t* postfixOperator = zen_ASTNode_new(node);
+            //     jtk_ArrayList_add(context->m_postfixParts, postfixOperator);
+            //     zen_Parser_postfixOperator(parser, postfixOperator);
+            //     break;
+            // }
         }
         la1 = zen_TokenStream_la(parser->m_tokens, 1);
     }
@@ -3092,9 +3093,17 @@ void zen_Parser_subscript(zen_Parser_t* parser, zen_ASTNode_t* node) {
     /* Match and discard the '[' token. */
     zen_Parser_match(parser, ZEN_TOKEN_LEFT_SQUARE_BRACKET);
 
+    /* If expression fails, discard tokens until the ']' token is
+     * encountered.
+     */
+    zen_Parser_pushFollowToken(parser, ZEN_TOKEN_RIGHT_SQUARE_BRACKET);
+
     zen_ASTNode_t* expression = zen_ASTNode_new(node);
     context->m_expression = expression;
     zen_Parser_expression(parser, expression);
+
+    /* Pop the ']' token from the follow set. */
+    zen_Parser_popFollowToken(parser);
 
     /* Match and discard the ']' token. */
     zen_Parser_match(parser, ZEN_TOKEN_RIGHT_SQUARE_BRACKET);
@@ -3116,9 +3125,17 @@ void zen_Parser_functionArguments(zen_Parser_t* parser, zen_ASTNode_t* node) {
     zen_Parser_match(parser, ZEN_TOKEN_LEFT_PARENTHESIS);
 
     if (zen_Parser_isExpressionFollow(zen_TokenStream_la(parser->m_tokens, 1))) {
+        /* If expression fails, discard tokens until the ')' token is
+        * encountered.
+        */
+        zen_Parser_pushFollowToken(parser, ZEN_TOKEN_RIGHT_PARENTHESIS);
+
         zen_ASTNode_t* expressions = zen_ASTNode_new(node);
         context->m_expressions = expressions;
         zen_Parser_expressions(parser, expressions);
+
+        /* Pop the ')' token from the follow set. */
+        zen_Parser_popFollowToken(parser);
     }
 
     /* Match and discard the ')' token. */
@@ -3226,9 +3243,17 @@ void zen_Parser_primaryExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
                 /* Consume and discard the '(' token. */
                 zen_TokenStream_consume(parser->m_tokens);
 
+                /* If expression fails, discard tokens until the ')' token is
+                 * encountered.
+                 */
+                zen_Parser_pushFollowToken(parser, ZEN_TOKEN_RIGHT_PARENTHESIS);
+
                 zen_ASTNode_t* expression = zen_ASTNode_new(node);
                 context->m_expression = expression;
                 zen_Parser_expression(parser, expression);
+
+                /* Pop the ')' token from the follow set. */
+                zen_Parser_popFollowToken(parser);
 
                 /* Match and discard the ')' token. */
                 zen_Parser_match(parser, ZEN_TOKEN_RIGHT_PARENTHESIS);
@@ -3269,10 +3294,9 @@ void zen_Parser_primaryExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
                 break;
             }
 
-            // We are skipping INTEGERS!
-
             default: {
-                // Syntax error: ...
+                printf("[internal error] Control should not reach here.\n");
+
                 break;
             }
         }
@@ -3340,11 +3364,19 @@ void zen_Parser_mapExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
     /* Match and discard the '{' token. */
     zen_Parser_match(parser, ZEN_TOKEN_LEFT_BRACE);
 
+    /* If expression fails, discard tokens until the '}' token is
+     * encountered.
+     */
+    zen_Parser_pushFollowToken(parser, ZEN_TOKEN_RIGHT_BRACE);
+
     if (zen_Parser_isExpressionFollow(zen_TokenStream_la(parser->m_tokens, 1))) {
         zen_ASTNode_t* mapEntries = zen_ASTNode_new(node);
         context->m_mapEntries = mapEntries;
         zen_Parser_mapEntries(parser, mapEntries);
     }
+
+    /* Pop the '}' token from the follow set. */
+    zen_Parser_popFollowToken(parser);
 
     /* Match and discard the '}' token. */
     zen_Parser_match(parser, ZEN_TOKEN_RIGHT_BRACE);
@@ -3416,9 +3448,17 @@ void zen_Parser_listExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
     zen_Parser_match(parser, ZEN_TOKEN_LEFT_SQUARE_BRACKET);
 
     if (zen_Parser_isExpressionFollow(zen_TokenStream_la(parser->m_tokens, 1))) {
+        /* If expression fails, discard tokens until the ')' token is
+        * encountered.
+        */
+        zen_Parser_pushFollowToken(parser, ZEN_TOKEN_RIGHT_SQUARE_BRACKET);
+
         zen_ASTNode_t* expressions = zen_ASTNode_new(node);
         context->m_expressions = expressions;
         zen_Parser_expressions(parser, expressions);
+
+        /* Pop the ']' token from the follow set. */
+        zen_Parser_popFollowToken(parser);
     }
 
     /* Match and discard the ']' token. */
