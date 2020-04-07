@@ -45,6 +45,7 @@ enum zen_ErrorCode_t {
     // Syntactical Errors
 
     ZEN_ERROR_CODE_UNEXPECTED_TOKEN,
+    ZEN_ERROR_CODE_TRY_STATEMENT_EXPECTS_CATCH_OR_FINALLY,
 
     // Semantical Errors
 

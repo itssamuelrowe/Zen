@@ -211,6 +211,7 @@ const uint8_t* zen_ErrorCode_messages[] = {
     // Syntactical Errors
 
     "Unexpected token",
+    "The try statement expects at least one catch or finally clause.",
 
     // Semantical Errors
 

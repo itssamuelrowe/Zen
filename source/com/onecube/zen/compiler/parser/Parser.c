@@ -1059,8 +1059,14 @@ void zen_Parser_simpleStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
 
 	zen_SimpleStatementContext_t* context = zen_SimpleStatementContext_new(node);
 
-    zen_TokenType_t la1 = zen_TokenStream_la(parser->m_tokens, 1);
+    /* If expressionStatement, emptyStatement, variableDeclaration,
+     * constantDeclaration, assertStatement, breakStatement, continueStatement,
+     * returnStatement, or throwStatement fails, discard tokens until the newline
+     * token is encountered.
+     */
     zen_Parser_pushFollowToken(parser, ZEN_TOKEN_NEWLINE);
+
+    zen_TokenType_t la1 = zen_TokenStream_la(parser->m_tokens, 1);
     if (zen_Parser_isExpressionFollow(la1)) {
         zen_ASTNode_t* expression = zen_ASTNode_new(node);
         context->m_statement = expression;
@@ -1125,6 +1131,8 @@ void zen_Parser_simpleStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
             }
         }
     }
+
+    /* Pop the newline token from the follow set. */
     zen_Parser_popFollowToken(parser);
 
     /* Match and discard the newline token. */
@@ -1144,9 +1152,6 @@ void zen_Parser_statement(zen_Parser_t* parser, zen_ASTNode_t* node) {
 
     zen_StatementContext_t* context = zen_StatementContext_new(node);
 
-    /* Add the dedentation token to the follow set. */
-    zen_Parser_pushFollowToken(parser, ZEN_TOKEN_DEDENTATION);
-
     zen_TokenType_t la1 = zen_TokenStream_la(parser->m_tokens, 1);
     if (zen_Parser_isSimpleStatementFollow(la1)) {
         zen_ASTNode_t* simpleStatement = zen_ASTNode_new(node);
@@ -1159,11 +1164,9 @@ void zen_Parser_statement(zen_Parser_t* parser, zen_ASTNode_t* node) {
         zen_Parser_compoundStatement(parser, compoundStatement);
     }
     else {
-        // Syntax error: Expected simple or compound statement
+        // TODO: Expected simple or compound statement
+        zen_Parser_reportAndRecover(parser, ZEN_TOKEN_KEYWORD_VAR);
     }
-
-    /* Remove the dedentation token from the follow set. */
-    zen_Parser_popFollowToken(parser);
 
     zen_StackTrace_exit();
 }
@@ -1789,6 +1792,7 @@ void zen_Parser_tryStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
 	bool hasCatch = false;
 	bool hasFinally = false;
 
+    zen_Token_t* tryKeyword = zen_TokenStream_lt(parser->m_tokens, 1);
     zen_ASTNode_t* tryClause = zen_ASTNode_new(node);
     context->m_tryClause = tryClause;
     zen_Parser_tryClause(parser, tryClause);
@@ -1809,7 +1813,13 @@ void zen_Parser_tryStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
 	}
 
 	if (!hasCatch && !hasFinally) {
-		// Syntax Error: Try clause without catch or finally.
+		/* Try clause without catch or finally. According to the grammar of Zen,
+         * this is not an error. However, the Zen specification requires a try
+         * clause to be followed by at least a catch or finally clause.
+         */
+        zen_ErrorHandler_handleSyntacticalError(parser->m_compiler->m_errorHandler,
+            parser, ZEN_ERROR_CODE_TRY_STATEMENT_EXPECTS_CATCH_OR_FINALLY,
+            tryKeyword, ZEN_TOKEN_UNKNOWN);
 	}
 
     zen_StackTrace_exit();
