@@ -204,6 +204,7 @@ void zen_Parser_recover(zen_Parser_t* parser) {
             lt1 = zen_TokenStream_lt(parser->m_tokens, 1);
         }
         afterDiscard:
+            ;
     }
 }
 
@@ -269,19 +270,28 @@ void zen_Parser_popFollowToken(zen_Parser_t* parser) {
 
 void zen_Parser_match(zen_Parser_t* parser, zen_TokenType_t type) {
     jtk_Assert_assertObject(parser, "The specified parser is null.");
+
+    zen_Parser_matchAndYield(parser, type);
+}
+
+zen_Token_t* zen_Parser_matchAndYield(zen_Parser_t* parser, zen_TokenType_t type) {
+    jtk_Assert_assertObject(parser, "The specified parser is null.");
+
     zen_Token_t* lt1 = zen_TokenStream_lt(parser->m_tokens, 1);
+
+    /* The token stream prohibts consumption of end-of-stream
+    * token.
+    */
+    if (lt1->m_type != ZEN_TOKEN_END_OF_STREAM) {
+        /* Remove the lookahead(1) regardless of a matching token. */
+        zen_TokenStream_consume(parser->m_tokens);
+    }
+
     if (lt1->m_type == type) {
         /* The token expected by the parser was found. If we the parser is
          * in error recovery, turn it off.
          */
         parser->m_recovery = false;
-
-        /* The token stream prohibts consumption of end-of-stream
-         * token.
-         */
-        if (lt1->m_type != ZEN_TOKEN_END_OF_STREAM) {
-            zen_TokenStream_consume(parser->m_tokens);
-        }
     }
     else {
         // char buffer[200];
@@ -294,7 +304,7 @@ void zen_Parser_match(zen_Parser_t* parser, zen_TokenType_t type) {
         /* Do not report the error if the parser is in recovery mode. Otherwise,
          * duplicate syntax errors will be reported to the end user.
          */
-        if (parser->m_recovery) {
+        if (!parser->m_recovery) {
             zen_Compiler_t* compiler = parser->m_compiler;
             zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
             zen_ErrorHandler_handleSyntacticalError(errorHandler, parser,
@@ -303,19 +313,7 @@ void zen_Parser_match(zen_Parser_t* parser, zen_TokenType_t type) {
         /* Try to resychronize the parser with the input. */
         zen_Parser_recover(parser);
     }
-}
-
-zen_Token_t* zen_Parser_matchAndYield(zen_Parser_t* parser, zen_TokenType_t type) {
-    jtk_Assert_assertObject(parser, "The specified parser is null.");
-
-    zen_Token_t* token = zen_TokenStream_lt(parser->m_tokens, 1);
-    if (token->m_type == type) {
-        zen_TokenStream_consume(parser->m_tokens);
-    }
-    else {
-        // TODO: ...
-    }
-    return token;
+    return lt1;
 }
 
 // Reset
@@ -324,6 +322,8 @@ void zen_Parser_reset(zen_Parser_t* parser, zen_TokenStream_t* tokens) {
     jtk_Assert_assertObject(parser, "The specified parser is null.");
 
     parser->m_tokens = tokens;
+    parser->m_followSetSize = 0;
+    parser->m_recovery = false;
 }
 
 /*
@@ -1025,6 +1025,7 @@ void zen_Parser_simpleStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
 	zen_SimpleStatementContext_t* context = zen_SimpleStatementContext_new(node);
 
     zen_TokenType_t la1 = zen_TokenStream_la(parser->m_tokens, 1);
+    zen_Parser_pushFollowToken(parser, ZEN_TOKEN_NEWLINE);
     if (zen_Parser_isExpressionFollow(la1)) {
         zen_ASTNode_t* expression = zen_ASTNode_new(node);
         context->m_statement = expression;
@@ -1089,6 +1090,7 @@ void zen_Parser_simpleStatement(zen_Parser_t* parser, zen_ASTNode_t* node) {
             }
         }
     }
+    zen_Parser_popFollowToken(parser);
 
     /* Match and discard the newline token. */
 	zen_Parser_match(parser, ZEN_TOKEN_NEWLINE);
@@ -1107,6 +1109,9 @@ void zen_Parser_statement(zen_Parser_t* parser, zen_ASTNode_t* node) {
 
     zen_StatementContext_t* context = zen_StatementContext_new(node);
 
+    /* Add the dedentation token to the follow set. */
+    zen_Parser_pushFollowToken(parser, ZEN_TOKEN_DEDENTATION);
+
     zen_TokenType_t la1 = zen_TokenStream_la(parser->m_tokens, 1);
     if (zen_Parser_isSimpleStatementFollow(la1)) {
         zen_ASTNode_t* simpleStatement = zen_ASTNode_new(node);
@@ -1121,6 +1126,9 @@ void zen_Parser_statement(zen_Parser_t* parser, zen_ASTNode_t* node) {
     else {
         // Syntax error: Expected simple or compound statement
     }
+
+    /* Remove the dedentation token from the follow set. */
+    zen_Parser_popFollowToken(parser);
 
     zen_StackTrace_exit();
 }
@@ -2969,7 +2977,9 @@ void zen_Parser_postfixExpression(zen_Parser_t* parser, zen_ASTNode_t* node) {
             case ZEN_TOKEN_LEFT_PARENTHESIS: {
                 zen_ASTNode_t* functionArguments = zen_ASTNode_new(node);
                 jtk_ArrayList_add(context->m_postfixParts, functionArguments);
+
                 zen_Parser_functionArguments(parser, functionArguments);
+
                 break;
             }
 
