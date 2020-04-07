@@ -2203,9 +2203,17 @@ void zen_Parser_classMember(zen_Parser_t* parser, zen_ASTNode_t* node) {
 
     switch (zen_TokenStream_la(parser->m_tokens, 1)) {
         case ZEN_TOKEN_KEYWORD_VAR: {
+            /* If variableDeclaration fails, discard tokens until the newline
+             * token is encountered.
+             */
+            zen_Parser_pushFollowToken(parser, ZEN_TOKEN_NEWLINE);
+
             zen_ASTNode_t* variableDeclaration = zen_ASTNode_new(node);
             context->m_declaration = variableDeclaration;
             zen_Parser_variableDeclaration(parser, variableDeclaration);
+
+            /* Pop the newline token from the follow set. */
+            zen_Parser_popFollowToken(parser);
 
             /* Match and discard the newline token. */
             zen_Parser_match(parser, ZEN_TOKEN_NEWLINE);
@@ -2214,9 +2222,17 @@ void zen_Parser_classMember(zen_Parser_t* parser, zen_ASTNode_t* node) {
         }
 
         case ZEN_TOKEN_KEYWORD_FINAL: {
+            /* If constantDeclaration fails, discard tokens until the newline
+             * token is encountered.
+             */
+            zen_Parser_pushFollowToken(parser, ZEN_TOKEN_NEWLINE);
+
             zen_ASTNode_t* constantDeclaration = zen_ASTNode_new(node);
             context->m_declaration = constantDeclaration;
             zen_Parser_constantDeclaration(parser, constantDeclaration);
+
+            /* Pop the newline token from the follow set. */
+            zen_Parser_popFollowToken(parser);
 
             /* Match and discard the newline token. */
             zen_Parser_match(parser, ZEN_TOKEN_NEWLINE);
@@ -2259,6 +2275,7 @@ void zen_Parser_classMember(zen_Parser_t* parser, zen_ASTNode_t* node) {
         default: {
             /* TODO: Expected var, final, or function. */
             zen_Parser_reportAndRecover(parser, ZEN_TOKEN_KEYWORD_FUNCTION);
+
             break;
         }
     }
