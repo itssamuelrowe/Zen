@@ -34,7 +34,6 @@
 struct zen_ClassSymbol_t {
     /* The superclasses are added in the resolution phase. */
     jtk_ArrayList_t* m_superClasses; /* <zen_Symbol_t*> */
-    zen_Scope_t* m_classScope;
     uint8_t* m_qualifiedName;
     int32_t m_qualifiedNameSize;
 };

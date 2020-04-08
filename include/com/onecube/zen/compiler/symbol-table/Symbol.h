@@ -46,11 +46,8 @@ struct zen_Symbol_t {
     zen_ASTNode_t* m_identifier;
     zen_Scope_t* m_enclosingScope;
     union {
-        zen_LabelSymbol_t m_asLabel;
         zen_ClassSymbol_t m_asClass;
         zen_FunctionSymbol_t m_asFunction;
-        zen_VariableSymbol_t m_asVariable;
-        zen_ConstantSymbol_t m_asConstant;
     } context;
     jtk_ArrayList_t* m_explicitModifiers;
     uint32_t m_modifiers;
