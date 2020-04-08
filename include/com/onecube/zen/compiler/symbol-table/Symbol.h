@@ -54,6 +54,7 @@ struct zen_Symbol_t {
     } context;
     jtk_ArrayList_t* m_explicitModifiers;
     uint32_t m_modifiers;
+    int32_t m_ticket;
 };
 
 /**

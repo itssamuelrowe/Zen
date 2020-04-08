@@ -23,14 +23,9 @@
 #include <jtk/collection/map/HashMap.h>
 
 #include <com/onecube/zen/compiler/symbol-table/ScopeType.h>
-
-// Forward references
-
-typedef struct zen_Symbol_t zen_Symbol_t;
-
-typedef zen_Symbol_t* (*zen_Scope_ResolveSymbolFunction_t)(void* context, const uint8_t* identifier);
-typedef zen_Symbol_t* (*zen_Scope_DefineSymbolFunction_t)(void* context, zen_Symbol_t* symbol);
-typedef void (*zen_Scope_GetChildrenSymbolsFunction_t)(void* context, jtk_ArrayList_t* childrenSymbols);
+#include <com/onecube/zen/compiler/symbol-table/ClassScope.h>
+#include <com/onecube/zen/compiler/symbol-table/FunctionScope.h>
+#include <com/onecube/zen/compiler/symbol-table/CompilationUnitScope.h>
 
 /*******************************************************************************
  * Scope                                                                       *
@@ -52,10 +47,8 @@ struct zen_Scope_t {
     int32_t m_nameSize;
     zen_ScopeType_t m_type;
     zen_Scope_t* m_enclosingScope;
-    void* m_context;
-    zen_Scope_ResolveSymbolFunction_t m_resolveSymbol;
-    zen_Scope_DefineSymbolFunction_t m_defineSymbol;
-    zen_Scope_GetChildrenSymbolsFunction_t m_getChildrenSymbols;
+    jtk_HashMap_t* m_symbols;
+    int32_t m_nextTicket;
 };
 
 // Constructor
