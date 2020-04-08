@@ -17,6 +17,7 @@
 // Monday, January 08, 2018
 
 #include <com/onecube/zen/compiler/symbol-table/Symbol.h>
+#include <jtk/core/CString.h>
 
 /*******************************************************************************
  * Symbol                                                                      *

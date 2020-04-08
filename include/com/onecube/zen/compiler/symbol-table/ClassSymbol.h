@@ -46,4 +46,8 @@ struct zen_ClassSymbol_t {
  */
 typedef struct zen_ClassSymbol_t zen_ClassSymbol_t;
 
+void zen_ClassSymbol_initialize(zen_ClassSymbol_t* symbol);
+
+void zen_ClassSymbol_destroy(zen_ClassSymbol_t* symbol);
+
 #endif /* COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_CLASS_SYMBOL_H */

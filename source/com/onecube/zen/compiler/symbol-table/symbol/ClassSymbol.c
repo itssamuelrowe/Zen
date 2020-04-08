@@ -23,12 +23,11 @@
  * ClassSymbol                                                                 *
  *******************************************************************************/
 
-void zen_ClassSymbol_initialize(zen_ClassSymbol_t* symbol, const uint8_t* qualifiedName,
-    int32_t qualifiedNameSize) {
+void zen_ClassSymbol_initialize(zen_ClassSymbol_t* symbol) {
     symbol->m_superClasses = jtk_ArrayList_new();
     symbol->m_classScope = NULL;
-    symbol->m_qualifiedName = jtk_CString_make(qualifiedName, &qualifiedNameSize);
-    symbol->m_qualifiedNameSize = qualifiedNameSize;
+    symbol->m_qualifiedName = NULL; // jtk_CString_make(qualifiedName, &qualifiedNameSize);
+    symbol->m_qualifiedNameSize = 0; // qualifiedNameSize;
 }
 
 void zen_ClassSymbol_destroy(zen_ClassSymbol_t* symbol) {

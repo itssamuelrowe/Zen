@@ -44,6 +44,14 @@ struct zen_FunctionSymbol_t {
  */
 typedef struct zen_FunctionSymbol_t zen_FunctionSymbol_t;
 
+// Initializer
+
+void zen_FunctionSymbol_initialize(zen_FunctionSymbol_t* symbol);
+
+// Destructor
+
+void zen_FunctionSymbol_destroy(zen_FunctionSymbol_t* symbol);
+
 // Signature
 
 /**

@@ -15,11 +15,17 @@
  */
 
 #include <jtk/core/CString.h>
+#include <jtk/collection/stack/LinkedStack.h>
+#include <jtk/core/CStringObjectAdapter.h>
+
 #include <com/onecube/zen/compiler/symbol-table/Scope.h>
+#include <com/onecube/zen/compiler/symbol-table/Symbol.h>
+#include <com/onecube/zen/compiler/ast/ASTNode.h>
+#include <com/onecube/zen/compiler/lexer/Token.h>
 
 zen_Scope_t* zen_Scope_new(const uint8_t* name, int32_t nameSize,
     zen_ScopeType_t type, zen_Scope_t* enclosingScope, zen_Symbol_t* symbol) {
-    jtk_Assert_assertObject(name, "The specified name is null.");
+    // jtk_Assert_assertObject(name, "The specified name is null.");
 
     jtk_ObjectAdapter_t* stringObjectAdapter = jtk_CStringObjectAdapter_getInstance();
 
@@ -64,7 +70,9 @@ void zen_Scope_getChildrenSymbols(zen_Scope_t* scope, jtk_ArrayList_t* childrenS
     jtk_Assert_assertObject(scope, "The specified scope is null.");
     jtk_Assert_assertObject(childrenSymbols, "The specified list is null.");
 
-    // TODO
+    jtk_Iterator_t* iterator = jtk_HashMap_getValueIterator(scope->m_symbols);
+    jtk_ArrayList_addAllFromIterator(childrenSymbols, iterator);
+    jtk_Iterator_delete(iterator);
 }
 
 bool zen_Scope_isEnumerationScope(zen_Scope_t* scope) {
@@ -93,12 +101,85 @@ zen_Scope_t* zen_Scope_getEnclosingScope(zen_Scope_t* scope) {
 }
 
 void zen_Scope_define(zen_Scope_t* scope, zen_Symbol_t* symbol) {
-    // TODO
+    const uint8_t* text = ((zen_Token_t*)symbol->m_identifier->m_context)->m_text;
+    if (!jtk_HashMap_putStrictly(scope->m_symbols, (void*)text, symbol)) {
+        fprintf(stderr, "[internal error] zen_Scope_define() invoked to redefine a symbol.\n");
+    }
+}
+
+/*
+ * Resolving a class member
+ * ------------------------
+ *
+ * 0. We are given a class scope and an identifier.
+ * 1. Retrieve the class symbol corresponding to class scope.
+ * 2. The super classes of the class symbol are stored in an
+ *    tree. Therefore, create a linked-stack for its traversal.
+ * 3. Push the class symbol on to the stack.
+ * 4. Repeatedly process the elements on the stack.
+ * 5. Retrieve the class symbol on top of the stack and remove it.
+ * 6. Retrieve the class scope associated with the class symbol.
+ * 7. Look for a function, variable, constant, enumeration, or subclass symbol
+ *    within the class scope.
+ * 8. If such a symbol exists, retrieve the corresponding symbol. Fall
+ *    through to the end.
+ * 9. Otherwise, retrieve the super classes of the current class.
+ *     Push the super classes on to the stack. GOTO step 4.
+ * 10. Return the symbol, if found. Otherwise, null.
+ */
+zen_Symbol_t* zen_Scope_resolveClassmember(zen_Scope_t* scope,
+    const uint8_t* identifier) {
+    jtk_Assert_assertObject(scope, "The specified class scope is null.");
+    jtk_Assert_assertObject(identifier, "The specified identifier is null.");
+
+    zen_Symbol_t* result = NULL;
+    zen_Symbol_t* symbol = scope->m_symbol;
+
+    jtk_LinkedStack_t* stack = jtk_LinkedStack_new();
+    /* The things you have to do when you have no inheritance. (-__-) */
+    jtk_LinkedStack_push(stack, symbol);
+
+    while (!jtk_LinkedStack_isEmpty(stack)) {
+        symbol = (zen_Symbol_t*)jtk_LinkedStack_pop(stack);
+
+        result = (zen_Symbol_t*)jtk_HashMap_getValue(scope->m_symbols, identifier);
+        if (symbol != NULL) {
+            break;
+        }
+        else {
+            jtk_ArrayList_t* superClasses = zen_ClassSymbol_getSuperClasses(
+                &symbol->m_context.m_asClass);
+            int32_t size = jtk_ArrayList_getSize(superClasses);
+            int32_t i;
+            for (i = 0; i < size; i++) {
+                zen_Symbol_t* superClassSymbol = jtk_ArrayList_getValue(superClasses, i);
+                jtk_LinkedStack_push(stack, superClassSymbol);
+            }
+        }
+    }
+
+    /* Destroy the stack; not required anymore. */
+    jtk_LinkedStack_delete(stack);
+
+    return symbol;
 }
 
 zen_Symbol_t* zen_Scope_resolve(zen_Scope_t* scope, uint8_t* identifier) {
-    // TODO
-    return NULL;
+    zen_Symbol_t* result = NULL;
+    switch (scope->m_type) {
+        case ZEN_SCOPE_COMPILATION_UNIT:
+        case ZEN_SCOPE_FUNCTION:
+        case ZEN_SCOPE_LOCAL: {
+            result = jtk_HashMap_getValue(scope->m_symbols, (void*)identifier);
+            break;
+        }
+
+        case ZEN_SCOPE_CLASS: {
+            result = zen_Scope_resolveClassmember(scope, identifier);
+            break;
+        }
+    }
+    return result;
 }
 
 const uint8_t* zen_Scope_getName(zen_Scope_t* scope) {
