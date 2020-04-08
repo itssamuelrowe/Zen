@@ -48,7 +48,6 @@ struct zen_Symbol_t {
         zen_ClassSymbol_t m_asClass;
         zen_FunctionSymbol_t m_asFunction;
     } m_context;
-    jtk_ArrayList_t* m_explicitModifiers;
     uint32_t m_modifiers;
     int32_t m_ticket;
     int32_t m_index;
@@ -66,8 +65,23 @@ typedef struct zen_Symbol_t zen_Symbol_t;
  * @memberof Symbol
  */
 zen_Symbol_t* zen_Symbol_new(zen_SymbolCategory_t category,
-    zen_ASTNode_t* identifier, zen_Scope_t* enclosingScope,
-    void* context);
+    zen_ASTNode_t* identifier, zen_Scope_t* enclosingScope);
+
+zen_Symbol_t* zen_Symbol_forConstant(zen_ASTNode_t* identifier,
+    zen_Scope_t* enclosingScope);
+
+zen_Symbol_t* zen_Symbol_forVariable(zen_ASTNode_t* identifier,
+    zen_Scope_t* enclosingScope);
+
+zen_Symbol_t* zen_Symbol_forFunction(zen_ASTNode_t* identifier,
+    zen_Scope_t* enclosingScope);
+
+zen_Symbol_t* zen_Symbol_forClass(zen_ASTNode_t* identifier,
+    zen_Scope_t* enclosingScope, zen_Scope_t* classScope, const uint8_t* qualifiedName,
+    int32_t qualifiedNameSize);
+
+zen_Symbol_t* zen_Symbol_forLabel(zen_ASTNode_t* identifier,
+    zen_Scope_t* enclosingScope);
 
 // Destructor
 

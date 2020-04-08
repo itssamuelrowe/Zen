@@ -39,6 +39,18 @@ zen_Scope_t* zen_Scope_forCompilationUnit() {
     return zen_Scope_new(NULL, 0, ZEN_SCOPE_COMPILATION_UNIT, NULL, NULL);
 }
 
+zen_Scope_t* zen_Scope_forFunction(zen_Scope_t* enclosingScope) {
+    return zen_Scope_new(NULL, 0, ZEN_SCOPE_FUNCTION, enclosingScope, NULL);
+}
+
+zen_Scope_t* zen_Scope_forLocal(zen_Scope_t* enclosingScope) {
+    return zen_Scope_new(NULL, 0, ZEN_SCOPE_LOCAL, enclosingScope, NULL);
+}
+
+zen_Scope_t* zen_Scope_forClass(zen_Scope_t* enclosingScope) {
+    return zen_Scope_new(NULL, 0, ZEN_SCOPE_CLASS, enclosingScope, NULL);
+}
+
 void zen_Scope_delete(zen_Scope_t* scope) {
     jtk_Assert_assertObject(scope, "The specified scope is null.");
 

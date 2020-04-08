@@ -462,7 +462,8 @@ zen_Symbol_t* zen_SymbolDefinitionListener_declareFunction(zen_SymbolTable_t* sy
     zen_ASTNode_t* identifier, jtk_ArrayList_t* fixedParameters,
     zen_ASTNode_t* variableParameter) {
     /* Create a member function symbol to store in the symbol table. */
-    zen_FunctionSymbol_t* functionSymbol = zen_FunctionSymbol_new(identifier, symbolTable->m_currentScope);
+    zen_Symbol_t* symbol = zen_Symbol_forFunction(identifier, symbolTable->m_currentScope);
+    zen_FunctionSymbol_t* functionSymbol = &symbol->m_context.m_asFunction;
     if (variableParameter != NULL) {
         int32_t parameterThreshold = jtk_ArrayList_getSize(fixedParameters);
         zen_FunctionSymbol_setParameterThreshold(functionSymbol, parameterThreshold);
@@ -474,8 +475,7 @@ zen_Symbol_t* zen_SymbolDefinitionListener_declareFunction(zen_SymbolTable_t* sy
      */
     zen_FunctionSignature_t* signature = zen_FunctionSignature_new(fixedParameters, variableParameter);
     zen_FunctionSymbol_addSignature(functionSymbol, signature);
-    /* Retrieve the symbol corresponding to the member function symbol. */
-    zen_Symbol_t* symbol = zen_FunctionSymbol_getSymbol(functionSymbol);
+
     /* Define the symbol in the symbol table. */
     zen_SymbolTable_define(symbolTable, symbol);
 
@@ -719,10 +719,9 @@ void zen_SymbolDefinitionListener_onEnterClassDeclaration(
 
         zen_Scope_t* scope = zen_Scope_forClass(listener->m_symbolTable->m_currentScope);
 
-        zen_ClassSymbol_t* classSymbol = zen_ClassSymbol_new(identifier,
+        zen_Symbol_t* symbol = zen_Symbol_forClass(identifier,
             listener->m_symbolTable->m_currentScope, scope,
             qualifiedName, qualifiedNameSize);
-        symbol = zen_ClassSymbol_getSymbol(classSymbol);
         scope->m_symbol = symbol;
 
         zen_SymbolTable_define(listener->m_symbolTable, symbol);

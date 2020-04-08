@@ -67,6 +67,21 @@ zen_Scope_t* zen_Scope_forCompilationUnit();
 /**
  * @memberof Scope
  */
+zen_Scope_t* zen_Scope_forFunction(zen_Scope_t* enclosingScope);
+
+/**
+ * @memberof Scope
+ */
+zen_Scope_t* zen_Scope_forLocal(zen_Scope_t* enclosingScope);
+
+/**
+ * @memberof Scope
+ */
+zen_Scope_t* zen_Scope_forClass(zen_Scope_t* enclosingScope);
+
+/**
+ * @memberof Scope
+ */
 
 // Destructor
 

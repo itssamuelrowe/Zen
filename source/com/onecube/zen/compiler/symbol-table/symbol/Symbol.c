@@ -23,22 +23,69 @@
  *******************************************************************************/
 
 zen_Symbol_t* zen_Symbol_new(zen_SymbolCategory_t category,
-    zen_ASTNode_t* identifier, zen_Scope_t* enclosingScope, void* context) {
+    zen_ASTNode_t* identifier, zen_Scope_t* enclosingScope) {
     zen_Symbol_t* symbol = zen_Memory_allocate(zen_Symbol_t, 1);
     symbol->m_category = category;
     symbol->m_identifier = identifier;
     symbol->m_enclosingScope = enclosingScope;
-    symbol->m_explicitModifiers = jtk_ArrayList_new();
     symbol->m_modifiers = 0;
-    // TODO
+    symbol->m_ticket = enclosingScope->m_nextTicket++;
+    symbol->m_index = -1;
+    symbol->m_flags = 0;
+
+    if (category == ZEN_SYMBOL_CATEGORY_FUNCTION) {
+        zen_FunctionSymbol_initialize(&symbol->m_context.m_asFunction);
+    }
+    else if (category == ZEN_SYMBOL_CATEGORY_CLASS) {
+        zen_ClassSymbol_initialize(&symbol->m_context.m_asClass);
+    }
 
     return symbol;
+}
+
+zen_Symbol_t* zen_Symbol_forConstant(zen_ASTNode_t* identifier,
+    zen_Scope_t* enclosingScope) {
+    return zen_Symbol_new(ZEN_SYMBOL_CATEGORY_CONSTANT, identifier, enclosingScope);
+}
+
+zen_Symbol_t* zen_Symbol_forVariable(zen_ASTNode_t* identifier,
+    zen_Scope_t* enclosingScope) {
+    return zen_Symbol_new(ZEN_SYMBOL_CATEGORY_VARIABLE, identifier, enclosingScope);
+}
+
+zen_Symbol_t* zen_Symbol_forFunction(zen_ASTNode_t* identifier,
+    zen_Scope_t* enclosingScope) {
+    zen_Symbol_t* symbol = zen_Symbol_new(ZEN_SYMBOL_CATEGORY_FUNCTION,
+        identifier, enclosingScope);
+    return symbol;
+}
+
+zen_Symbol_t* zen_Symbol_forClass(zen_ASTNode_t* identifier,
+    zen_Scope_t* enclosingScope, zen_Scope_t* classScope, const uint8_t* qualifiedName,
+    int32_t qualifiedNameSize) {
+    zen_Symbol_t* symbol = zen_Symbol_new(ZEN_SYMBOL_CATEGORY_CLASS, identifier, enclosingScope);
+    zen_ClassSymbol_t* classSymbol = &symbol->m_context.m_asClass;
+    classSymbol->m_qualifiedName = jtk_CString_make(qualifiedName, &qualifiedNameSize);
+    classSymbol->m_qualifiedNameSize = qualifiedNameSize;
+
+    return symbol;
+}
+
+zen_Symbol_t* zen_Symbol_forLabel(zen_ASTNode_t* identifier,
+    zen_Scope_t* enclosingScope) {
+    return zen_Symbol_new(ZEN_SYMBOL_CATEGORY_LABEL, identifier, enclosingScope);
 }
 
 void zen_Symbol_delete(zen_Symbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
-    jtk_ArrayList_delete(symbol->m_explicitModifiers);
+    if (symbol->m_category == ZEN_SYMBOL_CATEGORY_FUNCTION) {
+        zen_ClassSymbol_destroy(&symbol->m_context.m_asFunction);
+    }
+    else if (symbol->m_category == ZEN_SYMBOL_CATEGORY_CLASS) {
+        zen_ClassSymbol_destroy(&symbol->m_context.m_asClass);
+    }
+
     jtk_Memory_deallocate(symbol);
 }
 
@@ -88,16 +135,6 @@ zen_ASTNode_t* zen_Symbol_getIdentifier(zen_Symbol_t* symbol) {
 }
 
 /* Modifier */
-
-void zen_Symbol_addExplicitModifiers(zen_Symbol_t* symbol, uint32_t modifiers,
-    zen_ASTNode_t* node) {
-    jtk_Assert_assertObject(symbol, "The specified symbol is null.");
-
-    if (node != NULL) {
-        jtk_ArrayList_add(symbol->m_explicitModifiers, node);
-    }
-    symbol->m_modifiers |= modifiers;
-}
 
 void zen_Symbol_addModifiers(zen_Symbol_t* symbol, uint32_t modifiers) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
