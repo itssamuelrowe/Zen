@@ -47,20 +47,9 @@
 
 
 #include <com/onecube/zen/compiler/symbol-table/SymbolResolutionListener.h>
-#include <com/onecube/zen/compiler/symbol-table/ClassScope.h>
 #include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolDefinitionListener.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
-#include <com/onecube/zen/compiler/symbol-table/FunctionScope.h>
-#include <com/onecube/zen/compiler/symbol-table/ConstantSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/LocalScope.h>
-#include <com/onecube/zen/compiler/symbol-table/VariableSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/LabelSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/EnumerationSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/EnumerationScope.h>
-#include <com/onecube/zen/compiler/symbol-table/CompilationUnitScope.h>
-#include <com/onecube/zen/compiler/symbol-table/EnumerateSymbol.h>
 
 #include <com/onecube/zen/compiler/support/ErrorHandler.h>
 
@@ -452,7 +441,7 @@ void zen_Compiler_destroyNestedScopes(zen_ASTAnnotations_t* annotations) {
         int32_t i;
         for (i = 0; i < limit; i++) {
             zen_Symbol_t* symbol = (zen_Symbol_t*)jtk_ArrayList_getValue(temporary, i);
-            zen_Compiler_destroySymbol(symbol);
+            zen_Symbol_delete(symbol);
         }
 
         /* At this point, the symbols retrieved form the scope are destroyed.
@@ -461,177 +450,12 @@ void zen_Compiler_destroyNestedScopes(zen_ASTAnnotations_t* annotations) {
         jtk_ArrayList_clear(temporary);
 
         /* Destroy the current scope. */
-        zen_Compiler_destroyScope(scope);
+        zen_Scope_delete(scope);
     }
     jtk_Iterator_delete(iterator);
     jtk_ArrayList_delete(temporary);
 
     zen_ASTAnnotations_delete(annotations);
-}
-
-void zen_Compiler_destroySymbol(zen_Symbol_t* symbol) {
-    /* I could have designed the zen_Symbol_t and its "descendant" classes that
-     * implement specific symbols like the jtk_Iterator_t and its "descendant"
-     * classes such as jtk_ArrayListIterator_t. This would have helped
-     * us delete specific symbols by simply invoking the zen_Symbol_delete()
-     * function. However, to implement such a design would require me to
-     * modify a few files for which I can spare no time. Further, the likelihood
-     * of introducing new symbol categories is very rare. Therefore, I have chosen
-     * to manually cast the context of the symbol before invoking a specific
-     * destructor.
-     *
-     * NOTE: If a new symbol category is added and its instance is created during
-     * the definition phase to the symbol table, then please add a respective
-     * destructor call here.
-     */
-    zen_SymbolCategory_t category = zen_Symbol_getCategory(symbol);
-    switch (category) {
-        /* TODO: Should annotations simply be classes? In which case the
-         * ZEN_SYMBOL_CATEGORY_ANNOTATION would be useless.
-         */
-
-        case ZEN_SYMBOL_CATEGORY_CLASS: {
-            zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
-            zen_ClassSymbol_delete(classSymbol);
-
-            // printf("[debug] Destroyed a class symbol.\n");
-
-            break;
-        }
-
-        // case ZEN_SYMBOL_CATEGORY_ENUMERATE: {
-        //     zen_EnumerateSymbol_t* enumerateSymbol = (zen_EnumerateSymbol_t*)symbol->m_context;
-        //     zen_EnumerateSymbol_delete(enumerateSymbol);
-
-        //     // printf("[debug] Destroyed a enumerate symbol.\n");
-
-        //     break;
-        // }
-
-        // case ZEN_SYMBOL_CATEGORY_ENUMERATION: {
-        //     zen_EnumerationSymbol_t* enumerationSymbol = (zen_EnumerationSymbol_t*)symbol->m_context;
-        //     zen_EnumerationSymbol_delete(enumerationSymbol);
-
-        //     // printf("[debug] Destroyed a enumeration symbol.\n");
-
-        //     break;
-        // }
-
-        case ZEN_SYMBOL_CATEGORY_FUNCTION: {
-            zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)symbol->m_context;
-            zen_FunctionSymbol_delete(functionSymbol);
-
-            // printf("[debug] Destroyed a function symbol.\n");
-
-            break;
-        }
-
-        case ZEN_SYMBOL_CATEGORY_CONSTANT: {
-            zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
-            zen_ConstantSymbol_delete(constantSymbol);
-
-            // printf("[debug] Destroyed a constant symbol.\n");
-
-            break;
-        }
-
-        case ZEN_SYMBOL_CATEGORY_VARIABLE: {
-            zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)symbol->m_context;
-            zen_VariableSymbol_delete(variableSymbol);
-
-            // printf("[debug] Destroyed a variable symbol.\n");
-
-            break;
-        }
-
-        case ZEN_SYMBOL_CATEGORY_LABEL: {
-            zen_LabelSymbol_t* labelSymbol = (zen_LabelSymbol_t*)symbol->m_context;
-            zen_LabelSymbol_delete(labelSymbol);
-
-            // printf("[debug] Destroyed a label symbol.\n");
-
-            break;
-        }
-    }
-}
-
-void zen_Compiler_destroyScope(zen_Scope_t* scope) {
-    /* I could have designed the zen_Scope_t and its "descendant" classes that
-     * implement specific scopes like the jtk_Iterator_t and its "descendant"
-     * classes such as jtk_ArrayListIterator_t. This would have helped
-     * us delete specific scopes by simply invoking the zen_Scope_delete()
-     * function. However, to implement such a design would require me to
-     * modify a few files for which I can spare no time. Further, the likelihood
-     * of introducing new scope types is very rare. Therefore, I have chosen
-     * to manually cast the context of the scope before invoking a specific
-     * destructor.
-     *
-     * Since the jtk_HashMap_t class does not store the order in which the
-     * scopes were inserted, the scopes are deleted in "random" order. With
-     * the currently available scopes, this behavior should not really affect
-     * the program in unexpected ways.
-     *
-     * NOTE: If a new scope type is added and its instance is created during
-     * the definition phase to the symbol table, then please add a respective
-     * destructor call here.
-     */
-    zen_ScopeType_t type = zen_Scope_getType(scope);
-    switch (type) {
-        /* TODO: Should annotations simply be classes? In which case the
-         * ZEN_SCOPE_ANNOTATION would be useless.
-         */
-
-        case ZEN_SCOPE_COMPILATION_UNIT: {
-            zen_CompilationUnitScope_t* compilationUnitScope =
-                (zen_CompilationUnitScope_t*)scope->m_context;
-            zen_CompilationUnitScope_delete(compilationUnitScope);
-
-            // printf("[debug] Compilation unit scope deleted.\n");
-
-            break;
-        }
-
-
-        // case ZEN_SCOPE_ENUMERATION: {
-        //     zen_EnumerationScope_t* enumerationScope =
-        //         (zen_EnumerationScope_t*)scope->m_context;
-        //     zen_EnumerationScope_delete(enumerationScope);
-
-        //     // printf("[debug] Enumeration scope deleted.\n");
-
-        //     break;
-        // }
-
-        case ZEN_SCOPE_FUNCTION: {
-            zen_FunctionScope_t* functionScope =
-                (zen_FunctionScope_t*)scope->m_context;
-            zen_FunctionScope_delete(functionScope);
-
-            // printf("[debug] Function scope deleted.\n");
-
-            break;
-        }
-
-        case ZEN_SCOPE_CLASS: {
-            zen_ClassScope_t* classScope =
-                (zen_ClassScope_t*)scope->m_context;
-            zen_ClassScope_delete(classScope);
-
-            // printf("[debug] Class scope deleted.\n");
-
-            break;
-        }
-
-        case ZEN_SCOPE_LOCAL: {
-            zen_LocalScope_t* localScope =
-                (zen_LocalScope_t*)scope->m_context;
-            zen_LocalScope_delete(localScope);
-
-            // printf("[debug] Local scope deleted.\n");
-
-            break;
-        }
-    }
 }
 
 bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t length) {

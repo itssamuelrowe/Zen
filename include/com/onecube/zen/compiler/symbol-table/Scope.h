@@ -23,9 +23,8 @@
 #include <jtk/collection/map/HashMap.h>
 
 #include <com/onecube/zen/compiler/symbol-table/ScopeType.h>
-#include <com/onecube/zen/compiler/symbol-table/ClassScope.h>
-#include <com/onecube/zen/compiler/symbol-table/FunctionScope.h>
-#include <com/onecube/zen/compiler/symbol-table/CompilationUnitScope.h>
+
+typedef struct zen_Symbol_t zen_Symbol_t;
 
 /*******************************************************************************
  * Scope                                                                       *
@@ -49,6 +48,7 @@ struct zen_Scope_t {
     zen_Scope_t* m_enclosingScope;
     jtk_HashMap_t* m_symbols;
     int32_t m_nextTicket;
+    zen_Symbol_t* m_symbol;
 };
 
 // Constructor

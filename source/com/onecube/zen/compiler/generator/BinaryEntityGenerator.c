@@ -34,15 +34,7 @@
 #include <com/onecube/zen/compiler/generator/BinaryEntityBuilder.h>
 #include <com/onecube/zen/compiler/generator/DataChannel.h>
 #include <com/onecube/zen/compiler/symbol-table/Symbol.h>
-#include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/ConstantSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/LabelSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/VariableSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/Scope.h>
-#include <com/onecube/zen/compiler/symbol-table/ClassScope.h>
-#include <com/onecube/zen/compiler/symbol-table/FunctionScope.h>
-#include <com/onecube/zen/compiler/symbol-table/LocalScope.h>
 #include <com/onecube/zen/compiler/generator/BinaryEntityGenerator.h>
 #include <com/onecube/zen/virtual-machine/feb/EntityType.h>
 #include <com/onecube/zen/virtual-machine/feb/attribute/InstructionAttribute.h>
@@ -836,10 +828,9 @@ void zen_BinaryEntityGenerator_assignParameterIndexes(zen_BinaryEntityGenerator_
         uint8_t* identifierText = zen_ASTNode_toCString(identifier, &identifierSize);
 
         zen_Symbol_t* symbol = zen_Scope_resolve(currentScope, identifierText);
-        zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
 
         /* Generate an index for the parameter. */
-        constantSymbol->m_index = generator->m_localVariableCount;
+        symbol->m_index = generator->m_localVariableCount;
         /* Update the local variable count, each parameter is a reference. Therefore,
          * increment the count by 2.
          */
@@ -854,10 +845,8 @@ void zen_BinaryEntityGenerator_assignParameterIndexes(zen_BinaryEntityGenerator_
             functionParametersContext->m_variableParameter, &identifierSize);
 
         zen_Symbol_t* symbol = zen_Scope_resolve(currentScope, identifierText);
-        zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
-
         /* Generate an index for the parameter. */
-        constantSymbol->m_index = generator->m_localVariableCount;
+        symbol->m_index = generator->m_localVariableCount;
         /* Update the local variable count, each parameter is a reference. Therefore,
          * increment the count by 2.
          */
@@ -2599,14 +2588,13 @@ void zen_BinaryEntityGenerator_onEnterVariableDeclaration(zen_ASTListener_t* ast
 
             zen_Symbol_t* symbol = zen_Scope_resolve(currentScope, identifierText);
             if (zen_Symbol_isVariable(symbol)) {
-                zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)symbol->m_context;
                 /* Generate and assign the index of the local variable only if it
                  * was not previously assigned an index.
                  *
                  * I don't remember why this condition should be checked.
                  */
-                if (variableSymbol->m_index < 0) {
-                    variableSymbol->m_index = generator->m_localVariableCount;
+                if (symbol->m_index < 0) {
+                    symbol->m_index = generator->m_localVariableCount;
                     // TODO: Temporary fix. References are considered as 8 bytes.
                     // TODO: Design the local variable array correctly.
                     generator->m_localVariableCount += 2;
@@ -2621,10 +2609,10 @@ void zen_BinaryEntityGenerator_onEnterVariableDeclaration(zen_ASTListener_t* ast
                         *
                         * TODO: Implement the zen_BinaryEntityGenerator_storeLocalReference() function.
                         */
-                        zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, variableSymbol->m_index);
+                        zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, symbol->m_index);
 
                         /* Log the emission of the store_a instruction. */
-                        jtk_Logger_debug(logger, "Emitted store_a %d", variableSymbol->m_index);
+                        jtk_Logger_debug(logger, "Emitted store_a %d", symbol->m_index);
                     }
                 }
             }
@@ -2714,11 +2702,10 @@ void zen_BinaryEntityGenerator_onEnterConstantDeclaration(zen_ASTListener_t* ast
 
             zen_Symbol_t* symbol = zen_Scope_resolve(currentScope, identifierText);
             if (zen_Symbol_isConstant(symbol)) {
-                zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
                 /* Generate and assign the index of the local variable only if it
                  * was not previously assigned an index.
                  */
-                constantSymbol->m_index = generator->m_localVariableCount;
+                symbol->m_index = generator->m_localVariableCount;
                 // TODO: Temporary fix. References are considered as 8 bytes.
                 // TODO: Design the local variable array correctly.
                 generator->m_localVariableCount += 2;
@@ -2733,10 +2720,10 @@ void zen_BinaryEntityGenerator_onEnterConstantDeclaration(zen_ASTListener_t* ast
                      *
                      * TODO: Implement the zen_BinaryEntityGenerator_storeLocalReference() function.
                      */
-                    zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, constantSymbol->m_index);
+                    zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, symbol->m_index);
 
                     /* Log the emission of the store_a instruction. */
-                    jtk_Logger_debug(logger, "Emitted store_a %d", constantSymbol->m_index);
+                    jtk_Logger_debug(logger, "Emitted store_a %d", symbol->m_index);
                 }
             }
             else {
@@ -3005,8 +2992,7 @@ void zen_BinaryEntityGenerator_onEnterBreakStatement(zen_ASTListener_t* astListe
             /* Resolve the parameter symbol in the symbol table. */
             zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, identifierText);
             /* Retrieve the label symbol. */
-            zen_LabelSymbol_t* labelSymbol = (zen_LabelSymbol_t*)symbol->m_context;
-            loopIdentifier = labelSymbol->m_loopIdentifier;
+            loopIdentifier = symbol->m_index;
         }
         else {
             loopIdentifier = generator->m_currentLoopLabel;
@@ -3307,12 +3293,10 @@ void zen_BinaryEntityGenerator_onEnterIterativeStatement(zen_ASTListener_t* astL
 
         /* Resolve the parameter symbol in the symbol table. */
         zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, identifierText);
-        /* Retrieve the label symbol. */
-        zen_LabelSymbol_t* labelSymbol = (zen_LabelSymbol_t*)symbol->m_context;
         /* Associate the label symbol with the identifier generated
          * for the current loop.
          */
-        labelSymbol->m_loopIdentifier = loopIdentifier;
+        symbol->m_index = loopIdentifier;
     }
 
     generator->m_currentLoopLabel = loopIdentifier;
@@ -3605,27 +3589,10 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
          */
         generator->m_localVariableCount += 2;
 
-        if (zen_Symbol_isVariable(symbol)) {
-            zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)symbol->m_context;
-            variableSymbol->m_index = parameterIndex;
-        }
-        else {
-            zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
-            constantSymbol->m_index = parameterIndex;
-        }
+        symbol->m_index = parameterIndex;
     }
     else {
-        if (zen_Symbol_isVariable(symbol)) {
-            zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)symbol->m_context;
-            parameterIndex = variableSymbol->m_index;
-        }
-        else if (zen_Symbol_isConstant(symbol)) {
-            zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
-            parameterIndex = constantSymbol->m_index;
-        }
-        else {
-            printf("[error] Using non-storage entity as for parameter.\n");
-        }
+        parameterIndex = symbol->m_index;
     }
 
     /* Store the retrieved value in a local variable. */
@@ -3936,8 +3903,7 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
             int32_t catchParameterSize;
             uint8_t* catchParameterText = zen_ASTNode_toCString(catchParameter, &catchParameterSize);
             zen_Symbol_t* catchParameterSymbol = zen_SymbolTable_resolve(generator->m_symbolTable, catchParameterText);
-            zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)catchParameterSymbol->m_context;
-            variableSymbol->m_index = parameterIndex;
+            catchParameterSymbol->m_index = parameterIndex;
 
             /* The virtual machine pushes the exception that was caught to the
              * operand stack. Store this reference in a local variable.
@@ -4933,7 +4899,7 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
             zen_Symbol_t* symbol = zen_Scope_resolveQualifiedSymbol(
                 parentScope, qualifiedName, &qualifiedNameSize);
             if (zen_Symbol_isClass(symbol)) {
-                zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
+                zen_ClassSymbol_t* classSymbol = &symbol->m_context.m_asClass;
 
                 uint16_t superclassIndex = zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
                     generator->m_constantPoolBuilder, classSymbol->m_qualifiedName,
@@ -6621,8 +6587,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                 if (zen_Symbol_isVariable(symbol) || zen_Symbol_isConstant(symbol)) {
                     if (zen_Scope_isClassScope(enclosingScope)) {
                         if (zen_Symbol_isVariable(symbol)) {
-                            zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)symbol->m_context;
-                            if (true /* !zen_VariableSymbol_isStatic(variableSymbol)) */) {
+                            if (true /* !zen_Symbol_isStatic(symbol)) */) {
                                 /* The this reference is always stored at the zeroth position
                                  * in the local variable array. Further, we assume that the
                                  * class member and the expression being processed appear in
@@ -6656,8 +6621,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                             }
                         }
                         else {
-                            zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
-                            if (true /* !zen_ConstantSymbol_isStatic(variableSymbol)) */) {
+                            if (true /* !zen_Symbol_isStatic(symbol)) */) {
                                 /* The this reference is always stored at the zeroth position
                                  * in the local variable array. Further, we assume that the
                                  * class member and the expression being processed appear in
@@ -6684,22 +6648,13 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                             }
                         }
                     }
-                    else if (zen_Scope_isLocalScope(enclosingScope) || zen_Scope_isFunctionScope(enclosingScope)) {
-                        int32_t index = -1;
-                        if (zen_Symbol_isVariable(symbol)) {
-                            zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)symbol->m_context;
-                            index = variableSymbol->m_index;
-                        }
-                        else {
-                            zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)symbol->m_context;
-                            index = constantSymbol->m_index;
-                        }
-
+                    else if (zen_Scope_isLocalScope(enclosingScope) ||
+                        zen_Scope_isFunctionScope(enclosingScope)) {
                         /* Emit the load_a instruction. */
-                        zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, index);
+                        zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, symbol->m_index);
 
                         /* Log the emission of the load_a instruction. */
-                        jtk_Logger_debug(logger, "Emitted load_a %d", index);
+                        jtk_Logger_debug(logger, "Emitted load_a %d", symbol->m_index);
                     }
                 }
                 else {
@@ -6981,13 +6936,12 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                         printf("[internal error] Variable treated as function. Looks like the semantic analysis phase malfunctioned.\n");
                     }
                     else if (zen_Symbol_isFunction(primarySymbol)) {
-                        zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)primarySymbol->m_context;
+                        zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)&primarySymbol->m_context.m_asFunction;
                         int32_t index = invokeStaticIndex;
                         if (zen_Modifier_hasStatic(primarySymbol->m_modifiers)) {
                             // NOTE: I am assuming that only class members can be declared as static.
                             zen_Scope_t* enclosingScope = primarySymbol->m_enclosingScope;
-                            zen_ClassScope_t* classScope = (zen_ClassScope_t*)enclosingScope->m_context;
-                            zen_Symbol_t* classSymbol = classScope->m_classSymbol;
+                            zen_Symbol_t* classSymbol = enclosingScope->m_symbol;
                             zen_ASTNode_t* identifier = classSymbol->m_identifier;
                             zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
 
@@ -7462,14 +7416,7 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
             zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(primarySymbol);
             if (zen_Scope_isClassScope(enclosingScope)) {
                 bool instance = false;
-                if (zen_Symbol_isVariable(primarySymbol)) {
-                    zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)primarySymbol->m_context;
-                    instance = true; /* !zen_VariableSymbol_isStatic(variableSymbol)) */
-                }
-                else {
-                    zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)primarySymbol->m_context;
-                    instance = true; /* !zen_ConstantSymbol_isStatic(constantSymbol)) */
-                }
+                instance = true; /* !zen_Symbol_isStatic(primarySymbol); */
 
                 uint16_t identifierIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
                     generator->m_constantPoolBuilder, identifierToken->m_text,
@@ -7526,24 +7473,16 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
                 }
             }
             else if (zen_Scope_isLocalScope(enclosingScope)) {
-                int32_t index = -1;
                 if (zen_Symbol_isVariable(primarySymbol)) {
-                    zen_VariableSymbol_t* variableSymbol = (zen_VariableSymbol_t*)primarySymbol->m_context;
-                    index = variableSymbol->m_index;
-
                     /* Emit the store_a instruction. */
-                    zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder, index);
+                    zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder,
+                        primarySymbol->m_index);
 
                     /* Log the emission of the store_a instruction. */
-                    jtk_Logger_debug(logger, "Emitted store_a %d", index);
+                    jtk_Logger_debug(logger, "Emitted store_a %d", primarySymbol->m_index);
                 }
                 else {
-                    // zen_ConstantSymbol_t* constantSymbol = (zen_ConstantSymbol_t*)primarySymbol->m_context;
-                    // index = constantSymbol->m_index;
-                    // zen_Parser_reportSyntaxError(NULL, identifierToken, "Invalid assignment of constant after declaration.");
-
                     printf("[error] Invalid assignment of constant after declaration.\n");
-
                 }
             }
         }
@@ -7615,13 +7554,12 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
 
                     if (i == 0) {
                         if (zen_Symbol_isFunction(primarySymbol)) {
-                            zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)primarySymbol->m_context;
+                            zen_FunctionSymbol_t* functionSymbol = &primarySymbol->m_context.m_asFunction;
                             int32_t index = invokeStaticIndex;
                             if (zen_Modifier_hasStatic(primarySymbol->m_modifiers)) {
                                 // NOTE: I am assuming that only class members can be declared as static.
                                 zen_Scope_t* enclosingScope = primarySymbol->m_enclosingScope;
-                                zen_ClassScope_t* classScope = (zen_ClassScope_t*)enclosingScope->m_context;
-                                zen_Symbol_t* classSymbol = classScope->m_classSymbol;
+                                zen_Symbol_t* classSymbol = enclosingScope->m_symbol;
                                 zen_ASTNode_t* identifier = classSymbol->m_identifier;
                                 zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
 
@@ -8380,17 +8318,16 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
         printf("[warning] Looks like the syntactical phase or the resolution phase failed.\n");
     }
 
-    zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
+    zen_ClassSymbol_t* classSymbol = &symbol->m_context.m_asClass;
     /* Retrieve the scope corresponding to the class symbol. */
-    zen_Scope_t* scope = zen_ClassSymbol_getClassScope(classSymbol);
+    zen_Scope_t* scope = classSymbol->m_classScope;
     if (!zen_Scope_isClassScope(scope)) {
         printf("[error] %s is a non-class scope\n", typeNameText);
         printf("[warning] Looks like the syntactical phase or the resolution phase failed.\n");
     }
 
-    zen_ClassScope_t* classScope = (zen_ClassScope_t*)scope->m_context;
     /* Retrieve the constructor declared in this class. */
-    zen_Symbol_t* constructorSymbol = zen_ClassScope_resolve(classScope, "new");
+    zen_Symbol_t* constructorSymbol = zen_Scope_resolve(scope, "new");
 
     if (zen_Symbol_getEnclosingScope(constructorSymbol) != scope) {
         printf("[error] No constructor defined in class %s, neither explicitly nor implicity.\n", typeNameText);
@@ -8427,7 +8364,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
     /* Log the emission of the duplicate instruction. */
     jtk_Logger_debug(logger, "Emitted duplicate");
 
-    zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)constructorSymbol->m_context;
+    zen_FunctionSymbol_t* functionSymbol = &constructorSymbol->m_context.m_asFunction;
 
     uint8_t* constructorName = "<initialize>";
     int32_t constructorNameSize = 12;

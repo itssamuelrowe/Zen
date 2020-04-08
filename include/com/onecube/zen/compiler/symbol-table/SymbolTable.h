@@ -19,7 +19,6 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_SYMBOL_TABLE_H
 #define COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_SYMBOL_TABLE_H
 
-#include <com/onecube/zen/compiler/symbol-table/ClassScope.h>
 #include <com/onecube/zen/compiler/symbol-table/Scope.h>
 #include <com/onecube/zen/compiler/symbol-table/Symbol.h>
 
@@ -87,7 +86,7 @@ void zen_SymbolTable_define(zen_SymbolTable_t* symbolTable, zen_Symbol_t* symbol
 /**
  * @memberof SymbolTable
  */
-void zen_SymbolTable_defineClassMember(zen_SymbolTable_t* symbolTable, zen_ClassScope_t* classScope, zen_Symbol_t* symbol);
+void zen_SymbolTable_defineClassMember(zen_SymbolTable_t* symbolTable, zen_Scope_t* classScope, zen_Symbol_t* symbol);
 
 // Resolve
 

@@ -22,14 +22,8 @@
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
 #include <com/onecube/zen/compiler/symbol-table/Scope.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolCategory.h>
-#include <com/onecube/zen/compiler/symbol-table/LabelSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/VariableSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/ConstantSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/AnnotationSymbol.h>
-// #include <com/onecube/zen/compiler/symbol-table/EnumerationSymbol.h>
-// #include <com/onecube/zen/compiler/symbol-table/EnumerateSymbol.h>
 
 /*******************************************************************************
  * Symbol                                                                      *
@@ -48,10 +42,11 @@ struct zen_Symbol_t {
     union {
         zen_ClassSymbol_t m_asClass;
         zen_FunctionSymbol_t m_asFunction;
-    } context;
+    } m_context;
     jtk_ArrayList_t* m_explicitModifiers;
     uint32_t m_modifiers;
     int32_t m_ticket;
+    int32_t m_index;
 };
 
 /**

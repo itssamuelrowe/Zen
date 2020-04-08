@@ -36,6 +36,7 @@ struct zen_ClassSymbol_t {
     jtk_ArrayList_t* m_superClasses; /* <zen_Symbol_t*> */
     uint8_t* m_qualifiedName;
     int32_t m_qualifiedNameSize;
+    zen_Scope_t* m_classScope;
 };
 
 /**
