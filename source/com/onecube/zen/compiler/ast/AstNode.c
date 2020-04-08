@@ -48,6 +48,9 @@ void zen_ASTNode_delete(zen_ASTNode_t* node) {
         }
         node->m_contextDestructor(node->m_context);
     }
+    if (node->m_children != NULL) {
+        jtk_ArrayList_delete(node->m_children);
+    }
     jtk_Memory_deallocate(node);
 }
 

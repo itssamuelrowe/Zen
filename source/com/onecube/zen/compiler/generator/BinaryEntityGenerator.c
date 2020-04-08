@@ -67,6 +67,7 @@ zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_new(
 
     generator->m_breakRecords = NULL;
     generator->m_breakRecordsCount = 0;
+    generator->m_breakRecordsCapacity = 0;
     generator->m_nextLoopLabel = 0;
     generator->m_currentLoopLabel = -1;
 

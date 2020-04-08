@@ -112,8 +112,17 @@ void zen_Compiler_zen_Compiler_printTokens(zen_Compiler_t* compiler, jtk_ArrayLi
  * PathHelper                                                                 *
  ******************************************************************************/
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 bool jtk_PathHelper_exists(const uint8_t* path) {
-    return true;
+    /*
+    struct stat buffer;
+    int32_t result = fstat(path, &buffer);
+    return result == 0 && S_ISREG(buffer.st_mode);
+    */
+   return true;
 }
 
 #define JTK_FILE_OPEN_MODE_BUFFERED (1 << 0)
@@ -251,6 +260,15 @@ void zen_Compiler_printErrors(zen_Compiler_t* compiler) {
         zen_Token_t* token = error->m_token;
         const char* message = zen_ErrorCode_messages[(int32_t)error->m_code];
         char message0[128];
+
+        char lineNumbers[100];
+        if (token->m_startLine != token->m_stopLine) {
+            sprintf(lineNumbers, "%d-%d", token->m_startLine, token->m_stopLine);
+        }
+        else {
+            sprintf(lineNumbers, "%d", token->m_startLine);
+        }
+
         if (error->m_expected != ZEN_TOKEN_UNKNOWN) {
             const uint8_t* expectedName = zen_Lexer_getLiteralName(error->m_expected);
             const uint8_t* actualName = zen_Lexer_getLiteralName(token->m_type);
@@ -258,9 +276,9 @@ void zen_Compiler_printErrors(zen_Compiler_t* compiler) {
                 expectedName, actualName);
             message = message0;
         }
-        fprintf(stderr, "\033[1;31m[error]\033[0m %s:%d-%d:%d-%d: %s\n",
-            token->m_file, token->m_startLine, token->m_stopLine,
-            token->m_startColumn, token->m_stopColumn, message);
+        fprintf(stderr, "\033[1;31m[error]\033[0m %s:%s:%d-%d: %s\n",
+            token->m_file, lineNumbers, token->m_startColumn,
+            token->m_stopColumn, message);
     }
 }
 
@@ -285,7 +303,7 @@ void zen_Compiler_buildAST(zen_Compiler_t* compiler) {
 
         const uint8_t* path = (const uint8_t*)jtk_ArrayList_getValue(compiler->m_inputFiles, i);
         if (!jtk_PathHelper_exists(path)) {
-            fprintf(stderr, "[error] Path '%s' does not exist.", path);
+            fprintf(stderr, "[error] Path '%s' does not exist.\n", path);
         }
         else {
             jtk_InputStream_t* stream = jtk_PathHelper_read(path);
