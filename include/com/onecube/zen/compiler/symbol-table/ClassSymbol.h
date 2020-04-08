@@ -25,6 +25,8 @@
  * ClassSymbol                                                                 *
  *******************************************************************************/
 
+typedef struct zen_Scope_t zen_Scope_t;
+
 /**
  * @class ClassSymbol
  * @ingroup zen_compiler_symbolTable

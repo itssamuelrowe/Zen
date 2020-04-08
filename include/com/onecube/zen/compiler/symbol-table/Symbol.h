@@ -26,6 +26,10 @@
 #include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/Modifier.h>
 
+enum zen_SymbolFlag_t {
+    ZEN_SYMBOL_FLAG_EXTERNAL = (1 << 0)
+};
+
 /*******************************************************************************
  * Symbol                                                                      *
  *******************************************************************************/
@@ -48,6 +52,7 @@ struct zen_Symbol_t {
     uint32_t m_modifiers;
     int32_t m_ticket;
     int32_t m_index;
+    uint32_t m_flags;
 };
 
 /**

@@ -733,7 +733,6 @@ void zen_SymbolDefinitionListener_onEnterClassDeclaration(
             jtk_CString_delete(qualifiedName0);
         }
 
-
         zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
         zen_ASTAnnotations_put(listener->m_scopes, node, scope);
 

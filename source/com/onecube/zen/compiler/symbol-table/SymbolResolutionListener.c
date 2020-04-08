@@ -440,18 +440,19 @@ void zen_SymbolResolutionListener_onEnterImportDeclaration(
         int32_t qualifiedNameSize;
         uint8_t* qualifiedName = zen_ASTNode_toCString(node, &qualifiedNameSize);
 
+        int32_t identifierCount = jtk_ArrayList_getSize(context->m_identifiers);
+        zen_ASTNode_t* lastIdentifier = jtk_ArrayList_getValue(context->m_identifiers,
+            identifierCount - 1);
+
         zen_Symbol_t* symbol = zen_Compiler_resolveSymbol(compiler, qualifiedName);
         if (symbol == NULL) {
-            int32_t identifierCount = jtk_ArrayList_getSize(context->m_identifiers);
-            zen_ASTNode_t* lastIdentifier = jtk_ArrayList_getValue(context->m_identifiers,
-                identifierCount - 1);
             zen_Token_t* lastIdentifierToken = (zen_Token_t*)lastIdentifier->m_context;
             zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
                 ZEN_ERROR_CODE_UNKNOWN_CLASS, lastIdentifierToken);
         }
         else {
             zen_Symbol_t* externalSymbol = zen_SymbolResolutionListener_createExternalSymbol(
-                listener, symbol);
+                listener, symbol, listener->m_symbolTable->m_currentScope, lastIdentifier);
             zen_SymbolTable_define(listener->m_symbolTable, externalSymbol);
         }
 
@@ -1002,7 +1003,7 @@ void zen_SymbolResolutionListener_onEnterClassDeclaration(zen_ASTListener_t* ast
             // TODO: Use a node annotation
 
             zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, zen_Token_getText((zen_Token_t*)classDeclarationContext->m_identifier->m_context));
-            zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
+            zen_ClassSymbol_t* classSymbol = &symbol->m_context.m_asClass;
             jtk_ArrayList_t* superClasses = zen_ClassSymbol_getSuperClasses(classSymbol);
 
             int32_t superClassCount = jtk_ArrayList_getSize(classExtendsClauseContext->m_typeNames);
@@ -1491,7 +1492,7 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
                             ZEN_ERROR_CODE_VARIABLE_TREATED_AS_FUNCTION, token);
                     }
                     else if (zen_Symbol_isFunction(primarySymbol)) {
-                        zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)primarySymbol->m_context;
+                        zen_FunctionSymbol_t* functionSymbol = &primarySymbol->m_context.m_asFunction;
                         zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
                         if (expressions != NULL) {
                             zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
@@ -1699,13 +1700,12 @@ void zen_SymbolResolutionListener_onEnterNewExpression(zen_ASTListener_t* astLis
     }
     else {
         if (zen_Symbol_isClass(symbol)) {
-            zen_ClassSymbol_t* classSymbol = (zen_ClassSymbol_t*)symbol->m_context;
+            zen_ClassSymbol_t* classSymbol = &symbol->m_context.m_asClass;
             /* Retrieve the scope corresponding to the class symbol. */
             zen_Scope_t* scope = zen_ClassSymbol_getClassScope(classSymbol);
             if (zen_Scope_isClassScope(scope)) {
-                zen_ClassScope_t* classScope = (zen_ClassScope_t*)scope->m_context;
                 /* Retrieve the constructor declared in this class. */
-                zen_Symbol_t* constructorSymbol = zen_ClassScope_resolve(classScope, "new");
+                zen_Symbol_t* constructorSymbol = zen_Scope_resolve(scope, "new");
 
                 if ((constructorSymbol == NULL) ||
                     (zen_Symbol_getEnclosingScope(constructorSymbol) != scope)) {

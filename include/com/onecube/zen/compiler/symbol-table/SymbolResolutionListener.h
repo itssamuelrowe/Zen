@@ -71,6 +71,10 @@ zen_ASTListener_t* zen_SymbolResolutionListener_getASTListener(zen_SymbolResolut
 void zen_SymbolResolutionListener_reset(zen_SymbolResolutionListener_t* listener,
     zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes);
 
+zen_Symbol_t* zen_SymbolResolutionListener_createExternalSymbol(
+    zen_SymbolResolutionListener_t* listener, zen_Symbol_t* symbol,
+    zen_Scope_t* enclosingScope, zen_ASTNode_t* identifier);
+
 // Event Handlers
 
 /**
