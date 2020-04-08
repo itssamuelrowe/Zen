@@ -90,9 +90,9 @@ set (
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/Modifier.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/scope/Scope.c
 
-    # ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/ClassSymbol.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/ClassSymbol.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/FunctionSignature.c
-    # ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/FunctionSymbol.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/FunctionSymbol.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/Symbol.c
 
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/support/Error.c

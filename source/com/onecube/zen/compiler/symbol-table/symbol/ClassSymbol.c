@@ -17,39 +17,25 @@
 // Saturday, February 24, 2018
 
 #include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/ClassScope.h>
 #include <jtk/core/CString.h>
 
 /*******************************************************************************
  * ClassSymbol                                                                 *
  *******************************************************************************/
 
-zen_ClassSymbol_t* zen_ClassSymbol_new(zen_ASTNode_t* identifier,
-    zen_Scope_t* enclosingScope, zen_Scope_t* classScope,
-    uint8_t* qualifiedName, int32_t qualifiedNameSize) {
-    zen_ClassSymbol_t* classSymbol = zen_Memory_allocate(zen_ClassSymbol_t, 1);
-
-    zen_Symbol_t* symbol = zen_Symbol_new(ZEN_SYMBOL_CATEGORY_CLASS, identifier, enclosingScope, classSymbol);
-
-    classSymbol->m_symbol = symbol;
-    classSymbol->m_superClasses = jtk_ArrayList_new();
-    classSymbol->m_classScope = classScope;
-    classSymbol->m_qualifiedName = jtk_CString_make(qualifiedName, &qualifiedNameSize);
-    classSymbol->m_qualifiedNameSize = qualifiedNameSize;
-
-    zen_ClassScope_t* classScope0 = (zen_ClassScope_t*)enclosingScope->m_context;
-    classScope0->m_classSymbol = symbol;
-
-    return classSymbol;
+void zen_ClassSymbol_initialize(zen_ClassSymbol_t* symbol, const uint8_t* qualifiedName,
+    int32_t qualifiedNameSize) {
+    symbol->m_superClasses = jtk_ArrayList_new();
+    symbol->m_classScope = NULL;
+    symbol->m_qualifiedName = jtk_CString_make(qualifiedName, &qualifiedNameSize);
+    symbol->m_qualifiedNameSize = qualifiedNameSize;
 }
 
-void zen_ClassSymbol_delete(zen_ClassSymbol_t* symbol) {
+void zen_ClassSymbol_destroy(zen_ClassSymbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
     jtk_CString_delete(symbol->m_qualifiedName);
-    zen_Symbol_delete(symbol->m_symbol);
     jtk_ArrayList_delete(symbol->m_superClasses);
-    jtk_Memory_deallocate(symbol);
 }
 
 zen_Scope_t* zen_ClassSymbol_getClassScope(zen_ClassSymbol_t* symbol) {
@@ -62,12 +48,6 @@ jtk_ArrayList_t* zen_ClassSymbol_getSuperClasses(zen_ClassSymbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
     return symbol->m_superClasses;
-}
-
-zen_Symbol_t* zen_ClassSymbol_getSymbol(zen_ClassSymbol_t* symbol) {
-    jtk_Assert_assertObject(symbol, "The specified symbol is null.");
-
-    return symbol->m_symbol;
 }
 
 uint8_t* zen_ClassSymbol_getQualifiedName(zen_ClassSymbol_t* symbol) {

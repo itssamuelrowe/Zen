@@ -290,8 +290,7 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
 
     /* A function scope is pushed regardless of the declaration being erroneous. */
 
-    zen_Scope_t* functionScope = zen_Scope_forFunction(symbolTable->m_currentScope);
-    zen_Scope_t* scope = zen_FunctionScope_getScope(functionScope);
+    zen_Scope_t* scope = zen_Scope_forFunction(symbolTable->m_currentScope);
     zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
     zen_ASTAnnotations_put(listener->m_scopes, node, scope);
 

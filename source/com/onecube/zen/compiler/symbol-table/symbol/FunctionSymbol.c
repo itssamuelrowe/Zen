@@ -22,30 +22,24 @@
  * FunctionSymbol                                                              *
  *******************************************************************************/
 
-zen_FunctionSymbol_t* zen_FunctionSymbol_new(zen_ASTNode_t* identifier, zen_Scope_t* enclosingScope) {
+void zen_FunctionSymbol_initialize(zen_FunctionSymbol_t* symbol) {
     zen_FunctionSymbol_t* functionSymbol = zen_Memory_allocate(zen_FunctionSymbol_t, 1);
 
-    zen_Symbol_t* symbol = zen_Symbol_new(ZEN_SYMBOL_CATEGORY_FUNCTION, identifier, enclosingScope, functionSymbol);
-
-    functionSymbol->m_symbol = symbol;
-    functionSymbol->m_signatures = jtk_ArrayList_new();
+    symbol->m_signatures = jtk_ArrayList_new();
     functionSymbol->m_parameterThreshold = -1;
-
-    return functionSymbol;
 }
 
-void zen_FunctionSymbol_delete(zen_FunctionSymbol_t* symbol) {
+void zen_FunctionSymbol_destroy(zen_FunctionSymbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
-    zen_Symbol_delete(symbol->m_symbol);
     int32_t size = jtk_ArrayList_getSize(symbol->m_signatures);
     int32_t i;
     for (i = 0; i < size; i++) {
-        zen_FunctionSignature_t* signature = (zen_FunctionSignature_t*)jtk_ArrayList_getValue(symbol->m_signatures, i);
+        zen_FunctionSignature_t* signature =
+            (zen_FunctionSignature_t*)jtk_ArrayList_getValue(symbol->m_signatures, i);
         zen_FunctionSignature_delete(signature);
     }
     jtk_ArrayList_delete(symbol->m_signatures);
-    jtk_Memory_deallocate(symbol);
 }
 
 jtk_ArrayList_t* zen_FunctionSymbol_getSignatures(zen_FunctionSymbol_t* symbol) {
@@ -78,10 +72,4 @@ void zen_FunctionSymbol_setParameterThreshold(zen_FunctionSymbol_t* symbol,
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
     symbol->m_parameterThreshold = parameterThreshold;
-}
-
-zen_Symbol_t* zen_FunctionSymbol_getSymbol(zen_FunctionSymbol_t* symbol) {
-    jtk_Assert_assertObject(symbol, "The specified symbol is null.");
-
-    return symbol->m_symbol;
 }

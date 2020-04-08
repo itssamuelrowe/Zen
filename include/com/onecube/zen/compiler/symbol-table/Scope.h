@@ -56,8 +56,17 @@ struct zen_Scope_t {
 /**
  * @memberof Scope
  */
-zen_Scope_t* zen_Scope_new(const uint8_t* name, zen_ScopeType_t type,
-    zen_Scope_t* enclosingScope, void* context);
+zen_Scope_t* zen_Scope_new(const uint8_t* name, int32_t nameSize,
+    zen_ScopeType_t type, zen_Scope_t* enclosingScope, zen_Symbol_t* symbol);
+
+/**
+ * @memberof Scope
+ */
+zen_Scope_t* zen_Scope_forCompilationUnit();
+
+/**
+ * @memberof Scope
+ */
 
 // Destructor
 

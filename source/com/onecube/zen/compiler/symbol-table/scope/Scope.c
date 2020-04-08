@@ -17,17 +17,26 @@
 #include <jtk/core/CString.h>
 #include <com/onecube/zen/compiler/symbol-table/Scope.h>
 
-zen_Scope_t* zen_Scope_new(const uint8_t* name, zen_ScopeType_t type,
-    zen_Scope_t* enclosingScope, void* context) {
+zen_Scope_t* zen_Scope_new(const uint8_t* name, int32_t nameSize,
+    zen_ScopeType_t type, zen_Scope_t* enclosingScope, zen_Symbol_t* symbol) {
     jtk_Assert_assertObject(name, "The specified name is null.");
 
+    jtk_ObjectAdapter_t* stringObjectAdapter = jtk_CStringObjectAdapter_getInstance();
+
     zen_Scope_t* scope = jtk_Memory_allocate(zen_Scope_t, 1);
-    scope->m_name = jtk_CString_new(name); // Fix this.
+    scope->m_name = NULL; // jtk_CString_make(name, &nameSize);
+    scope->m_nameSize = nameSize;
     scope->m_type = type;
     scope->m_enclosingScope = enclosingScope;
-    // TODO
+    scope->m_symbols = jtk_HashMap_new(stringObjectAdapter, NULL);
+    scope->m_nextTicket = 0;
+    scope->m_symbol = symbol;
 
     return scope;
+}
+
+zen_Scope_t* zen_Scope_forCompilationUnit() {
+    return zen_Scope_new(NULL, 0, ZEN_SCOPE_COMPILATION_UNIT, NULL, NULL);
 }
 
 void zen_Scope_delete(zen_Scope_t* scope) {
