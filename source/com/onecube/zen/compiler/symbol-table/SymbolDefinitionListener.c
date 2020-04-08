@@ -696,8 +696,8 @@ void zen_SymbolDefinitionListener_onEnterClassDeclaration(
     zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
     const uint8_t* identifierText = zen_Token_getText(identifierToken);
 
-    zen_Symbol_t* symbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
-    if (symbol != NULL) {
+    zen_Symbol_t* classSymbol = zen_SymbolTable_resolve(listener->m_symbolTable, identifierText);
+    if (classSymbol != NULL) {
         zen_ErrorHandler_handleSemanticalError(errorHandler,
             listener, ZEN_ERROR_CODE_REDECLARATION_OF_SYMBOL_AS_CLASS,
             (zen_Token_t*)identifier->m_context);

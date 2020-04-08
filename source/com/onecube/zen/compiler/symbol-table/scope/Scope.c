@@ -143,12 +143,11 @@ zen_Symbol_t* zen_Scope_resolveClassmember(zen_Scope_t* scope,
         symbol = (zen_Symbol_t*)jtk_LinkedStack_pop(stack);
 
         result = (zen_Symbol_t*)jtk_HashMap_getValue(scope->m_symbols, identifier);
-        if (symbol != NULL) {
+        if (result != NULL) {
             break;
         }
         else {
-            jtk_ArrayList_t* superClasses = zen_ClassSymbol_getSuperClasses(
-                &symbol->m_context.m_asClass);
+            jtk_ArrayList_t* superClasses = symbol->m_context.m_asClass.m_superClasses;
             int32_t size = jtk_ArrayList_getSize(superClasses);
             int32_t i;
             for (i = 0; i < size; i++) {
@@ -161,7 +160,7 @@ zen_Symbol_t* zen_Scope_resolveClassmember(zen_Scope_t* scope,
     /* Destroy the stack; not required anymore. */
     jtk_LinkedStack_delete(stack);
 
-    return symbol;
+    return result;
 }
 
 zen_Symbol_t* zen_Scope_resolve(zen_Scope_t* scope, uint8_t* identifier) {

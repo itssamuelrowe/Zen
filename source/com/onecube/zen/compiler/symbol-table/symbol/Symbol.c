@@ -81,7 +81,7 @@ void zen_Symbol_delete(zen_Symbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
     if (symbol->m_category == ZEN_SYMBOL_CATEGORY_FUNCTION) {
-        zen_ClassSymbol_destroy(&symbol->m_context.m_asFunction);
+        zen_FunctionSymbol_destroy(&symbol->m_context.m_asFunction);
     }
     else if (symbol->m_category == ZEN_SYMBOL_CATEGORY_CLASS) {
         zen_ClassSymbol_destroy(&symbol->m_context.m_asClass);
