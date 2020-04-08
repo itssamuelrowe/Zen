@@ -70,6 +70,8 @@ struct zen_TokenStream_t {
      * from.
      */
     zen_TokenChannel_t m_channel;
+
+    jtk_ArrayList_t* m_trash;
 };
 
 typedef struct zen_TokenStream_t zen_TokenStream_t;

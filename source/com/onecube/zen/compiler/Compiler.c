@@ -170,6 +170,7 @@ zen_Compiler_t* zen_Compiler_new() {
     compiler->m_symbolTables = NULL;
     compiler->m_scopes = NULL;
     compiler->m_repository = jtk_HashMap_new(stringObjectAdapter, NULL);
+    compiler->m_trash = NULL;
 #ifdef JTK_LOGGER_DISABLE
     compiler->m_logger = NULL;
 #else
@@ -196,6 +197,23 @@ void zen_Compiler_delete(zen_Compiler_t* compiler) {
     if (compiler->m_scopes != NULL) {
         jtk_Memory_deallocate(compiler->m_scopes);
     }
+
+    if (compiler->m_trash != NULL) {
+        int32_t size = jtk_ArrayList_getSize(compiler->m_trash);
+        int32_t i;
+        for (i = 0; i < size; i++) {
+            /* The ownership of the tokens produced by the lexer
+            * is transfered to the token stream which demanded
+            * their creation. Therefore, the token stream
+            * has to destroy the buffered tokens.
+            */
+            zen_Token_t* token = (zen_Token_t*)jtk_ArrayList_getValue(compiler->m_trash, i);
+            zen_Token_delete(token);
+        }
+        jtk_ArrayList_delete(compiler->m_trash);
+    }
+
+    zen_ErrorHandler_delete(compiler->m_errorHandler);
 
 #ifndef JTK_LOGGER_DISABLE
     jtk_Logger_delete(compiler->m_logger);
@@ -346,9 +364,11 @@ void zen_Compiler_buildAST(zen_Compiler_t* compiler) {
                 }
             }
 
-            jtk_InputStream_delete(stream);
+            jtk_InputStream_destroy(stream);
         }
     }
+
+    compiler->m_trash = tokens->m_trash;
 
     zen_ASTPrinter_delete(astPrinter);
     zen_Parser_delete(parser);
@@ -579,7 +599,9 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
         if (compiler->m_scopes[i] != NULL) {
             zen_Compiler_destroyNestedScopes(compiler->m_scopes[i]);
         }
+    }
 
+    for (i = 0; i < size; i++) {
         /* The symbol table is not required anymore. Therefore, destroy it
          * and release the resources it holds.
          */

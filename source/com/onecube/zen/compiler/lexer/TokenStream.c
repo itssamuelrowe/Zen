@@ -28,6 +28,7 @@ zen_TokenStream_t* zen_TokenStream_new(zen_Compiler_t* compiler,
     stream->m_p = -1;
     stream->m_hitEndOfStream = false;
     stream->m_channel = channel;
+    stream->m_trash = jtk_ArrayList_new();
 
     return stream;
 }
@@ -39,19 +40,7 @@ void zen_TokenStream_destroyStaleTokens(zen_TokenStream_t* stream) {
 void zen_TokenStream_delete(zen_TokenStream_t* stream) {
     jtk_Assert_assertObject(stream, "The specified token stream is null.");
 
-    // int32_t size = jtk_ArrayList_getSize(stream->m_tokens);
-    // int32_t i;
-    // for (i = 0; i < size; i++) {
-    //     /* The ownership of the tokens produced by the lexer
-    //      * is transfered to the token stream which demanded
-    //      * their creation. Therefore, the token stream
-    //      * has to destroy the buffered tokens.
-    //      */
-    //     zen_Token_t* token = (zen_Token_t*)jtk_ArrayList_getValue(stream->m_tokens, i);
-    //     zen_Token_delete(token);
-    // }
     jtk_ArrayList_delete(stream->m_tokens);
-
     jtk_Memory_deallocate(stream);
 }
 
@@ -126,6 +115,7 @@ int32_t zen_TokenStream_fetch(zen_TokenStream_t* stream, int32_t n) {
         zen_Token_t* token = zen_Lexer_nextToken(stream->m_lexer);
         zen_Token_setIndex(token, oldSize + i);
         jtk_ArrayList_add(stream->m_tokens, token);
+        jtk_ArrayList_add(stream->m_trash, token);
 
         if (zen_Token_getType(token) == ZEN_TOKEN_END_OF_STREAM) {
             stream->m_hitEndOfStream = true;

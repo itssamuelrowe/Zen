@@ -23,10 +23,8 @@
  *******************************************************************************/
 
 void zen_FunctionSymbol_initialize(zen_FunctionSymbol_t* symbol) {
-    zen_FunctionSymbol_t* functionSymbol = zen_Memory_allocate(zen_FunctionSymbol_t, 1);
-
     symbol->m_signatures = jtk_ArrayList_new();
-    functionSymbol->m_parameterThreshold = -1;
+    symbol->m_parameterThreshold = -1;
 }
 
 void zen_FunctionSymbol_destroy(zen_FunctionSymbol_t* symbol) {

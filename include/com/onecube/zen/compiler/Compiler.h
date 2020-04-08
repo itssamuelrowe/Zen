@@ -51,6 +51,7 @@ struct zen_Compiler_t {
     zen_ASTAnnotations_t** m_scopes;
 
     jtk_HashMap_t* m_repository;
+    jtk_ArrayList_t* m_trash;
 };
 
 /**

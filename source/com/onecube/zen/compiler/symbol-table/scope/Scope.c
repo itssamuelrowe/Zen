@@ -60,6 +60,7 @@ zen_Scope_t* zen_Scope_forClass(zen_Scope_t* enclosingScope) {
 void zen_Scope_delete(zen_Scope_t* scope) {
     jtk_Assert_assertObject(scope, "The specified scope is null.");
 
+    jtk_HashMap_delete(scope->m_symbols);
     jtk_CString_delete(scope->m_name);
     jtk_Memory_deallocate(scope);
 }
