@@ -25,8 +25,7 @@ zen_Scope_t* zen_Scope_new(const uint8_t* name, zen_ScopeType_t type,
     scope->m_name = jtk_CString_new(name); // Fix this.
     scope->m_type = type;
     scope->m_enclosingScope = enclosingScope;
-    scope->m_context = context;
-    scope->m_resolveSymbol = NULL;
+    // TODO
 
     return scope;
 }
@@ -44,7 +43,7 @@ void zen_Scope_getChildrenSymbols(zen_Scope_t* scope, jtk_ArrayList_t* childrenS
     jtk_Assert_assertObject(scope, "The specified scope is null.");
     jtk_Assert_assertObject(childrenSymbols, "The specified list is null.");
 
-    scope->m_getChildrenSymbols(scope->m_context, childrenSymbols);
+    // TODO
 }
 
 bool zen_Scope_isEnumerationScope(zen_Scope_t* scope) {
@@ -73,11 +72,12 @@ zen_Scope_t* zen_Scope_getEnclosingScope(zen_Scope_t* scope) {
 }
 
 void zen_Scope_define(zen_Scope_t* scope, zen_Symbol_t* symbol) {
-    scope->m_defineSymbol(scope->m_context, symbol);
+    // TODO
 }
 
 zen_Symbol_t* zen_Scope_resolve(zen_Scope_t* scope, uint8_t* identifier) {
-    return scope->m_resolveSymbol(scope->m_context, identifier);
+    // TODO
+    return NULL;
 }
 
 const uint8_t* zen_Scope_getName(zen_Scope_t* scope) {
@@ -86,10 +86,6 @@ const uint8_t* zen_Scope_getName(zen_Scope_t* scope) {
 
 zen_ScopeType_t zen_Scope_getType(zen_Scope_t* scope) {
     return scope->m_type;
-}
-
-void* zen_Scope_getContext(zen_Scope_t* scope) {
-    return scope->m_context;
 }
 
 zen_Scope_t* zen_Scope_resolveQualifiedSymbol(zen_Scope_t* scope, const uint8_t* name,

@@ -88,25 +88,12 @@ set (
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/SymbolResolutionListener.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/SymbolTable.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/Modifier.c
-
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/scope/ClassScope.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/scope/CompilationUnitScope.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/scope/EnumerationScope.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/scope/FunctionScope.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/scope/LocalScope.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/scope/Scope.c
 
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/ClassSymbol.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/ConstantSymbol.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/EnumerateSymbol.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/EnumerationSymbol.c
+    # ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/ClassSymbol.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/FunctionSignature.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/FunctionSymbol.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/LabelSymbol.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/MemberConstantSymbol.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/MemberVariableSymbol.c
+    # ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/FunctionSymbol.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/Symbol.c
-    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/symbol-table/symbol/VariableSymbol.c
 
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/support/Error.c
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/support/ErrorHandler.c

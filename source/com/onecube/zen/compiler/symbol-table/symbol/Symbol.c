@@ -28,9 +28,9 @@ zen_Symbol_t* zen_Symbol_new(zen_SymbolCategory_t category,
     symbol->m_category = category;
     symbol->m_identifier = identifier;
     symbol->m_enclosingScope = enclosingScope;
-    symbol->m_context = context;
     symbol->m_explicitModifiers = jtk_ArrayList_new();
     symbol->m_modifiers = 0;
+    // TODO
 
     return symbol;
 }

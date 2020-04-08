@@ -20,15 +20,6 @@
 
 #include <com/onecube/zen/compiler/Compiler.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
-#include <com/onecube/zen/compiler/symbol-table/AnnotationSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/EnumerationSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/MemberConstantSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/MemberClassSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/MemberEnumerationSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/MemberVariableSymbol.h>
 
 zen_SymbolTable_t* zen_SymbolTable_new(zen_Compiler_t* compiler) {
     zen_SymbolTable_t* symbolTable = zen_Memory_allocate(zen_SymbolTable_t, 1);
