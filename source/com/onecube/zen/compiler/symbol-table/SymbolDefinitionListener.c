@@ -18,21 +18,10 @@
 
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
 #include <com/onecube/zen/compiler/lexer/Token.h>
-#include <com/onecube/zen/compiler/symbol-table/ClassScope.h>
 #include <com/onecube/zen/compiler/symbol-table/FunctionSignature.h>
 #include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolDefinitionListener.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
-#include <com/onecube/zen/compiler/symbol-table/FunctionScope.h>
-#include <com/onecube/zen/compiler/symbol-table/ConstantSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/LocalScope.h>
-#include <com/onecube/zen/compiler/symbol-table/VariableSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/LabelSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/EnumerationSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/EnumerationScope.h>
-#include <com/onecube/zen/compiler/symbol-table/CompilationUnitScope.h>
-#include <com/onecube/zen/compiler/symbol-table/EnumerateSymbol.h>
 
 /*
  * As new features are implemented, the source code of a project grows in
@@ -191,8 +180,7 @@ void zen_SymbolDefinitionListener_onEnterCompilationUnit(zen_ASTListener_t* astL
     /* The scopes are represented as an n-ary tree, where the root scope is
      * an instance of zen_CompilationUnitScope_t.
      */
-    zen_CompilationUnitScope_t* compilationUnitScope = zen_CompilationUnitScope_new();
-    zen_Scope_t* scope = zen_CompilationUnitScope_getScope(compilationUnitScope);
+    zen_Scope_t* scope = zen_Scope_forCompilationUnit();
     zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
     zen_ASTAnnotations_put(listener->m_scopes, node, scope);
 }
@@ -271,9 +259,9 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
                     /* The resolved symbol is a function. Retrieve the corresponding
                      * function symbol.
                      */
-                    zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)symbol->m_context;
+                    zen_FunctionSymbol_t* functionSymbol = &symbol->m_context.m_asFunction;
                     zen_SymbolDefinitionListener_declareOverloadedFunction(listener,
-                        functionSymbol, fixedParameters, variableParameter);
+                        symbol, fixedParameters, variableParameter);
                 }
                 else {
                     zen_ErrorHandler_handleSemanticalError(errorHandler,
@@ -302,7 +290,7 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
 
     /* A function scope is pushed regardless of the declaration being erroneous. */
 
-    zen_FunctionScope_t* functionScope = zen_FunctionScope_new(symbolTable->m_currentScope);
+    zen_Scope_t* functionScope = zen_Scope_forFunction(symbolTable->m_currentScope);
     zen_Scope_t* scope = zen_FunctionScope_getScope(functionScope);
     zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
     zen_ASTAnnotations_put(listener->m_scopes, node, scope);
@@ -318,8 +306,8 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
                 (zen_Token_t*)(parameter->m_context));
         }
         else {
-            zen_ConstantSymbol_t* constantSymbol = zen_ConstantSymbol_new(parameter, symbolTable->m_currentScope);
-            symbol = zen_ConstantSymbol_getSymbol(constantSymbol);
+            zen_Symbol_t* symbol = zen_Symbol_forConstant(parameter,
+                symbolTable->m_currentScope);
             zen_SymbolTable_define(listener->m_symbolTable, symbol);
         }
     }
@@ -333,8 +321,7 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
                 (zen_Token_t*)(variableParameter->m_context));
         }
         else {
-            zen_ConstantSymbol_t* constantSymbol = zen_ConstantSymbol_new(variableParameter, symbolTable->m_currentScope);
-            symbol = zen_ConstantSymbol_getSymbol(constantSymbol);
+            symbol = zen_Symbol_forConstant(variableParameter, symbolTable->m_currentScope);
             zen_Symbol_addModifiers(symbol, ZEN_MODIFIER_VARIABLE_PARAMETER);
             zen_SymbolTable_define(listener->m_symbolTable, symbol);
         }
@@ -358,13 +345,15 @@ void zen_SymbolDefinitionListener_onExitFunctionDeclaration(
 // TODO: Declare function even if it has no parameters.
 
 void zen_SymbolDefinitionListener_declareOverloadedFunction(
-    zen_SymbolDefinitionListener_t* listener, zen_FunctionSymbol_t* functionSymbol,
+    zen_SymbolDefinitionListener_t* listener, zen_Symbol_t* symbol,
     jtk_ArrayList_t* fixedParameters, zen_ASTNode_t* variableParameter) {
+
+    zen_FunctionSymbol_t* functionSymbol = &symbol->m_context.m_asFunction;
 
     zen_Compiler_t* compiler = listener->m_compiler;
     zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
 
-    zen_Token_t* identifierToken = (zen_Token_t*)functionSymbol->m_symbol->m_identifier->m_context;
+    zen_Token_t* identifierToken = (zen_Token_t*)symbol->m_identifier->m_context;
 
     /* Determines whether the overloaded function is semantically erroneous. */
     bool error = false;
@@ -500,8 +489,7 @@ void zen_SymbolDefinitionListener_onEnterStatementSuite(
     jtk_Assert_assertObject(node, "The specified AST node is null.");
 
     zen_SymbolDefinitionListener_t* listener = (zen_SymbolDefinitionListener_t*)astListener->m_context;
-    zen_LocalScope_t* localScope = zen_LocalScope_new(listener->m_symbolTable->m_currentScope);
-    zen_Scope_t* scope = zen_LocalScope_getScope(localScope);
+    zen_Scope_t* scope = zen_Scope_forLocal(listener->m_symbolTable->m_currentScope);
     zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
     zen_ASTAnnotations_put(listener->m_scopes, node, scope);
 }
@@ -541,8 +529,8 @@ void zen_SymbolDefinitionListener_onEnterVariableDeclaration(
                 (zen_Token_t*)identifier->m_context);
         }
         else {
-            zen_VariableSymbol_t* variableSymbol = zen_VariableSymbol_new(identifier, listener->m_symbolTable->m_currentScope);
-            symbol = zen_VariableSymbol_getSymbol(variableSymbol);
+            zen_Symbol_t* symbol = zen_Symbol_forVariable(identifier,
+                listener->m_symbolTable->m_currentScope);
             zen_SymbolTable_define(listener->m_symbolTable, symbol);
         }
     }
@@ -574,8 +562,7 @@ void zen_SymbolDefinitionListener_onEnterConstantDeclaration(
                 (zen_Token_t*)identifier->m_context);
         }
         else {
-            zen_ConstantSymbol_t* constantSymbol = zen_ConstantSymbol_new(identifier, listener->m_symbolTable->m_currentScope);
-            symbol = zen_ConstantSymbol_getSymbol(constantSymbol);
+            zen_Symbol_t* symbol = zen_Symbol_forConstant(identifier, listener->m_symbolTable->m_currentScope);
             zen_SymbolTable_define(listener->m_symbolTable, symbol);
         }
     }
@@ -601,8 +588,8 @@ void zen_SymbolDefinitionListener_onEnterLabelClause(
             (zen_Token_t*)identifier->m_context);
     }
     else {
-        zen_LabelSymbol_t* labelSymbol = zen_LabelSymbol_new(identifier, listener->m_symbolTable->m_currentScope);
-        symbol = zen_LabelSymbol_getSymbol(labelSymbol);
+        zen_Symbol_t* symbol = zen_Symbol_forLabel(identifier,
+            listener->m_symbolTable->m_currentScope);
         zen_SymbolTable_define(listener->m_symbolTable, symbol);
     }
 }
@@ -631,12 +618,12 @@ void zen_SymbolDefinitionListener_onEnterForParameters(
         }
         else {
             if (forParametersContext->m_variable) {
-                zen_VariableSymbol_t* variableSymbol = zen_VariableSymbol_new(identifier, listener->m_symbolTable->m_currentScope);
-                symbol = zen_VariableSymbol_getSymbol(variableSymbol);
+                symbol = zen_Symbol_forVariable(identifier,
+                    listener->m_symbolTable->m_currentScope);
             }
             else {
-                zen_ConstantSymbol_t* constantSymbol = zen_ConstantSymbol_new(identifier, listener->m_symbolTable->m_currentScope);
-                symbol = zen_ConstantSymbol_getSymbol(constantSymbol);
+                symbol = zen_Symbol_forConstant(identifier,
+                    listener->m_symbolTable->m_currentScope);
             }
             zen_SymbolTable_define(listener->m_symbolTable, symbol);
         }
@@ -663,8 +650,7 @@ void zen_SymbolDefinitionListener_onEnterTryStatement(
         /* Each catch clause receives its own local scope to define its
          * catch parameter.
          */
-        zen_LocalScope_t* localScope = zen_LocalScope_new(listener->m_symbolTable->m_currentScope);
-        zen_Scope_t* scope = zen_LocalScope_getScope(localScope);
+        zen_Scope_t* scope = zen_Scope_forLocal(listener->m_symbolTable->m_currentScope);
         zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
         zen_ASTAnnotations_put(listener->m_scopes, catchClause, scope);
 
@@ -679,9 +665,7 @@ void zen_SymbolDefinitionListener_onEnterTryStatement(
             (zen_Token_t*)identifier->m_context);
         }
         else {
-            zen_VariableSymbol_t* variableSymbol = zen_VariableSymbol_new(identifier, scope);
-            symbol = zen_VariableSymbol_getSymbol(variableSymbol);
-
+            symbol = zen_Symbol_forVariable(identifier, scope);
             zen_SymbolTable_define(listener->m_symbolTable, symbol);
         }
 
@@ -734,12 +718,14 @@ void zen_SymbolDefinitionListener_onEnterClassDeclaration(
             qualifiedNameSize = identifierToken->m_length;
         }
 
-        zen_ClassScope_t* classScope = zen_ClassScope_new(listener->m_symbolTable->m_currentScope);
+        zen_Scope_t* scope = zen_Scope_forClass(listener->m_symbolTable->m_currentScope);
 
         zen_ClassSymbol_t* classSymbol = zen_ClassSymbol_new(identifier,
-            listener->m_symbolTable->m_currentScope, zen_ClassScope_getScope(classScope),
+            listener->m_symbolTable->m_currentScope, scope,
             qualifiedName, qualifiedNameSize);
         symbol = zen_ClassSymbol_getSymbol(classSymbol);
+        scope->m_symbol = symbol;
+
         zen_SymbolTable_define(listener->m_symbolTable, symbol);
         zen_Compiler_registerSymbol(compiler, qualifiedName, symbol);
 
@@ -747,9 +733,6 @@ void zen_SymbolDefinitionListener_onEnterClassDeclaration(
             jtk_CString_delete(qualifiedName0);
         }
 
-        classScope->m_classSymbol = symbol;
-
-        zen_Scope_t* scope = zen_ClassScope_getScope(classScope);
 
         zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
         zen_ASTAnnotations_put(listener->m_scopes, node, scope);

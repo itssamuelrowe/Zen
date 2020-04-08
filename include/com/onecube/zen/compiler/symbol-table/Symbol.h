@@ -24,6 +24,7 @@
 #include <com/onecube/zen/compiler/symbol-table/SymbolCategory.h>
 #include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
+#include <com/onecube/zen/compiler/symbol-table/Modifier.h>
 
 /*******************************************************************************
  * Symbol                                                                      *
