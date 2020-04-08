@@ -21,7 +21,6 @@
 
 #include <jtk/collection/list/ArrayList.h>
 
-#include <com/onecube/zen/compiler/symbol-table/Symbol.h>
 #include <com/onecube/zen/compiler/symbol-table/FunctionSignature.h>
 
 /*******************************************************************************
@@ -35,7 +34,6 @@
  * @since zen 1.0
  */
 struct zen_FunctionSymbol_t {
-    zen_Symbol_t* m_symbol;
     /* Signatures are destroyed by the destructor. */
     jtk_ArrayList_t* m_signatures; /* <zen_FunctionSignature_t*> */
     int32_t m_parameterThreshold;
@@ -45,20 +43,6 @@ struct zen_FunctionSymbol_t {
  * @memberof FunctionSymbol
  */
 typedef struct zen_FunctionSymbol_t zen_FunctionSymbol_t;
-
-// Constructor
-
-/**
- * @memberof FunctionSymbol
- */
-zen_FunctionSymbol_t* zen_FunctionSymbol_new(zen_ASTNode_t* identifier, zen_Scope_t* enclosingScope);
-
-// Destructor
-
-/**
- * @memberof FunctionSymbol
- */
-void zen_FunctionSymbol_delete(zen_FunctionSymbol_t* symbol);
 
 // Signature
 
@@ -83,12 +67,5 @@ int32_t zen_FunctionSymbol_getParameterThreshold(zen_FunctionSymbol_t* symbol);
  * @memberof FunctionSymbol
  */
 void zen_FunctionSymbol_setParameterThreshold(zen_FunctionSymbol_t* symbol, int32_t parameterThreshold);
-
-// Symbol
-
-/**
- * @memberof FunctionSymbol
- */
-zen_Symbol_t* zen_FunctionSymbol_getSymbol(zen_FunctionSymbol_t* symbol);
 
 #endif /* COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_MEMBER_FUNCTION_SYMBOL_H */
