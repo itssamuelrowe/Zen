@@ -440,6 +440,7 @@ void zen_SymbolResolutionListener_onEnterImportDeclaration(
         int32_t identifierCount = jtk_ArrayList_getSize(context->m_identifiers);
         zen_ASTNode_t* lastIdentifier = jtk_ArrayList_getValue(context->m_identifiers,
             identifierCount - 1);
+        zen_Token_t* lastIdentifierToken = (zen_Token_t*)lastIdentifier->m_context;
 
         jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
         int32_t i;
@@ -457,14 +458,22 @@ void zen_SymbolResolutionListener_onEnterImportDeclaration(
 
         zen_Symbol_t* symbol = zen_Compiler_resolveSymbol(compiler, qualifiedName);
         if (symbol == NULL) {
-            zen_Token_t* lastIdentifierToken = (zen_Token_t*)lastIdentifier->m_context;
             zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
                 ZEN_ERROR_CODE_UNKNOWN_CLASS, lastIdentifierToken);
         }
         else {
-            zen_Symbol_t* externalSymbol = zen_Symbol_forExternal(lastIdentifier,
-                listener->m_symbolTable->m_currentScope, symbol);
-            zen_SymbolTable_define(listener->m_symbolTable, externalSymbol);
+            zen_Symbol_t* localSymbol = zen_SymbolTable_resolve(listener->m_symbolTable,
+                lastIdentifierToken->m_text);
+            if (localSymbol == NULL) {
+                zen_Symbol_t* externalSymbol = zen_Symbol_forExternal(lastIdentifier,
+                    listener->m_symbolTable->m_currentScope, symbol);
+                zen_SymbolTable_define(listener->m_symbolTable, externalSymbol);
+            }
+            else {
+                zen_ErrorHandler_handleSemanticalError(errorHandler,
+                    listener, ZEN_ERROR_CODE_REDECLARATION_OF_SYMBOL_AS_CLASS,
+                    (zen_Token_t*)localSymbol->m_identifier->m_context);
+            }
         }
 
         jtk_CString_delete(qualifiedName);
