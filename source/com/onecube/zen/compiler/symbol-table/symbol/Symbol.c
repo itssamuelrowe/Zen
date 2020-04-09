@@ -68,6 +68,7 @@ zen_Symbol_t* zen_Symbol_forClass(zen_ASTNode_t* identifier,
     zen_ClassSymbol_t* classSymbol = &symbol->m_context.m_asClass;
     classSymbol->m_qualifiedName = jtk_CString_make(qualifiedName, &qualifiedNameSize);
     classSymbol->m_qualifiedNameSize = qualifiedNameSize;
+    classSymbol->m_classScope = classScope;
 
     return symbol;
 }
@@ -79,13 +80,9 @@ zen_Symbol_t* zen_Symbol_forLabel(zen_ASTNode_t* identifier,
 
 zen_Symbol_t* zen_Symbol_forExternal(zen_ASTNode_t* identifier,
     zen_Scope_t* enclosingScope, zen_Symbol_t* other) {
-    zen_Symbol_t* result = zen_Symbol_new(other->m_category, identifier,
-        enclosingScope);
-    result->m_flags = other->m_flags | ZEN_SYMBOL_FLAG_EXTERNAL;
-
-    if (other->m_category == ZEN_SYMBOL_CATEGORY_CLASS) {
-        // TODO: ...
-    }
+    zen_Symbol_t* result = zen_Symbol_new(ZEN_SYMBOL_CATEGORY_EXTERNAL,
+        identifier, enclosingScope);
+    result->m_context.m_asExternal = other;
 
     return result;
 }
@@ -137,6 +134,11 @@ bool zen_Symbol_isVariable(zen_Symbol_t* symbol) {
 bool zen_Symbol_isClass(zen_Symbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
     return (symbol->m_category == ZEN_SYMBOL_CATEGORY_CLASS);
+}
+
+bool zen_Symbol_isExternal(zen_Symbol_t* symbol) {
+    jtk_Assert_assertObject(symbol, "The specified symbol is null.");
+    return (symbol->m_category == ZEN_SYMBOL_CATEGORY_EXTERNAL);
 }
 
 zen_Scope_t* zen_Symbol_getEnclosingScope(zen_Symbol_t* symbol) {

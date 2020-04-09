@@ -8314,6 +8314,10 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
         printf("[warning] Looks like a resolution phase failure was detected.\n");
     }
 
+    if (zen_Symbol_isExternal(symbol)) {
+        symbol = symbol->m_context.m_asExternal;
+    }
+
     if (!zen_Symbol_isClass(symbol)) {
         printf("[error] %s is a non-class symbol\n", typeNameText);
         printf("[warning] Looks like the syntactical phase or the resolution phase failed.\n");

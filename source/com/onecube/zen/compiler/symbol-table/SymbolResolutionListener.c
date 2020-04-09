@@ -23,9 +23,8 @@
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
 #include <com/onecube/zen/compiler/ast/ASTWalker.h>
 #include <com/onecube/zen/compiler/ast/context/Context.h>
-#include <com/onecube/zen/compiler/symbol-table/ClassSymbol.h>
-#include <com/onecube/zen/compiler/symbol-table/FunctionSymbol.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolResolutionListener.h>
+#include <com/onecube/zen/compiler/symbol-table/Symbol.h>
 
 /*
  * The following text describes a naive algorithm that I developed to analyze
@@ -451,8 +450,8 @@ void zen_SymbolResolutionListener_onEnterImportDeclaration(
                 ZEN_ERROR_CODE_UNKNOWN_CLASS, lastIdentifierToken);
         }
         else {
-            zen_Symbol_t* externalSymbol = zen_Symbol_forExternal(symbol,
-                listener->m_symbolTable->m_currentScope, lastIdentifier);
+            zen_Symbol_t* externalSymbol = zen_Symbol_forExternal(lastIdentifier,
+                listener->m_symbolTable->m_currentScope, symbol);
             zen_SymbolTable_define(listener->m_symbolTable, externalSymbol);
         }
 
@@ -1699,10 +1698,14 @@ void zen_SymbolResolutionListener_onEnterNewExpression(zen_ASTListener_t* astLis
             ZEN_ERROR_CODE_UNDECLARED_CLASS, lastIdentifierToken);
     }
     else {
+        if (zen_Symbol_isExternal(symbol)) {
+            symbol = symbol->m_context.m_asExternal;
+        }
+
         if (zen_Symbol_isClass(symbol)) {
             zen_ClassSymbol_t* classSymbol = &symbol->m_context.m_asClass;
             /* Retrieve the scope corresponding to the class symbol. */
-            zen_Scope_t* scope = zen_ClassSymbol_getClassScope(classSymbol);
+            zen_Scope_t* scope = classSymbol->m_classScope;
             if (zen_Scope_isClassScope(scope)) {
                 /* Retrieve the constructor declared in this class. */
                 zen_Symbol_t* constructorSymbol = zen_Scope_resolve(scope, "new");

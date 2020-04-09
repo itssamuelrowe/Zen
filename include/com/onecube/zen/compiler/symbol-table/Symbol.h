@@ -47,6 +47,7 @@ struct zen_Symbol_t {
     union {
         zen_ClassSymbol_t m_asClass;
         zen_FunctionSymbol_t m_asFunction;
+        zen_Symbol_t* m_asExternal;
     } m_context;
     uint32_t m_modifiers;
     int32_t m_ticket;
@@ -131,6 +132,13 @@ bool zen_Symbol_isVariable(zen_Symbol_t* symbol);
  * @memberof Symbol
  */
 bool zen_Symbol_isEnumeration(zen_Symbol_t* symbol);
+
+// External
+
+/**
+ * @memberof Symbol
+ */
+bool zen_Symbol_isExternal(zen_Symbol_t* symbol);
 
 // Enclosing Scope
 
