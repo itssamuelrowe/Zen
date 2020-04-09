@@ -239,10 +239,29 @@ uint8_t* jtk_CString_substringEx(const uint8_t* string, int32_t size,
     return jtk_CString_newEx(string + startIndex, stopIndex - startIndex);
 }
 
-uint8_t* jtk_PathHelper_getParent(const uint8_t* path, int32_t size) {
+void jtk_Arrays_replaceEx_b(int8_t* array, int32_t size, uint8_t oldValue,
+    uint8_t newValue, int32_t startIndex, int32_t stopIndex) {
+    int32_t i;
+    for (i = startIndex; i < stopIndex; i++) {
+        if (array[i] == oldValue) {
+            array[i] = newValue;
+        }
+    }
+}
+
+void jtk_Arrays_replace_b(int8_t* array, int32_t size, uint8_t oldValue,
+    uint8_t newValue) {
+    jtk_Arrays_replaceEx_b(array, size, oldValue, newValue, 0, size);
+}
+
+uint8_t* jtk_PathHelper_getParent(const uint8_t* path, int32_t size,
+    int32_t* resultSize) {
     size = size < 0? jtk_CString_getSize(path) : size;
 
     int32_t index = jtk_CString_findLast_c(path, size, JTK_PATH_ELEMENT_SEPARATOR);
+    if (resultSize != NULL) {
+        *resultSize = index < 0? 0 : index;
+    }
     return index < 0? NULL : jtk_CString_substringEx(path, size, 0, index);
 }
 
@@ -266,6 +285,8 @@ zen_Compiler_t* zen_Compiler_new() {
     compiler->m_compilationUnits = NULL;
     compiler->m_symbolTables = NULL;
     compiler->m_scopes = NULL;
+    compiler->m_packages = NULL;
+    compiler->m_packageSizes = NULL;
     compiler->m_repository = jtk_HashMap_new(stringObjectAdapter, NULL);
     compiler->m_trash = NULL;
 #ifdef JTK_LOGGER_DISABLE
@@ -308,6 +329,16 @@ void zen_Compiler_delete(zen_Compiler_t* compiler) {
             zen_Token_delete(token);
         }
         jtk_ArrayList_delete(compiler->m_trash);
+    }
+
+    if (compiler->m_packages != NULL) {
+        int32_t i;
+        int32_t inputCount = jtk_ArrayList_getSize(compiler->m_inputFiles);
+        for (i = 0; i < inputCount; i++) {
+            jtk_CString_delete(compiler->m_packages[i]);
+        }
+        jtk_Memory_deallocate(compiler->m_packages);
+        jtk_Memory_deallocate(compiler->m_packageSizes);
     }
 
     jtk_HashMap_delete(compiler->m_repository);
@@ -403,6 +434,8 @@ void zen_Compiler_initialize(zen_Compiler_t* compiler) {
     compiler->m_compilationUnits = jtk_Memory_allocate(zen_ASTNode_t*, size);
     compiler->m_symbolTables = jtk_Memory_allocate(zen_SymbolTable_t*, size);
     compiler->m_scopes = jtk_Memory_allocate(zen_ASTAnnotations_t*, size);
+    compiler->m_packages = jtk_Memory_allocate(uint8_t*, size);
+    compiler->m_packageSizes = jtk_Memory_allocate(int32_t, size);
 }
 
 void zen_Compiler_buildAST(zen_Compiler_t* compiler) {
@@ -422,11 +455,11 @@ void zen_Compiler_buildAST(zen_Compiler_t* compiler) {
             fprintf(stderr, "[error] Path '%s' does not exist.\n", path);
         }
         else {
-            uint8_t* parent = jtk_PathHelper_getParent(path, -1);
-            printf("Path: %s, Parent: %s\n", path, parent);
-            if (parent != NULL) {
-                jtk_CString_delete(parent);
-            }
+            int32_t packageSize;
+            uint8_t* package = jtk_PathHelper_getParent(path, -1, &packageSize);
+            compiler->m_packages[i] = package;
+            jtk_Arrays_replace_b(package, packageSize, '/', '.');
+            printf("Path: %s, Parent: %s\n", path, package);
 
             jtk_InputStream_t* stream = jtk_PathHelper_read(path);
             zen_Lexer_reset(lexer, stream);

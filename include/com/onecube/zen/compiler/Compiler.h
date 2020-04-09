@@ -49,6 +49,8 @@ struct zen_Compiler_t {
     zen_ASTNode_t** m_compilationUnits;
     zen_SymbolTable_t** m_symbolTables;
     zen_ASTAnnotations_t** m_scopes;
+    uint8_t** m_packages;
+    int32_t* m_packageSizes;
 
     jtk_HashMap_t* m_repository;
     jtk_ArrayList_t* m_trash;
