@@ -18,6 +18,7 @@
 
 #include <jtk/collection/stack/LinkedStack.h>
 #include <jtk/collection/array/Arrays.h>
+#include <jtk/core/StringBuilder.h>
 
 #include <com/onecube/zen/compiler/lexer/Token.h>
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
@@ -436,12 +437,23 @@ void zen_SymbolResolutionListener_onEnterImportDeclaration(
         // TODO
     }
     else {
-        int32_t qualifiedNameSize;
-        uint8_t* qualifiedName = zen_ASTNode_toCString(node, &qualifiedNameSize);
-
         int32_t identifierCount = jtk_ArrayList_getSize(context->m_identifiers);
         zen_ASTNode_t* lastIdentifier = jtk_ArrayList_getValue(context->m_identifiers,
             identifierCount - 1);
+
+        jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+        int32_t i;
+        for (i = 0; i < identifierCount; i++) {
+            zen_ASTNode_t* identifier = (zen_ASTNode_t*)jtk_ArrayList_getValue(context->m_identifiers, i);
+            zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+            jtk_StringBuilder_appendEx_z(builder, identifierToken->m_text, identifierToken->m_length);
+            if (i + 1 < identifierCount) {
+                jtk_StringBuilder_append_c(builder, '.');
+            }
+        }
+        int32_t qualifiedNameSize;
+        uint8_t* qualifiedName = jtk_StringBuilder_toCString(builder, &qualifiedNameSize);
+        jtk_StringBuilder_delete(builder);
 
         zen_Symbol_t* symbol = zen_Compiler_resolveSymbol(compiler, qualifiedName);
         if (symbol == NULL) {

@@ -32,6 +32,7 @@
 #include <jtk/io/InputStream.h>
 #include <jtk/log/ConsoleLogger.h>
 #include <jtk/core/CStringObjectAdapter.h>
+#include <jtk/core/CString.h>
 
 #include <com/onecube/zen/compiler/Compiler.h>
 #include <com/onecube/zen/compiler/lexer/Lexer.h>
@@ -59,8 +60,9 @@
 // Register
 
 void zen_Compiler_registerSymbol(zen_Compiler_t* compiler, const uint8_t* identifier,
-    zen_Symbol_t* symbol) {
-    jtk_HashMap_put(compiler->m_repository, identifier, symbol);
+    int32_t identifierSize, zen_Symbol_t* symbol) {
+    uint8_t* copy = jtk_CString_newEx(identifier, identifierSize);
+    jtk_HashMap_put(compiler->m_repository, copy, symbol);
 }
 
 zen_Symbol_t* zen_Compiler_resolveSymbol(zen_Compiler_t* compiler,
@@ -149,7 +151,6 @@ jtk_InputStream_t* jtk_PathHelper_readEx(const uint8_t* path, uint32_t flags) {
 
     return result;
 }
-
 
 int32_t jtk_CString_findLastEx_c(const char* string, int32_t size, int32_t codePoint,
     int32_t index) {
@@ -341,7 +342,14 @@ void zen_Compiler_delete(zen_Compiler_t* compiler) {
         jtk_Memory_deallocate(compiler->m_packageSizes);
     }
 
+    jtk_Iterator_t* iterator = jtk_HashMap_getKeyIterator(compiler->m_repository);
+    while (jtk_Iterator_hasNext(iterator)) {
+        uint8_t* key = (uint8_t*)jtk_Iterator_getNext(iterator);
+        jtk_CString_delete(key);
+    }
+    jtk_Iterator_delete(iterator);
     jtk_HashMap_delete(compiler->m_repository);
+
     zen_ErrorHandler_delete(compiler->m_errorHandler);
 
 #ifndef JTK_LOGGER_DISABLE
@@ -458,8 +466,8 @@ void zen_Compiler_buildAST(zen_Compiler_t* compiler) {
             int32_t packageSize;
             uint8_t* package = jtk_PathHelper_getParent(path, -1, &packageSize);
             compiler->m_packages[i] = package;
+            compiler->m_packageSizes[i] = packageSize;
             jtk_Arrays_replace_b(package, packageSize, '/', '.');
-            printf("Path: %s, Parent: %s\n", path, package);
 
             jtk_InputStream_t* stream = jtk_PathHelper_read(path);
             zen_Lexer_reset(lexer, stream);
@@ -532,7 +540,8 @@ void zen_Compiler_analyze(zen_Compiler_t* compiler) {
         zen_ASTAnnotations_t* scopes = zen_ASTAnnotations_new();
 
         jtk_Logger_info(compiler->m_logger, "Starting definition phase...");
-        zen_SymbolDefinitionListener_reset(symbolDefinitionListener, symbolTable, scopes);
+        zen_SymbolDefinitionListener_reset(symbolDefinitionListener, symbolTable,
+            scopes, compiler->m_packages[i], compiler->m_packageSizes[i]);
         zen_ASTWalker_walk(symbolDefinitionASTListener, compilationUnit);
         jtk_Logger_info(compiler->m_logger, "The symbol definition phase is complete.");
 

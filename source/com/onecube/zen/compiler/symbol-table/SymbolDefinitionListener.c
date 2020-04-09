@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <jtk/core/CString.h>
 #include <jtk/collection/stack/LinkedStack.h>
 
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
@@ -124,6 +125,7 @@ zen_SymbolDefinitionListener_t* zen_SymbolDefinitionListener_new(
     listener->m_symbolTable = NULL;
     listener->m_scopes = NULL;
     listener->m_package = NULL;
+    listener->m_packageSize = -1;
 
     zen_ASTListener_t* astListener = listener->m_astListener;
 
@@ -162,10 +164,12 @@ zen_ASTListener_t* zen_SymbolDefinitionListener_getASTListener(zen_SymbolDefinit
 
 void zen_SymbolDefinitionListener_reset(
     zen_SymbolDefinitionListener_t* listener,
-    zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes) {
+    zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes,
+    const uint8_t* package, int32_t packageSize) {
     listener->m_symbolTable = symbolTable;
     listener->m_scopes = scopes;
-    listener->m_package = NULL;
+    listener->m_package = package;
+    listener->m_packageSize = packageSize;
 }
 
 /* compilationUnit */
@@ -707,9 +711,17 @@ void zen_SymbolDefinitionListener_onEnterClassDeclaration(
         uint8_t* qualifiedName0 = NULL;
         int32_t qualifiedNameSize;
         if (listener->m_package != NULL) {
-            qualifiedName = jtk_CString_joinEx(listener->m_package,
-                listener->m_packageSize, identifierToken->m_text,
-                identifierToken->m_length, &qualifiedNameSize);
+            uint8_t* strings[] = {
+                listener->m_package,
+                ".",
+                identifierToken->m_text
+            };
+            int32_t sizes[] = {
+                listener->m_packageSize,
+                1,
+                identifierToken->m_length
+            };
+            qualifiedName = jtk_CString_joinAll(strings, sizes, 3, &qualifiedNameSize);
             qualifiedName0 = qualifiedName;
         }
         else {
@@ -725,7 +737,7 @@ void zen_SymbolDefinitionListener_onEnterClassDeclaration(
         scope->m_symbol = symbol;
 
         zen_SymbolTable_define(listener->m_symbolTable, symbol);
-        zen_Compiler_registerSymbol(compiler, qualifiedName, symbol);
+        zen_Compiler_registerSymbol(compiler, qualifiedName, qualifiedNameSize, symbol);
 
         if (qualifiedName0 != NULL) {
             jtk_CString_delete(qualifiedName0);

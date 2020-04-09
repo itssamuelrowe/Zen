@@ -86,7 +86,7 @@ void zen_Compiler_destroyScope(zen_Scope_t* scope);
 // Register
 
 void zen_Compiler_registerSymbol(zen_Compiler_t* compiler, const uint8_t* identifier,
-    zen_Symbol_t* symbol);
+    int32_t identifierSize, zen_Symbol_t* symbol);
 
 zen_Symbol_t* zen_Compiler_resolveSymbol(zen_Compiler_t* compiler,
     const uint8_t* identifier);

@@ -42,7 +42,7 @@ struct zen_SymbolDefinitionListener_t {
     zen_ASTListener_t* m_astListener;
     zen_SymbolTable_t* m_symbolTable;
     zen_ASTAnnotations_t* m_scopes;
-    uint8_t* m_package;
+    const uint8_t* m_package;
     int32_t m_packageSize;
 };
 
@@ -73,7 +73,8 @@ zen_ASTListener_t* zen_SymbolDefinitionListener_getASTListener(zen_SymbolDefinit
 
 void zen_SymbolDefinitionListener_reset(
     zen_SymbolDefinitionListener_t* symbolDefinitionListener,
-    zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes);
+    zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes,
+    const uint8_t* package, int32_t packageSize);
 
 // Event Handlers
 
