@@ -213,6 +213,7 @@ void zen_Compiler_delete(zen_Compiler_t* compiler) {
         jtk_ArrayList_delete(compiler->m_trash);
     }
 
+    jtk_HashMap_delete(compiler->m_repository);
     zen_ErrorHandler_delete(compiler->m_errorHandler);
 
 #ifndef JTK_LOGGER_DISABLE
@@ -441,8 +442,8 @@ void zen_Compiler_generate(zen_Compiler_t* compiler) {
     zen_BinaryEntityGenerator_delete(generator);
 }
 
-void zen_Compiler_destroyNestedScopes(zen_ASTAnnotations_t* annotations) {
-    jtk_Assert_assertObject(annotations, "The specified annotations is null.");
+void zen_Compiler_destroyNestedScopes(zen_ASTAnnotations_t* scopes) {
+    jtk_Assert_assertObject(scopes, "The specified annotations is null.");
 
     /* There are three algorithms that can help us in the destruction of the
      * symbols and scopes.
@@ -463,11 +464,10 @@ void zen_Compiler_destroyNestedScopes(zen_ASTAnnotations_t* annotations) {
      */
 
     jtk_ArrayList_t* temporary = jtk_ArrayList_new();
-    jtk_Iterator_t* iterator = jtk_HashMap_getValueIterator(annotations->m_map);
+    jtk_Iterator_t* iterator = jtk_HashMap_getValueIterator(scopes->m_map);
     while (jtk_Iterator_hasNext(iterator)) {
         /* The scopes are created during the definition phase of the symbol table.
-         * Therefore, we destroy them here before destroying the
-         * jtk_SymbolDefinitionListener_t class instance itself.
+         * Therefore, we destroy them here.
          */
         zen_Scope_t* scope = (zen_Scope_t*)jtk_Iterator_getNext(iterator);
 
@@ -492,8 +492,7 @@ void zen_Compiler_destroyNestedScopes(zen_ASTAnnotations_t* annotations) {
     }
     jtk_Iterator_delete(iterator);
     jtk_ArrayList_delete(temporary);
-
-    zen_ASTAnnotations_delete(annotations);
+    zen_ASTAnnotations_delete(scopes);
 }
 
 bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t length) {

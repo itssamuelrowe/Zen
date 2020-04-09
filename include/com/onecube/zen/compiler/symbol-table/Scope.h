@@ -79,10 +79,6 @@ zen_Scope_t* zen_Scope_forLocal(zen_Scope_t* enclosingScope);
  */
 zen_Scope_t* zen_Scope_forClass(zen_Scope_t* enclosingScope);
 
-/**
- * @memberof Scope
- */
-
 // Destructor
 
 /**

@@ -47,7 +47,9 @@ void* zen_ASTAnnotations_get(zen_ASTAnnotations_t* annotations, zen_ASTNode_t* n
 void zen_ASTAnnotations_put(zen_ASTAnnotations_t* annotations, zen_ASTNode_t* node, void* value) {
     jtk_Assert_assertObject(annotations, "The specified annotations is null.");
 
-    jtk_HashMap_put(annotations->m_map, (void*)node, value);
+    if (!jtk_HashMap_putStrictly(annotations->m_map, (void*)node, value)) {
+        printf("[internal error] AST node with multiple entries.\n");
+    }
 }
 
 void zen_ASTAnnotations_remove(zen_ASTAnnotations_t* annotations, zen_ASTNode_t* node) {
