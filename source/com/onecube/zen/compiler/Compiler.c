@@ -400,13 +400,21 @@ void zen_Compiler_analyze(zen_Compiler_t* compiler) {
         zen_ASTWalker_walk(symbolDefinitionASTListener, compilationUnit);
         jtk_Logger_info(compiler->m_logger, "The symbol definition phase is complete.");
 
+        compiler->m_symbolTables[i] = symbolTable;
+        compiler->m_scopes[i] = scopes;
+    }
+
+    for (i = 0; i < size; i++) {
+        compiler->m_currentFileIndex = i;
+        zen_ASTNode_t* compilationUnit = compiler->m_compilationUnits[i];
+
+        zen_SymbolTable_t* symbolTable = compiler->m_symbolTables[i];
+        zen_ASTAnnotations_t* scopes = compiler->m_scopes[i];
+
         jtk_Logger_info(compiler->m_logger, "Starting symbol resolution phase...");
         zen_SymbolResolutionListener_reset(symbolResolutionListener, symbolTable, scopes);
         zen_ASTWalker_walk(symbolResolutionASTListener, compilationUnit);
         jtk_Logger_info(compiler->m_logger, "The symbol resolution phase is complete.");
-
-        compiler->m_symbolTables[i] = symbolTable;
-        compiler->m_scopes[i] = scopes;
     }
 
     zen_SymbolResolutionListener_delete(symbolResolutionListener);
