@@ -8330,6 +8330,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
     zen_ClassSymbol_t* classSymbol = &symbol->m_context.m_asClass;
     /* Retrieve the scope corresponding to the class symbol. */
     zen_Scope_t* scope = classSymbol->m_classScope;
+
     if (!zen_Scope_isClassScope(scope)) {
         printf("[error] %s is a non-class scope\n", typeNameText);
         printf("[warning] Looks like the syntactical phase or the resolution phase failed.\n");
@@ -8348,18 +8349,20 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
         printf("[warning] Looks like the syntactical phase or the resolution phase failed.\n");
     }
 
+    uint8_t* qualifiedName = jtk_CString_newEx(classSymbol->m_qualifiedName,
+        classSymbol->m_qualifiedNameSize);
     /* The binary entity format requires the identifiers of a class to be separated
      * using the forward slash character.
      */
     int32_t i;
-    for (i = 0; i < typeNameSize; i++) {
-        if (typeNameText[i] == '.') {
-            typeNameText[i] = '/';
+    for (i = 0; i < classSymbol->m_qualifiedNameSize; i++) {
+        if (qualifiedName[i] == '.') {
+            qualifiedName[i] = '/';
         }
     }
     /* Retrieve the class entry index for the type name. */
     uint16_t typeNameIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
-        generator->m_constantPoolBuilder, typeNameText, typeNameSize);
+        generator->m_constantPoolBuilder, qualifiedName, classSymbol->m_qualifiedNameSize);
 
     /* Create an instance of the specified class. */
     zen_BinaryEntityBuilder_emitNew(generator->m_builder, typeNameIndex);
@@ -8478,7 +8481,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
     }
 
     uint16_t constructorIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, typeNameText, typeNameSize,
+        generator->m_constantPoolBuilder, qualifiedName, classSymbol->m_qualifiedNameSize,
         constructorDescriptor, constructorDescriptorSize, constructorName,
         constructorNameSize);
 
@@ -8498,6 +8501,7 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
      * entry in the constant pool. Therefore, we delay its destruction.
      */
     jtk_CString_delete(typeNameText);
+    jtk_CString_delete(qualifiedName);
 
     /* The normal behaviour of the AST walker causes the generator to emit instructions
      * in an undesirable fashion. Therefore, we partially switch from the listener

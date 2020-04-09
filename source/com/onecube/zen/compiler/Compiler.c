@@ -403,7 +403,8 @@ const uint8_t* zen_ErrorCode_messages[] = {
     "Redeclaration of symbol as loop parameter",
     "Redeclaration of symbol as catch parameter",
     "Redeclaration of symbol as class",
-    "Unknown class"
+    "Unknown class",
+    "Redeclaration of symbol previously imported"
 };
 
 void zen_Compiler_printErrors(zen_Compiler_t* compiler) {

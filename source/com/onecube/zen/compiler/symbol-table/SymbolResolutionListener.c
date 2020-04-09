@@ -471,7 +471,7 @@ void zen_SymbolResolutionListener_onEnterImportDeclaration(
             }
             else {
                 zen_ErrorHandler_handleSemanticalError(errorHandler,
-                    listener, ZEN_ERROR_CODE_REDECLARATION_OF_SYMBOL_AS_CLASS,
+                    listener, ZEN_ERROR_CODE_REDECLARATION_OF_SYMBOL_PREVIOUSLY_IMPORTED,
                     (zen_Token_t*)localSymbol->m_identifier->m_context);
             }
         }
