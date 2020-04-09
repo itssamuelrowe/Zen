@@ -597,31 +597,19 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
         }
     }
 
-    /* Log the constant pool details, including the number of entries and the trends
-    * seen among the entries.
-    */
-    printf("Constant pool size is %d.\n", entryCount);
-
     /* Retrieve the entity to write. */
     zen_Entity_t* entity = &generator->m_entityFile->m_entity;
 
     /* Write the entity header. */
     zen_BinaryEntityBuilder_writeEntityHeader(generator->m_builder, entity->m_type,
         entity->m_flags, entity->m_reference);
-    /* Log the entity header information written, including type, flags, and reference. */
-    jtk_Logger_debug(logger, "Entity header includes type = %d, flags = 0x%X, and reference = %d.",
-        entity->m_type, entity->m_flags, entity->m_reference);
 
     /* Write the superclasses. */
     zen_BinaryEntityBuilder_writeSuperclasses(generator->m_builder, entity->m_superclassCount,
         entity->m_superclasses);
-    /* Log the superclass indexes that the entity inherits. */
-    jtk_Logger_debug(logger, "Entity inherits %d superclasses.", entity->m_superclassCount);
 
     /* Write the attribute count. */
     zen_BinaryEntityBuilder_writeAttributeCount(generator->m_builder, entity->m_attributeTable.m_size);
-    /* Log the attribute count. */
-    jtk_Logger_debug(logger, "Entity has %d attributes.", entity->m_attributeTable.m_size);
 
     // TODO: Write the attribute
 
@@ -629,8 +617,22 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
     int32_t fieldCount = jtk_ArrayList_getSize(generator->m_fields);
     /* Write the field count. */
     zen_BinaryEntityBuilder_writeFieldCount(generator->m_builder, fieldCount);
-    /* Log the field count. */
-    jtk_Logger_debug(logger, "Entity has %d fields.", fieldCount);
+
+    if (generator->m_compiler->m_dumpInstructions) {
+        /* Log the constant pool details, including the number of entries and the trends
+        * seen among the entries.
+        */
+        printf("Constant pool size is %d.\n", entryCount);
+        /* Log the entity header information written, including type, flags, and reference. */
+        printf("Entity header includes type = %d, flags = 0x%X, and reference = %d.\n",
+            entity->m_type, entity->m_flags, entity->m_reference);
+        /* Log the superclass indexes that the entity inherits. */
+        printf("Entity inherits %d superclasses.\n", entity->m_superclassCount);
+        /* Log the attribute count. */
+        printf("Entity has %d attributes.\n", entity->m_attributeTable.m_size);
+        /* Log the field count. */
+        printf("Entity has %d fields.\n", fieldCount);
+    }
 
     int32_t fieldIndex;
     for (fieldIndex = 0; fieldIndex < fieldCount; fieldIndex++) {
@@ -647,12 +649,14 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
 
         // TODO: Write the attribute!
 
-        /* Log the details of the field. */
-        jtk_Logger_debug(logger, "A field was written with the features (flags = 0x%X, nameIndex = %d, descriptorIndex = %d).",
-            fieldEntity->m_flags, fieldEntity->m_nameIndex, fieldEntity->m_descriptorIndex);
+        if (generator->m_compiler->m_dumpInstructions) {
+            /* Log the details of the field. */
+            jtk_Logger_debug(logger, "A field was written with the features (flags = 0x%X, nameIndex = %d, descriptorIndex = %d).",
+                fieldEntity->m_flags, fieldEntity->m_nameIndex, fieldEntity->m_descriptorIndex);
 
-        /* Log the attribute count. */
-        jtk_Logger_debug(logger, "Field entity has %d attributes.", fieldEntity->m_attributeTable.m_size);
+            /* Log the attribute count. */
+            jtk_Logger_debug(logger, "Field entity has %d attributes.", fieldEntity->m_attributeTable.m_size);
+        }
     }
 
     /* Retrieve the function count. */
