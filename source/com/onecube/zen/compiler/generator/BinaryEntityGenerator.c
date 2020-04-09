@@ -390,13 +390,16 @@ void zen_BinaryEntityGenerator_generate(zen_BinaryEntityGenerator_t* generator) 
 
 void zen_BinaryEntityGenerator_reset(zen_BinaryEntityGenerator_t* generator,
     zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes,
-    zen_ASTNode_t* compilationUnit, jtk_OutputStream_t* outputStream) {
+    zen_ASTNode_t* compilationUnit, const uint8_t* package, int32_t packageSize,
+    jtk_OutputStream_t* outputStream) {
     jtk_Assert_assertObject(generator, "The specified generator is null.");
 
     // zen_BinaryEntityBuilder_clear(generator->m_builder);
     generator->m_symbolTable = symbolTable;
     generator->m_scopes = scopes;
     generator->m_compilationUnit = compilationUnit;
+    generator->m_package = package;
+    generator->m_packageSize = packageSize;
     generator->m_outputStream = outputStream;
 }
 
@@ -4847,9 +4850,18 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
     uint8_t* reference0 = NULL;
     int32_t referenceSize;
     if (generator->m_package != NULL) {
-        reference = jtk_CString_joinEx(generator->m_package,
-            generator->m_packageSize, identifierToken->m_text,
-            identifierToken->m_length, &referenceSize);
+        uint8_t* strings[] = {
+            generator->m_package,
+            "/",
+            identifierToken->m_text
+        };
+        int32_t sizes[] = {
+            generator->m_packageSize,
+            1,
+            identifierToken->m_length
+        };
+        reference = jtk_CString_joinAll(strings, sizes, 3, &referenceSize);
+        jtk_Arrays_replace_b(reference, referenceSize, '.', '/');
         reference0 = reference;
     }
     else {
@@ -4859,7 +4871,8 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
 
     uint16_t flags = 0;
     uint16_t referenceIndex =
-        zen_ConstantPoolBuilder_getUtf8EntryIndexEx(generator->m_constantPoolBuilder, reference, referenceSize);
+        zen_ConstantPoolBuilder_getUtf8EntryIndexEx(generator->m_constantPoolBuilder,
+        reference, referenceSize);
     uint16_t* superclassIndexes = NULL;
     uint16_t superclassCount = 0;
 

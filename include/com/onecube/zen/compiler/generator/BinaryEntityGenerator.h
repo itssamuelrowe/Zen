@@ -152,7 +152,8 @@ void zen_BinaryEntityGenerator_generate(zen_BinaryEntityGenerator_t* generator);
 
 void zen_BinaryEntityGenerator_reset(zen_BinaryEntityGenerator_t* generator,
     zen_SymbolTable_t* symbolTable, zen_ASTAnnotations_t* scopes,
-    zen_ASTNode_t* compilationUnit, jtk_OutputStream_t* outputStream);
+    zen_ASTNode_t* compilationUnit, const uint8_t* package, int32_t packageSize,
+    jtk_OutputStream_t* outputStream);
 
 // Descriptor
 

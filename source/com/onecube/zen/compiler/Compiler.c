@@ -583,7 +583,8 @@ void zen_Compiler_generate(zen_Compiler_t* compiler) {
         zen_ASTAnnotations_t* scopes = compiler->m_scopes[i];
         zen_ASTNode_t* compilationUnit = compiler->m_compilationUnits[i];
         zen_BinaryEntityGenerator_reset(generator, symbolTable, scopes,
-            compilationUnit, NULL);
+            compilationUnit, compiler->m_packages[i], compiler->m_packageSizes[i],
+            NULL);
 
         zen_BinaryEntityGenerator_generate(generator);
 
