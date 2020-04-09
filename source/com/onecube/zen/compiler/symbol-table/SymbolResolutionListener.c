@@ -451,8 +451,8 @@ void zen_SymbolResolutionListener_onEnterImportDeclaration(
                 ZEN_ERROR_CODE_UNKNOWN_CLASS, lastIdentifierToken);
         }
         else {
-            zen_Symbol_t* externalSymbol = zen_SymbolResolutionListener_createExternalSymbol(
-                listener, symbol, listener->m_symbolTable->m_currentScope, lastIdentifier);
+            zen_Symbol_t* externalSymbol = zen_Symbol_forExternal(symbol,
+                listener->m_symbolTable->m_currentScope, lastIdentifier);
             zen_SymbolTable_define(listener->m_symbolTable, externalSymbol);
         }
 

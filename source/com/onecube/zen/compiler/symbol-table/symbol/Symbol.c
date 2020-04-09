@@ -77,6 +77,19 @@ zen_Symbol_t* zen_Symbol_forLabel(zen_ASTNode_t* identifier,
     return zen_Symbol_new(ZEN_SYMBOL_CATEGORY_LABEL, identifier, enclosingScope);
 }
 
+zen_Symbol_t* zen_Symbol_forExternal(zen_ASTNode_t* identifier,
+    zen_Scope_t* enclosingScope, zen_Symbol_t* other) {
+    zen_Symbol_t* result = zen_Symbol_new(other->m_category, identifier,
+        enclosingScope);
+    result->m_flags = other->m_flags | ZEN_SYMBOL_FLAG_EXTERNAL;
+
+    if (other->m_category == ZEN_SYMBOL_CATEGORY_CLASS) {
+        // TODO: ...
+    }
+
+    return result;
+}
+
 void zen_Symbol_delete(zen_Symbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 

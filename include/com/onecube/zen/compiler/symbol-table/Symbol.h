@@ -83,6 +83,9 @@ zen_Symbol_t* zen_Symbol_forClass(zen_ASTNode_t* identifier,
 zen_Symbol_t* zen_Symbol_forLabel(zen_ASTNode_t* identifier,
     zen_Scope_t* enclosingScope);
 
+zen_Symbol_t* zen_Symbol_forExternal(zen_ASTNode_t* identifier,
+    zen_Scope_t* enclosingScope, zen_Symbol_t* other);
+
 // Destructor
 
 /**
