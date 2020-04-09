@@ -46,7 +46,8 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
      * jtk_VirtualMachineConfiguration_t.
      */
     zen_VirtualMachineConfiguration_t* configuration = zen_VirtualMachineConfiguration_new();
-    zen_VirtualMachineConfiguration_addEntityDirectory(configuration, "./");
+    zen_VirtualMachineConfiguration_addEntityDirectory(configuration, ".");
+    // TODO: addEntityDirectory() should normalize the given path before adding to the list.
 
     bool invalidCommandLine = false;
     int32_t i;
@@ -198,6 +199,6 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
      */
     zen_VirtualMachine_delete(virtualMachine);
     zen_VirtualMachineConfiguration_delete(configuration);
-    
+
     return 0;
 }

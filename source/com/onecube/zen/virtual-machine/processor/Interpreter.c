@@ -3837,8 +3837,19 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
 
 void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter) {
     zen_Class_t* exceptionClass = zen_Object_getClass(interpreter->m_exception);
+    uint8_t name[exceptionClass->m_descriptorSize + 1];
+    int32_t k;
+    for (k = 0; k < exceptionClass->m_descriptorSize; k++) {
+        if (exceptionClass->m_descriptor[k] == '/') {
+            name[k] = '.';
+        }
+        else {
+            name[k] = exceptionClass->m_descriptor[k];
+        }
+    }
+    name[exceptionClass->m_descriptorSize] = '\0';
     printf("\033[1;31m[error]\033[0m An instance of \033[1;37m%s\033[0m was thrown as exception\n",
-        exceptionClass->m_descriptor);
+        name);
 
     jtk_Iterator_t* iterator = jtk_DoublyLinkedList_getIterator(interpreter->m_invocationStack->m_trace);
     while (jtk_Iterator_hasNext(iterator)) {
