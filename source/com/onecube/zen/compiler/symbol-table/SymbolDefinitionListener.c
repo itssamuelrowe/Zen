@@ -246,14 +246,16 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
     else {
         if (zen_Scope_isCompilationUnitScope(currentScope) || zen_Scope_isClassScope(currentScope) || zen_Scope_isLocalScope(currentScope)) {
             /* Resolve the identifier within the scope of the compilation unit. */
-            zen_Symbol_t* symbol = NULL;
+            zen_Symbol_t* symbol = zen_SymbolTable_resolve(symbolTable, identifierText);
 
+            /*
             if (zen_Scope_isClassScope(currentScope)) {
                 symbol = zen_Scope_resolve(currentScope, identifierText);
             }
             else {
                 symbol = zen_SymbolTable_resolve(symbolTable, identifierText);
             }
+            */
 
             if (symbol != NULL) {
                 /* If a symbol with the given identifier exists, make sure it is
@@ -274,16 +276,21 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
                 }
             }
             else {
-                symbol = zen_SymbolDefinitionListener_declareFunction(listener->m_symbolTable, identifier, fixedParameters, variableParameter);
+                symbol = zen_SymbolDefinitionListener_declareFunction(listener->m_symbolTable, identifier,
+                    fixedParameters, variableParameter);
 
-                zen_ClassMemberContext_t* classMemberContext = (zen_ClassMemberContext_t*)node->m_parent->m_context;
-                int32_t modifierCount = jtk_ArrayList_getSize(classMemberContext->m_modifiers);
-                int32_t i;
-                for (i = 0; i < modifierCount; i++) {
-                    zen_ASTNode_t* modifier = (zen_ASTNode_t*)jtk_ArrayList_getValue(classMemberContext->m_modifiers, i);
-                    zen_Token_t* token = (zen_Token_t*)modifier->m_context;
-                    uint32_t modifiers = zen_TokenType_toModifiers(token->m_type);
-                    zen_Symbol_addModifiers(symbol, modifiers, modifier);
+                // NOTE: Functions declared in the compilation unit cannot have modifiers.
+                if (zen_Scope_isClassScope(currentScope)) {
+                    zen_ClassMemberContext_t* classMemberContext = (zen_ClassMemberContext_t*)node->m_parent->m_context;
+                    int32_t modifierCount = jtk_ArrayList_getSize(classMemberContext->m_modifiers);
+                    int32_t i;
+                    for (i = 0; i < modifierCount; i++) {
+                        zen_ASTNode_t* modifier =
+                            (zen_ASTNode_t*)jtk_ArrayList_getValue(classMemberContext->m_modifiers, i);
+                        zen_Token_t* token = (zen_Token_t*)modifier->m_context;
+                        uint32_t modifiers = zen_TokenType_toModifiers(token->m_type);
+                        zen_Symbol_addModifiers(symbol, modifiers, modifier);
+                    }
                 }
             }
         }

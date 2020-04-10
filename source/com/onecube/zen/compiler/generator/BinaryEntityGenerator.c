@@ -457,6 +457,10 @@ void zen_BinaryEntityGenerator_onExitCompilationUnit(zen_ASTListener_t* astListe
 
     /* Invalidate the current scope in the symbol table. */
     zen_SymbolTable_invalidateCurrentScope(generator->m_symbolTable);
+
+    if (generator->m_mainComponent != ZEN_AST_NODE_TYPE_CLASS_DECLARATION) {
+        zen_BinaryEntityGenerator_writeEntity(generator);
+    }
 }
 
 #include <stdio.h>
