@@ -5085,6 +5085,18 @@ void zen_BinaryEntityGenerator_onEnterExpression(zen_ASTListener_t* astListener,
 }
 
 void zen_BinaryEntityGenerator_onExitExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    zen_ExpressionContext_t* context = (zen_AssignmentExpressionContext_t*)node->m_context;
+    zen_Compiler_t* compiler = generator->m_compiler;
+    jtk_Logger_t* logger = compiler->m_logger;
+
+    /* Emit the pop instruction to clear the operand stack. Without the generation
+     * of this instruction, the operand stack will overflow.
+     */
+    zen_BinaryEntityBuilder_emitPop(generator->m_builder);
+
+    /* Log the emission of the `pop` instruction. */
+    jtk_Logger_debug(logger, "Emitted `pop`");
 }
 
 // assignmentExpression
@@ -7492,6 +7504,9 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
             }
             else if (zen_Scope_isLocalScope(enclosingScope)) {
                 if (zen_Symbol_isVariable(primarySymbol)) {
+                    /* Emit the duplicate instruction. */
+                    zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
+
                     /* Emit the store_a instruction. */
                     zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder,
                         primarySymbol->m_index);
