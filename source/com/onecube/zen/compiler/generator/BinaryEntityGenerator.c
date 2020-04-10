@@ -2505,6 +2505,20 @@ void zen_BinaryEntityGenerator_onEnterSimpleStatement(zen_ASTListener_t* astList
 }
 
 void zen_BinaryEntityGenerator_onExitSimpleStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
+    zen_SimpleStatementContext_t* context = (zen_SimpleStatementContext_t*)node->m_context;
+    zen_Compiler_t* compiler = generator->m_compiler;
+    jtk_Logger_t* logger = compiler->m_logger;
+
+    if (context->m_statement->m_type == ZEN_AST_NODE_TYPE_EXPRESSION) {
+        /* Emit the pop2 instruction to clear the operand stack. Without the generation
+        * of this instruction, the operand stack will overflow.
+        */
+        zen_BinaryEntityBuilder_emitPop2(generator->m_builder);
+
+        /* Log the emission of the `pop2` instruction. */
+        jtk_Logger_debug(logger, "Emitted `pop2`");
+    }
 }
 
 // statement
@@ -2512,7 +2526,8 @@ void zen_BinaryEntityGenerator_onExitSimpleStatement(zen_ASTListener_t* astListe
 void zen_BinaryEntityGenerator_onEnterStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // emptyStatement
@@ -5085,18 +5100,6 @@ void zen_BinaryEntityGenerator_onEnterExpression(zen_ASTListener_t* astListener,
 }
 
 void zen_BinaryEntityGenerator_onExitExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
-    zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    zen_ExpressionContext_t* context = (zen_AssignmentExpressionContext_t*)node->m_context;
-    zen_Compiler_t* compiler = generator->m_compiler;
-    jtk_Logger_t* logger = compiler->m_logger;
-
-    /* Emit the pop instruction to clear the operand stack. Without the generation
-     * of this instruction, the operand stack will overflow.
-     */
-    zen_BinaryEntityBuilder_emitPop(generator->m_builder);
-
-    /* Log the emission of the `pop` instruction. */
-    jtk_Logger_debug(logger, "Emitted `pop`");
 }
 
 // assignmentExpression

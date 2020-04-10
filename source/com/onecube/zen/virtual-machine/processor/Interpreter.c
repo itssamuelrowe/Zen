@@ -2345,7 +2345,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pop(currentStackFrame->m_operandStack);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `pop` (operand stack = %d)",
+                jtk_Logger_debug(interpreter->m_logger, "Executed instruction `pop` (operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2356,7 +2356,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_popEx(currentStackFrame->m_operandStack, 2);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `pop2` (operand stack = %d)",
+                jtk_Logger_debug(interpreter->m_logger, "Executed instruction `pop2` (operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
