@@ -500,7 +500,7 @@ void zen_Compiler_buildAST(zen_Compiler_t* compiler) {
                  * state, please make sure that the zen_Parser_reset() function
                  * is invoked.
                  */
-                // zen_Parser_reset(parser, tokens);
+                zen_Parser_reset(parser, tokens);
                 zen_Parser_compilationUnit(parser, compilationUnit);
                 compiler->m_compilationUnits[i] = compilationUnit;
 
