@@ -73,6 +73,8 @@ zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_new(
 
     generator->m_mainComponent = ZEN_AST_NODE_TYPE_UNKNOWN;
     generator->m_classPrepared = false;
+    generator->m_className = NULL;
+    generator->m_classNameSize = -1;
 
     zen_ASTListener_t* astListener = generator->m_astListener;
 
@@ -377,6 +379,10 @@ void zen_BinaryEntityGenerator_delete(zen_BinaryEntityGenerator_t* generator) {
         jtk_Memory_deallocate(generator->m_breakRecords);
     }
 
+    if (generator->m_className != NULL) {
+        jtk_CString_delete(generator->m_className);
+    }
+
     zen_ASTListener_delete(generator->m_astListener);
     jtk_Memory_deallocate(generator);
 }
@@ -398,6 +404,11 @@ void zen_BinaryEntityGenerator_reset(zen_BinaryEntityGenerator_t* generator,
     jtk_Assert_assertObject(generator, "The specified generator is null.");
 
     // zen_BinaryEntityBuilder_clear(generator->m_builder);
+
+    if (generator->m_className != NULL) {
+        jtk_CString_delete(generator->m_className);
+    }
+
     generator->m_symbolTable = symbolTable;
     generator->m_scopes = scopes;
     generator->m_compilationUnit = compilationUnit;
@@ -406,6 +417,8 @@ void zen_BinaryEntityGenerator_reset(zen_BinaryEntityGenerator_t* generator,
     generator->m_outputStream = outputStream;
     generator->m_mainComponent = ZEN_AST_NODE_TYPE_UNKNOWN;
     generator->m_classPrepared = false;
+    generator->m_className = NULL;
+    generator->m_classNameSize = -1;
 }
 
 // Event Handlers
@@ -932,6 +945,18 @@ int32_t jtk_CString_findLast_c(const uint8_t* string, int32_t size, int32_t code
 uint8_t* jtk_CString_substringEx(const uint8_t* string, int32_t size,
     int32_t startIndex, int32_t stopIndex);
 
+void zen_BinaryEntityGenerator_initializeClassName(zen_BinaryEntityGenerator_t* generator) {
+    zen_Compiler_t* compiler = generator->m_compiler;
+    const uint8_t* fileName = (const uint8_t*)jtk_ArrayList_getValue(
+        compiler->m_inputFiles, compiler->m_currentFileIndex);
+    int32_t size = jtk_CString_getSize(fileName);
+    int32_t slashIndex = jtk_CString_findLast_c(fileName, size, '/');
+    int32_t dotIndex = jtk_CString_findLast_c(fileName, size, '.');
+    generator->m_className = jtk_CString_substringEx(fileName, size, slashIndex + 1,
+        dotIndex);
+    generator->m_classNameSize = dotIndex - (slashIndex + 1);
+}
+
 void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
     zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
@@ -955,16 +980,9 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
         superclassIndexes[0] = zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
             generator->m_constantPoolBuilder, "zen/core/Object", 15);
 
-        zen_Compiler_t* compiler = generator->m_compiler;
-        const uint8_t* fileName = (const uint8_t*)jtk_ArrayList_getValue(
-            compiler->m_inputFiles, compiler->m_currentFileIndex);
-        int32_t size = jtk_CString_getSize(fileName);
-        int32_t slashIndex = jtk_CString_findLast_c(fileName, size, '/');
-        int32_t dotIndex = jtk_CString_findLast_c(fileName, size, '.');
-        uint8_t* className = jtk_CString_substringEx(fileName, size, slashIndex + 1,
-            dotIndex);
-        zen_BinaryEntityGenerator_prepareClass(generator, className, dotIndex - (slashIndex + 1),
-            superclassIndexes, superclassCount);
+        zen_BinaryEntityGenerator_initializeClassName(generator);
+        zen_BinaryEntityGenerator_prepareClass(generator, generator->m_className,
+            generator->m_classNameSize, superclassIndexes, superclassCount);
     }
 
     int32_t instructionChannelIndex = zen_BinaryEntityBuilder_addChannel(generator->m_builder);
@@ -7023,15 +7041,24 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                         zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)&primarySymbol->m_context.m_asFunction;
                         int32_t index = invokeStaticIndex;
                         if (zen_Modifier_hasStatic(primarySymbol->m_modifiers)) {
-                            // NOTE: I am assuming that only class members can be declared as static.
                             zen_Scope_t* enclosingScope = primarySymbol->m_enclosingScope;
-                            zen_Symbol_t* classSymbol = enclosingScope->m_symbol;
-                            zen_ASTNode_t* identifier = classSymbol->m_identifier;
-                            zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+                            const uint8_t* className = NULL;
+                            int32_t classNameSize = -1;
+                            if (zen_Scope_isClassScope(enclosingScope)) {
+                                zen_Symbol_t* classSymbol = enclosingScope->m_symbol;
+                                zen_ASTNode_t* identifier = classSymbol->m_identifier;
+                                zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
 
+                                className = identifierToken->m_text;
+                                classNameSize = identifierToken->m_length;
+                            }
+                            else {
+                                className = generator->m_className;
+                                classNameSize = generator->m_classNameSize;
+                            }
                             uint16_t identifierIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
-                                generator->m_constantPoolBuilder, identifierToken->m_text,
-                                identifierToken->m_length);
+                                    generator->m_constantPoolBuilder, className,
+                                    classNameSize);
 
                             // TODO: Should retrieve a constant pool index to a class entry.
                             zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);

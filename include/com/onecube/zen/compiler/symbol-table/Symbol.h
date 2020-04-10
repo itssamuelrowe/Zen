@@ -154,4 +154,6 @@ zen_Scope_t* zen_Symbol_getEnclosingScope(zen_Symbol_t* symbol);
  */
 zen_ASTNode_t* zen_Symbol_getIdentifier(zen_Symbol_t* symbol);
 
+void zen_Symbol_addModifiers(zen_Symbol_t* symbol, uint32_t modifiers);
+
 #endif /* COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_SYMBOL_H */

@@ -3516,7 +3516,7 @@ uint8_t zen_Interpreter_readByte(zen_Interpreter_t* interpreter) {
 }
 
 uint16_t zen_Interpreter_readShort(zen_Interpreter_t* interpreter) {
-zen_StackFrame_t* currentStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
+    zen_StackFrame_t* currentStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
     zen_InstructionAttribute_t* instructionAttribute = currentStackFrame->m_instructionAttribute;
 
     uint8_t byte0 = instructionAttribute->m_instructions[currentStackFrame->m_ip++];

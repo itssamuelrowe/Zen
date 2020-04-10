@@ -289,8 +289,11 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
                             (zen_ASTNode_t*)jtk_ArrayList_getValue(classMemberContext->m_modifiers, i);
                         zen_Token_t* token = (zen_Token_t*)modifier->m_context;
                         uint32_t modifiers = zen_TokenType_toModifiers(token->m_type);
-                        zen_Symbol_addModifiers(symbol, modifiers, modifier);
+                        zen_Symbol_addModifiers(symbol, modifiers);
                     }
+                }
+                else {
+                    zen_Symbol_addModifiers(symbol, ZEN_TOKEN_KEYWORD_STATIC);
                 }
             }
         }

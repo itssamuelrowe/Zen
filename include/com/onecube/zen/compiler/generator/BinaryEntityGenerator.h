@@ -123,6 +123,8 @@ struct zen_BinaryEntityGenerator_t {
 
     zen_ASTNodeType_t m_mainComponent;
     bool m_classPrepared;
+    uint8_t* m_className;
+    int32_t m_classNameSize;
 };
 
 /**
