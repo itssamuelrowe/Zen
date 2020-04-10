@@ -120,6 +120,9 @@ struct zen_BinaryEntityGenerator_t {
     int32_t m_breakRecordsCapacity;
     int32_t m_nextLoopLabel;
     int32_t m_currentLoopLabel;
+
+    zen_ASTNodeType_t m_mainComponent;
+    bool m_classPrepared;
 };
 
 /**

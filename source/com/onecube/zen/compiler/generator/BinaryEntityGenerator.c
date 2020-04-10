@@ -71,6 +71,9 @@ zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_new(
     generator->m_nextLoopLabel = 0;
     generator->m_currentLoopLabel = -1;
 
+    generator->m_mainComponent = ZEN_AST_NODE_TYPE_UNKNOWN;
+    generator->m_classPrepared = false;
+
     zen_ASTListener_t* astListener = generator->m_astListener;
 
     astListener->m_onVisitErrorNode = zen_BinaryEntityGenerator_onVisitErrorNode;
@@ -401,6 +404,8 @@ void zen_BinaryEntityGenerator_reset(zen_BinaryEntityGenerator_t* generator,
     generator->m_package = package;
     generator->m_packageSize = packageSize;
     generator->m_outputStream = outputStream;
+    generator->m_mainComponent = ZEN_AST_NODE_TYPE_UNKNOWN;
+    generator->m_classPrepared = false;
 }
 
 // Event Handlers
@@ -441,6 +446,8 @@ void zen_BinaryEntityGenerator_onEnterCompilationUnit(zen_ASTListener_t* astList
     generator->m_entityFile->m_version.m_majorVersion = 0x0000;
     /* Set the minor version of the target binary entity format. */
     generator->m_entityFile->m_version.m_minorVersion = 0x0001;
+
+    generator->m_mainComponent = ZEN_AST_NODE_TYPE_UNKNOWN;
 }
 
 void zen_BinaryEntityGenerator_onExitCompilationUnit(zen_ASTListener_t* astListener,
@@ -864,6 +871,63 @@ void zen_BinaryEntityGenerator_assignParameterIndexes(zen_BinaryEntityGenerator_
     }
 }
 
+void zen_BinaryEntityGenerator_prepareClass(zen_BinaryEntityGenerator_t* generator,
+    const uint8_t* name, int32_t nameSize, const int16_t* superclassIndexes,
+    int32_t superclassCount) {
+    uint8_t* reference = NULL;
+    uint8_t* reference0 = NULL;
+    int32_t referenceSize;
+    if (generator->m_package != NULL) {
+        uint8_t* strings[] = {
+            generator->m_package,
+            "/",
+            name
+        };
+        int32_t sizes[] = {
+            generator->m_packageSize,
+            1,
+            nameSize
+        };
+        reference = jtk_CString_joinAll(strings, sizes, 3, &referenceSize);
+        jtk_Arrays_replace_b(reference, referenceSize, '.', '/');
+        reference0 = reference;
+    }
+    else {
+        reference = name;
+        referenceSize = nameSize;
+    }
+
+    uint16_t flags = 0;
+    uint16_t referenceIndex =
+        zen_ConstantPoolBuilder_getUtf8EntryIndexEx(generator->m_constantPoolBuilder,
+        reference, referenceSize);
+
+    /* At this point, the reference is not required anymore. We have the index into
+     * the constant pool which represents it. Therefore, destroy it.
+     */
+    if (reference0 != NULL) {
+        jtk_CString_delete(reference0);
+    }
+
+    zen_Entity_t* entity = &generator->m_entityFile->m_entity;
+    entity->m_type = ZEN_ENTITY_TYPE_CLASS;
+    entity->m_flags = 0;
+    entity->m_reference = referenceIndex;
+    entity->m_superclassCount = superclassCount;
+    entity->m_superclasses = superclassIndexes;
+    entity->m_attributeTable.m_size = 0;
+    entity->m_fieldCount = 0;
+    entity->m_fields = NULL;
+    entity->m_functionCount = 0;
+    entity->m_functions = NULL;
+
+    generator->m_classPrepared = true;
+}
+
+int32_t jtk_CString_findLast_c(const uint8_t* string, int32_t size, int32_t codePoint);
+uint8_t* jtk_CString_substringEx(const uint8_t* string, int32_t size,
+    int32_t startIndex, int32_t stopIndex);
+
 void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
     zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
@@ -874,6 +938,30 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
 
     zen_Scope_t* scope = zen_ASTAnnotations_get(generator->m_scopes, node);
     zen_SymbolTable_setCurrentScope(generator->m_symbolTable, scope);
+
+    if ((generator->m_mainComponent != ZEN_AST_NODE_TYPE_CLASS_DECLARATION)
+        && !generator->m_classPrepared) {
+        /* The extends clause has not been explicitly written. Therefore,
+         * the compiler generates the default extends clause which inherits
+         * the zen.core.Object class.
+         */
+
+        int32_t superclassCount = 1;
+        uint16_t* superclassIndexes = jtk_Memory_allocate(uint16_t, 1);
+        superclassIndexes[0] = zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
+            generator->m_constantPoolBuilder, "zen/core/Object", 15);
+
+        zen_Compiler_t* compiler = generator->m_compiler;
+        const uint8_t* fileName = (const uint8_t*)jtk_ArrayList_getValue(
+            compiler->m_inputFiles, compiler->m_currentFileIndex);
+        int32_t size = jtk_CString_getSize(fileName);
+        int32_t slashIndex = jtk_CString_findLast_c(fileName, size, '/');
+        int32_t dotIndex = jtk_CString_findLast_c(fileName, size, '.');
+        uint8_t* className = jtk_CString_substringEx(fileName, size, slashIndex + 1,
+            dotIndex);
+        zen_BinaryEntityGenerator_prepareClass(generator, className, dotIndex - (slashIndex + 1),
+            superclassIndexes, superclassCount);
+    }
 
     int32_t instructionChannelIndex = zen_BinaryEntityBuilder_addChannel(generator->m_builder);
     zen_BinaryEntityBuilder_setActiveChannelIndex(generator->m_builder, instructionChannelIndex);
@@ -4859,45 +4947,13 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
     /* Update the current scope in the symbol table. */
     zen_SymbolTable_setCurrentScope(generator->m_symbolTable, scope);
 
+    generator->m_mainComponent = ZEN_AST_NODE_TYPE_CLASS_DECLARATION;
+
     zen_ASTNode_t* identifier = context->m_identifier;
     zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
-    uint8_t* reference = NULL;
-    uint8_t* reference0 = NULL;
-    int32_t referenceSize;
-    if (generator->m_package != NULL) {
-        uint8_t* strings[] = {
-            generator->m_package,
-            "/",
-            identifierToken->m_text
-        };
-        int32_t sizes[] = {
-            generator->m_packageSize,
-            1,
-            identifierToken->m_length
-        };
-        reference = jtk_CString_joinAll(strings, sizes, 3, &referenceSize);
-        jtk_Arrays_replace_b(reference, referenceSize, '.', '/');
-        reference0 = reference;
-    }
-    else {
-        reference = identifierToken->m_text;
-        referenceSize = identifierToken->m_length;
-    }
 
-    uint16_t flags = 0;
-    uint16_t referenceIndex =
-        zen_ConstantPoolBuilder_getUtf8EntryIndexEx(generator->m_constantPoolBuilder,
-        reference, referenceSize);
     uint16_t* superclassIndexes = NULL;
     uint16_t superclassCount = 0;
-
-    /* At this point, the reference is not required anymore. We have the index into
-     * the constant pool which represents it. Therefore, destroy it.
-     */
-    if (reference0 != NULL) {
-        jtk_CString_delete(reference0);
-    }
-
     if (context->m_classExtendsClause != NULL) {
         /* Retrieve the extends clause context to extract information about the
          * superclasses.
@@ -4956,17 +5012,8 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
             generator->m_constantPoolBuilder, "zen/core/Object", 15);
     }
 
-    zen_Entity_t* entity = &generator->m_entityFile->m_entity;
-    entity->m_type = ZEN_ENTITY_TYPE_CLASS;
-    entity->m_flags = 0;
-    entity->m_reference = referenceIndex;
-    entity->m_superclassCount = superclassCount;
-    entity->m_superclasses = superclassIndexes;
-    entity->m_attributeTable.m_size = 0;
-    entity->m_fieldCount = 0;
-    entity->m_fields = NULL;
-    entity->m_functionCount = 0;
-    entity->m_functions = NULL;
+    zen_BinaryEntityGenerator_prepareClass(generator, identifierToken->m_text,
+        identifierToken->m_length, superclassIndexes, superclassCount);
 }
 
 void zen_BinaryEntityGenerator_onExitClassDeclaration(zen_ASTListener_t* astListener,

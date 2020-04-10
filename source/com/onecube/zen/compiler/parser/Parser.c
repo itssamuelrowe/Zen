@@ -323,7 +323,7 @@ void zen_Parser_reset(zen_Parser_t* parser, zen_TokenStream_t* tokens) {
     parser->m_tokens = tokens;
     parser->m_followSetSize = 0;
     parser->m_recovery = false;
-    parser->m_previousComponent = ZEN_AST_NODE_TYPE_UNKNOWN;
+    parser->m_mainComponent = ZEN_AST_NODE_TYPE_UNKNOWN;
 }
 
 /*
@@ -795,11 +795,11 @@ void zen_Parser_componentDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) 
         }
     }
 
-    if (parser->m_previousComponent == ZEN_AST_NODE_TYPE_UNKNOWN) {
-        parser->m_previousComponent = component;
+    if (parser->m_mainComponent == ZEN_AST_NODE_TYPE_UNKNOWN) {
+        parser->m_mainComponent = component;
     }
     else {
-        if (parser->m_previousComponent != component) {
+        if (parser->m_mainComponent != component) {
             zen_ErrorHandler_handleSemanticalError(errorHandler, parser,
                 ZEN_ERROR_CODE_CANNOT_DECLARE_MULTIPLE_TYPES_OF_COMPONENT, lt1);
         }
