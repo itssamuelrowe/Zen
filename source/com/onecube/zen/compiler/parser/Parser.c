@@ -323,6 +323,7 @@ void zen_Parser_reset(zen_Parser_t* parser, zen_TokenStream_t* tokens) {
     parser->m_tokens = tokens;
     parser->m_followSetSize = 0;
     parser->m_recovery = false;
+    parser->m_previousComponent = ZEN_AST_NODE_TYPE_UNKNOWN;
 }
 
 /*
@@ -749,16 +750,22 @@ void zen_Parser_annotationAttribute(zen_Parser_t* parser, zen_ASTNode_t* node) {
  * componentDeclaration
  * :    functionDeclaration
  * |    classDeclaration
- * |    enumerationDeclaration
+ * // |    enumerationDeclaration
  * ;
  */
 void zen_Parser_componentDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) {
     zen_StackTrace_enter();
 
+    zen_Compiler_t* compiler = parser->m_compiler;
+    zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
     zen_ComponentDeclarationContext_t* context = zen_ComponentDeclarationContext_new(node);
 
-    switch (zen_TokenStream_la(parser->m_tokens, 1)) {
+    zen_ASTNodeType_t component = ZEN_AST_NODE_TYPE_UNKNOWN;
+    zen_Token_t* lt1 = zen_TokenStream_lt(parser->m_tokens, 1);
+    switch (lt1->m_type) {
         case ZEN_TOKEN_KEYWORD_FUNCTION: {
+            component = ZEN_AST_NODE_TYPE_FUNCTION_DECLARATION;
+
             zen_ASTNode_t* functionDeclaration = zen_ASTNode_new(node);
             context->m_component = functionDeclaration;
             zen_Parser_functionDeclaration(parser, functionDeclaration, 0);
@@ -766,6 +773,8 @@ void zen_Parser_componentDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) 
         }
 
         case ZEN_TOKEN_KEYWORD_CLASS: {
+            component = ZEN_AST_NODE_TYPE_CLASS_DECLARATION;
+
             zen_ASTNode_t* classDeclaration = zen_ASTNode_new(node);
             context->m_component = classDeclaration;
             zen_Parser_classDeclaration(parser, classDeclaration);
@@ -785,6 +794,17 @@ void zen_Parser_componentDeclaration(zen_Parser_t* parser, zen_ASTNode_t* node) 
             break;
         }
     }
+
+    if (parser->m_previousComponent == ZEN_AST_NODE_TYPE_UNKNOWN) {
+        parser->m_previousComponent = component;
+    }
+    else {
+        if (parser->m_previousComponent != component) {
+            zen_ErrorHandler_handleSemanticalError(errorHandler, parser,
+                ZEN_ERROR_CODE_CANNOT_DECLARE_MULTIPLE_TYPES_OF_COMPONENT, lt1);
+        }
+    }
+
 
     zen_StackTrace_exit();
 }

@@ -42,6 +42,7 @@ struct zen_Parser_t {
     int32_t m_followSetSize;
     int32_t m_followSetCapacity;
     bool m_recovery;
+    zen_ASTNodeType_t m_previousComponent;
 };
 
 /**

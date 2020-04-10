@@ -404,7 +404,8 @@ const uint8_t* zen_ErrorCode_messages[] = {
     "Redeclaration of symbol as catch parameter",
     "Redeclaration of symbol as class",
     "Unknown class",
-    "Redeclaration of symbol previously imported"
+    "Redeclaration of symbol previously imported",
+    "Cannot declare function and class in the same compilation unit"
 };
 
 void zen_Compiler_printErrors(zen_Compiler_t* compiler) {
