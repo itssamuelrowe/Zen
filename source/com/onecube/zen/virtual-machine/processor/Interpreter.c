@@ -75,6 +75,7 @@ zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* manager,
     interpreter->m_virtualMachine = virtualMachine;
     interpreter->m_state = 0;
     interpreter->m_exception = NULL;
+    interpreter->m_handlerStackFrame = NULL;
 
     return interpreter;
 }
@@ -133,12 +134,16 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             break;
         }
 
-        /* If the previous instruction caused the interpreter to move to the "exception thrown"
-         * state, the next instruction should be the instruction to handle the exception.
-         * Therefore, reset the interpreter state.
-         */
-        interpreter->m_state &= ~ZEN_INTERPRETER_STATE_EXCEPTION_THROWN;
-        interpreter->m_exception = NULL;
+        if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) != 0) {
+            if (interpreter->m_handlerStackFrame == currentStackFrame) {
+                interpreter->m_state &= ~ZEN_INTERPRETER_STATE_EXCEPTION_THROWN;
+                interpreter->m_exception = NULL;
+            }
+            else {
+                break;
+            }
+        }
+
         /* Destroy the stack frames that were traced. */
         // TODO: Move stopTracing somewhere more appropriate.
         zen_InvocationStack_stopTracing(interpreter->m_invocationStack);
@@ -4088,6 +4093,8 @@ bool zen_Interpreter_throw(zen_Interpreter_t* interpreter,
 
                         if (exceptionClass == filterClass) {
                             found = true;
+
+                            interpreter->m_handlerStackFrame = currentStackFrame;
 
                             /* Update the instruction pointer of the current stack frame to
                                 * the exception handler.

@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2020 Samuel Rowe
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,6 +53,7 @@ struct zen_Interpreter_t {
     zen_VirtualMachine_t* m_virtualMachine;
     uint32_t m_state;
     zen_Object_t* m_exception;
+    zen_StackFrame_t* m_handlerStackFrame;
 };
 
 /**
@@ -80,7 +81,7 @@ void zen_Interpreter_delete(zen_Interpreter_t* interpreter);
 void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
     zen_Object_t* object, zen_Function_t* constructor,
     jtk_Array_t* arguments);
-    
+
 /* Invoke Static Function */
 
 zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interpreter,
