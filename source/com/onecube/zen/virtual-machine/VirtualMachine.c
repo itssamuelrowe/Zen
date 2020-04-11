@@ -1133,114 +1133,114 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
         "range", 5, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_range);
 
     // Object ZenKernel.invoke(Object object, Object name)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/ZenKernel", 18,
         "invoke", 6, "(zen/core/Object):(zen/core/Object)(zen/core/Object)",
         52, zen_ZenKernel_invoke);
 
     // Object ZenKernel.invokeEx(Object object, Object name, Object ... arguments)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/ZenKernel", 18,
         "invokeEx", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)",
         70, zen_ZenKernel_invokeEx);
 
     // Object ZenKernel.invokeStatic(Object className, Object functionName, Object ... arguments)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/ZenKernel", 18,
         "invokeStatic", 12, "(zen/core/Object):(zen/core/Object)(zen/core/Object)",
         52, zen_ZenKernel_invokeStatic);
 
     // Object ZenKernel.invokeStaticEx(Object className, Object functionName, Object ... arguments)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/ZenKernel", 18,
         "invokeStaticEx", 14, "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)",
         70, zen_ZenKernel_invokeStaticEx);
 
     // Object ZenKernel.evaluate(Object operator, Object operand1, Object operand2)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/ZenKernel", 18,
         "evaluate", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)",
         69, zen_ZenKernel_evaluate);
 
     // Object ZenKernel.storeField(Object value, Object self, Object name)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/ZenKernel", 18,
         "storeField", 10, "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)",
         69, zen_ZenKernel_storeField);
 
     // Object ZenKernel.loadField(Object self, Object name)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "ZenKernel", 9,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/ZenKernel", 18,
         "loadField", 9, "(zen/core/Object):(zen/core/Object)(zen/core/Object)",
         52, zen_ZenKernel_loadField);
 
     // void String.new(value)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "String", 6,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/String", 15,
         "<initialize>", 12, "v:(zen/core/Object)", 19, zen_String_initialize);
 
     // String String.add(value1, value2)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "String", 6,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/String", 15,
         "add", 3, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_String_add);
 
     // String String.multiply(string, count)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "String", 6,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/String", 15,
         "multiply", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_String_multiply);
 
     // Boolean String.equals(string, count)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "String", 6,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/String", 15,
         "equals", 6, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_String_equals);
 
     // Boolean String.notEquals(string, count)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "String", 6,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/String", 15,
         "notEquals", 9, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_String_notEquals);
 
     // void Integer.new(value)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/Integer", 16,
         "<initialize>", 12, "v:(zen/core/Object)", 19, zen_Integer_initialize);
 
     // Integer Integer.add(value1, value2)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/Integer", 16,
         "add", 3, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_add);
 
     // Integer Integer.subtract(value1, value2)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/Integer", 16,
         "subtract", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_subtract);
 
     // Integer Integer.multiply(value1, value2)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/Integer", 16,
         "multiply", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_multiply);
 
     // Integer Integer.divide(value1, value2)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/Integer", 16,
         "divide", 6, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_divide);
 
     // Integer Integer.remainder(value1, value2)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/Integer", 16,
         "remainder", 9, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_remainder);
 
     // Boolean Integer.equals(value1, value2)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/Integer", 16,
         "equals", 6, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_equals);
 
     // Boolean Integer.notEquals(value1, value2)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/Integer", 16,
         "notEquals", 9, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_notEquals);
 
     // Boolean Integer.greater(value1, value2)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/Integer", 16,
         "greater", 7, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_greater);
 
     // Boolean Integer.greaterOrEqual(value1, value2)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/Integer", 16,
         "greaterOrEqual", 14, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_greaterOrEqual);
 
     // Boolean Integer.lesser(value1, value2)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/Integer", 16,
         "lesser", 6, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_lesser);
 
     // Boolean Integer.lesserOrEqual(value1, value2)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Integer", 7,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/Integer", 16,
         "lesserOrEqual", 13, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52, zen_Integer_lesserOrEqual);
 
     // void Boolean.new(value)
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Boolean", 7,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/Boolean", 16,
         "<initialize>", 12, "v:(zen/core/Object)", 19, zen_Boolean_initialize);
 
     // boolean Boolean.getValue()
-    zen_VirtualMachine_registerNativeFunction(virtualMachine, "Boolean", 7,
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/Boolean", 16,
         "getValue", 8, "(zen/core/Object):v", 19, zen_Boolean_getValue);
 
 

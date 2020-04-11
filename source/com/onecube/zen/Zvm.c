@@ -118,6 +118,8 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
             else {
                 mainClassDescriptor = arguments[i];
                 mainClassDescriptorSize = jtk_CString_getSize(mainClassDescriptor);
+
+                afterClass = true;
             }
         }
     }
