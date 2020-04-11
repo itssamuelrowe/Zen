@@ -77,6 +77,7 @@ struct zen_SymbolLoader_t {
     uint8_t* m_bytes;
     int32_t m_size;
     zen_ConstantPool_t m_constantPool;
+    zen_Symbol_t* m_symbol;
 };
 
 /**

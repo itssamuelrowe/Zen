@@ -61,6 +61,7 @@ zen_SymbolLoader_t* zen_SymbolLoader_new(zen_Compiler_t* compiler) {
     loader->m_size = -1;
     loader->m_constantPool.m_size = 0;
     loader->m_constantPool.m_entries = NULL;
+    loader->m_symbol = NULL;
 
     return loader;
 }
@@ -566,10 +567,21 @@ void zen_SymbolLoader_parseFunction(zen_SymbolLoader_t* loader) {
     // Descriptor Index
     uint16_t descriptorIndex = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
         (loader->m_bytes[loader->m_index++] & 0xFF);
+    zen_ConstantPoolUtf8_t* descriptor = loader->m_constantPool.m_entries[descriptorIndex];
 
     // Define function
-
-    printf("Function defined!\n");
+    zen_Symbol_t* classSymbol = loader->m_symbol;
+    zen_Scope_t* classScope = classSymbol->m_context.m_asClass.m_classScope;
+    zen_Symbol_t* functionSymbol = zen_Scope_resolve(classScope, descriptor->m_bytes);
+    if (functionSymbol != NULL) {
+        zen_FunctionSymbol_t* context = &functionSymbol->m_context.m_asFunction;
+        // zen_SymbolLoader_declareOverloadedFunction();
+    }
+    else {
+        functionSymbol = zen_Symbol_forFunction(NULL, classScope);
+        zen_Scope_defineEx(classScope, descriptor->m_bytes, descriptor->m_length,
+            functionSymbol);
+    }
 
     // Skip attribute table
     zen_SymbolLoader_skipAttributeTable(loader);
@@ -598,7 +610,6 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* loader, uint8_t* bytes,
     loader->m_bytes = bytes;
     loader->m_size = size;
 
-    zen_Symbol_t* symbol = NULL;
     if (loader->m_index + ZEN_FEB_HEADER_SIZE < size) {
         uint32_t magicNumber = ((loader->m_bytes[loader->m_index++] & 0xFF) << 24) |
                                ((loader->m_bytes[loader->m_index++] & 0xFF) << 16) |
@@ -640,9 +651,9 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* loader, uint8_t* bytes,
                 jtk_Arrays_replace_b(qualifiedName, descriptor->m_length, '/', '.');
 
                 zen_Scope_t* classScope = zen_Scope_forClass(NULL);
-                symbol = zen_Symbol_forClass(NULL, NULL, classScope, qualifiedName,
+                loader->m_symbol = zen_Symbol_forClass(NULL, NULL, classScope, qualifiedName,
                     descriptor->m_length);
-                classScope->m_symbol = symbol;
+                classScope->m_symbol = loader->m_symbol;
 
                 /* Skip attribute table */
                 zen_SymbolLoader_skipAttributeTable(loader);
@@ -677,6 +688,8 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* loader, uint8_t* bytes,
         }
     }
 
+    zen_Symbol_t* result = loader->m_symbol;
+
     /* Reset the symbol loader. */
     loader->m_index = 0;
     loader->m_bytes = NULL;
@@ -686,6 +699,7 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* loader, uint8_t* bytes,
     }
     loader->m_constantPool.m_size = 0;
     loader->m_constantPool.m_entries = NULL;
+    loader->m_symbol = NULL;
 
-    return symbol;
+    return result;
 }
