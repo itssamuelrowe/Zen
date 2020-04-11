@@ -1,0 +1,17 @@
+--break-closing-braces
+--break-one-line-headers
+--add-braces
+--style=java
+--indent=spaces=4
+--indent-switches
+--indent-after-parens
+--indent-labels
+--indent-preproc-block
+--indent-preproc-define
+--pad-oper
+--pad-comma
+--pad-header
+--unpad-paren
+--align-reference=type
+--align-pointer=type
+--attach-return-type
