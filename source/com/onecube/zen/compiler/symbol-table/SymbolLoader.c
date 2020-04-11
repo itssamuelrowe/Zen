@@ -28,17 +28,17 @@
 #include <jtk/core/CStringObjectAdapter.h>
 
 #include <com/onecube/zen/virtual-machine/feb/BinaryEntityFormat.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/constantPool->.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/constantPool->Class.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/constantPool->Double.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/constantPool->Field.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/constantPool->Float.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/constantPool->Function.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/constantPool->Integer.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/constantPool->Long.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/constantPool->String.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/constantPool->Tag.h>
-#include <com/onecube/zen/virtual-machine/feb/constant-pool/constantPool->Utf8.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPool.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolClass.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolDouble.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolField.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFloat.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFunction.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolInteger.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolLong.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolString.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolTag.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolUtf8.h>
 
 #include <com/onecube/zen/compiler/symbol-table/SymbolLoader.h>
 #include <com/onecube/zen/compiler/Compiler.h>
@@ -319,14 +319,14 @@ void zen_SymbolLoader_setIgnoreCorruptEntity(zen_SymbolLoader_t* loader,
 #define ZEN_FEB_HEADER_SIZE 12
 
 void zen_SymbolLoader_parseConstantPool(zen_SymbolLoader_t* loader) {
-    zen_constantPool->_t* constantPool = &loader->m_constantPool;
-    constantPool->->m_size = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
+    zen_ConstantPool_t* constantPool = &loader->m_constantPool;
+    constantPool->m_size = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
         (loader->m_bytes[loader->m_index++] & 0xFF);
-    constantPool->->m_entries = jtk_Memory_allocate(zen_constantPool->Entry_t*, size + 1);
-    constantPool->->m_entries[0] = NULL;
+    constantPool->m_entries = jtk_Memory_allocate(zen_ConstantPoolEntry_t*, loader->m_size + 1);
+    constantPool->m_entries[0] = NULL;
 
     int32_t i;
-    for (i = 1; i <= size; i++) {
+    for (i = 1; i <= constantPool->m_size; i++) {
         uint8_t tag = loader->m_bytes[loader->m_index++];
 
         switch (tag) {
@@ -336,14 +336,14 @@ void zen_SymbolLoader_parseConstantPool(zen_SymbolLoader_t* loader) {
                     ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
                     (loader->m_bytes[loader->m_index++] & 0xFF);
 
-                zen_constantPool->Integer_t* constantPool->Integer =
-                    jtk_Memory_allocate(zen_constantPool->Integer_t, 1);
-                constantPool->Integer->m_tag = ZEN_CONSTANT_POOL_TAG_INTEGER;
-                constantPool->Integer->m_bytes = value;
+                zen_ConstantPoolInteger_t* constantPoolInteger =
+                    jtk_Memory_allocate(zen_ConstantPoolInteger_t, 1);
+                constantPoolInteger->m_tag = ZEN_CONSTANT_POOL_TAG_INTEGER;
+                constantPoolInteger->m_bytes = value;
 
-                constantPool->.m_entries[i] = constantPool->Integer;
+                constantPool->m_entries[i] = constantPoolInteger;
 
-                jtk_Logger_debug(logger, "Parsed constant pool entry `zen_constantPool->Integer_t`, stored at index %d.", i);
+                jtk_Logger_debug(logger, "Parsed constant pool entry `zen_ConstantPoolInteger_t`, stored at index %d.", i);
 
                 break;
             }
@@ -358,14 +358,14 @@ void zen_SymbolLoader_parseConstantPool(zen_SymbolLoader_t* loader) {
                     ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
                     (loader->m_bytes[loader->m_index++] & 0xFF);
 
-                zen_constantPool->Long_t* constantPool->Long = jtk_Memory_allocate(zen_constantPool->Long_t, 1);
-                constantPool->Long->m_tag = ZEN_CONSTANT_POOL_TAG_LONG;
-                constantPool->Long->m_highBytes = highBytes;
-                constantPool->Long->m_lowBytes = lowBytes;
+                zen_ConstantPoolLong_t* constantPoolLong = jtk_Memory_allocate(zen_ConstantPoolLong_t, 1);
+                constantPoolLong->m_tag = ZEN_CONSTANT_POOL_TAG_LONG;
+                constantPoolLong->m_highBytes = highBytes;
+                constantPoolLong->m_lowBytes = lowBytes;
 
-                constantPool->.m_entries[i] = constantPool->Long;
+                constantPool->m_entries[i] = constantPoolLong;
 
-                // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed constant pool entry `zen_constantPool->Long_t`, stored at index %d.", index);
+                // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed constant pool entry `zen_ConstantPoolLong_t`, stored at index %d.", index);
 
                 break;
             }
@@ -376,13 +376,13 @@ void zen_SymbolLoader_parseConstantPool(zen_SymbolLoader_t* loader) {
                     ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
                     (loader->m_bytes[loader->m_index++] & 0xFF);
 
-                zen_constantPool->Float_t* constantPool->Float = jtk_Memory_allocate(zen_constantPool->Float_t, 1);
-                constantPool->Float->m_tag = ZEN_CONSTANT_POOL_TAG_FLOAT;
-                constantPool->Float->m_bytes = value;
+                zen_ConstantPoolFloat_t* constantPoolFloat = jtk_Memory_allocate(zen_ConstantPoolFloat_t, 1);
+                constantPoolFloat->m_tag = ZEN_CONSTANT_POOL_TAG_FLOAT;
+                constantPoolFloat->m_bytes = value;
 
-                constantPool->.m_entries[i] = constantPool->Float;
+                constantPool->m_entries[i] = constantPoolFloat;
 
-                // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed constant pool entry `zen_constantPool->Float_t`, stored at index %d.", index);
+                // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed constant pool entry `zen_ConstantPoolFloat_t`, stored at index %d.", index);
 
                 break;
             }
@@ -397,14 +397,14 @@ void zen_SymbolLoader_parseConstantPool(zen_SymbolLoader_t* loader) {
                     ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
                     (loader->m_bytes[loader->m_index++] & 0xFF);
 
-                zen_constantPool->Double_t* constantPool->Double = jtk_Memory_allocate(zen_constantPool->Double_t, 1);
-                constantPool->Double->m_tag = ZEN_CONSTANT_POOL_TAG_DOUBLE;
-                constantPool->Double->m_highBytes = highBytes;
-                constantPool->Double->m_lowBytes = lowBytes;
+                zen_ConstantPoolDouble_t* constantPoolDouble = jtk_Memory_allocate(zen_ConstantPoolDouble_t, 1);
+                constantPoolDouble->m_tag = ZEN_CONSTANT_POOL_TAG_DOUBLE;
+                constantPoolDouble->m_highBytes = highBytes;
+                constantPoolDouble->m_lowBytes = lowBytes;
 
-                constantPool->.m_entries[i] = constantPool->Double;
+                constantPool->m_entries[i] = constantPoolDouble;
 
-                // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed constant pool entry `zen_constantPool->Double_t`, stored at index %d.", index);
+                // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed constant pool entry `zen_ConstantPoolDouble_t`, stored at index %d.", index);
 
                 break;
             }
@@ -413,24 +413,25 @@ void zen_SymbolLoader_parseConstantPool(zen_SymbolLoader_t* loader) {
                 uint16_t length = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
                     (loader->m_bytes[loader->m_index++] & 0xFF);
                 /* The specification guarantees that an empty string is never stored in a constant pool.
-                    *
-                    * Although the speciication does not specify the bytes to be null-terminated,
-                    * the reference implementation of the compiler terminates UTF8 constant pool
-                    * entries for performance.
-                    */
+                 *
+                 * Although the speciication does not specify the bytes to be null-terminated,
+                 * the reference implementation of the compiler terminates UTF8 constant pool
+                 * entries for performance.
+                 */
 
                 uint8_t* value = jtk_Memory_allocate(uint8_t, length + 1);
                 value[length] = '\0';
-                jtk_Arrays_copyEx_b(bytes, size, index, value, length, 0, length);
+                jtk_Arrays_copyEx_b(loader->m_bytes, loader->m_size, loader->m_index,
+                    value, length, 0, length);
 
-                zen_constantPool->Utf8_t* constantPool->Utf8 = jtk_Memory_allocate(zen_constantPool->Utf8_t, 1);
-                constantPool->Utf8->m_tag = ZEN_CONSTANT_POOL_TAG_UTF8;
-                constantPool->Utf8->m_length = length;
-                constantPool->Utf8->m_bytes = value;
+                zen_ConstantPoolUtf8_t* constantPoolUtf8 = jtk_Memory_allocate(zen_ConstantPoolUtf8_t, 1);
+                constantPoolUtf8->m_tag = ZEN_CONSTANT_POOL_TAG_UTF8;
+                constantPoolUtf8->m_length = length;
+                constantPoolUtf8->m_bytes = value;
 
-                constantPool->.m_entries[i] = constantPool->Utf8;
+                constantPool->m_entries[i] = constantPoolUtf8;
 
-                jtk_Logger_debug(logger, "Parsed constant pool entry `zen_constantPool->Utf8_t`, stored at index %d.", index);
+                jtk_Logger_debug(logger, "Parsed constant pool entry `zen_ConstantPoolUtf8_t`, stored at index %d.", index);
 
                 break;
             }
@@ -439,13 +440,13 @@ void zen_SymbolLoader_parseConstantPool(zen_SymbolLoader_t* loader) {
                 uint16_t stringIndex = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
                     (loader->m_bytes[loader->m_index++] & 0xFF);
 
-                zen_constantPool->String_t* constantPool->String = jtk_Memory_allocate(zen_constantPool->String_t, 1);
-                constantPool->String->m_tag = ZEN_CONSTANT_POOL_TAG_STRING;
-                constantPool->String->m_stringIndex = stringIndex;
+                zen_ConstantPoolString_t* constantPoolString = jtk_Memory_allocate(zen_ConstantPoolString_t, 1);
+                constantPoolString->m_tag = ZEN_CONSTANT_POOL_TAG_STRING;
+                constantPoolString->m_stringIndex = stringIndex;
 
-                constantPool->.m_entries[i] = constantPool->String;
+                constantPool->m_entries[i] = constantPoolString;
 
-                // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed constant pool entry `zen_constantPool->String_t`, stored at index %d.", index);
+                // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed constant pool entry `zen_ConstantPoolString_t`, stored at index %d.", index);
 
                 break;
             }
@@ -458,15 +459,15 @@ void zen_SymbolLoader_parseConstantPool(zen_SymbolLoader_t* loader) {
                 uint16_t nameIndex = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
                     (loader->m_bytes[loader->m_index++] & 0xFF);
 
-                zen_constantPool->Function_t* constantPool->Function = jtk_Memory_allocate(zen_constantPool->Function_t, 1);
-                constantPool->Function->m_tag = ZEN_CONSTANT_POOL_TAG_FUNCTION;
-                constantPool->Function->m_classIndex = classIndex;
-                constantPool->Function->m_descriptorIndex = descriptorIndex;
-                constantPool->Function->m_nameIndex = nameIndex;
+                zen_ConstantPoolFunction_t* constantPoolFunction = jtk_Memory_allocate(zen_ConstantPoolFunction_t, 1);
+                constantPoolFunction->m_tag = ZEN_CONSTANT_POOL_TAG_FUNCTION;
+                constantPoolFunction->m_classIndex = classIndex;
+                constantPoolFunction->m_descriptorIndex = descriptorIndex;
+                constantPoolFunction->m_nameIndex = nameIndex;
 
-                constantPool->.m_entries[i] = constantPool->Function;
+                constantPool->m_entries[i] = constantPoolFunction;
 
-                // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed constant pool entry `zen_constantPool->Function_t`, stored at index %d.", index);
+                // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed constant pool entry `zen_ConstantPoolFunction_t`, stored at index %d.", index);
 
                 break;
             }
@@ -477,14 +478,14 @@ void zen_SymbolLoader_parseConstantPool(zen_SymbolLoader_t* loader) {
                 uint16_t nameIndex = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
                     (loader->m_bytes[loader->m_index++] & 0xFF);
 
-                zen_constantPool->Field_t* constantPool->Field = jtk_Memory_allocate(zen_constantPool->Field_t, 1);
-                constantPool->Field->m_tag = ZEN_CONSTANT_POOL_TAG_FIELD;
-                constantPool->Field->m_descriptorIndex = descriptorIndex;
-                constantPool->Field->m_nameIndex = nameIndex;
+                zen_ConstantPoolField_t* constantPoolField = jtk_Memory_allocate(zen_ConstantPoolField_t, 1);
+                constantPoolField->m_tag = ZEN_CONSTANT_POOL_TAG_FIELD;
+                constantPoolField->m_descriptorIndex = descriptorIndex;
+                constantPoolField->m_nameIndex = nameIndex;
 
-                constantPool->.m_entries[i] = constantPool->Field;
+                constantPool->m_entries[i] = constantPoolField;
 
-                // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed constant pool entry `zen_constantPool->Field_t`, stored at index %d.", index);
+                // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed constant pool entry `zen_ConstantPoolField_t`, stored at index %d.", index);
 
                 break;
             }
@@ -493,13 +494,13 @@ void zen_SymbolLoader_parseConstantPool(zen_SymbolLoader_t* loader) {
                 uint16_t nameIndex = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
                     (loader->m_bytes[loader->m_index++] & 0xFF);
 
-                zen_constantPool->Class_t* constantPool->Class = jtk_Memory_allocate(zen_constantPool->Class_t, 1);
-                constantPool->Class->m_tag = ZEN_CONSTANT_POOL_TAG_CLASS;
-                constantPool->Class->m_nameIndex = nameIndex;
+                zen_ConstantPoolClass_t* constantPoolClass = jtk_Memory_allocate(zen_ConstantPoolClass_t, 1);
+                constantPoolClass->m_tag = ZEN_CONSTANT_POOL_TAG_CLASS;
+                constantPoolClass->m_nameIndex = nameIndex;
 
-                constantPool->.m_entries[i] = constantPool->Class;
+                constantPool->m_entries[i] = constantPoolClass;
 
-                // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed constant pool entry `zen_constantPool->Class_t`, stored at index %d.", index);
+                // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed constant pool entry `zen_ConstantPoolClass_t`, stored at index %d.", index);
 
                 break;
             }
@@ -553,8 +554,8 @@ void zen_SymbolLoader_parseFunction(zen_SymbolLoader_t* loader) {
         (loader->m_bytes[loader->m_index++] & 0xFF);
 
     // Descriptor Index
-    uint16_t descriptorIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
-    functionEntity->m_descriptorIndex = descriptorIndex;
+    uint16_t descriptorIndex = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
+        (loader->m_bytes[loader->m_index++] & 0xFF);
 
     // Skip attribute table
     zen_SymbolLoader_skipAttributeTable(loader);
@@ -565,6 +566,9 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* loader, uint8_t* bytes,
     zen_Compiler_t* compiler = loader->m_compiler;
     zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
     jtk_Logger_t* logger = compiler->m_logger;
+
+    loader->m_bytes = bytes;
+    loader->m_size = size;
 
     if (loader->m_index + ZEN_FEB_HEADER_SIZE < size) {
         uint32_t magicNumber = ((loader->m_bytes[loader->m_index++] & 0xFF) << 24) |
@@ -612,7 +616,7 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* loader, uint8_t* bytes,
                     (loader->m_bytes[loader->m_index++] & 0xFF);
                 int32_t j;
                 for (j = 0; j < fieldCount; j++) {
-                    zen_SymbolLoader_parseField(parser);
+                    zen_SymbolLoader_parseField(loader);
                 }
 
                 /* Parse functions
@@ -623,15 +627,15 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* loader, uint8_t* bytes,
                     (loader->m_bytes[loader->m_index++] & 0xFF);
                 int32_t k;
                 for (k = 0; k < functionCount; k++) {
-                    zen_SymbolLoader_parseFunction(parser);
+                    zen_SymbolLoader_parseFunction(loader);
                 }
             }
             else {
-                zen_ErrorHandler_handleGeneralError(errorHandler, ZEN_ERROR_CODE_INVALID_FEB_VERSION);
+                zen_ErrorHandler_handleGeneralError(errorHandler, loader, ZEN_ERROR_CODE_INVALID_FEB_VERSION);
             }
         }
         else {
-            zen_ErrorHandler_handleGeneralError(errorHandler, ZEN_ERROR_CODE_CORRUPTED_BINARY_ENTITY);
+            zen_ErrorHandler_handleGeneralError(errorHandler, loader, ZEN_ERROR_CODE_CORRUPTED_BINARY_ENTITY);
         }
     }
 

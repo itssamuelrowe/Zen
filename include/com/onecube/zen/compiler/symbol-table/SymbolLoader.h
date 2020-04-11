@@ -74,6 +74,8 @@ struct zen_SymbolLoader_t {
 
     int32_t m_index;
     uint8_t* m_bytes;
+    int32_t m_size;
+    zen_ConstantPool_t m_constantPool;
 };
 
 /**
@@ -125,7 +127,7 @@ zen_Symbol_t* zen_SymbolLoader_loadSymbol(zen_SymbolLoader_t* loader,
  *
  * @memberof SymbolLoader
  */
-zen_EntityFile_t* zen_SymbolLoader_loadEntityFromHandle(zen_SymbolLoader_t* loader,
+zen_Symbol_t* zen_SymbolLoader_loadEntityFromHandle(zen_SymbolLoader_t* loader,
     jtk_PathHandle_t* handle);
 
 /**
@@ -137,7 +139,7 @@ zen_EntityFile_t* zen_SymbolLoader_loadEntityFromHandle(zen_SymbolLoader_t* load
 zen_Symbol_t* zen_SymbolLoader_loadSymbolFromHandle(zen_SymbolLoader_t* loader,
     jtk_PathHandle_t* handle);
 
-zen_Symbol_t* zen_SymbolLoader_parse(zen_Symbol_t* symbolLoader, uint8_t* bytes,
+zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* symbolLoader, uint8_t* bytes,
     int32_t size);
 
 // Ignore Corrupt Entity
