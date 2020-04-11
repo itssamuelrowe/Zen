@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
+ * Copyright 2018-2020 Samuel Rowe
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -154,6 +154,8 @@ void zen_OperandStack_pushReference(zen_OperandStack_t* operandStack, uintptr_t 
  */
 uintptr_t zen_OperandStack_popReference(zen_OperandStack_t* operandStack);
 
+int32_t zen_OperandStack_pop(zen_OperandStack_t* operandStack);
+int64_t zen_OperandStack_popEx(zen_OperandStack_t* operandStack);
 
 /* Swap */
 
@@ -161,5 +163,9 @@ uintptr_t zen_OperandStack_popReference(zen_OperandStack_t* operandStack);
  * @memberof OperandStack
  */
 void zen_OperandStack_swap(zen_OperandStack_t* operandStack);
+
+// #define zen_OperandStack_pop(stack) (stack)->m_values[--(stack)->m_size]
+// #define zen_OperandStack_popEx(stack) (((uint64_t)((stack)->m_values[--(stack)->m_size]) << 32L) | (stack)->m_values[--(stack)->m_size])
+// #define zen_OperandStack_popReference(stack) (uintptr_t)(stack->m_values[--stack->m_size] | (((uint64_t)(stack->m_values[--stack->m_size]) << 32L)))
 
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_PROCESSOR_OPERAND_STACK_H */

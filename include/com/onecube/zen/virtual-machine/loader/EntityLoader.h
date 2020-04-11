@@ -1,12 +1,12 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
- *
+ * Copyright 2018-2020 Samuel Rowe
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,9 +40,10 @@
 #define ZEN_ENTITY_LOADER_DEFAULT_ENTITIES_MAP_CAPCITY 128
 
 /* A small experiment on a deployed project written in a certain virtual
- * machine powered language revealed that on an average most binary files
- * are 3 kilobytes in size. The buffer size was evaluated to reduce the cache
- * misses and increase the cache hits in the buffered input stream.
+ * machine that powers my favorite language revealed that on an average
+ * most binary files are 3 kilobytes in size. The buffer size was evaluated
+ * to reduce the cache misses and increase the cache hits in the buffered
+ * input stream.
  */
 #define ZEN_ENTITY_LOADER_BUFFER_SIZE (3 * 1024)
 
@@ -71,7 +72,7 @@ struct zen_EntityLoader_t {
      * Cache to store entities loaded previously.
      */
     jtk_HashMap_t* m_entities;
-
+    
     zen_AttributeParseRules_t* m_attributeParseRules;
 };
 
@@ -99,7 +100,8 @@ void zen_EntityLoader_delete(zen_EntityLoader_t* loader);
  *
  * @memberof EntityLoader
  */
-zen_EntityFile_t* zen_EntityLoader_findEntity(zen_EntityLoader_t* loader, const uint8_t* descriptor);
+zen_EntityFile_t* zen_EntityLoader_findEntity(zen_EntityLoader_t* loader,
+    const uint8_t* descriptor, int32_t descriptorSize);
 
 /**
  * It tries to find a previously loaded class with the specified descriptor in
@@ -107,7 +109,8 @@ zen_EntityFile_t* zen_EntityLoader_findEntity(zen_EntityLoader_t* loader, const 
  *
  * @memberof EntityLoader
  */
-zen_EntityFile_t* zen_EntityLoader_getEntity(zen_EntityLoader_t* loader, const uint8_t* descriptor);
+zen_EntityFile_t* zen_EntityLoader_getEntity(zen_EntityLoader_t* loader,
+    const uint8_t* descriptor, int32_t descriptorSize);
 /**
  * It tries to load a class with the specified descriptor from a physical
  * description, i.e., a binary entity. It fails if a class was previously
@@ -115,7 +118,8 @@ zen_EntityFile_t* zen_EntityLoader_getEntity(zen_EntityLoader_t* loader, const u
  *
  * @memberof EntityLoader
  */
-zen_EntityFile_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader, const uint8_t* descriptor);
+zen_EntityFile_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader,
+    const uint8_t* descriptor, int32_t descriptorSize);
 
 // Load Class From
 
@@ -142,7 +146,7 @@ zen_EntityFile_t* zen_EntityLoader_loadEntityFromHandle(zen_EntityLoader_t* load
 bool zen_EntityLoader_shouldIgnoreCorruptEntity(zen_EntityLoader_t* loader);
 void zen_EntityLoader_setIgnoreCorruptEntity(zen_EntityLoader_t* loader, bool ignoreCorruptEntity);
 
-bool zen_EntityLoader_addDirectory(zen_EntityLoader_t* loader, uint8_t* directory,
+bool zen_EntityLoader_addDirectory(zen_EntityLoader_t* loader, const uint8_t* directory,
     int32_t directorySize);
 
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_LOADER_ENTITY_LOADER_H */

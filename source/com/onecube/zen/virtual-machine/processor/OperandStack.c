@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
+ * Copyright 2018-2020 Samuel Rowe
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,6 +80,12 @@ int32_t zen_OperandStack_getCapacity(zen_OperandStack_t* stack) {
 
 void zen_OperandStack_duplicate(zen_OperandStack_t* stack) {
     jtk_Assert_assertObject(stack, "The specified operand stack is null.");
+
+    // TODO: Duplciate should work with 4 bytes!
+
+    stack->m_values[stack->m_size] = stack->m_values[stack->m_size - 2];
+    stack->m_values[stack->m_size + 1] = stack->m_values[stack->m_size - 1];
+    stack->m_size += 2;
 }
 
 void zen_OperandStack_duplicateX1(zen_OperandStack_t* stack) {
@@ -182,7 +188,7 @@ uintptr_t zen_OperandStack_peekReference(zen_OperandStack_t* stack) {
         ZEN_OPERAND_STACK_REFERENCE_SLOT_COUNT), "Operand stack underflow");
 
     uintptr_t result = 0;
-        /* A null reference is represented with the integer value of 0. */
+    /* A null reference is represented with the integer value of 0. */
     switch (ZEN_OPERAND_STACK_REFERENCE_SLOT_COUNT) {
         case ZEN_OPERAND_STACK_REFERENCE_SLOT_COUNT_1: {
             result = (uintptr_t)stack->m_values[stack->m_size - 1];

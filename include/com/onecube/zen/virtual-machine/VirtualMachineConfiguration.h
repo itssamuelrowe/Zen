@@ -1,12 +1,12 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
- *
+ * Copyright 2018-2020 Samuel Rowe
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@
 
 #include <jtk/collection/list/ArrayList.h>
 #include <jtk/collection/map/HashMap.h>
+#include <jtk/log/LogLevel.h>
 
 #include <com/onecube/zen/Configuration.h>
 
@@ -37,6 +38,7 @@
 struct zen_VirtualMachineConfiguration_t {
     jtk_ArrayList_t* m_entityDirectories;
     jtk_HashMap_t* m_variables;
+    jtk_LogLevel_t m_logLevel;
 };
 
 /**

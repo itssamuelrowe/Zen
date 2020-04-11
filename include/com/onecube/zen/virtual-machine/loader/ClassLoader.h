@@ -1,12 +1,12 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
- *
+ * Copyright 2018-2020 Samuel Rowe
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,6 +44,7 @@
 struct zen_ClassLoader_t {
     zen_EntityLoader_t* m_entityLoader;
     jtk_HashMap_t* m_classes;
+    zen_VirtualMachine_t* m_virtualMachine;
 };
 
 /**
@@ -53,7 +54,8 @@ typedef struct zen_ClassLoader_t zen_ClassLoader_t;
 
 // Constructor
 
-zen_ClassLoader_t* zen_ClassLoader_new(zen_EntityLoader_t* entityLoader);
+zen_ClassLoader_t* zen_ClassLoader_new(
+    zen_VirtualMachine_t* virtualMachine, zen_EntityLoader_t* entityLoader);
 
 // Destructor
 
@@ -61,8 +63,11 @@ void zen_ClassLoader_delete(zen_ClassLoader_t* classLoader);
 
 // Class
 
+zen_Class_t* zen_ClassLoader_findClassEx(zen_ClassLoader_t* classLoader,
+    const uint8_t* descriptor, int32_t size);
+    
 zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
-    const uint8_t* descriptor);
+    const uint8_t* descriptor, int32_t descriptorSize);
 
 // Load
 
@@ -71,6 +76,6 @@ zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
  * previously loaded. This behavior can cause memory leaks if used incorrectly.
  */
 zen_Class_t* zen_ClassLoader_loadFromEntityFile(zen_ClassLoader_t* classLoader,
-    uint8_t* descriptor, int32_t descriptorSize, zen_EntityFile_t* entityFile);
-
+    const uint8_t* descriptor, int32_t descriptorSize, zen_EntityFile_t* entityFile);
+    
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_LOADER_CLASS_LOADER_H */

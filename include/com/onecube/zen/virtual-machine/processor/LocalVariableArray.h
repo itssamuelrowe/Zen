@@ -1,12 +1,12 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
- *
+ * Copyright 2018-2020 Samuel Rowe
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,12 @@
 /*******************************************************************************
  * LocalVariableArray                                                          *
  *******************************************************************************/
+
+#define ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT_1 1
+#define ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT_2 2
+#define ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT (sizeof (void*) <= 4)? \
+    ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT_1 : ((sizeof (void*) <= 8)? \
+    ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT_2 : zen_LocalVariableArray_referenceSlotCountError())
 
 /**
  * @class LocalVariableArray
@@ -103,5 +109,17 @@ void zen_LocalVariableArray_setDouble(zen_LocalVariableArray_t* array, int32_t i
  * @memberof LocalVariableArray
  */
 double zen_LocalVariableArray_getDouble(zen_LocalVariableArray_t* array, int32_t index);
+
+/* Reference */
+
+uintptr_t zen_LocalVariableArray_getReference(zen_LocalVariableArray_t* localVariableArray,
+    int32_t index);
+
+void zen_LocalVariableArray_setReference(zen_LocalVariableArray_t* localVariableArray,
+    int32_t index, uintptr_t reference);
+
+/* Size */
+
+int32_t zen_LocalVariableArray_getSize(zen_LocalVariableArray_t* localVariableArray);
 
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_PROCESSOR_LOCAL_VARIABLE_ARRAY_H */

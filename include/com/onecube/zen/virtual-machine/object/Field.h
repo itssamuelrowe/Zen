@@ -1,12 +1,12 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
- *
+ * Copyright 2018-2020 Samuel Rowe
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,6 +42,8 @@ struct zen_Field_t {
     uint8_t* m_descriptor;
     int32_t m_descriptorSize;
     zen_Class_t* m_class;
+    int32_t m_offset;
+    zen_FieldEntity_t* m_entity;
 };
 
 /**
@@ -51,8 +53,8 @@ typedef struct zen_Field_t zen_Field_t;
 
 // Constructor
 
-zen_Field_t* zen_Field_newFromFieldEntity(zen_Class_t* class0,
-    zen_FieldEntity_t* fieldEntity);
+zen_Field_t* zen_Field_new(zen_Class_t* class0, 
+    zen_FieldEntity_t* fieldEntity, int32_t offset);
 
 // Destructor
 

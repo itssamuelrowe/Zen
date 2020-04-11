@@ -1,12 +1,12 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
- *
+ * Copyright 2018-2020 Samuel Rowe
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -50,11 +50,11 @@ void zen_PrimaryMemoryManager_delete(zen_PrimaryMemoryManager_t* primaryMemoryMa
 /* Allocate */
 
 uint8_t* zen_PrimaryMemoryManager_allocateRawPrimitiveArray(
-    zen_PrimaryMemoryManager_t* primaryMemoryManager, zen_PrimitiveType_t type,
+    zen_PrimaryMemoryManager_t* primaryMemoryManager, zen_Type_t type,
     int32_t length);
 
 uint8_t* zen_PrimaryMemoryManager_allocatePrimitiveArray(
-    zen_PrimaryMemoryManager_t* primaryMemoryManager, zen_PrimitiveType_t type,
+    zen_PrimaryMemoryManager_t* primaryMemoryManager, zen_Type_t type,
     int32_t length);
 
 uint8_t* zen_PrimaryMemoryManager_allocateBooleanArray(

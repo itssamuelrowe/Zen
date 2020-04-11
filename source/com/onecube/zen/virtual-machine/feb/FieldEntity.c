@@ -30,7 +30,6 @@ zen_FieldEntity_t* zen_FieldEntity_new(uint16_t flags, uint16_t nameIndex,
     entity->m_flags = flags;
     entity->m_nameIndex = nameIndex;
     entity->m_descriptorIndex = descriptorIndex;
-    entity->m_attributeTable.m_size = 0;
     
     return entity;
 }

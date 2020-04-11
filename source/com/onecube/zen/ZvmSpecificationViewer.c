@@ -1,12 +1,12 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
- *
+ * Copyright 2018-2020 Samuel Rowe
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,8 +15,8 @@
  */
 
 #include <com/onecube/zen/feb/Instruction.h>
-#include <com/onecube/zen/core/Integer.h>
-#include <com/onecube/zen/CString.h>
+#include <jtk/core/Integer.h>
+#include <jtk/core/CString.h>
 
 #define ZEN_ZVM_SPECIFICATION_VIEWER_MAJOR_VERSION 1
 #define ZEN_ZVM_SPECIFICATION_VIEWER_MINOR_VERSION 0

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
+ * Copyright 2018-2020 Samuel Rowe
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,8 @@ typedef struct zen_VirtualMachine_t zen_VirtualMachine_t;
  * Interpreter                                                                 *
  *******************************************************************************/
 
+#define ZEN_INTERPRETER_STATE_EXCEPTION_THROWN (1 << 0)
+
 /**
  * @class Interpreter
  * @ingroup zen_vm_processor
@@ -49,6 +51,9 @@ struct zen_Interpreter_t {
     zen_ProcessorThread_t* m_processorThread;
     jtk_Logger_t* m_logger;
     zen_VirtualMachine_t* m_virtualMachine;
+    uint32_t m_state;
+    zen_Object_t* m_exception;
+    zen_StackFrame_t* m_handlerStackFrame;
 };
 
 /**
@@ -71,14 +76,38 @@ zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* memoryManager,
  */
 void zen_Interpreter_delete(zen_Interpreter_t* interpreter);
 
+/* Invoke Constructor */
+
+void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
+    zen_Object_t* object, zen_Function_t* constructor,
+    jtk_Array_t* arguments);
+
 /* Invoke Static Function */
+
+zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interpreter,
+    zen_Function_t* function, jtk_Array_t* arguments);
 
 void zen_Interpreter_invokeStaticFunctionEx(zen_Interpreter_t* interpreter,
     zen_Function_t* function, jtk_VariableArguments_t variableArguments);
+
+/* Invoke Virtual Function */
+
+zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpreter,
+    zen_Function_t* function, zen_Object_t* object, jtk_Array_t* arguments);
+
+/* Load Arguments */
+
+void zen_Interpreter_loadArguments(zen_Interpreter_t* interpreter,
+    zen_Function_t* function, zen_LocalVariableArray_t* array,
+    jtk_Array_t* arguments, bool instance);
 
 /* Read */
 
 uint8_t zen_Interpreter_readByte(zen_Interpreter_t* interpreter);
 uint16_t zen_Interpreter_readShort(zen_Interpreter_t* interpreter);
+
+/* Throw */
+
+bool zen_Interpreter_throw(zen_Interpreter_t* interpreter, zen_Object_t* exception);
 
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_PROCESSOR_INTERPRETER_H */

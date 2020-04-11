@@ -1,12 +1,12 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
- *
+ * Copyright 2018-2020 Samuel Rowe
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,17 +17,12 @@
 // Sunday, September 30, 2018
 
 #include <jtk/core/Assert.h>
+#include <jtk/collection/array/Arrays.h>
 #include <com/onecube/zen/virtual-machine/processor/LocalVariableArray.h>
 
 /*******************************************************************************
  * LocalVariableArray                                                          *
  *******************************************************************************/
-
-#define ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT_1 1
-#define ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT_2 2
-#define ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT (sizeof (void*) <= 4)? \
-    ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT_1 : ((sizeof (void*) <= 8)? \
-    ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT_2 : zen_LocalVariableArray_referenceSlotCountError())
 
 int32_t zen_LocalVariableArray_referenceSlotCountError() {
     fprintf(stderr, "[internal error] Pointer type occupies more than 8 bytes. A reference cannot occupy more than two slots in the local variable array.\n");
@@ -47,8 +42,15 @@ int32_t zen_LocalVariableArray_referenceSlotCountError() {
  */
 zen_LocalVariableArray_t* zen_LocalVariableArray_new(int32_t size) {
     zen_LocalVariableArray_t* localVariableArray = jtk_Memory_allocate(zen_LocalVariableArray_t, 1);
-    localVariableArray->m_values = (size > 0)? jtk_Memory_allocate(uint32_t, size) : NULL;
+    localVariableArray->m_values = NULL;
     localVariableArray->m_size = size;
+
+    if (size > 0) {
+        uint32_t* values = jtk_Memory_allocate(uint32_t, size);
+        jtk_Arrays_fill_i(values, size, 0);
+
+        localVariableArray->m_values = values;
+    }
 
     return localVariableArray;
 }

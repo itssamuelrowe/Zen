@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
+ * Copyright 2018-2020 Samuel Rowe
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,10 @@
 
 #include <jtk/collection/Iterator.h>
 #include <jtk/collection/array/Array.h>
+#include <jtk/collection/array/Arrays.h>
 #include <jtk/collection/list/DoublyLinkedList.h>
+#include <jtk/core/CStringObjectAdapter.h>
+#include <jtk/core/CString.h>
 #include <jtk/fs/Path.h>
 #include <jtk/fs/PathHandle.h>
 #include <jtk/fs/FileInputStream.h>
@@ -32,7 +35,7 @@
  *******************************************************************************/
 
 zen_EntityLoader_t* zen_EntityLoader_new() {
-    jtk_ObjectAdapter_t* stringObjectAdapter = jtk_StringObjectAdapter_getInstance();
+    jtk_ObjectAdapter_t* stringObjectAdapter = jtk_CStringObjectAdapter_getInstance();
 
     zen_EntityLoader_t* loader = jtk_Memory_allocate(zen_EntityLoader_t, 1);
     loader->m_directories = jtk_DoublyLinkedList_new();
@@ -46,12 +49,12 @@ zen_EntityLoader_t* zen_EntityLoader_new() {
 }
 
 zen_EntityLoader_t* zen_EntityLoader_newWithEntityDirectories(jtk_Iterator_t* entityDirectoryIterator) {
-    jtk_ObjectAdapter_t* stringObjectAdapter = jtk_StringObjectAdapter_getInstance();
+    // jtk_ObjectAdapter_t* stringObjectAdapter = jtk_StringObjectAdapter_getInstance();
 
     zen_EntityLoader_t* loader = zen_EntityLoader_new();
     while (jtk_Iterator_hasNext(entityDirectoryIterator)) {
-        jtk_CString_t* directory = jtk_Iterator_getNext(entityDirectoryIterator);
-        zen_EntityLoader_addDirectory_s(loader, directory);
+        uint8_t* directory = (uint8_t*)jtk_Iterator_getNext(entityDirectoryIterator);
+        zen_EntityLoader_addDirectory(loader, directory, -1);
     }
 
     return loader;
@@ -73,13 +76,14 @@ void zen_EntityLoader_delete(zen_EntityLoader_t* loader) {
     while (jtk_Iterator_hasNext(entryIterator)) {
         jtk_HashMapEntry_t* entry = (jtk_HashMapEntry_t*)jtk_Iterator_getNext(entryIterator);
 
-        jtk_CString_t* descriptor = (jtk_CString_t*)jtk_HashMapEntry_getKey(entry);
+        uint8_t* descriptor = (uint8_t*)jtk_HashMapEntry_getKey(entry);
         jtk_CString_delete(descriptor);
 
 #warning "Should the entity be destroyed this way?"
         zen_EntityFile_t* entityFile = (zen_EntityFile_t*)jtk_HashMapEntry_getValue(entry->m_value);
         // zen_EntityFile_delete(entityFile);
     }
+    jtk_Iterator_delete(entryIterator);
 
     zen_AttributeParseRules_delete(loader->m_attributeParseRules);
 
@@ -90,29 +94,12 @@ void zen_EntityLoader_delete(zen_EntityLoader_t* loader) {
  * directoires. Since the directories are validated when loading entities the
  * algorithm was modified to include all the directories without checking.
  */
-bool zen_EntityLoader_addDirectory(zen_EntityLoader_t* loader, const uint8_t* directory) {
+bool zen_EntityLoader_addDirectory(zen_EntityLoader_t* loader,
+    const uint8_t* directory, int32_t directorySize) {
     jtk_Assert_assertObject(loader, "The specified entity loader is null.");
     jtk_Assert_assertObject(directory, "The specified directory is null.");
 
-    jtk_Path_t* path = jtk_Path_newFromString(directory);
-    jtk_DoublyLinkedList_add(loader->m_directories, path);
-
-    // bool result = jtk_Path_isDirectory(path);
-    // if (result) {
-    //    jtk_DoublyLinkedList_add(loader->m_directories, path);
-    // }
-    // else {
-    //    jtk_Path_delete(path);
-    // }
-
-    return true;
-}
-
-bool zen_EntityLoader_addDirectory_s(zen_EntityLoader_t* loader, jtk_CString_t* directory) {
-    jtk_Assert_assertObject(loader, "The specified entity loader is null.");
-    jtk_Assert_assertObject(directory, "The specified directory is null.");
-
-    jtk_Path_t* path = jtk_Path_newFromString_s(directory);
+    jtk_Path_t* path = jtk_Path_newFromStringEx(directory, directorySize);
     jtk_DoublyLinkedList_add(loader->m_directories, path);
 
     // bool result = jtk_Path_isDirectory(path);
@@ -128,13 +115,14 @@ bool zen_EntityLoader_addDirectory_s(zen_EntityLoader_t* loader, jtk_CString_t* 
 
 // Find Entity
 
-zen_EntityFile_t* zen_EntityLoader_findEntity(zen_EntityLoader_t* loader, const uint8_t* descriptor) {
+zen_EntityFile_t* zen_EntityLoader_findEntity(zen_EntityLoader_t* loader,
+    const uint8_t* descriptor, int32_t descriptorSize) {
     jtk_Assert_assertObject(loader, "The specified entity loader is null.");
     jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
 
     zen_EntityFile_t* result = (zen_EntityFile_t*)jtk_HashMap_getValue(loader->m_entities, descriptor);
     if (result == NULL) {
-        result = zen_EntityLoader_loadEntity(loader, descriptor);
+        result = zen_EntityLoader_loadEntity(loader, descriptor, descriptorSize);
     }
 
     return result;
@@ -143,13 +131,11 @@ zen_EntityFile_t* zen_EntityLoader_findEntity(zen_EntityLoader_t* loader, const 
 // Get Entity
 
 zen_EntityFile_t* zen_EntityLoader_getEntity(zen_EntityLoader_t* loader,
-    const uint8_t* descriptor) {
+    const uint8_t* descriptor, int32_t descriptorSize) {
     jtk_Assert_assertObject(loader, "The specified entity loader is null.");
     jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
 
-    jtk_CString_t* string = jtk_CString_new(descriptor);
-    zen_EntityFile_t* entity = (zen_EntityFile_t*)jtk_HashMap_getValue(loader->m_entities, string);
-    jtk_CString_delete(string);
+    zen_EntityFile_t* entity = (zen_EntityFile_t*)jtk_HashMap_getValue(loader->m_entities, descriptor);
 
     return entity;
 }
@@ -157,7 +143,7 @@ zen_EntityFile_t* zen_EntityLoader_getEntity(zen_EntityLoader_t* loader,
 // Load Entity
 
 zen_EntityFile_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader,
-    const uint8_t* descriptor) {
+    const uint8_t* descriptor, int32_t descriptorSize) {
     jtk_Assert_assertObject(loader, "The specified entity loader is null.");
     jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
 
@@ -165,9 +151,11 @@ zen_EntityFile_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader,
 
     /* Question. Why is joining two strings so complicated?! */
     // const uint8_t* strings[] = { descriptor, ".feb" };
-    // jtk_CString_t* entityName = jtk_CString_newFromJoinEx(strings, 2);
-    jtk_CString_t* entityName = jtk_CString_newFromJoin(descriptor, ".feb");
-    jtk_Path_t* entityFile = jtk_Path_newFromStringEx(entityName->m_value, entityName->m_size);
+    // jtk_String_t* entityName = jtk_String_newFromJoinEx(strings, 2);
+    int32_t entityNameSize;
+    uint8_t* entityName = jtk_CString_joinEx(descriptor, descriptorSize, ".feb",
+        4, &entityNameSize);
+    jtk_Path_t* entityFile = jtk_Path_newFromStringEx(entityName, entityNameSize);
     jtk_CString_delete(entityName);
 
     /* Retrieve an iterator over the list of registered entity directories. */
@@ -203,7 +191,7 @@ zen_EntityFile_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader,
                          * ** After a few minutes **
                          * Damn it! Let's go implement that String class! -_-
                          */
-                        jtk_CString_t* entityDescriptor = jtk_CString_new(descriptor);
+                        uint8_t* entityDescriptor = jtk_CString_newEx(descriptor, descriptorSize);
 
                         jtk_HashMap_put(loader->m_entities, entityDescriptor, result);
                     }
@@ -227,7 +215,7 @@ zen_EntityFile_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader,
             jtk_Path_delete(entityPath);
         }
         else {
-            fprintf(stderr, "Warning: Cannot find lookup directory\n");
+            fprintf(stderr, "[warning] Cannot find find directory.\n");
         }
     }
     jtk_Path_delete(entityFile);
@@ -237,8 +225,37 @@ zen_EntityFile_t* zen_EntityLoader_loadEntity(zen_EntityLoader_t* loader,
 
 // Load Entity From File
 
-// BUG: You cannot copy an array of bytes with the general purpose Array.
-jtk_Array_t* jtk_InputStreamHelper_toArray(jtk_InputStream_t* stream) {
+// Tuesday, March 17, 2020
+
+/**
+ * @author Samuel Rowe
+ * @since JTK 1.1
+ */
+struct jtk_ByteArray_t {
+    int8_t* m_values;
+    int32_t m_size;
+};
+
+typedef struct jtk_ByteArray_t jtk_ByteArray_t;
+
+jtk_ByteArray_t* jtk_ByteArray_fromRawArray(int8_t* array, int32_t size) {
+    jtk_Assert_assertObject(array, "The specified array is null.");
+
+    jtk_ByteArray_t* result = jtk_Memory_allocate(jtk_ByteArray_t, 1);
+    result->m_values = jtk_Arrays_clone_b(array, size);
+    result->m_size = size;
+
+    return result;
+}
+
+void jtk_ByteArray_delete(jtk_ByteArray_t* array) {
+    jtk_Assert_assertObject(array, "The specified byte array is null.");
+
+    jtk_Memory_deallocate(array->m_values);
+    jtk_Memory_deallocate(array);
+}
+
+jtk_ByteArray_t* jtk_InputStreamHelper_toArray(jtk_InputStream_t* stream) {
     uint8_t* result = jtk_Memory_allocate(uint8_t, 1024);
     int32_t size = 1024;
     int32_t index = 0;
@@ -257,9 +274,11 @@ jtk_Array_t* jtk_InputStreamHelper_toArray(jtk_InputStream_t* stream) {
             int32_t newSize = size * 2;
             result = jtk_Arrays_copyOfEx_b(result, size, newSize, 0, false);
             jtk_Memory_deallocate(temporary);
+
+            size = newSize;
         }
     }
-    jtk_Array_t* array = (index == 0)? NULL : jtk_Array_newFromRawArray(result, index);
+    jtk_Array_t* array = (index == 0)? NULL : jtk_ByteArray_fromRawArray(result, index);
 
     jtk_Memory_deallocate(result);
 
@@ -278,15 +297,14 @@ zen_EntityFile_t* zen_EntityLoader_loadEntityFromHandle(zen_EntityLoader_t* load
             fileInputStream->m_inputStream, ZEN_ENTITY_LOADER_BUFFER_SIZE);
         jtk_InputStream_t* inputStream = bufferedInputStream->m_inputStream;
 
-        jtk_Array_t* input = jtk_InputStreamHelper_toArray(inputStream);
+        jtk_ByteArray_t* input = jtk_InputStreamHelper_toArray(inputStream);
 
         zen_BinaryEntityParser_t* parser = zen_BinaryEntityParser_new(
             loader->m_attributeParseRules, input->m_values, input->m_size);
-        result = zen_BinaryEntityParser_parse(parser,
-inputStream);
+        result = zen_BinaryEntityParser_parse(parser, inputStream);
 
         zen_BinaryEntityParser_delete(parser);
-        jtk_Array_delete(input);
+        jtk_ByteArray_delete(input);
         jtk_InputStream_destroy(inputStream);
     }
     else {

@@ -1,12 +1,12 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
- *
+ * Copyright 2018-2020 Samuel Rowe
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,12 +25,9 @@
 
 #include <com/onecube/zen/Configuration.h>
 
-#include <com/onecube/zen/virtual-machine/feb/AnnotationEntity.h>
-#include <com/onecube/zen/virtual-machine/feb/ClassEntity.h>
 #include <com/onecube/zen/virtual-machine/feb/FieldEntity.h>
 #include <com/onecube/zen/virtual-machine/feb/FunctionEntity.h>
 #include <com/onecube/zen/virtual-machine/feb/EntityFile.h>
-#include <com/onecube/zen/virtual-machine/feb/PackageEntity.h>
 #include <com/onecube/zen/virtual-machine/feb/EntityType.h>
 
 #include <com/onecube/zen/virtual-machine/feb/attribute/InstructionAttribute.h>
@@ -86,21 +83,21 @@ zen_EntityFile_t* zen_BinaryEntityParser_parseEntityFile(zen_BinaryEntityParser_
 
 /* Parse Constant Pool */
 
-zen_ConstantPool_t* zen_BinaryEntityParser_parseConstantPool(zen_BinaryEntityParser_t* parser);
+void zen_BinaryEntityParser_parseConstantPool(zen_BinaryEntityParser_t* parser);
 
 /* Parse Entity */
 
-zen_Entity_t* zen_BinaryEntityParser_parseEntity(zen_BinaryEntityParser_t* parser);
+void zen_BinaryEntityParser_parseEntity(zen_BinaryEntityParser_t* parser);
 
 /* Parse Attribute Table */
 
 void zen_BinaryEntityParser_parseAttributeTable(zen_BinaryEntityParser_t* parser, zen_AttributeTable_t* attributeTable);
-
+    
 /* Parse Instruction Attribute */
 
 zen_InstructionAttribute_t* zen_BinaryEntityParser_parseInstructionAttribute(
     zen_BinaryEntityParser_t* parser, uint16_t nameIndex, uint32_t length);
-
+    
 /* Parse Exception Table */
 
 void zen_BinaryEntityParser_parseExceptionTable(zen_BinaryEntityParser_t* parser,
@@ -117,9 +114,5 @@ zen_FunctionEntity_t* zen_BinaryEntityParser_parseFunction(zen_BinaryEntityParse
 /* Parse Field */
 
 zen_FieldEntity_t* zen_BinaryEntityParser_parseField(zen_BinaryEntityParser_t* parser);
-
-/* Parse Class */
-
-zen_ClassEntity_t* zen_BinaryEntityParser_parseClass(zen_BinaryEntityParser_t* parser);
 
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_LOADER_BINARY_ENTITY_PARSER_H */

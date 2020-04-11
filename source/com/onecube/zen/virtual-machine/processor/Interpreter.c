@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
+ * Copyright 2018-2020 Samuel Rowe
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@
 #include <jtk/core/Float.h>
 #include <jtk/core/Double.h>
 #include <jtk/collection/array/Array.h>
+#include <jtk/collection/array/Arrays.h>
+#include <jtk/core/CString.h>
 
 #include <com/onecube/zen/virtual-machine/VirtualMachine.h>
 #include <com/onecube/zen/virtual-machine/feb/ByteCode.h>
@@ -33,8 +35,11 @@
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolUtf8.h>
 #include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolTag.h>
 #include <com/onecube/zen/virtual-machine/feb/Entity.h>
+#include <com/onecube/zen/virtual-machine/object/Class.h>
 #include <com/onecube/zen/virtual-machine/object/Object.h>
+#include <com/onecube/zen/virtual-machine/object/Function.h>
 #include <com/onecube/zen/virtual-machine/processor/Interpreter.h>
+#include <com/onecube/zen/virtual-machine/processor/LocalVariableArray.h>
 #include <com/onecube/zen/virtual-machine/memory/MemoryManager.h>
 
 /* The interpreter is the heart of the virtual machine. */
@@ -56,9 +61,6 @@ const uint8_t* ZEN_BOOTSTRAP_CLASS_ZEN_CORE_NULL_POINTER_EXCEPTION = "zen.core.N
  * Interpreter                                                                 *
  *******************************************************************************/
 
-xjtk_Logger_debug(void* logger, const uint8_t* tag, const uint8_t* message, ...) {
-}
-
 /* Constructor */
 
 zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* manager,
@@ -71,6 +73,9 @@ zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* manager,
     interpreter->m_processorThread = processorThread;
     interpreter->m_logger = NULL;
     interpreter->m_virtualMachine = virtualMachine;
+    interpreter->m_state = 0;
+    interpreter->m_exception = NULL;
+    interpreter->m_handlerStackFrame = NULL;
 
     return interpreter;
 }
@@ -79,13 +84,6 @@ zen_Interpreter_t* zen_Interpreter_new(zen_MemoryManager_t* manager,
 
 void zen_Interpreter_delete(zen_Interpreter_t* interpreter) {
     jtk_Assert_assertObject(interpreter, "The specified interpreter is null.");
-
-    jtk_Iterator_t* iterator = zen_InvocationStack_getIterator(interpreter->m_invocationStack);
-    while (jtk_Iterator_hasNext(iterator)) {
-        zen_StackFrame_t* stackFrame = (zen_StackFrame_t*)jtk_Iterator_getNext(iterator);
-        zen_StackFrame_delete(stackFrame);
-    }
-    jtk_Iterator_delete(iterator);
 
     zen_InvocationStack_delete(interpreter->m_invocationStack);
     jtk_Memory_deallocate(interpreter);
@@ -121,34 +119,41 @@ zen_Object_t* zen_Interpreter_makeException(zen_Interpreter_t* interpreter,
     return NULL;
 }
 
-/* Exception Handler */
-
-bool zen_Interpreter_hasExceptionHandler(zen_Interpreter_t* interpreter, zen_StackFrame_t* stackFrame) {
-    return false;
-}
-
 /* Interpret */
 
 void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
     jtk_Assert_assertObject(interpreter, "The specified interpreter is null.");
+    jtk_Logger_t* logger = interpreter->m_virtualMachine->m_logger;
 
     zen_StackFrame_t* currentStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
     uint32_t flags = 0;
-    while (true) {
-        // TODO: Check if the instruction stream is exhausted.
+    while (!zen_InvocationStack_isEmpty(interpreter->m_invocationStack)) {
+        /* Stop the interpreter loop if the byte stream has been exhausted. */
         zen_InstructionAttribute_t* instructionAttribute = currentStackFrame->m_instructionAttribute;
-
-        // Temporary fix. In reality, the return instruction should be provided. */
-        if ((currentStackFrame->m_ip + 1) >= instructionAttribute->m_instructionLength) {
+        if ((currentStackFrame->m_ip + 1) > instructionAttribute->m_instructionLength) {
             break;
         }
 
+        if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) != 0) {
+            if (interpreter->m_handlerStackFrame == currentStackFrame) {
+                interpreter->m_state &= ~ZEN_INTERPRETER_STATE_EXCEPTION_THROWN;
+                interpreter->m_exception = NULL;
+            }
+            else {
+                break;
+            }
+        }
+
+        /* Destroy the stack frames that were traced. */
+        // TODO: Move stopTracing somewhere more appropriate.
+        zen_InvocationStack_stopTracing(interpreter->m_invocationStack);
 
         uint8_t instruction = instructionAttribute->m_instructions[currentStackFrame->m_ip++];
 
-        xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Fetched instruction... (instruction pointer = %d, instruction = 0x%X, function = %s -> %s)",
+        jtk_Logger_debug(logger, "Fetched instruction... (instruction pointer = %d, instruction = 0x%X, function = %s -> %s)",
             currentStackFrame->m_ip, instruction, zen_Interpreter_getCurrentFunctionName(interpreter),
             zen_Interpreter_getCurrentClassName(interpreter));
+        fflush(stdout);
 
         switch (instruction) {
 
@@ -158,7 +163,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Perform no operation. */
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `nop` (No operation was performed.)");
+                jtk_Logger_debug(logger, "Executed instruction `nop` (No operation was performed.)");
 
                 break;
             }
@@ -175,7 +180,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `add_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `add_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -191,7 +196,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `add_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `add_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -207,7 +212,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `add_f` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `add_f` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -223,7 +228,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `add_d` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `add_d` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -243,7 +248,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `and_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `and_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -261,7 +266,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `and_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `and_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -281,7 +286,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `or_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `or_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -299,7 +304,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `or_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `or_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -324,7 +329,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `shift_left_l` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `shift_left_l` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -347,7 +352,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `shift_left_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `shift_left_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -370,7 +375,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `shift_right_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `shift_right_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -393,7 +398,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `shift_right_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `shift_right_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -416,7 +421,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `shift_right_ui` (operand1 = %u, operand2 = %d, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `shift_right_ui` (operand1 = %u, operand2 = %d, result = %d, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -439,7 +444,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `shift_right_ul` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `shift_right_ul` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -459,7 +464,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `xor_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `xor_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -477,7 +482,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `xor_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `xor_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -495,7 +500,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `cast_itl` (operand = %d, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `cast_itl` (operand = %d, result = %l, operand stack = %d)",
                     operand, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -511,7 +516,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `cast_itf` (operand = %d, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `cast_itf` (operand = %d, result = %f, operand stack = %d)",
                     operand, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -527,7 +532,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `cast_itd` (operand = %d, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `cast_itd` (operand = %d, result = %f, operand stack = %d)",
                     operand, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -543,7 +548,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `cast_lti` (operand = %l, result = %i, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `cast_lti` (operand = %l, result = %i, operand stack = %d)",
                     operand, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -559,7 +564,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `cast_ltf` (operand = %l, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `cast_ltf` (operand = %l, result = %f, operand stack = %d)",
                     operand, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -575,7 +580,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `cast_ltd` (operand = %l, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `cast_ltd` (operand = %l, result = %f, operand stack = %d)",
                     operand, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -591,7 +596,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `cast_fti` (operand = %f, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `cast_fti` (operand = %f, result = %d, operand stack = %d)",
                     operand, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -607,7 +612,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `cast_ftl` (operand = %f, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `cast_ftl` (operand = %f, result = %l, operand stack = %d)",
                     operand, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -623,7 +628,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `cast_ftd` (operand = %f, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `cast_ftd` (operand = %f, result = %f, operand stack = %d)",
                     operand, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -639,7 +644,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `cast_dti` (operand = %f, result = %i, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `cast_dti` (operand = %f, result = %i, operand stack = %d)",
                     operand, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -655,7 +660,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `cast_dtl` (operand = %f, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `cast_dtl` (operand = %f, result = %l, operand stack = %d)",
                     operand, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -671,7 +676,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `cast_dtf` (operand = %f, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `cast_dtf` (operand = %f, result = %f, operand stack = %d)",
                     operand, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -687,7 +692,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `cast_itb` (operand = %d, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `cast_itb` (operand = %d, result = %d, operand stack = %d)",
                     operand, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -707,7 +712,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `cast_its` (operand = %d, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `cast_its` (operand = %d, result = %d, operand stack = %d)",
                     operand, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -717,7 +722,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_CHECK_CAST: { /* check_cast */
                 uint16_t index = zen_Interpreter_readShort(interpreter);
-/*
+            /*
                 zen_Object_t* object = zen_OperandStack_peekReference(currentStackFrame->m_operandStack);
                 if (object != NULL) {
                     zen_Class_t* targetClass = NULL; //zen_ConstantPool_resolveClass(constantPool, function, index);
@@ -738,7 +743,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 */
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                //xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `check_cast` (operand = 0x%X, result = 0x%X, operand stack = %d)",
+                //jtk_Logger_debug(logger, "Executed instruction `check_cast` (operand = 0x%X, result = 0x%X, operand stack = %d)",
                 //    object, object, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -763,7 +768,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `compare_l` (operand1 = %l, operand2 = %l, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `compare_l` (operand1 = %l, operand2 = %l, result = %d, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -802,7 +807,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `compare_lt_f` (operand1 = %f, operand2 = %f, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `compare_lt_f` (operand1 = %f, operand2 = %f, result = %d, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -841,7 +846,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `compare_gt_f` (operand1 = %f, operand2 = %f, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `compare_gt_f` (operand1 = %f, operand2 = %f, result = %d, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -880,7 +885,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `compare_lt_d` (operand1 = %f, operand2 = %f, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `compare_lt_d` (operand1 = %f, operand2 = %f, result = %d, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -919,7 +924,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `compare_gt_f` (operand1 = %f, operand2 = %f, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `compare_gt_f` (operand1 = %f, operand2 = %f, result = %d, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -933,21 +938,23 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Retrieve the first operand from the operand stack. */
                 int32_t operand1 = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
 
+                int32_t result = -1;
                 if (operand2 == 0) {
-                    /* Throw an instance of the zen.core.DivisionByZeroException class. */
-                    zen_Object_t* exception = zen_Interpreter_makeException(interpreter,
-                        ZEN_BOOTSTRAP_CLASS_ZEN_CORE_DIVISION_BY_ZERO_EXCEPTION);
+                    // /* Throw an instance of the zen.core.DivisionByZeroException class. */
+                    // zen_Object_t* exception = zen_Interpreter_makeException(interpreter,
+                    //     ZEN_BOOTSTRAP_CLASS_ZEN_CORE_DIVISION_BY_ZERO_EXCEPTION);
                     // jtk_ProcessorThread_setException(thread, exception);
 
-                    goto exceptionHandler;
+                    // goto exceptionHandler;
+                }
+                else {
+                    /* Divide the operands. Push the result on the operand stack. */
+                    result = operand1 / operand2;
+                    zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
                 }
 
-                /* Divide the operands. Push the result on the operand stack. */
-                int32_t result = operand1 / operand2;
-                zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
-
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `divide_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `divide_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -959,21 +966,23 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Retrieve the first operand from the operand stack. */
                 int64_t operand1 = zen_OperandStack_popLong(currentStackFrame->m_operandStack);
 
+                int64_t result = -1;
                 if (operand2 == 0L) {
-                    /* Throw an instance of the zen.core.DivisionByZeroException class. */
-                    zen_Object_t* exception = zen_Interpreter_makeException(interpreter,
-                        ZEN_BOOTSTRAP_CLASS_ZEN_CORE_DIVISION_BY_ZERO_EXCEPTION);
+                    // /* Throw an instance of the zen.core.DivisionByZeroException class. */
+                    // zen_Object_t* exception = zen_Interpreter_makeException(interpreter,
+                    //     ZEN_BOOTSTRAP_CLASS_ZEN_CORE_DIVISION_BY_ZERO_EXCEPTION);
                     // jtk_ProcessorThread_setException(thread, exception);
 
-                    goto exceptionHandler;
+                    // goto exceptionHandler;
+                }
+                else {
+                    /* Divide the operands. Push the result on the operand stack. */
+                    result = operand1 / operand2;
+                    zen_OperandStack_pushLong(currentStackFrame->m_operandStack, result);
                 }
 
-                /* Divide the operands. Push the result on the operand stack. */
-                int64_t result = operand1 / operand2;
-                zen_OperandStack_pushLong(currentStackFrame->m_operandStack, result);
-
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `divide_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `divide_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -989,7 +998,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `divide_f` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `divide_f` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1005,7 +1014,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `divide_d` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `divide_d` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1018,7 +1027,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_duplicate(currentStackFrame->m_operandStack);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `duplicate` (operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `duplicate` (operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1031,7 +1040,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_duplicateX1(currentStackFrame->m_operandStack);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `duplicate_x1` (operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `duplicate_x1` (operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1044,7 +1053,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_duplicateX2(currentStackFrame->m_operandStack);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `duplicate_x2` (operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `duplicate_x2` (operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1055,7 +1064,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_duplicate2(currentStackFrame->m_operandStack);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `duplicate2` (operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `duplicate2` (operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1068,7 +1077,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_duplicate2X1(currentStackFrame->m_operandStack);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `duplicate2_x1` (operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `duplicate2_x1` (operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1081,7 +1090,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_duplicate2X2(currentStackFrame->m_operandStack);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `duplicate2_x2` (operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `duplicate2_x2` (operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1090,43 +1099,48 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             /* Jump */
 
             case ZEN_BYTE_CODE_JUMP_EQ0_I: { /* jump_eq0_i */
-                int32_t operand = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
+                // int32_t operand = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
+
+                #warning    "TODO: 32-bit instruction is implemented as 64-bit instruction!"
+                int32_t operand = (int32_t)zen_OperandStack_popLong(currentStackFrame->m_operandStack);
 
                 if (operand == 0) {
                     uint16_t offset = zen_Interpreter_readShort(interpreter);
-                    currentStackFrame->m_ip += offset - 3;
+                    currentStackFrame->m_ip = offset;
                 }
                 else {
                     currentStackFrame->m_ip += 2;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Operand is %d, expected 0. Branch ignored.",
-                        operand);
+                    jtk_Logger_debug(logger, "Operand is %d, expected 0. Branch ignored.", operand);
                 }
 
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `jump_eq0_i` (operand = %d, expected = 0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `jump_eq0_i` (operand = %d, expected = 0, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
             }
 
             case ZEN_BYTE_CODE_JUMP_NE0_I: { /* jump_ne0_i */
-                int32_t operand = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
+                // int32_t operand = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
+
+                #warning    "TODO: 32-bit instruction is implemented as 64-bit instruction!"
+                int32_t operand = (int32_t)zen_OperandStack_popLong(currentStackFrame->m_operandStack);
 
                 if (operand != 0) {
                     uint16_t offset = zen_Interpreter_readShort(interpreter);
-                    currentStackFrame->m_ip += offset - 3;
+                    currentStackFrame->m_ip = offset;
                 }
                 else {
                     currentStackFrame->m_ip += 2;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Operand is %d, expected integer value other than 0. Branch ignored.",
+                    jtk_Logger_debug(logger, "Operand is %d, expected integer value other than 0. Branch ignored.",
                         operand);
                 }
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `jump_ne0_i` (operand = %d, expected != 0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `jump_ne0_i` (operand = %d, expected != 0, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1142,12 +1156,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 else {
                     currentStackFrame->m_ip += 2;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Operand is %d, expected integer value lesser than 0. Branch ignored.",
+                    jtk_Logger_debug(logger, "Operand is %d, expected integer value lesser than 0. Branch ignored.",
                         operand);
                 }
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `jump_lt0_i` (operand = %d, expected < 0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `jump_lt0_i` (operand = %d, expected < 0, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1163,12 +1177,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 else {
                     currentStackFrame->m_ip += 2;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Operand is %d, expected integer value greater than 0. Branch ignored.",
+                    jtk_Logger_debug(logger, "Operand is %d, expected integer value greater than 0. Branch ignored.",
                         operand);
                 }
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `jump_gt0_i` (operand = %d, expected > 0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `jump_gt0_i` (operand = %d, expected > 0, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1184,12 +1198,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 else {
                     currentStackFrame->m_ip += 2;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Operand is %d, expected integer value lesser than or equal to 0. Branch ignored.",
+                    jtk_Logger_debug(logger, "Operand is %d, expected integer value lesser than or equal to 0. Branch ignored.",
                         operand);
                 }
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `jump_le0_i` (operand = %d, expected <= 0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `jump_le0_i` (operand = %d, expected <= 0, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1205,12 +1219,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 else {
                     currentStackFrame->m_ip += 2;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Operand is %d, expected integer value greater than or equal to 0. Branch ignored.",
+                    jtk_Logger_debug(logger, "Operand is %d, expected integer value greater than or equal to 0. Branch ignored.",
                         operand);
                 }
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `jump_ge0_i` (operand = %d, expected >= 0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `jump_ge0_i` (operand = %d, expected >= 0, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1226,18 +1240,18 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     int16_t offset = zen_Interpreter_readShort(interpreter);
                     currentStackFrame->m_ip += offset - 3;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Operands are equal. Branch acknowledged, program counter adjusted accordingly.  (operand1 = %d, operand2 = %d, offset = %d)",
+                    jtk_Logger_debug(logger, "Operands are equal. Branch acknowledged, program counter adjusted accordingly.  (operand1 = %d, operand2 = %d, offset = %d)",
                         operand1, operand2, offset);
                 }
                 else {
                     currentStackFrame->m_ip += 2;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Operands are unequal. Branch ignored. (operand1 = %d, operand2 = %d)",
+                    jtk_Logger_debug(logger, "Operands are unequal. Branch ignored. (operand1 = %d, operand2 = %d)",
                         operand1, operand2);
                 }
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `jump_eq_i` (operand1 = %d, operand2 = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `jump_eq_i` (operand1 = %d, operand2 = %d, operand stack = %d)",
                     operand1, operand2, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1253,18 +1267,18 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     int16_t offset = zen_Interpreter_readShort(interpreter);
                     currentStackFrame->m_ip += offset - 3;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Operands are unequal. Branch acknowledged, program counter adjusted accordingly.  (operand1 = %d, operand2 = %d, offset = %d)",
+                    jtk_Logger_debug(logger, "Operands are unequal. Branch acknowledged, program counter adjusted accordingly.  (operand1 = %d, operand2 = %d, offset = %d)",
                         operand1, operand2, offset);
                 }
                 else {
                     currentStackFrame->m_ip += 2;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Operands are equal. Branch ignored. (operand1 = %d, operand2 = %d)",
+                    jtk_Logger_debug(logger, "Operands are equal. Branch ignored. (operand1 = %d, operand2 = %d)",
                         operand1, operand2);
                 }
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `jump_ne_i` (operand1 = %d, operand2 = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `jump_ne_i` (operand1 = %d, operand2 = %d, operand stack = %d)",
                     operand1, operand2, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1280,18 +1294,18 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     int16_t offset = zen_Interpreter_readShort(interpreter);
                     currentStackFrame->m_ip += offset - 3;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "operand1 is lesser than operand2. Branch acknowledged, program counter adjusted accordingly.  (operand1 = %d, operand2 = %d, offset = %d)",
+                    jtk_Logger_debug(logger, "operand1 is lesser than operand2. Branch acknowledged, program counter adjusted accordingly.  (operand1 = %d, operand2 = %d, offset = %d)",
                         operand1, operand2, offset);
                 }
                 else {
                     currentStackFrame->m_ip += 2;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "operand1 is not lesser than operand2. Branch ignored. (operand1 = %d, operand2 = %d)",
+                    jtk_Logger_debug(logger, "operand1 is not lesser than operand2. Branch ignored. (operand1 = %d, operand2 = %d)",
                         operand1, operand2);
                 }
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `jump_lt_i` (operand1 = %d, operand2 = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `jump_lt_i` (operand1 = %d, operand2 = %d, operand stack = %d)",
                     operand1, operand2, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1307,18 +1321,18 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     int16_t offset = zen_Interpreter_readShort(interpreter);
                     currentStackFrame->m_ip += offset - 3;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "operand1 is greater than operand2. Branch acknowledged, program counter adjusted accordingly.  (operand1 = %d, operand2 = %d, offset = %d)",
+                    jtk_Logger_debug(logger, "operand1 is greater than operand2. Branch acknowledged, program counter adjusted accordingly.  (operand1 = %d, operand2 = %d, offset = %d)",
                         operand1, operand2, offset);
                 }
                 else {
                     currentStackFrame->m_ip += 2;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "operand1 is not greater than operand2. Branch ignored. (operand1 = %d, operand2 = %d)",
+                    jtk_Logger_debug(logger, "operand1 is not greater than operand2. Branch ignored. (operand1 = %d, operand2 = %d)",
                         operand1, operand2);
                 }
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `jump_gt_i` (operand1 = %d, operand2 = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `jump_gt_i` (operand1 = %d, operand2 = %d, operand stack = %d)",
                     operand1, operand2, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1334,18 +1348,18 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     int16_t offset = zen_Interpreter_readShort(interpreter);
                     currentStackFrame->m_ip += offset - 3;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "operand1 is lesser than or equal to operand2. Branch acknowledged, program counter adjusted accordingly.  (operand1 = %d, operand2 = %d, offset = %d)",
+                    jtk_Logger_debug(logger, "operand1 is lesser than or equal to operand2. Branch acknowledged, program counter adjusted accordingly.  (operand1 = %d, operand2 = %d, offset = %d)",
                         operand1, operand2, offset);
                 }
                 else {
                     currentStackFrame->m_ip += 2;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "operand1 is not lesser than or equal to operand2. Branch ignored. (operand1 = %d, operand2 = %d)",
+                    jtk_Logger_debug(logger, "operand1 is not lesser than or equal to operand2. Branch ignored. (operand1 = %d, operand2 = %d)",
                         operand1, operand2);
                 }
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `jump_le_i` (operand1 = %d, operand2 = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `jump_le_i` (operand1 = %d, operand2 = %d, operand stack = %d)",
                     operand1, operand2, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1361,18 +1375,18 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     int16_t offset = zen_Interpreter_readShort(interpreter);
                     currentStackFrame->m_ip += offset - 3;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "operand1 is greater than or equal to operand2. Branch acknowledged, program counter adjusted accordingly.  (operand1 = %d, operand2 = %d, offset = %d)",
+                    jtk_Logger_debug(logger, "operand1 is greater than or equal to operand2. Branch acknowledged, program counter adjusted accordingly.  (operand1 = %d, operand2 = %d, offset = %d)",
                         operand1, operand2, offset);
                 }
                 else {
                     currentStackFrame->m_ip += 2;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "operand1 is not greater than or equal to operand2. Branch ignored. (operand1 = %d, operand2 = %d)",
+                    jtk_Logger_debug(logger, "operand1 is not greater than or equal to operand2. Branch ignored. (operand1 = %d, operand2 = %d)",
                         operand1, operand2);
                 }
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `jump_ge_i` (operand1 = %d, operand2 = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `jump_ge_i` (operand1 = %d, operand2 = %d, operand stack = %d)",
                     operand1, operand2, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1388,18 +1402,18 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     int16_t offset = zen_Interpreter_readShort(interpreter);
                     currentStackFrame->m_ip += offset - 3;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Operands are equal. Branch acknowledged, program counter adjusted accordingly.  (operand1 = 0x%X, operand2 = 0x%X, offset = %d)",
+                    jtk_Logger_debug(logger, "Operands are equal. Branch acknowledged, program counter adjusted accordingly.  (operand1 = 0x%X, operand2 = 0x%X, offset = %d)",
                         operand1, operand2, offset);
                 }
                 else {
                     currentStackFrame->m_ip += 2;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Operands are unequal. Branch ignored. (operand1 = 0x%X, operand2 = 0x%X)",
+                    jtk_Logger_debug(logger, "Operands are unequal. Branch ignored. (operand1 = 0x%X, operand2 = 0x%X)",
                         operand1, operand2);
                 }
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `jump_eq_a` (operand1 = 0x%X, operand2 = 0x%X, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `jump_eq_a` (operand1 = 0x%X, operand2 = 0x%X, operand stack = %d)",
                     operand1, operand2, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1415,18 +1429,18 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     int16_t offset = zen_Interpreter_readShort(interpreter);
                     currentStackFrame->m_ip += offset - 3;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Operands are unequal. Branch acknowledged, program counter adjusted accordingly.  (operand1 = 0x%X, operand2 = 0x%X, offset = %d)",
+                    jtk_Logger_debug(logger, "Operands are unequal. Branch acknowledged, program counter adjusted accordingly.  (operand1 = 0x%X, operand2 = 0x%X, offset = %d)",
                         operand1, operand2, offset);
                 }
                 else {
                     currentStackFrame->m_ip += 2;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Operands are equal. Branch ignored. (operand1 = 0x%X, operand2 = 0x%X)",
+                    jtk_Logger_debug(logger, "Operands are equal. Branch ignored. (operand1 = 0x%X, operand2 = 0x%X)",
                         operand1, operand2);
                 }
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `jump_ne_a` (operand1 = 0x%X, operand2 = 0x%X, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `jump_ne_a` (operand1 = 0x%X, operand2 = 0x%X, operand stack = %d)",
                     operand1, operand2, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1440,18 +1454,18 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     int16_t offset = zen_Interpreter_readShort(interpreter);
                     currentStackFrame->m_ip += offset - 3;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Operand is equal to null. Branch acknowledged, program counter adjusted accordingly.  (operand = 0x%X, offset = %d)",
+                    jtk_Logger_debug(logger, "Operand is equal to null. Branch acknowledged, program counter adjusted accordingly.  (operand = 0x%X, offset = %d)",
                         operand, offset);
                 }
                 else {
                     currentStackFrame->m_ip += 2;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Operand is not equal to null. Branch ignored. (operand = 0x%X)",
+                    jtk_Logger_debug(logger, "Operand is not equal to null. Branch ignored. (operand = 0x%X)",
                         operand);
                 }
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `jump_eqn_a` (operand = 0x%X, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `jump_eqn_a` (operand = 0x%X, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1465,18 +1479,18 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     int16_t offset = zen_Interpreter_readShort(interpreter);
                     currentStackFrame->m_ip += offset - 3;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Operand is not equal to null. Branch acknowledged, program counter adjusted accordingly.  (operand = 0x%X, offset = %d)",
+                    jtk_Logger_debug(logger, "Operand is not equal to null. Branch acknowledged, program counter adjusted accordingly.  (operand = 0x%X, offset = %d)",
                         operand, offset);
                 }
                 else {
                     currentStackFrame->m_ip += 2;
 
-                    xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Operand is equal to null. Branch ignored. (operand = 0x%X)",
+                    jtk_Logger_debug(logger, "Operand is equal to null. Branch ignored. (operand = 0x%X)",
                         operand);
                 }
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `jump_nen_a` (operand = 0x%X, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `jump_nen_a` (operand = 0x%X, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1491,41 +1505,115 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             /* Invoke */
 
             case ZEN_BYTE_CODE_INVOKE_SPECIAL: { /* invoke_special */
+                uint16_t index = zen_Interpreter_readShort(interpreter);
+
+                zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
+                zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
+                zen_ConstantPoolFunction_t* constructorEntry =
+                    (zen_ConstantPoolFunction_t*)constantPool->m_entries[index];
+                zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[constructorEntry->m_nameIndex];
+                zen_ConstantPoolUtf8_t* descriptorEntry = constantPool->m_entries[constructorEntry->m_descriptorIndex];
+                zen_ConstantPoolClass_t* classEntry = constantPool->m_entries[constructorEntry->m_classIndex];
+                zen_ConstantPoolUtf8_t* classNameEntry = constantPool->m_entries[classEntry->m_nameIndex];
+
+                zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine,
+                    classNameEntry->m_bytes, classNameEntry->m_length);
+
+                zen_Function_t* constructor = zen_Class_getConstructor(targetClass,
+                    descriptorEntry->m_bytes, descriptorEntry->m_length);
+
+                if (constructor != NULL) {
+                    jtk_Array_t* arguments = NULL;
+                    int32_t parameterCount = constructor->m_parameterCount;
+
+                    if (constructor->m_parameterCount > 0) {
+                        arguments = jtk_Array_new(parameterCount);
+
+                        int32_t parameterIndex;
+                        for (parameterIndex = parameterCount - 1; parameterIndex >= 0; parameterIndex--) {
+                            void* argument = (void*)zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+                            jtk_Array_setValue(arguments, parameterIndex, argument);
+                        }
+                    }
+
+                    zen_Object_t* object = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+                    zen_Interpreter_invokeConstructor(interpreter, object, constructor, arguments);
+
+                    if (arguments != NULL) {
+                        jtk_Array_delete(arguments);
+                    }
+                }
+                else {
+                    /* TODO: Throw an instance of the UnknownFunctionException class. */
+                    printf("[error] Unknown constructor in class %s with signature %s!",
+                        classNameEntry->m_bytes, descriptorEntry->m_bytes);
+                }
+
+                /* Log debugging information for assistance in debugging the interpreter. */
+                jtk_Logger_debug(logger, "Executed instruction `invoke_special` (index = %d, operand stack = %d)",
+                    index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+
                 break;
             }
 
             case ZEN_BYTE_CODE_INVOKE_VIRTUAL: { /* invoke_virtual */
                 uint16_t index = zen_Interpreter_readShort(interpreter);
 
-                zen_Function_t* targetFunction = NULL; /*zen_ConstantPool_resolveFunctionObject(
-                    currentClass->m_constantPool, index);*/
+                zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
+                zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
+                zen_ConstantPoolFunction_t* functionEntry =
+                    (zen_ConstantPoolFunction_t*)constantPool->m_entries[index];
+                zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[functionEntry->m_nameIndex];
+                zen_ConstantPoolUtf8_t* descriptorEntry = constantPool->m_entries[functionEntry->m_descriptorIndex];
+                zen_ConstantPoolClass_t* classEntry = constantPool->m_entries[functionEntry->m_classIndex];
+                zen_ConstantPoolUtf8_t* classNameEntry = constantPool->m_entries[classEntry->m_nameIndex];
 
-                if (targetFunction != NULL) {
-                    zen_Class_t* targetClass = NULL; // zen_Function_getClass(function);
+                zen_Object_t* self = (zen_Object_t*)zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+                zen_Class_t* selfClass = zen_Object_getClass(self);
 
-                    zen_Object_t* object = (zen_Object_t*)zen_OperandStack_peekReference(currentStackFrame->m_operandStack);
-                    zen_Class_t* objectClass = zen_Object_getClass(object);
+                /*zen_Function_t* function = zen_Class_getVirtualFunction(selfClass,
+                    functionName, functionDescriptor);*/
+                #warning "TODO: Replace the following statement with the previous statement!"
+                zen_Function_t* function = zen_Class_getStaticFunction(selfClass,
+                    nameEntry->m_bytes, nameEntry->m_length, descriptorEntry->m_bytes,
+                    descriptorEntry->m_length);
 
-                    if (targetClass != objectClass) {
-                        const uint8_t* functionName = zen_Function_getName(targetFunction);
-                        const uint8_t* functionDescriptor = zen_Function_getDescriptor(targetFunction);
+                if (function != NULL) {
+                    int32_t parameterCount = function->m_parameterCount;
+                    jtk_Array_t* arguments = NULL;
 
-                        /* TODO: The resolution of the virtual function should not fail. */
-                        targetFunction = zen_Class_getInstanceFunction(objectClass, functionName,
-                            functionDescriptor);
+                    if (function->m_parameterCount > 0) {
+                        arguments = jtk_Array_new(parameterCount);
+
+                        int32_t parameterIndex;
+                        for (parameterIndex = parameterCount - 1; parameterIndex >= 0; parameterIndex--) {
+                            void* argument = (void*)zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+                            jtk_Array_setValue(arguments, parameterIndex, argument);
+                        }
                     }
 
-                    if (zen_Function_isNative(targetFunction)) {
-                        zen_Interpreter_invokeNativeFunction(interpreter, targetClass, targetFunction, currentStackFrame->m_operandStack);
-                    }
-                    else {
-                        // currentFrame = ...;
-                        // code = ...;
+                    zen_Interpreter_invokeVirtualFunction(interpreter, function, self, arguments);
 
+                    if (arguments != NULL) {
+                        jtk_Array_delete(arguments);
                     }
                 }
                 else {
                     /* TODO: Throw an instance of the UnknownFunctionException class. */
+                    printf("[error] An exception was thrown\n"
+                        "[error] UnknownFunctionException: Cannot resolve function '%s' with signature '%s'.\n",
+                        nameEntry->m_bytes, descriptorEntry->m_bytes);
+                }
+
+                if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
+                    /* Log debugging information for assistance in debugging the interpreter. */
+                    jtk_Logger_debug(logger, "Executed instruction `invoke_virtual` (index = %d, operand stack = %d)",
+                        index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+                }
+                else {
+                    /* Log debugging information for assistance in debugging the interpreter. */
+                    jtk_Logger_debug(logger, "An exception was thrown when executing `invoke_virtual` (index = %d)",
+                        index);
                 }
 
                 break;
@@ -1539,38 +1627,56 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 uint16_t index = zen_Interpreter_readShort(interpreter);
 
                 zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
-                zen_ConstantPool_t* constantPool = entityFile->m_constantPool;
+                zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
                 zen_ConstantPoolFunction_t* functionEntry =
                     (zen_ConstantPoolFunction_t*)constantPool->m_entries[index];
                 zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[functionEntry->m_nameIndex];
                 zen_ConstantPoolUtf8_t* descriptorEntry = constantPool->m_entries[functionEntry->m_descriptorIndex];
+                zen_ConstantPoolClass_t* classEntry = constantPool->m_entries[functionEntry->m_classIndex];
+                zen_ConstantPoolUtf8_t* classNameEntry = constantPool->m_entries[classEntry->m_nameIndex];
 
-                jtk_CString_t* name = jtk_CString_newEx(nameEntry->m_bytes, nameEntry->m_length);
-                jtk_CString_t* descriptor = jtk_CString_newEx(descriptorEntry->m_bytes, descriptorEntry->m_length);
+                zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine,
+                    classNameEntry->m_bytes, classNameEntry->m_length);
 
-                zen_Function_t* function = zen_Class_getStaticFunction(currentStackFrame->m_class,
-                    name, descriptor);
-
-                jtk_CString_delete(name);
-                jtk_CString_delete(descriptor);
+                zen_Function_t* function = zen_Class_getStaticFunction(targetClass,
+                    nameEntry->m_bytes, nameEntry->m_length,
+                    descriptorEntry->m_bytes, descriptorEntry->m_length);
 
                 if (function != NULL) {
-                    // zen_Interpreter_handleClassInitialization(interpreter, class0);
+                    int32_t parameterCount = function->m_parameterCount;
+                    jtk_Array_t* arguments = NULL;
 
-                    void* argument1 = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
-                    void* argument0 = !zen_OperandStack_isEmpty(currentStackFrame->m_operandStack)?
-                        zen_OperandStack_popReference(currentStackFrame->m_operandStack) : NULL;
-
-                    jtk_Array_t* arguments = jtk_Array_new(2);
-                    jtk_Array_setValue(arguments, 0, argument0);
-                    jtk_Array_setValue(arguments, 1, argument1);
+                    if (function->m_parameterCount > 0) {
+                        arguments = jtk_Array_new(parameterCount);
+                        int32_t parameterIndex;
+                        for (parameterIndex = parameterCount - 1; parameterIndex >= 0; parameterIndex--) {
+                            void* argument = (void*)zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+                            jtk_Array_setValue(arguments, parameterIndex, argument);
+                        }
+                    }
 
                     zen_Interpreter_invokeStaticFunction(interpreter, function, arguments);
 
-                    jtk_Array_delete(arguments);
+                    if (arguments != NULL) {
+                        jtk_Array_delete(arguments);
+                    }
                 }
                 else {
                     /* TODO: Throw an instance of the UnknownFunctionException class. */
+                    printf("[error] An exception was thrown\n"
+                        "[error] UnknownFunctionException: Cannot resolve function '%s' with signature '%s'.\n",
+                        nameEntry->m_bytes, descriptorEntry->m_bytes);
+                }
+
+                if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
+                    /* Log debugging information for assistance in debugging the interpreter. */
+                    jtk_Logger_debug(logger, "Executed instruction `invoke_static` (index = %d, operand stack = %d)",
+                        index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+                }
+                else {
+                    /* Log debugging information for assistance in debugging the interpreter. */
+                    jtk_Logger_debug(logger, "An exception was thrown when executing `invoke_static` (index = %d)",
+                        index);
                 }
 
                 break;
@@ -1580,10 +1686,10 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_JUMP: { /* jump */
                 int16_t offset = zen_Interpreter_readShort(interpreter);
-                currentStackFrame->m_ip += offset - 3;
+                currentStackFrame->m_ip = offset;
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `jump` (offset = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `jump` (offset = %d, operand stack = %d)",
                     offset);
 
                 break;
@@ -1603,7 +1709,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_i` (index = %d, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_i` (index = %d, result = %d, operand stack = %d)",
                     index, value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1628,7 +1734,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, lowPart);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_l` (index = %d, high part = %d, low part = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_l` (index = %d, high part = %d, low part = %d, operand stack = %d)",
                     index, highPart, lowPart, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1648,7 +1754,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_f` (index = %d, result = 0x%X, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_f` (index = %d, result = 0x%X, operand stack = %d)",
                     index, value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1673,7 +1779,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, lowPart);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_d` (index = %d, high part = 0x%X, low part = 0x%X, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_d` (index = %d, high part = 0x%X, low part = 0x%X, operand stack = %d)",
                     index, highPart, lowPart, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1686,12 +1792,12 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Retrieve the object reference stored in the local variable at
                  * the specified index.
                  */
-                intptr_t reference = zen_LocalVariableArray_getReference(currentStackFrame->m_localVariableArray, index);
+                uintptr_t reference = zen_LocalVariableArray_getReference(currentStackFrame->m_localVariableArray, index);
                 /* Push the retrieved reference on the operand stack. */
                 zen_OperandStack_pushReference(currentStackFrame->m_operandStack, reference);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_a` (index = %d, result = 0x%X, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_a` (index = %d, result = 0x%X, operand stack = %d)",
                     index, reference, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1706,7 +1812,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_i0` (index = 0, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_i0` (index = 0, result = %d, operand stack = %d)",
                     value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1721,7 +1827,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_i1` (index = 1, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_i1` (index = 1, result = %d, operand stack = %d)",
                     value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1736,7 +1842,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_i2` (index = 2, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_i2` (index = 2, result = %d, operand stack = %d)",
                     value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1751,7 +1857,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_i3` (index = 3, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_i3` (index = 3, result = %d, operand stack = %d)",
                     value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1780,7 +1886,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_l0` (index = 0, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_l0` (index = 0, result = %l, operand stack = %d)",
                     value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1795,7 +1901,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_l1` (index = 1, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_l1` (index = 1, result = %l, operand stack = %d)",
                     value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1810,7 +1916,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_l2` (index = 2, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_l2` (index = 2, result = %l, operand stack = %d)",
                     value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1825,7 +1931,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_l3` (index = 3, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_l3` (index = 3, result = %l, operand stack = %d)",
                     value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1840,7 +1946,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_f0` (index = 0, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_f0` (index = 0, result = %f, operand stack = %d)",
                     value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1855,7 +1961,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_f1` (index = 1, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_f1` (index = 1, result = %f, operand stack = %d)",
                     value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1870,7 +1976,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_f2` (index = 2, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_f2` (index = 2, result = %f, operand stack = %d)",
                     value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1885,7 +1991,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_f3` (index = 3, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_f3` (index = 3, result = %f, operand stack = %d)",
                     value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1900,7 +2006,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_d0` (index = 0, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_d0` (index = 0, result = %f, operand stack = %d)",
                     value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1915,7 +2021,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_d1` (index = 1, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_d1` (index = 1, result = %f, operand stack = %d)",
                     value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1930,7 +2036,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_d2` (index = 2, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_d2` (index = 2, result = %f, operand stack = %d)",
                     value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1945,7 +2051,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_d3` (index = 3, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_d3` (index = 3, result = %f, operand stack = %d)",
                     value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1961,7 +2067,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushReference(currentStackFrame->m_operandStack, reference);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_a0` (index = 0, result = 0x%X, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_a0` (index = 0, result = 0x%X, operand stack = %d)",
                     reference, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1977,7 +2083,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushReference(currentStackFrame->m_operandStack, reference);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_a1` (index = 1, result = 0x%X, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_a1` (index = 1, result = 0x%X, operand stack = %d)",
                     reference, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -1993,7 +2099,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushReference(currentStackFrame->m_operandStack, reference);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_a2` (index = 2, result = 0x%X, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_a2` (index = 2, result = 0x%X, operand stack = %d)",
                     reference, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2009,7 +2115,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushReference(currentStackFrame->m_operandStack, reference);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `load_a3` (index = 3, result = 0x%X, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `load_a3` (index = 3, result = 0x%X, operand stack = %d)",
                     reference, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2059,13 +2165,16 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 int32_t index = zen_Interpreter_readByte(interpreter);
 
                 zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
-                zen_ConstantPool_t* constantPool = entityFile->m_constantPool;
+                zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
                 zen_ConstantPoolEntry_t* entry = constantPool->m_entries[index];
                 switch (entry->m_tag) {
                     case ZEN_CONSTANT_POOL_TAG_INTEGER: {
                         zen_ConstantPoolInteger_t* constantPoolInteger = (zen_ConstantPoolInteger_t*)entry;
                         int32_t value = zen_ConstantPoolInteger_getValue(constantPoolInteger);
                         zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, value);
+
+                        jtk_Logger_debug(logger, "Executed instruction `load_cpr` (index = %d, result = '%d', operand stack = %d)",
+                            index, value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                         break;
                     }
@@ -2075,6 +2184,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         int64_t value = zen_ConstantPoolLong_getValue(constantPoolLong);
                         zen_OperandStack_pushLong(currentStackFrame->m_operandStack, value);
 
+                        jtk_Logger_debug(logger, "Executed instruction `load_cpr` (index = %d, result = '%l', operand stack = %d)",
+                            index, value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+
                         break;
                     }
 
@@ -2082,6 +2194,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         zen_ConstantPoolFloat_t* constantPoolFloat = (zen_ConstantPoolFloat_t*)entry;
                         float value = zen_ConstantPoolFloat_getValue(constantPoolFloat);
                         zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, value);
+
+                        jtk_Logger_debug(logger, "Executed instruction `load_cpr` (index = %d, result = '%f', operand stack = %d)",
+                            index, value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                         break;
                     }
@@ -2091,6 +2206,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         double value = zen_ConstantPoolDouble_getValue(constantPoolDouble);
                         zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, value);
 
+                        jtk_Logger_debug(logger, "Executed instruction `load_cpr` (index = %d, result = '%f', operand stack = %d)",
+                            index, value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+
                         break;
                     }
 
@@ -2098,8 +2216,33 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                         zen_ConstantPoolString_t* constantPoolString = (zen_ConstantPoolString_t*)entry;
                         zen_ConstantPoolUtf8_t* constantPoolUtf8 =
                             (zen_ConstantPoolString_t*)constantPool->m_entries[constantPoolString->m_stringIndex];
-                        jtk_CString_t* value = jtk_CString_newEx(constantPoolUtf8->m_bytes, constantPoolUtf8->m_length);
+                        // jtk_String_t* value = jtk_String_newEx(constantPoolUtf8->m_bytes, constantPoolUtf8->m_length);
+
+                        // const uint8_t* arrayDescriptor = "b";
+                        // int32_t arrayDescriptorSize = 1;
+                        zen_Object_t* array = zen_VirtualMachine_newByteArray(interpreter->m_virtualMachine,
+                            constantPoolUtf8->m_bytes, constantPoolUtf8->m_length);
+
+                        const uint8_t* stringClassDescriptor = "zen/core/String";
+                        int32_t stringClassDescriptorSize = 15;
+                        const uint8_t* stringConstructorDescriptor = "v:(zen/core/Object)";
+                        int32_t stringConstructorDescriptorSize = 19;
+
+                        jtk_Array_t* arguments = jtk_Array_new(1);
+                        jtk_Array_setValue(arguments, 0, array);
+
+                        zen_Object_t* value = zen_VirtualMachine_newObjectEx(interpreter->m_virtualMachine,
+                            stringClassDescriptor, stringClassDescriptorSize, stringConstructorDescriptor,
+                            stringConstructorDescriptorSize, arguments);
+
+                        jtk_Array_delete(arguments);
+
                         zen_OperandStack_pushReference(currentStackFrame->m_operandStack, value);
+
+                        jtk_Logger_debug(logger, "Executed instruction `load_cpr` (index = %d, result = '%.*s', operand stack = %d)",
+                            index, constantPoolUtf8->m_length, constantPoolUtf8->m_bytes, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+
+                        jtk_Logger_debug(logger, "String object at 0x%X, array object at 0x%x", value, array);
 
                         break;
                     }
@@ -2135,7 +2278,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `modulo_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `modulo_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2158,7 +2301,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `modulo_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `modulo_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2176,7 +2319,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `modulo_f` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `modulo_f` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2194,7 +2337,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `modulo_d` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `modulo_d` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2212,7 +2355,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `multiply_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `multiply_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2228,7 +2371,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `multiply_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `multiply_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2244,7 +2387,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `multiply_f` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `multiply_f` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2260,7 +2403,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `multiply_d` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `multiply_d` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2276,7 +2419,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `negate_i` (operand = %d, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `negate_i` (operand = %d, result = %d, operand stack = %d)",
                     operand, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2290,7 +2433,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `negate_l` (operand = %l, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `negate_l` (operand = %l, result = %l, operand stack = %d)",
                     operand, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2304,7 +2447,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `negate_f` (operand = %f, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `negate_f` (operand = %f, result = %f, operand stack = %d)",
                     operand, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2318,7 +2461,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `negate_d` (operand = %f, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `negate_d` (operand = %f, result = %f, operand stack = %d)",
                     operand, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2327,10 +2470,52 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             /* New */
 
             case ZEN_BYTE_CODE_NEW: { /* new */
+                uint16_t index = zen_Interpreter_readShort(interpreter);
+
+                zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
+                zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
+                zen_ConstantPoolClass_t* classEntry =
+                    (zen_ConstantPoolClass_t*)constantPool->m_entries[index];
+                zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[classEntry->m_nameIndex];
+
+                zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine,
+                    nameEntry->m_bytes, nameEntry->m_length);
+
+                if (targetClass != NULL) {
+                    zen_Object_t* result = zen_VirtualMachine_allocateObject(interpreter->m_virtualMachine,
+                        targetClass);
+                    /* Push the reference of the newly allocated object onto the operand stack. */
+                    zen_OperandStack_pushReference(currentStackFrame->m_operandStack, result);
+                }
+                else {
+                    /* TODO: Throw an instance of the UnknownClassException class. */
+                }
+
+                /* Log debugging information for assistance in debugging the interpreter. */
+                jtk_Logger_debug(logger, "Executed instruction `new` (index = %d, operand stack = %d)",
+                    index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+
                 break;
             }
 
             case ZEN_BYTE_CODE_NEW_ARRAY: { /* new_array */
+                break;
+            }
+
+            case ZEN_BYTE_CODE_NEW_ARRAY_A: { /* new_array_a */
+                /* Read the class index from the instruction stream. */
+                uint16_t index = zen_Interpreter_readShort(interpreter);
+                /* Retrieve the size of the array from the operand stack. */
+                int32_t size = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
+                /* TODO: Create a new reference array. */
+                jtk_Array_t* result = jtk_Array_new(size);
+                /* Push the reference of the newly created reference array. */
+                zen_OperandStack_pushReference(currentStackFrame->m_operandStack, (void*)result);
+
+                /* Log debugging information for assistance in debugging the interpreter. */
+                jtk_Logger_debug(logger, "Executed instruction `new_array_a` (index = %d, size = %d, result = 0x%X, operand stack = %d)",
+                    index, size, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+
                 break;
             }
 
@@ -2345,7 +2530,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pop(currentStackFrame->m_operandStack);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                jtk_Logger_debug(interpreter->m_logger, "Executed instruction `pop` (operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `pop` (operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2353,10 +2538,10 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_POP2: { /* pop2 */
                 /* Discard the first two operands on top of the operand stack. */
-                zen_OperandStack_popEx(currentStackFrame->m_operandStack, 2);
+                zen_OperandStack_popEx(currentStackFrame->m_operandStack);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                jtk_Logger_debug(interpreter->m_logger, "Executed instruction `pop2` (operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `pop2` (operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2368,10 +2553,10 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* Push an integer value of 0, which represents the null reference,
                  * on the operand stack.
                  */
-                zen_OperandStack_pushReference(currentStackFrame->m_operandStack, NULL);
+                zen_OperandStack_pushReference(currentStackFrame->m_operandStack, ZEN_INTERPRETER_NULL_REFERENCE);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_null` (operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_null` (operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2382,7 +2567,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, -1);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_in1` (result = -1, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_in1` (result = -1, operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2393,7 +2578,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, 0);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_i0` (result = 0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_i0` (result = 0, operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2404,7 +2589,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, 1);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_i1` (result = 1, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_i1` (result = 1, operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2415,7 +2600,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, 2);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_i2` (result = 2, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_i2` (result = 2, operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2426,7 +2611,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, 3);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_i3` (result = 3, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_i3` (result = 3, operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2437,7 +2622,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, 4);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_i4` (result = 4, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_i4` (result = 4, operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2448,7 +2633,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, 5);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_i5` (result = 5, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_i5` (result = 5, operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2459,7 +2644,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, 0L);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_l0` (result = 0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_l0` (result = 0, operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2470,7 +2655,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, 1L);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_l1` (result = 1, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_l1` (result = 1, operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2481,7 +2666,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, 2L);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_l2` (result = 2, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_l2` (result = 2, operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2492,7 +2677,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, 0.0f);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_f0` (result = 0.0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_f0` (result = 0.0, operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2503,7 +2688,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, 1.0f);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_f1` (result = 1.0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_f1` (result = 1.0, operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2514,7 +2699,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, 2.0f);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_f2` (result = 2.0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_f2` (result = 2.0, operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2525,7 +2710,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, 0.0);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_d0` (result = 0.0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_d0` (result = 0.0, operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2536,7 +2721,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, 1.0);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_d1` (result = 1.0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_d1` (result = 1.0, operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2547,7 +2732,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, 2.0);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_d2` (result = 2.0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_d2` (result = 2.0, operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2562,7 +2747,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, (int32_t)value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_b` (result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_b` (result = %d, operand stack = %d)",
                     value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2577,7 +2762,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, (int32_t)value);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `push_s` (result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `push_s` (result = %d, operand stack = %d)",
                     value, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2589,10 +2774,10 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
                  */
-                currentStackFrame = zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
+                zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `return` (operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `return` (operand stack = %d)",
                     zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2605,13 +2790,13 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
                  */
-                currentStackFrame = zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
+                zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
 
                 /* Push the operand on the "new" current stack frame. */
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, returnValue);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `return_i` (operand = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `return_i` (operand = %d, operand stack = %d)",
                     returnValue, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2624,13 +2809,13 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
                  */
-                currentStackFrame = zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
+                zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
 
                 /* Push the operand on the "new" current stack frame. */
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, returnValue);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `return_l` (operand = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `return_l` (operand = %l, operand stack = %d)",
                     returnValue, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2651,13 +2836,13 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
                  */
-                currentStackFrame = zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
+                zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
 
                 /* Push the operand on the "new" current stack frame. */
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, returnValue);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `return_f` (operand = 0x%X, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `return_f` (operand = 0x%X, operand stack = %d)",
                     returnValue, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2670,13 +2855,13 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
                  */
-                currentStackFrame = zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
+                zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
 
                 /* Push the operand on the "new" current stack frame. */
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, returnValue);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `return_d` (operand = 0x%X, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `return_d` (operand = 0x%X, operand stack = %d)",
                     returnValue, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2689,14 +2874,16 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 /* The currently executing function is returning to the caller.
                  * Therefore, pop the current stack frame.
                  */
-                currentStackFrame = zen_InvocationStack_popStackFrame(interpreter->m_processorThread->m_invocationStack);
+                // zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
 
                 /* Push the operand on the "new" current stack frame. */
                 zen_OperandStack_pushReference(currentStackFrame->m_operandStack, returnValue);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `return_a` (operand = 0x%X, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `return_a` (operand = 0x%X, operand stack = %d)",
                     returnValue, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+
+                goto edgeOfEarth;
 
                 break;
             }
@@ -2718,7 +2905,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setInteger(currentStackFrame->m_localVariableArray, index, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_i` (operand = %d, index = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_i` (operand = %d, index = %d, operand stack = %d)",
                     operand, index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2731,7 +2918,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setInteger(currentStackFrame->m_localVariableArray, 0, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_i0` (operand = %d, index = 0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_i0` (operand = %d, index = 0, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2744,7 +2931,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setInteger(currentStackFrame->m_localVariableArray, 1, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_i1` (operand = %d, index = 1, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_i1` (operand = %d, index = 1, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2757,7 +2944,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setInteger(currentStackFrame->m_localVariableArray, 2, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_i2` (operand = %d, index = 2, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_i2` (operand = %d, index = 2, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2770,7 +2957,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setInteger(currentStackFrame->m_localVariableArray, 3, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_i3` (operand = %d, index = 3, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_i3` (operand = %d, index = 3, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2785,7 +2972,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setLong(currentStackFrame->m_localVariableArray, index, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_l` (operand = %d, index = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_l` (operand = %d, index = %d, operand stack = %d)",
                     operand, index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2824,7 +3011,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setLong(currentStackFrame->m_localVariableArray, 0, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_l0` (operand = %l, index = 0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_l0` (operand = %l, index = 0, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2858,7 +3045,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setLong(currentStackFrame->m_localVariableArray, 1, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_l1` (operand = %l, index = 1, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_l1` (operand = %l, index = 1, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2892,7 +3079,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setLong(currentStackFrame->m_localVariableArray, 2, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_l2` (operand = %l, index = 2, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_l2` (operand = %l, index = 2, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2926,7 +3113,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setLong(currentStackFrame->m_localVariableArray, 3, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_l3` (operand = %l, index = 3, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_l3` (operand = %l, index = 3, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2950,7 +3137,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setInteger(currentStackFrame->m_localVariableArray, index, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_f` (operand = 0x%X, index = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_f` (operand = 0x%X, index = %d, operand stack = %d)",
                     operand, index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
 
@@ -2968,7 +3155,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setInteger(currentStackFrame->m_localVariableArray, 0, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_f0` (operand = %d, index = 0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_f0` (operand = %d, index = 0, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -2985,7 +3172,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setInteger(currentStackFrame->m_localVariableArray, 1, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_f1` (operand = %d, index = 1, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_f1` (operand = %d, index = 1, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -3002,7 +3189,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setInteger(currentStackFrame->m_localVariableArray, 2, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_f2` (operand = %d, index = 2, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_f2` (operand = %d, index = 2, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -3019,7 +3206,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setInteger(currentStackFrame->m_localVariableArray, 3, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_f3` (operand = %d, index = 3, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_f3` (operand = %d, index = 3, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -3039,7 +3226,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setLong(currentStackFrame->m_localVariableArray, index, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_d` (operand = 0x%X, index = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_d` (operand = 0x%X, index = %d, operand stack = %d)",
                     operand, index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -3075,7 +3262,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setLong(currentStackFrame->m_localVariableArray, 0, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_d0` (operand = %l, index = 0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_d0` (operand = %l, index = 0, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -3111,7 +3298,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setLong(currentStackFrame->m_localVariableArray, 1, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_d1` (operand = %l, index = 1, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_d1` (operand = %l, index = 1, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -3143,7 +3330,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setLong(currentStackFrame->m_localVariableArray, 0, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_d2` (operand = %l, index = 1, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_d2` (operand = %l, index = 1, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -3175,7 +3362,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setLong(currentStackFrame->m_localVariableArray, 3, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_d3` (operand = %l, index = 3, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_d3` (operand = %l, index = 3, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -3190,7 +3377,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setReference(currentStackFrame->m_localVariableArray, index, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_a` (operand = 0x%X, index = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_a` (operand = 0x%X, index = %d, operand stack = %d)",
                     operand, index, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -3207,7 +3394,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setReference(currentStackFrame->m_localVariableArray, 0, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_a0` (operand = 0x%X, index = 0, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_a0` (operand = 0x%X, index = 0, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -3224,7 +3411,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setReference(currentStackFrame->m_localVariableArray, 1, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_a1` (operand = 0x%X, index = 1, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_a1` (operand = 0x%X, index = 1, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -3241,7 +3428,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setReference(currentStackFrame->m_localVariableArray, 2, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_a2` (operand = 0x%X, index = 2, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_a2` (operand = 0x%X, index = 2, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -3258,7 +3445,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_LocalVariableArray_setReference(currentStackFrame->m_localVariableArray, 3, operand);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `store_a3` (operand = 0x%X, index = 3, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `store_a3` (operand = 0x%X, index = 3, operand stack = %d)",
                     operand, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -3293,6 +3480,19 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             }
 
             case ZEN_BYTE_CODE_STORE_AA: { /* store_aa */
+                /* Retrieve the value from the operand stack. */
+                uintptr_t value = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+                /* Retrieve the index from the operand stack. */
+                int32_t index = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
+                /* Retrieve the array from the operand stack. */
+                jtk_Array_t* array = (jtk_Array_t*)zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+                /* Update the value at the specified index. */
+                jtk_Array_setValue(array, index, value);
+
+                /* Log debugging information for assistance in debugging the interpreter. */
+                jtk_Logger_debug(logger, "Executed instruction `store_aa` (value = 0x%X, index = %d, array = 0x%X, operand stack = %d)",
+                    value, index, array, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
+
                 break;
             }
 
@@ -3316,7 +3516,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushInteger(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `subtract_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `subtract_i` (operand1 = %d, operand2 = %d, result = %d, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -3332,7 +3532,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushLong(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `subtract_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `subtract_l` (operand1 = %l, operand2 = %l, result = %l, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -3348,7 +3548,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushFloat(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `subtract_f` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `subtract_f` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -3364,7 +3564,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_pushDouble(currentStackFrame->m_operandStack, result);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `subtract_d` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
+                jtk_Logger_debug(logger, "Executed instruction `subtract_d` (operand1 = %f, operand2 = %f, result = %f, operand stack = %d)",
                     operand1, operand2, result, zen_OperandStack_getSize(currentStackFrame->m_operandStack));
 
                 break;
@@ -3377,7 +3577,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_OperandStack_swap(currentStackFrame->m_operandStack);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `swap`");
+                jtk_Logger_debug(logger, "Executed instruction `swap`");
 
                 break;
             }
@@ -3395,56 +3595,24 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             /* Throw */
 
             case ZEN_BYTE_CODE_THROW: { /* throw */
+                interpreter->m_state |= ZEN_INTERPRETER_STATE_EXCEPTION_THROWN;
+
                 /* Retrieve the reference to the exception object from the operand stack. */
                 uintptr_t reference = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
+                zen_Object_t* exception = (zen_Object_t*)reference;;
 
-                /* Retrieve the class of the exception object. */
-                zen_Object_t* exception = (zen_Object_t*)reference;
-                zen_Class_t* class0 = zen_Object_getClass(exception);
-
-                /* Recursively search the stack trace for the most appropriate
-                 * exception handler, nearest to the current stack frame.
-                 * The search results in popping of the stack frames. Which goes
-                 * to say, the currently executing function may terminate.
-                 */
-                do {
-                    if (zen_Interpreter_hasExceptionHandler(interpreter, currentStackFrame)) {
-                        /* Push the reference to the exception object on top of the operand
-                         * stack belonging to the function with the suitable exception
-                         * handler. This reference is required by the "catch clause".
-                         */
-                        zen_OperandStack_pushReference(currentStackFrame->m_operandStack, reference);
-
-                        /* A suitable exception handler has been discovered. Terminate the search
-                         * loop.
-                         */
-                        break;
-                    }
-
-                    /* A suitable exception handler was not found. Move to the previous stack
-                     * frame and repeat.
-                     */
-                    currentStackFrame = zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
-
-                    exceptionHandler: {
-                    }
-                }
-                while (currentStackFrame != NULL);
-
-                /* No exception handler has been discovered in the stack trace. Invoke the thread
-                 * level exception handler.
-                 */
-                if (currentStackFrame == NULL) {
-                    /* Invoking an exception handler function causes the interpreter to insert
-                     * a stack frame. The primary loop continues normally. It is terminated
-                     * when a `return` (includes the other variations, too) instruction is
-                     * encountered.
-                     */
-                    zen_Interpreter_invokeThreadExceptionHandler(interpreter);
-                }
+                bool possibleNativeFunction = !zen_Interpreter_throw(interpreter, exception);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `throw`");
+                jtk_Logger_debug(logger, "Executed instruction `throw`");
+
+                /* If the thread was terminated because of an exception, the interpreter state for
+                 * that thread is not reset.
+                 */
+                if ((zen_InvocationStack_getSize(interpreter->m_invocationStack) == 0) ||
+                    possibleNativeFunction) {
+                    goto edgeOfEarth;
+                }
 
                 break;
             }
@@ -3458,7 +3626,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 flags |= ZEN_INTERPRETER_FLAG_WIDE_MODE;
 
                 /* Log debugging information for assistance in debugging the interpreter. */
-                xjtk_Logger_debug(interpreter->m_logger, ZEN_INTERPRETER_TAG, "Executed instruction `wide`");
+                jtk_Logger_debug(logger, "Executed instruction `wide`");
 
                 break;
             }
@@ -3469,6 +3637,53 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             }
         }
     }
+    edgeOfEarth:
+        ;
+}
+
+/* Invoke Constructor */
+
+typedef void (*zen_NativeFunction_InvokeConstructorFunction_t)(zen_VirtualMachine_t* virtualMachine, zen_Object_t* self, jtk_VariableArguments_t arguments);
+
+// TODO: Fix this function to accomodate exceptions.
+void zen_Interpreter_invokeConstructor(zen_Interpreter_t* interpreter,
+    zen_Object_t* object, zen_Function_t* constructor,
+    jtk_Array_t* arguments) {
+    zen_StackFrame_t* oldStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
+    zen_StackFrame_t* stackFrame = zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack,
+        constructor);
+
+    if (!zen_Function_isNative(constructor)) {
+        /* Pass the self reference to the constructor. */
+        zen_LocalVariableArray_setReference(stackFrame->m_localVariableArray, 0, object);
+    }
+
+    zen_EntityFile_t* entityFile = constructor->m_class->m_entityFile;
+    zen_Entity_t* entity = &entityFile->m_entity;
+    zen_ConstantPoolUtf8_t* name =
+        (zen_ConstantPoolUtf8_t*)entityFile->m_constantPool.m_entries[
+            entity->m_reference];
+
+    if (zen_Function_isNative(constructor)) {
+        zen_NativeFunction_t* nativeConstructor = constructor->m_nativeFunction;
+
+        if (nativeConstructor != NULL) {
+            zen_NativeFunction_InvokeConstructorFunction_t invokeConstructor =
+                (zen_NativeFunction_InvokeConstructorFunction_t)nativeConstructor->m_invoke;
+            invokeConstructor(interpreter->m_virtualMachine, object, arguments);
+        }
+        else {
+            printf("[error] Unknown native constructor (class=%s, name=%s, descriptor=%s)\n",
+                name->m_bytes, constructor->m_name, constructor->m_descriptor);
+        }
+    }
+    else {
+        zen_Interpreter_loadArguments(interpreter, constructor, stackFrame->m_localVariableArray,
+            arguments, true);
+        zen_Interpreter_interpret(interpreter);
+    }
+
+    zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
 }
 
 /* Invoke Native */
@@ -3479,31 +3694,306 @@ void zen_Interpreter_invokeNativeFunction(zen_Interpreter_t* interpreter,
 
 /* Invoke Static Function */
 
-void zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interpreter,
+zen_Object_t* zen_Interpreter_invokeStaticFunction(zen_Interpreter_t* interpreter,
     zen_Function_t* function, jtk_Array_t* arguments) {
 
-    zen_StackFrame_t* stackFrame = zen_StackFrame_new(function);
-    zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack, stackFrame);
+    zen_StackFrame_t* oldStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
+    zen_StackFrame_t* stackFrame = zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack,
+        function);
 
+    zen_EntityFile_t* entityFile = function->m_class->m_entityFile;
+    zen_Entity_t* entity = &entityFile->m_entity;
+    zen_ConstantPoolUtf8_t* name =
+        (zen_ConstantPoolUtf8_t*)entityFile->m_constantPool.m_entries[
+            entity->m_reference];
+
+    zen_Object_t* result = NULL;
     if (zen_Function_isNative(function)) {
-        zen_NativeFunction_t* nativeFunction = zen_VirtualMachine_getNativeFunction(
-            interpreter->m_virtualMachine, function->m_name, function->m_descriptor);
+        zen_NativeFunction_t* nativeFunction = function->m_nativeFunction;
 
         if (nativeFunction != NULL) {
-            nativeFunction->m_invoke(arguments);
+            zen_NativeFunction_InvokeFunction_t invoke = nativeFunction->m_invoke;
+            result = invoke(interpreter->m_virtualMachine, NULL, arguments);
+
+            if ((function->m_returnType != ZEN_TYPE_VOID) &&
+                ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) &&
+                (oldStackFrame != NULL)) {
+                zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
+            }
+
+            /* Always pop the stack frame of a native function, regardless of an
+             * exception is being thrown or not.
+             */
+            zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+
+            /* If an exception is being thrown, resume throwing it. */
+            if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) != 0) {
+                zen_Interpreter_throw(interpreter, interpreter->m_exception);
+            }
         }
         else {
-            // ERROR: Unknown native function.
+            printf("[error] Unknown native function (class=%.*s, name=%.*s, descriptor=%.*s)\n",
+                name->m_bytes, function->m_name, function->m_descriptor);
         }
     }
     else {
+        zen_Interpreter_loadArguments(interpreter, function, stackFrame->m_localVariableArray,
+            arguments, false);
         zen_Interpreter_interpret(interpreter);
+
+        if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
+            if ((function->m_returnType != ZEN_TYPE_VOID) &&
+                (oldStackFrame != NULL)) {
+                result = zen_OperandStack_popReference(stackFrame->m_operandStack);
+                zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
+            }
+
+            /* Do not pop the stack frame if an exception is being thrown. The stack frames
+             * would have already been popped off during the look up for a suitable exception
+             * handler site.
+             */
+            zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+        }
     }
+
+    return result;
+}
+
+void zen_Interpreter_invokeStaticFunctionEx(zen_Interpreter_t* interpreter,
+    zen_Function_t* function, jtk_VariableArguments_t variableArguments) {
+
+    zen_StackFrame_t* stackFrame = zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack,
+        function);
+    zen_Interpreter_interpret(interpreter);
+    // zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+}
+
+/* Invoke Virtual Function */
+
+zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpreter,
+    zen_Function_t* function, zen_Object_t* object, jtk_Array_t* arguments) {
+    zen_StackFrame_t* oldStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
+    zen_StackFrame_t* stackFrame = zen_InvocationStack_pushStackFrame(interpreter->m_invocationStack,
+        function);
+
+    if (!zen_Function_isNative(function)) {
+        zen_LocalVariableArray_setReference(stackFrame->m_localVariableArray, 0, object);
+    }
+
+    zen_EntityFile_t* entityFile = function->m_class->m_entityFile;
+    zen_Entity_t* entity = &entityFile->m_entity;
+    zen_ConstantPoolUtf8_t* name =
+        (zen_ConstantPoolUtf8_t*)entityFile->m_constantPool.m_entries[
+            entity->m_reference];
+
+    zen_Object_t* result = NULL;
+    if (zen_Function_isNative(function)) {
+        zen_NativeFunction_t* nativeFunction = function->m_nativeFunction;
+
+        if (nativeFunction != NULL) {
+            zen_NativeFunction_InvokeFunction_t invoke = nativeFunction->m_invoke;
+            result = invoke(interpreter->m_virtualMachine, object, arguments);
+
+            if ((function->m_returnType != ZEN_TYPE_VOID) &&
+                ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) &&
+                (oldStackFrame != NULL)) {
+                zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
+            }
+
+            /* Always pop the stack frame of a native function, regardless of an
+             * exception is being thrown or not.
+             */
+            zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+
+            /* If an exception is being thrown, resume throwing it. */
+            if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) != 0) {
+                zen_Interpreter_throw(interpreter, interpreter->m_exception);
+            }
+        }
+        else {
+            printf("[error] Unknown native function (class=%s, name=%s, descriptor=%s)\n",
+                name->m_bytes, function->m_name, function->m_descriptor);
+        }
+    }
+    else {
+        zen_Interpreter_loadArguments(interpreter, function, stackFrame->m_localVariableArray,
+            arguments, true);
+        zen_Interpreter_interpret(interpreter);
+
+        if ((interpreter->m_state & ZEN_INTERPRETER_STATE_EXCEPTION_THROWN) == 0) {
+            if ((function->m_returnType != ZEN_TYPE_VOID) &&
+                (oldStackFrame != NULL)) {
+                result = zen_OperandStack_popReference(stackFrame->m_operandStack);
+                zen_OperandStack_pushReference(oldStackFrame->m_operandStack, result);
+            }
+
+            /* Do not pop the stack frame if an exception is being thrown. The stack frames
+             * would have already been popped off during the look up for a suitable exception
+             * handler site.
+             */
+            zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+        }
+    }
+
+    return result;
 }
 
 /* Invoke Thread Exception Handler */
 
 void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter) {
+    zen_Class_t* exceptionClass = zen_Object_getClass(interpreter->m_exception);
+    uint8_t name[exceptionClass->m_descriptorSize + 1];
+    int32_t k;
+    for (k = 0; k < exceptionClass->m_descriptorSize; k++) {
+        if (exceptionClass->m_descriptor[k] == '/') {
+            name[k] = '.';
+        }
+        else {
+            name[k] = exceptionClass->m_descriptor[k];
+        }
+    }
+    name[exceptionClass->m_descriptorSize] = '\0';
+    printf("\033[1;31m[error]\033[0m An instance of \033[1;37m%s\033[0m was thrown as exception\n",
+        name);
+
+    jtk_Iterator_t* iterator = jtk_DoublyLinkedList_getIterator(interpreter->m_invocationStack->m_trace);
+    while (jtk_Iterator_hasNext(iterator)) {
+        zen_StackFrame_t* stackFrame = (zen_StackFrame_t*)jtk_Iterator_getNext(iterator);
+        zen_Class_t* class0 = stackFrame->m_class;
+        zen_Function_t* function = stackFrame->m_function;
+
+        uint8_t* friendlyDescriptor = jtk_Memory_allocate(uint8_t, function->m_descriptorSize + 1);
+        int32_t afterColon = -1;
+        int32_t i;
+        int32_t j = 0;
+        for (i = 0; i < function->m_descriptorSize; i++) {
+            if (function->m_descriptor[i] == ':') {
+                afterColon = i + 1;
+            }
+            else if (afterColon >= 0) {
+                if (function->m_descriptor[i] == '/') {
+                    friendlyDescriptor[j++] = '.';
+                }
+                else if (function->m_descriptor[i] == '(' || function->m_descriptor[i] == 'v') {
+                    // Do nothing
+                }
+                else if (function->m_descriptor[i] == ')') {
+                    if (i + 1 < function->m_descriptorSize) {
+                        friendlyDescriptor[j++] = ',';
+                        friendlyDescriptor[j++] = ' ';
+                    }
+                }
+                else {
+                    friendlyDescriptor[j++] = function->m_descriptor[i];
+                }
+            }
+        }
+        friendlyDescriptor[j] = '\0';
+
+        printf("        at %s.%s(%s) %s\n", class0->m_descriptor,
+            function->m_name, friendlyDescriptor,
+            zen_Function_isNative(function)? "\033[1;37m[native]\033[0m" : "");
+
+        jtk_Memory_deallocate(friendlyDescriptor);
+    }
+    jtk_Iterator_delete(iterator);
+}
+
+/* Load Arguments */
+
+void zen_Interpreter_loadArguments(zen_Interpreter_t* interpreter,
+    zen_Function_t* function, zen_LocalVariableArray_t* array,
+    jtk_Array_t* arguments, bool instance) {
+    int32_t i;
+    int32_t j;
+    /* Start from the second slot, if the specified function is an instance function.
+     * The first slot is reserved for self reference.
+     */
+    j = instance? ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT : 0;
+    for (i = 0; i < function->m_parameterCount; i++) {
+        zen_Type_t parameterType = (zen_Type_t)function->m_parameters[i * 2];
+        switch (parameterType) {
+            case ZEN_TYPE_BOOLEAN: {
+                // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
+                bool argument = (bool)jtk_Array_getValue(arguments, i);
+                zen_LocalVariableArray_setInteger(array, j, (int32_t)argument);
+                j += 1;
+                break;
+            }
+
+            case ZEN_TYPE_CHARACTER: {
+                // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
+                // TODO: Is character 1 byte?
+                uint8_t argument = (uint8_t)jtk_Array_getValue(arguments, i);
+                zen_LocalVariableArray_setInteger(array, j, (int32_t)argument);
+                j += 1;
+                break;
+            }
+
+            case ZEN_TYPE_INTEGER_8: {
+                // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
+                int8_t argument = (int8_t)jtk_Array_getValue(arguments, i);
+                zen_LocalVariableArray_setInteger(array, j, (int32_t)argument);
+                j += 1;
+                break;
+            }
+
+            case ZEN_TYPE_INTEGER_16: {
+                // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
+                int16_t argument = (int16_t)jtk_Array_getValue(arguments, i);
+                zen_LocalVariableArray_setInteger(array, j, (int32_t)argument);
+                j += 1;
+                break;
+            }
+
+            case ZEN_TYPE_INTEGER_32: {
+                // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
+                int32_t argument = (int32_t)jtk_Array_getValue(arguments, i);
+                zen_LocalVariableArray_setInteger(array, j, argument);
+                j += 1;
+                break;
+            }
+
+            case ZEN_TYPE_DECIMAL_32: {
+                // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
+                // NOTE: We are using bit pattern instead of float values.
+                // Otherwise, all the casting could result in loss of value.
+                int32_t argument = (int32_t)jtk_Array_getValue(arguments, i);
+                zen_LocalVariableArray_setInteger(array, j, argument);
+                j += 1;
+                break;
+            }
+
+            case ZEN_TYPE_INTEGER_64: {
+                // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
+                int64_t argument = (int64_t)jtk_Array_getValue(arguments, i);
+                zen_LocalVariableArray_setLong(array, j, argument);
+                j += 1;
+                break;
+            }
+
+            case ZEN_TYPE_DECIMAL_64: {
+                // TODO: Change the arguments type from jtk_Array_t to zen_Arguments_t!
+                // NOTE: We are using bit pattern instead of double values.
+                // Otherwise, all the casting could result in loss of value.
+                int64_t argument = (int64_t)jtk_Array_getValue(arguments, i);
+                zen_LocalVariableArray_setLong(array, j, argument);
+                j += 1;
+                break;
+            }
+
+            case ZEN_TYPE_REFERENCE: {
+                void* argument = jtk_Array_getValue(arguments, i);
+                zen_LocalVariableArray_setReference(array, j, argument);
+                j += ZEN_LOCAL_VARIABLE_ARRAY_REFERENCE_SLOT_COUNT;
+                break;
+            }
+
+            default: {
+                printf("[error] Invalid parameter type %d!\n", parameterType);
+            }
+        }
+    }
 }
 
 /* Read */
@@ -3516,10 +4006,139 @@ uint8_t zen_Interpreter_readByte(zen_Interpreter_t* interpreter) {
 }
 
 uint16_t zen_Interpreter_readShort(zen_Interpreter_t* interpreter) {
-    zen_StackFrame_t* currentStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
+zen_StackFrame_t* currentStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
     zen_InstructionAttribute_t* instructionAttribute = currentStackFrame->m_instructionAttribute;
 
     uint8_t byte0 = instructionAttribute->m_instructions[currentStackFrame->m_ip++];
     uint8_t byte1 = instructionAttribute->m_instructions[currentStackFrame->m_ip++];
     return (byte0 << 8) | byte1;
+}
+
+/* Throw */
+
+bool zen_Interpreter_throw(zen_Interpreter_t* interpreter,
+    zen_Object_t* exception) {
+    /* Retrieve the logger associated with the virtual machine. */
+    jtk_Logger_t* logger = interpreter->m_virtualMachine->m_logger;
+
+    /* Keep track of all the stack frames that are being popped off. */
+    zen_InvocationStack_startTracing(interpreter->m_invocationStack);
+
+    /* Retrieve the class of the exception object. */
+    zen_Class_t* exceptionClass = zen_Object_getClass(exception);
+
+    /* The exception mechanism may temporarily pause when the control
+     * is returned to native functions. Therefore, save the exception that is being thrown.
+     */
+    interpreter->m_exception = exception;
+
+    /* Recursively search the stack trace for the most appropriate
+     * exception handler or native function nearest to the current
+     * stack frame. The search results in popping of the stack
+     * frames. Which goes to say, the currently executing function
+     * may terminate.
+     */
+    zen_StackFrame_t* currentStackFrame;
+    bool found = false;
+    int32_t invocationStackSize = zen_InvocationStack_getSize(interpreter->m_invocationStack);
+    while ((invocationStackSize > 0) && !found) {
+        currentStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
+
+        /* When a native function is found on the invocation stack, the control
+         * is passed to it. The native function is responsible to catch the
+         * exception or let it propogate.
+         *
+         * The exception mechanism in the interpreter tries to find an
+         * exception handler site, if found the control is passed to it and
+         * the exception is considered as handled. However, if a native
+         * function is found instead, the control is passed to it.
+         * The native function can invoke an appropriate native interface
+         * function to determine if an exception is being thrown. After which,
+         * it may choose to handle the exception or return control back to
+         * the virtual machine.
+         *
+         * Note that, the native function is responsible to mark the exception
+         * as handled. Otherwise, the virtual machine assumes that the
+         * exception was unhandled and resumes searching for an exception
+         * handler site, which may cause the thread to terminate.
+         */
+        if (zen_Function_isNative(currentStackFrame->m_function)) {
+            /* Return control to the native function. */
+            break;
+        }
+        else {
+            zen_InstructionAttribute_t* instructionAttribute = currentStackFrame->m_instructionAttribute;
+            zen_ExceptionTable_t* exceptionTable = &instructionAttribute->m_exceptionTable;
+
+            if (exceptionTable->m_size > 0) {
+                /* Scan the exception table for an exception handler site with a catch
+                    * filter corresponding to the exception currently being thrown.
+                    */
+                int32_t siteIndex;
+                for (siteIndex = 0; siteIndex < exceptionTable->m_size; siteIndex++) {
+                    zen_ExceptionHandlerSite_t* site = exceptionTable->m_exceptionHandlerSites[siteIndex];
+                    /* Make sure that the exception was caused by an instruction
+                        * within the boundaries of the exception handler site.
+                        */
+                    if ((currentStackFrame->m_ip >= site->m_startIndex) &&
+                        (currentStackFrame->m_ip <= site->m_stopIndex)) {
+                        zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
+                        zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
+                        zen_ConstantPoolClass_t* classEntry =
+                            (zen_ConstantPoolClass_t*)constantPool->m_entries[site->m_exceptionClassIndex];
+                        zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[classEntry->m_nameIndex];
+
+                        zen_Class_t* filterClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine,
+                            nameEntry->m_bytes, nameEntry->m_length);
+
+                        if (exceptionClass == filterClass) {
+                            found = true;
+
+                            interpreter->m_handlerStackFrame = currentStackFrame;
+
+                            /* Update the instruction pointer of the current stack frame to
+                                * the exception handler.
+                                */
+                            currentStackFrame->m_ip = site->m_handlerIndex;
+
+                            /* Push the reference to the exception object on top of the operand
+                                * stack belonging to the function with the suitable exception
+                                * handler. This reference is required by the "catch clause".
+                                */
+                            zen_OperandStack_pushReference(currentStackFrame->m_operandStack, exception);
+
+                            /* A suitable exception handler has been discovered. Terminate the search
+                            * loop.
+                            */
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!found) {
+            /* A suitable exception handler was not found. Move to the previous stack
+            * frame and repeat.
+            *
+            * TODO: Create a stacktrace.
+            */
+            zen_InvocationStack_popStackFrame(interpreter->m_invocationStack);
+            invocationStackSize--;
+        }
+    }
+
+    /* No exception handler has been discovered in the stack trace. Invoke the thread
+        * level exception handler.
+        */
+    if (invocationStackSize == 0) {
+        /* Invoking an exception handler function causes the interpreter to insert
+         * a stack frame. The primary loop continues normally. It is terminated
+         * when a `return` (includes the other variations, too) instruction is
+         * encountered.
+         */
+        zen_Interpreter_invokeThreadExceptionHandler(interpreter);
+    }
+
+    return found;
 }

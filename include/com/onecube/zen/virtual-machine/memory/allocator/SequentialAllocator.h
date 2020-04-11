@@ -1,12 +1,12 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
- *
+ * Copyright 2018-2020 Samuel Rowe
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -50,7 +50,7 @@
  * The disadvantages of this allocator is as follows:
  * - It is less suitable than free-list allocation for non-moving collectors.
  * - It causes fragmentation unless compaction is done.
- *
+ * 
  * Please refer "The Garbage Collection Handbook" by Richard Jones, Antony
  * Hosking and Eliot Moss for more information. The algorithm described above
  * was extracted from Chapter 7, section 1.
@@ -61,7 +61,7 @@
  * @since zen 1.0
  */
 struct zen_SequentialAllocator_t {
-
+    
     /**
      * A pointer to the start of the memory chunk assigned to this sequential
      * allocator.
@@ -71,7 +71,7 @@ struct zen_SequentialAllocator_t {
      * address; the compiler takes care of the addresses for us.
      */
     uint8_t* m_start;
-
+    
     /**
      * A pointer to the end of the memory chunk assigned to this sequential
      * allocator. As mentioned above, it helps the allocator identify memory
@@ -82,7 +82,7 @@ struct zen_SequentialAllocator_t {
      * address; the compiler takes care of the addresses for us.
      */
     uint8_t* m_limit;
-
+    
     /**
      * A pointer to the start of the region where the next allocation may occur.
      * It is also known as the bump pointer.
@@ -91,7 +91,7 @@ struct zen_SequentialAllocator_t {
      * this allocator.
      */
     uint8_t* m_free;
-
+    
     jtk_SinglyLinkedList_t* m_allocationBuffers;
     jtk_Mutex_t* m_allocationBuffersMutex;
 };

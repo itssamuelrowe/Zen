@@ -1,12 +1,12 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
- *
+ * Copyright 2018-2020 Samuel Rowe
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -54,7 +54,7 @@
  * It should be noted that the allocator assumes that each free cell has space
  * to records its own size and the address of the next free cell. The allocator
  * itself maintains only a single reference to the head of the list.
- *
+ * 
  * The advantages of first-fit allocator are as follows:
  * - It behaves like the best-fit allocator, roughly sorting the cells from
  *   smallest to largest.
@@ -62,7 +62,7 @@
  * The disadvantages of the first-fit allocator are as follows:
  * - Fragmentation occurs near the front of the list, which slows down the
  *   allocation.
- *
+ * 
  * Please refer "The Garbage Collection Handbook" by Richard Jones, Antony
  * Hosking and Eliot Moss for more information. The algorithm described above
  * was extracted from Chapter 7, section 2.

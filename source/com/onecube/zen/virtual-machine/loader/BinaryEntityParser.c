@@ -1,12 +1,12 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
- *
+ * Copyright 2018-2020 Samuel Rowe
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -90,19 +90,17 @@ zen_EntityFile_t* zen_BinaryEntityParser_parseEntityFile(zen_BinaryEntityParser_
             /* Make sure that the major and minor version numbers are recognized by
              * the binary entity parser.
              */
-            if ((majorVersion <= ZEN_BINARY_ENTITY_FORMAT_MAJOR_VERSION) &&
-                (minorVersion <= ZEN_BINARY_ENTITY_FORMAT_MINOR_VERSION)) {
-                uint32_t size = jtk_Tape_readUncheckedInteger(parser->m_tape);
-                entityFile->m_size = size;
+            if ((majorVersion < ZEN_BINARY_ENTITY_FORMAT_MAJOR_VERSION) ||
+                ((majorVersion == ZEN_BINARY_ENTITY_FORMAT_MAJOR_VERSION) &&
+                 (minorVersion <= ZEN_BINARY_ENTITY_FORMAT_MINOR_VERSION))) {
+                // uint32_t size = jtk_Tape_readUncheckedInteger(parser->m_tape);
+                // entityFile->m_size = size;
 
                 uint16_t flags = jtk_Tape_readUncheckedShort(parser->m_tape);
                 entityFile->m_flags = flags;
 
-                zen_ConstantPool_t* constantPool = zen_BinaryEntityParser_parseConstantPool(parser);
-                entityFile->m_constantPool = constantPool;
-
-                zen_Entity_t* entity = zen_BinaryEntityParser_parseEntity(parser);
-                entityFile->m_entity = entity;
+                zen_BinaryEntityParser_parseConstantPool(parser);
+                zen_BinaryEntityParser_parseEntity(parser);
             }
             else {
                 // Error: Virtual machine version is lesser than the binary entity file version.
@@ -123,7 +121,7 @@ zen_EntityFile_t* zen_BinaryEntityParser_parseEntityFile(zen_BinaryEntityParser_
 
 /* Parse Constant Pool */
 
-zen_ConstantPool_t* zen_BinaryEntityParser_parseConstantPool(
+void zen_BinaryEntityParser_parseConstantPool(
     zen_BinaryEntityParser_t* parser) {
     jtk_Assert_assertObject(parser, "The specified binary entity parser is null.");
 
@@ -131,7 +129,7 @@ zen_ConstantPool_t* zen_BinaryEntityParser_parseConstantPool(
 
     uint16_t size = jtk_Tape_readUncheckedShort(parser->m_tape);
 
-    zen_ConstantPool_t* constantPool = jtk_Memory_allocate(zen_ConstantPool_t, 1);
+    zen_ConstantPool_t* constantPool = &parser->m_entityFile->m_constantPool;
     constantPool->m_size = size;
     constantPool->m_entries = jtk_Memory_allocate(zen_ConstantPoolEntry_t*, size + 1);
     constantPool->m_entries[0] = NULL;
@@ -203,8 +201,15 @@ zen_ConstantPool_t* zen_BinaryEntityParser_parseConstantPool(
 
             case ZEN_CONSTANT_POOL_TAG_UTF8: {
                 uint16_t length = jtk_Tape_readUncheckedShort(parser->m_tape);
-                // The specification guarantees that an empty string is never stored in a constant pool.
-                uint8_t* bytes = jtk_Memory_allocate(uint8_t, length);
+                /* The specification guarantees that an empty string is never stored in a constant pool.
+                 *
+                 * Although the speciication does not specify the bytes to be null-terminated,
+                 * the reference implementation of the Zen Virtual Machine terminates
+                 * UTF8 constant pool entries for performance.
+                 */
+
+                uint8_t* bytes = jtk_Memory_allocate(uint8_t, length + 1);
+                bytes[length] = '\0';
                 jtk_Tape_readUncheckedBytes(parser->m_tape, bytes, length);
 
                 zen_ConstantPoolUtf8_t* constantPoolUtf8 = jtk_Memory_allocate(zen_ConstantPoolUtf8_t, 1);
@@ -291,41 +296,56 @@ zen_ConstantPool_t* zen_BinaryEntityParser_parseConstantPool(
 
 /* Parse Entity */
 
-zen_Entity_t* zen_BinaryEntityParser_parseEntity(zen_BinaryEntityParser_t* parser) {
+void zen_BinaryEntityParser_parseEntity(zen_BinaryEntityParser_t* parser) {
     jtk_Assert_assertObject(parser, "The specified binary entity parser is null.");
 
-    zen_Entity_t* entity = NULL;
-
+    zen_Entity_t* entity = &parser->m_entityFile->m_entity;
     uint8_t type = jtk_Tape_readUncheckedByte(parser->m_tape);
-    switch (type) {
-        case ZEN_ENTITY_TYPE_CLASS: {
-            entity = zen_BinaryEntityParser_parseClass(parser);
+    
+    entity->m_type = type;
 
-            // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed class entity, with type %d.", type);
+    uint16_t flags = jtk_Tape_readUncheckedShort(parser->m_tape);
+    entity->m_flags = flags;
 
-            break;
-        }
-/*
-        case ZEN_ENTITY_TYPE_ANNOTATION: {
-            entity = zen_BinaryEntityParser_parseAnnotation(parser);
+    uint16_t reference = jtk_Tape_readUncheckedShort(parser->m_tape);
+    entity->m_reference = reference;
 
-            // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed annotation entity, with type %d.", type);
+    uint16_t superclassCount = jtk_Tape_readUncheckedShort(parser->m_tape);
+    entity->m_superclassCount = superclassCount;
 
-            break;
-        }
+    uint16_t* superclasses = zen_Memory_allocate(uint16_t, superclassCount);
+    int32_t i;
+    for (i = 0; i < superclassCount; i++) {
+        superclasses[i] = jtk_Tape_readUncheckedShort(parser->m_tape);
+    }
+    entity->m_superclasses = superclasses;
 
-        case ZEN_ENTITY_TYPE_PACKAGE: {
-            entity = zen_BinaryEntityParser_parsePackage(parser);
+    zen_BinaryEntityParser_parseAttributeTable(parser, &entity ->m_attributeTable);
 
-            // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed package entity, with type %d.", type);
+    // fieldCount fieldEntity*
 
-            break;
-        }
-*/
-        default: {
-            /* error: Control should not reach here. */
-            break;
-        }
+    uint16_t fieldCount = jtk_Tape_readUncheckedShort(parser->m_tape);
+    entity->m_fieldCount = fieldCount;
+    entity->m_fields = (fieldCount > 0)?
+        jtk_Memory_allocate(zen_FieldEntity_t*, fieldCount) : NULL;
+
+    int32_t j;
+    for (j = 0; j < fieldCount; j++) {
+        zen_FieldEntity_t* fieldEntity = zen_BinaryEntityParser_parseField(parser);
+        entity->m_fields[j] = fieldEntity;
+    }
+
+    // functionCount functionEntity*
+
+    uint16_t functionCount = jtk_Tape_readUncheckedShort(parser->m_tape);
+    entity->m_functionCount = functionCount;
+    entity->m_functions = (functionCount > 0)?
+        jtk_Memory_allocate(zen_FunctionEntity_t*, functionCount) : NULL;
+
+    int32_t k;
+    for (k = 0; k < functionCount; k++) {
+        zen_FunctionEntity_t* functionEntity = zen_BinaryEntityParser_parseFunction(parser);
+        entity->m_functions[k] = functionEntity;
     }
 
     return entity;
@@ -347,7 +367,7 @@ void zen_BinaryEntityParser_parseAttributeTable(
         uint32_t length = jtk_Tape_readUncheckedInteger(parser->m_tape);
 
         zen_ConstantPoolUtf8_t* nameConstantPoolUtf8 = zen_ConstantPool_resolveUtf8(
-            parser->m_entityFile->m_constantPool, nameIndex);
+            &parser->m_entityFile->m_constantPool, nameIndex);
         zen_AttributeParseRuleFunction_t attributeParseRule =
             zen_AttributeParseRules_getRuleEx(parser->m_attributeParseRules,
                 nameConstantPoolUtf8->m_bytes, nameConstantPoolUtf8->m_length);
@@ -498,59 +518,14 @@ zen_FieldEntity_t* zen_BinaryEntityParser_parseField(zen_BinaryEntityParser_t* p
 
 /* Parse Class */
 
-zen_ClassEntity_t* zen_BinaryEntityParser_parseClass(zen_BinaryEntityParser_t* parser) {
+/*zen_ClassEntity_t* zen_BinaryEntityParser_parseClass(zen_BinaryEntityParser_t* parser) {
     jtk_Assert_assertObject(parser, "The specified binary entity parser is null.");
 
-    zen_ClassEntity_t* classEntity = jtk_Memory_allocate(zen_ClassEntity_t, 1);
-    classEntity->m_type = ZEN_ENTITY_TYPE_CLASS;
-
-    uint16_t flags = jtk_Tape_readUncheckedShort(parser->m_tape);
-    classEntity->m_flags = flags;
-
-    uint16_t reference = jtk_Tape_readUncheckedShort(parser->m_tape);
-    classEntity->m_reference = reference;
-
-    uint16_t superclassCount = jtk_Tape_readUncheckedShort(parser->m_tape);
-    classEntity->m_superclassCount = superclassCount;
-
-    uint16_t* superclasses = zen_Memory_allocate(uint16_t, superclassCount);
-    int32_t i;
-    for (i = 0; i < superclassCount; i++) {
-        superclasses[i] = jtk_Tape_readUncheckedShort(parser->m_tape);
-    }
-    classEntity->m_superclasses = superclasses;
-
-    zen_BinaryEntityParser_parseAttributeTable(parser, &(classEntity->m_attributeTable));
-
-    // fieldCount fieldEntity*
-
-    uint16_t fieldCount = jtk_Tape_readUncheckedShort(parser->m_tape);
-    classEntity->m_fieldCount = fieldCount;
-    classEntity->m_fields = (fieldCount > 0)?
-        jtk_Memory_allocate(zen_FieldEntity_t*, fieldCount) : NULL;
-
-    int32_t j;
-    for (j = 0; j < fieldCount; j++) {
-        zen_FieldEntity_t* fieldEntity = zen_BinaryEntityParser_parseField(parser);
-        classEntity->m_fields[j] = fieldEntity;
-    }
-
-    // functionCount functionEntity*
-
-    uint16_t functionCount = jtk_Tape_readUncheckedShort(parser->m_tape);
-    classEntity->m_functionCount = functionCount;
-    classEntity->m_functions = (functionCount > 0)?
-        jtk_Memory_allocate(zen_FunctionEntity_t*, functionCount) : NULL;
-
-    int32_t k;
-    for (k = 0; k < functionCount; k++) {
-        zen_FunctionEntity_t* functionEntity = zen_BinaryEntityParser_parseFunction(parser);
-        classEntity->m_functions[k] = functionEntity;
-    }
-
+    
     return classEntity;
 }
-
+*/
+/*
 zen_AnnotationEntity_t* zen_BinaryEntityParser_parseAnnotation(
     zen_BinaryEntityParser_t* parser) {
     return NULL;
@@ -560,19 +535,18 @@ zen_PackageEntity_t* zen_BinaryEntityParser_parsePackage(
     zen_BinaryEntityParser_t* parser) {
     return NULL;
 }
+*/
 
 /*
 
-import zen.fs.FileHelper as Files
-import zen.net.HttpConnectionHelper as HttpConnections
-import zen.core.ExceptionHelper.print as printStackTrace
+import zen.fs.*
+import zen.net.*
 
 function main
     try
-        var url = new Url()
-        url.setContent('https://www.onecube.in')
-        with connection = HttpConnections.open(url), writer = path.openWriter()
+        with var connection = Url.open('https://www.onecube.in'), \
+             var writer = File.getWriter('output')
             connection.readTo(writer)
     catch Exception exception
-        exception.printStackTrace()
+        exception.print()
 */

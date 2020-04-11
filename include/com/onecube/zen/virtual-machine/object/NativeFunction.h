@@ -1,12 +1,12 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
- *
+ * Copyright 2018-2020 Samuel Rowe
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,10 +26,14 @@
  * NativeFunction                                                              *
  *******************************************************************************/
 
+typedef struct zen_VirtualMachine_t zen_VirtualMachine_t;
+
+typedef struct zen_Object_t zen_Object_t;
+
 /**
  * @memberof NativeFunction
  */
-typedef void (*zen_NativeFunction_InvokeFunction_t)(jtk_Array_t* arguments);
+typedef zen_Object_t* (*zen_NativeFunction_InvokeFunction_t)(zen_VirtualMachine_t* virtualMachine, zen_Object_t* object, jtk_Array_t* arguments);
 
 /**
  * @class NativeFunction
@@ -59,5 +63,5 @@ zen_NativeFunction_t* zen_NativeFunction_new(zen_NativeFunction_InvokeFunction_t
  * @memberof NativeFunction
  */
 void zen_NativeFunction_delete(zen_NativeFunction_t* function);
-
+ 
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_OBJECT_NATIVE_FUNCTION_H */

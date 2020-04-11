@@ -1,12 +1,12 @@
 /*
- * Copyright 2017-2020 Samuel Rowe
- *
+ * Copyright 2018-2020 Samuel Rowe
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,6 +40,8 @@
 struct zen_InvocationStack_t {
     // TODO: Replace this with a singly-linked list.
     jtk_DoublyLinkedList_t* m_stackFrames;
+    jtk_DoublyLinkedList_t* m_trace;
+    bool m_tracing;
 };
 
 /**
@@ -61,25 +63,39 @@ zen_InvocationStack_t* zen_InvocationStack_new();
  */
 void zen_InvocationStack_delete(zen_InvocationStack_t* stack);
 
-/* Current Stack Frame */
+/* Empty */
 
-zen_StackFrame_t* zen_InvocationStack_getCurrentStackFrame(zen_InvocationStack_t* stack);
+bool zen_InvocationStack_isEmpty(zen_InvocationStack_t* invocationStack);
 
 /* Iterator */
 
 jtk_Iterator_t* zen_InvocationStack_getIterator(zen_InvocationStack_t* invocationStack);
 
-/* Push/Pop Stack Frame */
+/* Stack Frame */
 
 /**
  * @memberof InvocationStack
  */
-void zen_InvocationStack_pushStackFrame(zen_InvocationStack_t* invocationStack,
-    zen_StackFrame_t* stackFrame);
+zen_StackFrame_t* zen_InvocationStack_pushStackFrame(zen_InvocationStack_t* invocationStack,
+    zen_Function_t* function);
 
 /**
  * @memberof InvocationStack
  */
-zen_StackFrame_t* zen_InvocationStack_popStackFrame(zen_InvocationStack_t* stack);
+void zen_InvocationStack_popStackFrame(zen_InvocationStack_t* stack);
+
+/**
+ * @memberof InvocationStack
+ */
+zen_StackFrame_t* zen_InvocationStack_peekStackFrame(zen_InvocationStack_t* stack);
+
+/* Size */
+
+int32_t zen_InvocationStack_getSize(zen_InvocationStack_t* invocationStack);
+
+// Tracing
+
+void zen_InvocationStack_startTracing(zen_InvocationStack_t* invocationStack);
+void zen_InvocationStack_stopTracing(zen_InvocationStack_t* invocationStack);
 
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_PROCESSOR_INVOCATION_STACK_H */

@@ -99,6 +99,7 @@ set (
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/compiler/support/ErrorHandler.c
 )
 
+
 set (
     ZEN_VIRTUAL_MACHINE_SOURCE
 
@@ -158,6 +159,17 @@ set (
 )
 
 set (
+    ZEN_COMPILER_TOOL_SOURCE
+
+    # Instruction.c is from the virtual machine module. Remove references to it.
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/Instruction.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/FieldEntity.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/FunctionEntity.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/attribute/InstructionAttribute.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/Zen.c
+)
+
+set (
     ZEN_ZVM_SPECIFICATION_VIEWER
 
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/ZvmSpecificationViewer.c
@@ -189,9 +201,9 @@ target_compile_options(zen PUBLIC -g -w ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
 # target_compile_options(zsv PUBLIC -Wall -Wswitch)
 
 
-# add_executable(zvm ${ZEN_COMMON_SOURCE} ${ZEN_VIRTUAL_MACHINE_SOURCE} ${ZEN_VIRTUAL_MACHINE_TOOL_SOURCE})
-# target_link_libraries(zvm ${JTK_LIBRARIES})
-# target_include_directories(zvm SYSTEM PUBLIC ${JTK_INCLUDE_DIRS})
-# target_compile_options(zvm PUBLIC -g -w ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
-
-message (WARNING ${JTK_LIBRARY_DIRS})
+add_executable(zvm ${ZEN_COMMON_SOURCE} ${ZEN_VIRTUAL_MACHINE_SOURCE} ${ZEN_VIRTUAL_MACHINE_TOOL_SOURCE})
+target_link_libraries(zvm ${JTK_LIBRARIES})
+target_include_directories(zvm SYSTEM PUBLIC ${JTK_INCLUDE_DIRS})
+# target_compile_options(zvm PUBLIC -O3 -g -w ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
+target_compile_options(zvm PUBLIC -g -w ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
+# target_compile_options(zvm PUBLIC -g -Wall ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
