@@ -543,6 +543,23 @@ void zen_SymbolLoader_parseField(zen_SymbolLoader_t* loader) {
     zen_SymbolLoader_skipAttributeTable(loader);
 }
 
+void zen_SymbolLoader_parseFunction(zen_SymbolLoader_t* loader) {
+    // Flags
+    uint16_t flags = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
+        (loader->m_bytes[loader->m_index++] & 0xFF);
+
+    // Name Index
+    uint16_t nameIndex = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
+        (loader->m_bytes[loader->m_index++] & 0xFF);
+
+    // Descriptor Index
+    uint16_t descriptorIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
+    functionEntity->m_descriptorIndex = descriptorIndex;
+
+    // Skip attribute table
+    zen_SymbolLoader_skipAttributeTable(loader);
+}
+
 zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* loader, uint8_t* bytes,
     int32_t size) {
     zen_Compiler_t* compiler = loader->m_compiler;
@@ -585,35 +602,28 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* loader, uint8_t* bytes,
                         (loader->m_bytes[loader->m_index++] & 0xFF);
                 }
 
-                /* Parse attribute table */
+                /* Skip attribute table */
                 zen_SymbolLoader_skipAttributeTable(loader);
 
                 /* Parse fields
                  * fieldCount fieldEntity*
                  */
-
                 uint16_t fieldCount = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
                     (loader->m_bytes[loader->m_index++] & 0xFF);
-                fields = (fieldCount > 0)?
-                    jtk_Memory_allocate(zen_FieldEntity_t*, fieldCount) : NULL;
-
                 int32_t j;
                 for (j = 0; j < fieldCount; j++) {
                     zen_SymbolLoader_parseField(parser);
                 }
 
-                // functionCount functionEntity*
+                /* Parse functions
+                 * functionCount functionEntity*
+                 */
 
                 uint16_t functionCount = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
                     (loader->m_bytes[loader->m_index++] & 0xFF);
-
-                functions = (functionCount > 0)?
-                    jtk_Memory_allocate(zen_FunctionEntity_t*, functionCount) : NULL;
-
                 int32_t k;
                 for (k = 0; k < functionCount; k++) {
-                    zen_FunctionEntity_t* functionEntity = zen_BinaryEntityParser_parseFunction(parser);
-                    entity->m_functions[k] = functionEntity;
+                    zen_SymbolLoader_parseFunction(parser);
                 }
             }
             else {
