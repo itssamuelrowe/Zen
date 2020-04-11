@@ -24,8 +24,9 @@
 #include <jtk/fs/FileInputStream.h>
 #include <jtk/io/BufferedInputStream.h>
 #include <jtk/io/InputStream.h>
+#include <jtk/core/CString.h>
 
-#include <com/onecube/zen/virtual-machine/loader/SymbolLoader.h>
+#include <com/onecube/zen/compiler/symbol-table/SymbolLoader.h>
 
 /*******************************************************************************
  * SymbolLoader                                                                *
@@ -50,7 +51,7 @@ zen_SymbolLoader_t* zen_SymbolLoader_newWithEntityDirectories(zen_Compiler_t* co
 
     zen_SymbolLoader_t* loader = zen_SymbolLoader_new(compiler);
     while (jtk_Iterator_hasNext(entityDirectoryIterator)) {
-        jtk_CString_t* directory = jtk_Iterator_getNext(entityDirectoryIterator);
+        uint8_t* directory = (uint8_t*)jtk_Iterator_getNext(entityDirectoryIterator);
         zen_SymbolLoader_addDirectory_s(loader, directory);
     }
 
@@ -73,7 +74,7 @@ void zen_SymbolLoader_delete(zen_SymbolLoader_t* loader) {
     while (jtk_Iterator_hasNext(entryIterator)) {
         jtk_HashMapEntry_t* entry = (jtk_HashMapEntry_t*)jtk_Iterator_getNext(entryIterator);
 
-        jtk_CString_t* descriptor = (jtk_CString_t*)jtk_HashMapEntry_getKey(entry);
+        uint8_t* descriptor = (uint8_t*)jtk_HashMapEntry_getKey(entry);
         jtk_CString_delete(descriptor);
 
 #warning "Should the entity be destroyed this way?"
