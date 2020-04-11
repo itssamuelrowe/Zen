@@ -30,7 +30,7 @@ zen_Symbol_t* zen_Symbol_new(zen_SymbolCategory_t category,
     symbol->m_identifier = identifier;
     symbol->m_enclosingScope = enclosingScope;
     symbol->m_modifiers = 0;
-    symbol->m_ticket = enclosingScope->m_nextTicket++;
+    symbol->m_ticket = (enclosingScope != NULL)? enclosingScope->m_nextTicket++ : -1;
     symbol->m_index = -1;
     symbol->m_flags = 0;
 

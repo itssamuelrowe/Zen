@@ -634,6 +634,16 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* loader, uint8_t* bytes,
                         (loader->m_bytes[loader->m_index++] & 0xFF);
                 }
 
+                zen_ConstantPoolUtf8_t* descriptor = loader->m_constantPool.m_entries[reference];
+                uint8_t* qualifiedName = jtk_CString_newEx(descriptor->m_bytes,
+                    descriptor->m_length);
+                jtk_Arrays_replace_b(qualifiedName, descriptor->m_length, '/', '.');
+
+                zen_Scope_t* classScope = zen_Scope_forClass(NULL);
+                symbol = zen_Symbol_forClass(NULL, NULL, classScope, qualifiedName,
+                    descriptor->m_length);
+                classScope->m_symbol = symbol;
+
                 /* Skip attribute table */
                 zen_SymbolLoader_skipAttributeTable(loader);
 

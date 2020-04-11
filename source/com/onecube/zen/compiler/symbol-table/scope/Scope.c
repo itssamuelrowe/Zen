@@ -128,7 +128,7 @@ void zen_Scope_define(zen_Scope_t* scope, zen_Symbol_t* symbol) {
  *     Push the super classes on to the stack. GOTO step 4.
  * 10. Return the symbol, if found. Otherwise, null.
  */
-zen_Symbol_t* zen_Scope_resolveClassmember(zen_Scope_t* scope,
+zen_Symbol_t* zen_Scope_resolveClassMember(zen_Scope_t* scope,
     const uint8_t* identifier) {
     jtk_Assert_assertObject(scope, "The specified class scope is null.");
     jtk_Assert_assertObject(identifier, "The specified identifier is null.");
@@ -175,7 +175,7 @@ zen_Symbol_t* zen_Scope_resolve(zen_Scope_t* scope, uint8_t* identifier) {
         }
 
         case ZEN_SCOPE_CLASS: {
-            result = zen_Scope_resolveClassmember(scope, identifier);
+            result = zen_Scope_resolveClassMember(scope, identifier);
             break;
         }
     }

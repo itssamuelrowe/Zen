@@ -158,21 +158,6 @@ jtk_InputStream_t* jtk_PathHelper_readEx(const uint8_t* path, uint32_t flags) {
     return result;
 }
 
-void jtk_Arrays_replaceEx_b(int8_t* array, int32_t size, uint8_t oldValue,
-    uint8_t newValue, int32_t startIndex, int32_t stopIndex) {
-    int32_t i;
-    for (i = startIndex; i < stopIndex; i++) {
-        if (array[i] == oldValue) {
-            array[i] = newValue;
-        }
-    }
-}
-
-void jtk_Arrays_replace_b(int8_t* array, int32_t size, uint8_t oldValue,
-    uint8_t newValue) {
-    jtk_Arrays_replaceEx_b(array, size, oldValue, newValue, 0, size);
-}
-
 uint8_t* jtk_PathHelper_getParent(const uint8_t* path, int32_t size,
     int32_t* resultSize) {
     size = size < 0? jtk_CString_getSize(path) : size;
