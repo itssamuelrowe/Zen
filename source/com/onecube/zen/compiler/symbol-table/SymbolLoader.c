@@ -372,8 +372,14 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* symbolLoader, uint8_t* 
                         }
 
                         case ZEN_CONSTANT_POOL_TAG_LONG: {
-                            uint32_t highBytes = jtk_Tape_readUncheckedInteger(parser->m_tape);
-                            uint32_t lowBytes = jtk_Tape_readUncheckedInteger(parser->m_tape);
+                            uint32_t highBytes = ((bytes[index++] & 0xFF) << 24) |
+                                ((bytes[index++] & 0xFF) << 16) |
+                                ((bytes[index++] & 0xFF) << 8) |
+                                (bytes[index++] & 0xFF);
+                            uint32_t lowBytes = ((bytes[index++] & 0xFF) << 24) |
+                                ((bytes[index++] & 0xFF) << 16) |
+                                ((bytes[index++] & 0xFF) << 8) |
+                                (bytes[index++] & 0xFF);
 
                             zen_ConstantPoolLong_t* constantPoolLong = jtk_Memory_allocate(zen_ConstantPoolLong_t, 1);
                             constantPoolLong->m_tag = ZEN_CONSTANT_POOL_TAG_LONG;
@@ -388,11 +394,14 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* symbolLoader, uint8_t* 
                         }
 
                         case ZEN_CONSTANT_POOL_TAG_FLOAT: {
-                            uint32_t bytes = jtk_Tape_readUncheckedInteger(parser->m_tape);
+                            uint32_t value = ((bytes[index++] & 0xFF) << 24) |
+                                ((bytes[index++] & 0xFF) << 16) |
+                                ((bytes[index++] & 0xFF) << 8) |
+                                (bytes[index++] & 0xFF);
 
                             zen_ConstantPoolFloat_t* constantPoolFloat = jtk_Memory_allocate(zen_ConstantPoolFloat_t, 1);
                             constantPoolFloat->m_tag = ZEN_CONSTANT_POOL_TAG_FLOAT;
-                            constantPoolFloat->m_bytes = bytes;
+                            constantPoolFloat->m_bytes = value;
 
                             constantPool.m_entries[i] = constantPoolFloat;
 
@@ -402,8 +411,14 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* symbolLoader, uint8_t* 
                         }
 
                         case ZEN_CONSTANT_POOL_TAG_DOUBLE: {
-                            uint32_t highBytes = jtk_Tape_readUncheckedInteger(parser->m_tape);
-                            uint32_t lowBytes = jtk_Tape_readUncheckedInteger(parser->m_tape);
+                            uint32_t highBytes = ((bytes[index++] & 0xFF) << 24) |
+                                ((bytes[index++] & 0xFF) << 16) |
+                                ((bytes[index++] & 0xFF) << 8) |
+                                (bytes[index++] & 0xFF);
+                            uint32_t lowBytes = ((bytes[index++] & 0xFF) << 24) |
+                                ((bytes[index++] & 0xFF) << 16) |
+                                ((bytes[index++] & 0xFF) << 8) |
+                                (bytes[index++] & 0xFF);
 
                             zen_ConstantPoolDouble_t* constantPoolDouble = jtk_Memory_allocate(zen_ConstantPoolDouble_t, 1);
                             constantPoolDouble->m_tag = ZEN_CONSTANT_POOL_TAG_DOUBLE;
@@ -418,32 +433,34 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* symbolLoader, uint8_t* 
                         }
 
                         case ZEN_CONSTANT_POOL_TAG_UTF8: {
-                            uint16_t length = jtk_Tape_readUncheckedShort(parser->m_tape);
+                            uint16_t length = ((bytes[index++] & 0xFF) << 8) |
+                                (bytes[index++] & 0xFF);
                             /* The specification guarantees that an empty string is never stored in a constant pool.
-                            *
-                            * Although the speciication does not specify the bytes to be null-terminated,
-                            * the reference implementation of the Zen Virtual Machine terminates
-                            * UTF8 constant pool entries for performance.
-                            */
+                             *
+                             * Although the speciication does not specify the bytes to be null-terminated,
+                             * the reference implementation of the compiler terminates UTF8 constant pool
+                             * entries for performance.
+                             */
 
-                            uint8_t* bytes = jtk_Memory_allocate(uint8_t, length + 1);
-                            bytes[length] = '\0';
-                            jtk_Tape_readUncheckedBytes(parser->m_tape, bytes, length);
+                            uint8_t* value = jtk_Memory_allocate(uint8_t, length + 1);
+                            value[length] = '\0';
+                            jtk_Arrays_copyEx_b(bytes, size, index, value, length, 0, length);
 
                             zen_ConstantPoolUtf8_t* constantPoolUtf8 = jtk_Memory_allocate(zen_ConstantPoolUtf8_t, 1);
                             constantPoolUtf8->m_tag = ZEN_CONSTANT_POOL_TAG_UTF8;
                             constantPoolUtf8->m_length = length;
-                            constantPoolUtf8->m_bytes = bytes;
+                            constantPoolUtf8->m_bytes = value;
 
                             constantPool.m_entries[i] = constantPoolUtf8;
 
-                            // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsed constant pool entry `zen_ConstantPoolUtf8_t`, stored at index %d.", index);
+                            jtk_Logger_debug(logger, "Parsed constant pool entry `zen_ConstantPoolUtf8_t`, stored at index %d.", index);
 
                             break;
                         }
 
                         case ZEN_CONSTANT_POOL_TAG_STRING: {
-                            uint16_t stringIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
+                            uint16_t stringIndex = ((bytes[index++] & 0xFF) << 8) |
+                                (bytes[index++] & 0xFF);
 
                             zen_ConstantPoolString_t* constantPoolString = jtk_Memory_allocate(zen_ConstantPoolString_t, 1);
                             constantPoolString->m_tag = ZEN_CONSTANT_POOL_TAG_STRING;
@@ -457,9 +474,12 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* symbolLoader, uint8_t* 
                         }
 
                         case ZEN_CONSTANT_POOL_TAG_FUNCTION: {
-                            uint16_t classIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
-                            uint16_t descriptorIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
-                            uint16_t nameIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
+                            uint16_t classIndex = ((bytes[index++] & 0xFF) << 8) |
+                                (bytes[index++] & 0xFF);
+                            uint16_t descriptorIndex = ((bytes[index++] & 0xFF) << 8) |
+                                (bytes[index++] & 0xFF);
+                            uint16_t nameIndex = ((bytes[index++] & 0xFF) << 8) |
+                                (bytes[index++] & 0xFF);
 
                             zen_ConstantPoolFunction_t* constantPoolFunction = jtk_Memory_allocate(zen_ConstantPoolFunction_t, 1);
                             constantPoolFunction->m_tag = ZEN_CONSTANT_POOL_TAG_FUNCTION;
@@ -475,8 +495,10 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* symbolLoader, uint8_t* 
                         }
 
                         case ZEN_CONSTANT_POOL_TAG_FIELD: {
-                            uint16_t descriptorIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
-                            uint16_t nameIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
+                            uint16_t descriptorIndex = ((bytes[index++] & 0xFF) << 8) |
+                                (bytes[index++] & 0xFF);
+                            uint16_t nameIndex = ((bytes[index++] & 0xFF) << 8) |
+                                (bytes[index++] & 0xFF);
 
                             zen_ConstantPoolField_t* constantPoolField = jtk_Memory_allocate(zen_ConstantPoolField_t, 1);
                             constantPoolField->m_tag = ZEN_CONSTANT_POOL_TAG_FIELD;
@@ -491,7 +513,8 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* symbolLoader, uint8_t* 
                         }
 
                         case ZEN_CONSTANT_POOL_TAG_CLASS: {
-                            uint16_t nameIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
+                            uint16_t nameIndex = ((bytes[index++] & 0xFF) << 8) |
+                                (bytes[index++] & 0xFF);
 
                             zen_ConstantPoolClass_t* constantPoolClass = jtk_Memory_allocate(zen_ConstantPoolClass_t, 1);
                             constantPoolClass->m_tag = ZEN_CONSTANT_POOL_TAG_CLASS;
