@@ -575,6 +575,20 @@ void zen_SymbolLoader_parseFunction(zen_SymbolLoader_t* loader) {
     zen_SymbolLoader_skipAttributeTable(loader);
 }
 
+void zen_SymbolLoader_destroyConstantPool(zen_SymbolLoader_t* loader) {
+    zen_ConstantPool_t* constantPool = &loader->m_constantPool;
+    int32_t i;
+    for (i = 1; i <= constantPool->m_size; i++) {
+        zen_ConstantPoolEntry_t* entry = (zen_ConstantPoolEntry_t*)constantPool->m_entries[i];
+        if (entry->m_tag == ZEN_CONSTANT_POOL_TAG_UTF8) {
+            zen_ConstantPoolUtf8_t* utf8Entry = (zen_ConstantPoolUtf8_t*)entry;
+            jtk_Memory_deallocate(utf8Entry->m_bytes);
+        }
+        jtk_Memory_deallocate(entry);
+    }
+    jtk_Memory_deallocate(loader->m_constantPool.m_entries);
+}
+
 zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* loader, uint8_t* bytes,
     int32_t size) {
     zen_Compiler_t* compiler = loader->m_compiler;
@@ -658,7 +672,7 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* loader, uint8_t* bytes,
     loader->m_bytes = NULL;
     loader->m_size = 0;
     if (loader->m_constantPool.m_entries != NULL) {
-        jtk_Memory_deallocate(loader->m_constantPool.m_entries);
+        zen_SymbolLoader_destroyConstantPool(loader);
     }
     loader->m_constantPool.m_size = 0;
     loader->m_constantPool.m_entries = NULL;
