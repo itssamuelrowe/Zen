@@ -3840,19 +3840,27 @@ zen_Object_t* zen_Interpreter_invokeVirtualFunction(zen_Interpreter_t* interpret
 
 /* Invoke Thread Exception Handler */
 
+void zen_Interpreter_formatClassDescriptor(const uint8_t* descriptor,
+    int32_t descriptorSize, uint8_t* buffer, int32_t bufferSize) {
+    int32_t k;
+    for (k = 0; (k < descriptorSize) && (k < (bufferSize - 1)); k++) {
+        if (descriptor[k] == '/') {
+            buffer[k] = '.';
+        }
+        else {
+            buffer[k] = descriptor[k];
+        }
+    }
+    buffer[k] = '\0';
+}
+
 void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter) {
     zen_Class_t* exceptionClass = zen_Object_getClass(interpreter->m_exception);
     uint8_t name[exceptionClass->m_descriptorSize + 1];
-    int32_t k;
-    for (k = 0; k < exceptionClass->m_descriptorSize; k++) {
-        if (exceptionClass->m_descriptor[k] == '/') {
-            name[k] = '.';
-        }
-        else {
-            name[k] = exceptionClass->m_descriptor[k];
-        }
-    }
-    name[exceptionClass->m_descriptorSize] = '\0';
+    zen_Interpreter_formatClassDescriptor(exceptionClass->m_descriptor,
+        exceptionClass->m_descriptorSize, name,
+        exceptionClass->m_descriptorSize + 1);
+
     printf("\033[1;31m[error]\033[0m An instance of \033[1;37m%s\033[0m was thrown as exception\n",
         name);
 
@@ -3862,7 +3870,7 @@ void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter
         zen_Class_t* class0 = stackFrame->m_class;
         zen_Function_t* function = stackFrame->m_function;
 
-        uint8_t* friendlyDescriptor = jtk_Memory_allocate(uint8_t, function->m_descriptorSize + 1);
+        uint8_t friendlyDescriptor[function->m_descriptorSize + 1];
         int32_t afterColon = -1;
         int32_t i;
         int32_t j = 0;
@@ -3890,11 +3898,14 @@ void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter
         }
         friendlyDescriptor[j] = '\0';
 
-        printf("        at %s.%s(%s) %s\n", class0->m_descriptor,
+        uint8_t functionClassDescriptor[class0->m_descriptorSize + 1];
+        zen_Interpreter_formatClassDescriptor(class0->m_descriptor,
+            class0->m_descriptorSize, functionClassDescriptor,
+            class0->m_descriptorSize + 1);
+        printf("        at %s%s%s(%s) %s\n", functionClassDescriptor,
+            ":", // zen_Function_isStatic(function)? "#" : ":",
             function->m_name, friendlyDescriptor,
             zen_Function_isNative(function)? "\033[1;37m[native]\033[0m" : "");
-
-        jtk_Memory_deallocate(friendlyDescriptor);
     }
     jtk_Iterator_delete(iterator);
 }
