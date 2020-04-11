@@ -25,7 +25,6 @@
 
 #include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/compiler/symbol-table/Symbol.h>
-#include <com/onecube/zen/virtual-machine/feb/EntityFile.h>
 
 #include <jtk/collection/Iterator.h>
 #include <jtk/collection/map/HashMap.h>
@@ -72,6 +71,9 @@ struct zen_SymbolLoader_t {
     jtk_HashMap_t* m_symbols;
 
     zen_Compiler_t* m_compiler;
+
+    int32_t m_index;
+    uint8_t* m_bytes;
 };
 
 /**
