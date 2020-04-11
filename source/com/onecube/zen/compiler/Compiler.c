@@ -66,8 +66,14 @@ void zen_Compiler_registerSymbol(zen_Compiler_t* compiler, const uint8_t* identi
 }
 
 zen_Symbol_t* zen_Compiler_resolveSymbol(zen_Compiler_t* compiler,
-    const uint8_t* identifier) {
-    return jtk_HashMap_getValue(compiler->m_repository, identifier);
+    const uint8_t* name, int32_t nameSize) {
+    zen_Symbol_t* result = jtk_HashMap_getValue(compiler->m_repository,
+        name);
+    if (result == NULL) {
+        result = zen_SymbolLoader_findSymbol(compiler->m_symbolLoader,
+            name, nameSize);
+    }
+    return result;
 }
 
 // Token
@@ -152,94 +158,6 @@ jtk_InputStream_t* jtk_PathHelper_readEx(const uint8_t* path, uint32_t flags) {
     return result;
 }
 
-int32_t jtk_CString_findLastEx_c(const char* string, int32_t size, int32_t codePoint,
-    int32_t index) {
-    int32_t result = -1;
-    int32_t i;
-    if (size < 0) {
-        while (string[i] != '\0') {
-            if (string[i] == codePoint) {
-                result = i;
-            }
-            i++;
-        }
-    }
-    else if (size > 0) {
-        for (i = index; i >= 0; i--) {
-            if (string[i] == codePoint) {
-                result = i;
-                break;
-            }
-        }
-    }
-    return result;
-}
-
-int32_t jtk_CString_findLast_c(const uint8_t* string, int32_t size, int32_t codePoint) {
-    return jtk_CString_findLastEx_c(string, size, codePoint, size - 1);
-}
-
-int32_t jtk_CString_findLastEx_z(const uint8_t* string, int32_t size,
-    const uint8_t* substring, int32_t substringSize, int32_t index) {
-    // TODO: Check index
-
-    int32_t result = -1;
-    if (substringSize == 0) {
-        result = index;
-    }
-    else {
-        int32_t lastIndex = size - 1;
-        uint8_t last = substring[lastIndex];
-        int32_t limit = size - 1;
-        int32_t i = limit + index;
-        search : while (true) {
-            uint8_t c = string[i];
-            while ((i >= limit) && (c != last)) {
-                i--;
-                c = string[i];
-            }
-
-            if (i < limit) {
-                result = -1;
-                break;
-            }
-
-            int32_t j = i - 1;
-            int32_t start = j - (size - 1);
-            int32_t k = lastIndex - 1;
-            while (j > start) {
-                uint8_t c0 = string[j];
-                uint8_t c1 = substring[k];
-                j--;
-                k--;
-                if (c0 != c1) {
-                    i--;
-                    goto search;
-                }
-            }
-
-            result = start + 1;
-            break;
-        }
-    }
-    return result;
-}
-
-int32_t jtk_CString_findLast_z(const uint8_t* string, int32_t size,
-    const uint8_t* substring, int32_t substringSize) {
-    return jtk_CString_findLastEx_z(string, size, substring, substringSize, 0);
-}
-
-uint8_t* jtk_CString_substring(const uint8_t* string, int32_t size,
-    int32_t startIndex) {
-    return jtk_CString_newEx(string + startIndex, size - startIndex);
-}
-
-uint8_t* jtk_CString_substringEx(const uint8_t* string, int32_t size,
-    int32_t startIndex, int32_t stopIndex) {
-    return jtk_CString_newEx(string + startIndex, stopIndex - startIndex);
-}
-
 void jtk_Arrays_replaceEx_b(int8_t* array, int32_t size, uint8_t oldValue,
     uint8_t newValue, int32_t startIndex, int32_t stopIndex) {
     int32_t i;
@@ -288,6 +206,7 @@ zen_Compiler_t* zen_Compiler_new() {
     compiler->m_scopes = NULL;
     compiler->m_packages = NULL;
     compiler->m_packageSizes = NULL;
+    compiler->m_symbolLoader = zen_SymbolLoader_new(compiler);
     compiler->m_repository = jtk_HashMap_new(stringObjectAdapter, NULL);
     compiler->m_trash = NULL;
 #ifdef JTK_LOGGER_DISABLE
@@ -653,6 +572,9 @@ void zen_Compiler_destroyNestedScopes(zen_ASTAnnotations_t* scopes) {
 
 bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t length) {
     jtk_Assert_assertObject(compiler, "The specified compiler is null.");
+
+    // TODO: Add the --path flag
+    zen_SymbolLoader_addDirectory(compiler->m_symbolLoader, ".");
 
     bool invalidCommandLine = false;
     int32_t i;

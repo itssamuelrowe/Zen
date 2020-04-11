@@ -215,7 +215,7 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
         zen_VirtualMachineConfiguration_delete(configuration);
     }
     else {
-        printf("[error] No main class specified\n");
+        printf("[error] No specify the main class.\n");
     }
 
     return 0;

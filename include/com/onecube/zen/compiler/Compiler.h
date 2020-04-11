@@ -27,6 +27,7 @@
 #include <com/onecube/zen/compiler/ast/ASTNode.h>
 #include <com/onecube/zen/compiler/ast/ASTAnnotations.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
+#include <com/onecube/zen/compiler/symbol-table/SymbolLoader.h>
 #include <com/onecube/zen/compiler/support/ErrorHandler.h>
 
 /******************************************************************************
@@ -51,7 +52,7 @@ struct zen_Compiler_t {
     zen_ASTAnnotations_t** m_scopes;
     uint8_t** m_packages;
     int32_t* m_packageSizes;
-
+    zen_SymbolLoader_t* m_symbolLoader;
     jtk_HashMap_t* m_repository;
     jtk_ArrayList_t* m_trash;
 };
@@ -89,7 +90,7 @@ void zen_Compiler_registerSymbol(zen_Compiler_t* compiler, const uint8_t* identi
     int32_t identifierSize, zen_Symbol_t* symbol);
 
 zen_Symbol_t* zen_Compiler_resolveSymbol(zen_Compiler_t* compiler,
-    const uint8_t* identifier);
+    const uint8_t* name, int32_t nameSize);
 
 // Token
 

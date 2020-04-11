@@ -25,15 +25,17 @@
 #include <jtk/io/BufferedInputStream.h>
 #include <jtk/io/InputStream.h>
 #include <jtk/core/CString.h>
+#include <jtk/core/CStringObjectAdapter.h>
 
 #include <com/onecube/zen/compiler/symbol-table/SymbolLoader.h>
+#include <com/onecube/zen/compiler/Compiler.h>
 
 /*******************************************************************************
  * SymbolLoader                                                                *
  *******************************************************************************/
 
 zen_SymbolLoader_t* zen_SymbolLoader_new(zen_Compiler_t* compiler) {
-    jtk_ObjectAdapter_t* stringObjectAdapter = jtk_StringObjectAdapter_getInstance();
+    jtk_ObjectAdapter_t* stringObjectAdapter = jtk_CStringObjectAdapter_getInstance();
 
     zen_SymbolLoader_t* loader = jtk_Memory_allocate(zen_SymbolLoader_t, 1);
     loader->m_directories = jtk_DoublyLinkedList_new();
@@ -47,12 +49,12 @@ zen_SymbolLoader_t* zen_SymbolLoader_new(zen_Compiler_t* compiler) {
 
 zen_SymbolLoader_t* zen_SymbolLoader_newWithEntityDirectories(zen_Compiler_t* compiler,
     jtk_Iterator_t* entityDirectoryIterator) {
-    jtk_ObjectAdapter_t* stringObjectAdapter = jtk_StringObjectAdapter_getInstance();
+    jtk_ObjectAdapter_t* stringObjectAdapter = jtk_CStringObjectAdapter_getInstance();
 
     zen_SymbolLoader_t* loader = zen_SymbolLoader_new(compiler);
     while (jtk_Iterator_hasNext(entityDirectoryIterator)) {
         uint8_t* directory = (uint8_t*)jtk_Iterator_getNext(entityDirectoryIterator);
-        zen_SymbolLoader_addDirectory_s(loader, directory);
+        zen_SymbolLoader_addDirectory(loader, directory);
     }
 
     return loader;
@@ -77,10 +79,11 @@ void zen_SymbolLoader_delete(zen_SymbolLoader_t* loader) {
         uint8_t* descriptor = (uint8_t*)jtk_HashMapEntry_getKey(entry);
         jtk_CString_delete(descriptor);
 
-#warning "Should the entity be destroyed this way?"
-        zen_EntityFile_t* entityFile = (zen_EntityFile_t*)jtk_HashMapEntry_getValue(entry->m_value);
-        // zen_EntityFile_delete(entityFile);
+        zen_Symbol_t* symbol = (zen_Symbol_t*)jtk_HashMapEntry_getValue(entry->m_value);
+        zen_Symbol_delete(symbol);
     }
+    jtk_Iterator_delete(entryIterator);
+    jtk_HashMap_delete(loader->m_symbols);
 
     jtk_Memory_deallocate(loader);
 }
@@ -110,13 +113,14 @@ bool zen_SymbolLoader_addDirectory(zen_SymbolLoader_t* loader, const uint8_t* di
 // Find Symbol
 
 zen_Symbol_t* zen_SymbolLoader_findSymbol(zen_SymbolLoader_t* loader,
-    const uint8_t* descriptor) {
+    const uint8_t* descriptor, int32_t descriptorSize) {
     jtk_Assert_assertObject(loader, "The specified entity loader is null.");
     jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
 
     zen_Symbol_t* result = (zen_Symbol_t*)jtk_HashMap_getValue(loader->m_symbols, descriptor);
     if (result == NULL) {
-        result = zen_SymbolLoader_loadSymbol(loader, descriptor);
+        result = zen_SymbolLoader_loadSymbol(loader, descriptor,
+            descriptorSize);
     }
 
     return result;
@@ -125,15 +129,17 @@ zen_Symbol_t* zen_SymbolLoader_findSymbol(zen_SymbolLoader_t* loader,
 // Load Symbol
 
 zen_Symbol_t* zen_SymbolLoader_loadSymbol(zen_SymbolLoader_t* loader,
-    const uint8_t* descriptor) {
+    const uint8_t* descriptor, int32_t descriptorSize) {
     jtk_Assert_assertObject(loader, "The specified entity loader is null.");
     jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
 
     zen_Symbol_t* result = NULL;
 
-    uint8_t* entityName = jtk_CString_newFromJoin(descriptor, ".feb");
-    jtk_Path_t* entityFile = jtk_Path_newFromStringEx(entityName->m_value, entityName->m_size);
-    jtk_CString_delete(entityName);
+    int32_t fileNameSize;
+    uint8_t* fileName = jtk_CString_join(descriptor, ".feb", &fileNameSize);
+    jtk_Arrays_replaceEx_b(fileName, fileNameSize, '.', '/', 0, fileNameSize - 4);
+    jtk_Path_t* entityFile = jtk_Path_newFromStringEx(fileName, fileNameSize);
+    jtk_CString_delete(fileName);
 
     /* Retrieve an iterator over the list of registered entity directories. */
     jtk_Iterator_t* iterator = jtk_DoublyLinkedList_getIterator(loader->m_directories);
@@ -159,8 +165,8 @@ zen_Symbol_t* zen_SymbolLoader_loadSymbol(zen_SymbolLoader_t* loader,
                     // NOTE: The loader should not maintain any reference to entity path.
                     result = zen_SymbolLoader_loadSymbolFromHandle(loader, entityPathHandle);
                     if (result != NULL) {
-                        uint8_t* entityDescriptor = jtk_CString_new(descriptor);
-                        jtk_HashMap_put(loader->m_symbols, entityDescriptor, result);
+                        uint8_t* identifier = jtk_CString_newEx(descriptor, descriptorSize);
+                        jtk_HashMap_put(loader->m_symbols, identifier, result);
                     }
                     else {
                         /* At this point, the entity loader found an entity file. Unfortunately, the
@@ -252,12 +258,12 @@ jtk_ByteArray_t* jtk_InputStreamHelper_toArray(jtk_InputStream_t* stream) {
     return array;
 }
 
-zen_EntityFile_t* zen_SymbolLoader_loadEntityFromHandle(zen_SymbolLoader_t* loader,
+zen_Symbol_t* zen_SymbolLoader_loadSymbolFromHandle(zen_SymbolLoader_t* loader,
     jtk_PathHandle_t* handle) {
     jtk_Assert_assertObject(loader, "The specified entity loader is null.");
     jtk_Assert_assertObject(handle, "The specified entity path handle is null.");
 
-    zen_EntityFile_t* result = NULL;
+    zen_Symbol_t* result = NULL;
     jtk_FileInputStream_t* fileInputStream = jtk_FileInputStream_newFromHandle(handle);
     if (fileInputStream != NULL) {
         jtk_BufferedInputStream_t* bufferedInputStream = jtk_BufferedInputStream_newEx(
@@ -266,11 +272,8 @@ zen_EntityFile_t* zen_SymbolLoader_loadEntityFromHandle(zen_SymbolLoader_t* load
 
         jtk_ByteArray_t* input = jtk_InputStreamHelper_toArray(inputStream);
 
-        zen_BinaryEntityParser_t* parser = zen_BinaryEntityParser_new(
-            loader->m_attributeParseRules, input->m_values, input->m_size);
-        result = zen_BinaryEntityParser_parse(parser, inputStream);
+        result = zen_SymbolLoader_parse(loader, input->m_values, input->m_size);
 
-        zen_BinaryEntityParser_delete(parser);
         jtk_ByteArray_delete(input);
         jtk_InputStream_destroy(inputStream);
     }
@@ -279,6 +282,11 @@ zen_EntityFile_t* zen_SymbolLoader_loadEntityFromHandle(zen_SymbolLoader_t* load
     }
 
     return result;
+}
+
+zen_Symbol_t* zen_SymbolLoader_parse(zen_Symbol_t* symbolLoader, uint8_t* bytes,
+    int32_t size) {
+    return NULL;
 }
 
 // Ignore Corrupt Entity
@@ -296,21 +304,4 @@ void zen_SymbolLoader_setIgnoreCorruptEntity(zen_SymbolLoader_t* loader,
     loader->m_flags = ignoreCorruptEntity?
         (loader->m_flags | ZEN_ENTITY_LOADER_FLAG_IGNORE_CORRUPT_ENTITY) :
         (loader->m_flags & ~ZEN_ENTITY_LOADER_FLAG_IGNORE_CORRUPT_ENTITY);
-}
-
-// Load
-
-zen_Symbol_t* zen_SymbolLoader_loadFromEntityFile(zen_SymbolLoader_t* loader,
-    const uint8_t* descriptor, int32_t descriptorSize,
-    zen_EntityFile_t* entityFile) {
-    jtk_Assert_assertObject(loader, "The specified class loader is null.");
-    jtk_Assert_assertObject(descriptor, "The specified class descriptor is null.");
-    jtk_Assert_assertObject(entityFile, "The specified entity file is null.");
-
-    zen_Symbol_t* symbol = zen_SymbolLoader_makeClassSymbol(loader,
-        entityFile);
-    uint8_t* descriptorCopy = jtk_CString_newEx(descriptor, descriptorSize);
-    jtk_HashMap_put(loader->m_classes, descriptorCopy, symbol);
-
-    return symbol;
 }

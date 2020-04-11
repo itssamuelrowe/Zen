@@ -29,13 +29,15 @@
 #include <jtk/fs/Path.h>
 
 #include <com/onecube/zen/Configuration.h>
-#include <com/onecube/zen/compiler/Compiler.h>
 #include <com/onecube/zen/compiler/symbol-table/Symbol.h>
 #include <com/onecube/zen/virtual-machine/feb/EntityFile.h>
 
 #define ZEN_ENTITY_LOADER_FLAG_PRIORITIZE_DIRECTORIES (1 << 0)
 #define ZEN_ENTITY_LOADER_FLAG_IGNORE_CORRUPT_ENTITY (1 << 1)
 
+/*******************************************************************************
+ * SymbolLoader                                                                *
+ *******************************************************************************/
 
 #define ZEN_ENTITY_LOADER_DEFAULT_ENTITIES_MAP_CAPCITY 128
 
@@ -45,6 +47,8 @@
  * misses and increase the cache hits in the buffered input stream.
  */
 #define ZEN_ENTITY_LOADER_BUFFER_SIZE (3 * 1024)
+
+typedef struct zen_Compiler_t zen_Compiler_t;
 
 /**
  * @class SymbolLoader
@@ -101,15 +105,7 @@ bool zen_SymbolLoader_addDirectory(zen_SymbolLoader_t* loader, const uint8_t* di
  */
 
 zen_Symbol_t* zen_SymbolLoader_findSymbol(zen_SymbolLoader_t* loader,
-    const uint8_t* descriptor);
-
-/**
- * It tries to find a previously loaded class with the specified descriptor in
- * the class registry. If not found, it fails without raising any exception.
- *
- * @memberof SymbolLoader
- */
-zen_EntityFile_t* zen_SymbolLoader_getEntity(zen_SymbolLoader_t* loader, const uint8_t* descriptor);
+    const uint8_t* descriptor, int32_t descriptorSize);
 
 /**
  * It tries to load a class with the specified descriptor from a physical
@@ -119,7 +115,7 @@ zen_EntityFile_t* zen_SymbolLoader_getEntity(zen_SymbolLoader_t* loader, const u
  * @memberof SymbolLoader
  */
 zen_Symbol_t* zen_SymbolLoader_loadSymbol(zen_SymbolLoader_t* loader,
-    const uint8_t* descriptor);
+    const uint8_t* descriptor, int32_t descriptorSize);
 
 /**
  * It tries to load a class from the specified regular file path. If the file
@@ -136,22 +132,15 @@ zen_EntityFile_t* zen_SymbolLoader_loadEntityFromHandle(zen_SymbolLoader_t* load
  *
  * @memberof SymbolLoader
  */
-zen_EntityFile_t* zen_SymbolLoader_loadEntityFromHandle(zen_SymbolLoader_t* loader,
+zen_Symbol_t* zen_SymbolLoader_loadSymbolFromHandle(zen_SymbolLoader_t* loader,
     jtk_PathHandle_t* handle);
+
+zen_Symbol_t* zen_SymbolLoader_parse(zen_Symbol_t* symbolLoader, uint8_t* bytes,
+    int32_t size);
 
 // Ignore Corrupt Entity
 
 bool zen_SymbolLoader_shouldIgnoreCorruptEntity(zen_SymbolLoader_t* loader);
 void zen_SymbolLoader_setIgnoreCorruptEntity(zen_SymbolLoader_t* loader, bool ignoreCorruptEntity);
-
-// Load
-
-/**
- * This function does not ensure that a class with the specified descriptor was
- * previously loaded. This behavior can cause memory leaks if used incorrectly.
- */
-zen_Symbol_t* zen_SymbolLoader_loadFromEntityFile(zen_SymbolLoader_t* loader,
-    const uint8_t* descriptor, int32_t descriptorSize,
-    zen_EntityFile_t* entityFile);
 
 #endif /* COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_SYMBOL_LOADER_H */

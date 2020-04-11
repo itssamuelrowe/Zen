@@ -456,7 +456,8 @@ void zen_SymbolResolutionListener_onEnterImportDeclaration(
         uint8_t* qualifiedName = jtk_StringBuilder_toCString(builder, &qualifiedNameSize);
         jtk_StringBuilder_delete(builder);
 
-        zen_Symbol_t* symbol = zen_Compiler_resolveSymbol(compiler, qualifiedName);
+        zen_Symbol_t* symbol = zen_Compiler_resolveSymbol(compiler, qualifiedName,
+            qualifiedNameSize);
         if (symbol == NULL) {
             zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
                 ZEN_ERROR_CODE_UNKNOWN_CLASS, lastIdentifierToken);
