@@ -48,6 +48,11 @@
 #define zen_Assert_assertRange(startIndex, stopIndex, size, message) puts("TODO: zen_Assert_assertRange");
 #define zen_Assert_assertAddIndex(index, size, message) assert(((index) <= (size)) && ((index) >= 0))
 
+#undef jtk_Memory_allocate
+#undef jtk_Memory_deallocate
+#define jtk_Memory_allocate(type, size) (type*)malloc(sizeof (type) * (size))
+#define jtk_Memory_deallocate(object) free(object)
+
 void* zen_Memory_allocate0(int32_t size);
 
 #endif /* ZEN_CONFIGURATION_H */

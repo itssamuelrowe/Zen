@@ -2538,7 +2538,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_POP2: { /* pop2 */
                 /* Discard the first two operands on top of the operand stack. */
-                zen_OperandStack_popEx(currentStackFrame->m_operandStack, 2);
+                zen_OperandStack_popEx(currentStackFrame->m_operandStack);
 
                 /* Log debugging information for assistance in debugging the interpreter. */
                 jtk_Logger_debug(logger, "Executed instruction `pop2` (operand stack = %d)",

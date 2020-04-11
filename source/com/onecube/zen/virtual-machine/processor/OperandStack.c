@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2020 Samuel Rowe
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -55,7 +55,7 @@ void zen_OperandStack_delete(zen_OperandStack_t* stack) {
 
     // zen_MemoryManager_deallocate(manager, stack->m_values);
     // zen_MemoryManager_deallocate(manager, stack);
-    
+
     jtk_Memory_deallocate(stack->m_values);
     jtk_Memory_deallocate(stack);
 }
@@ -80,9 +80,9 @@ int32_t zen_OperandStack_getCapacity(zen_OperandStack_t* stack) {
 
 void zen_OperandStack_duplicate(zen_OperandStack_t* stack) {
     jtk_Assert_assertObject(stack, "The specified operand stack is null.");
-    
+
     // TODO: Duplciate should work with 4 bytes!
-    
+
     stack->m_values[stack->m_size] = stack->m_values[stack->m_size - 2];
     stack->m_values[stack->m_size + 1] = stack->m_values[stack->m_size - 1];
     stack->m_size += 2;
