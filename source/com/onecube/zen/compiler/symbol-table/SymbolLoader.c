@@ -56,6 +56,11 @@ zen_SymbolLoader_t* zen_SymbolLoader_new(zen_Compiler_t* compiler) {
     loader->m_symbols = jtk_HashMap_newEx(stringObjectAdapter, NULL,
         ZEN_ENTITY_LOADER_DEFAULT_ENTITIES_MAP_CAPCITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
     loader->m_compiler = compiler;
+    loader->m_index = 0;
+    loader->m_bytes = NULL;
+    loader->m_size = -1;
+    loader->m_constantPool.m_size = 0;
+    loader->m_constantPool.m_entries = NULL;
 
     return loader;
 }
@@ -97,6 +102,10 @@ void zen_SymbolLoader_delete(zen_SymbolLoader_t* loader) {
     }
     jtk_Iterator_delete(entryIterator);
     jtk_HashMap_delete(loader->m_symbols);
+
+    if (loader->m_constantPool.m_entries != NULL) {
+        jtk_Memory_deallocate(loader->m_constantPool.m_entries);
+    }
 
     jtk_Memory_deallocate(loader);
 }
@@ -423,6 +432,7 @@ void zen_SymbolLoader_parseConstantPool(zen_SymbolLoader_t* loader) {
                 value[length] = '\0';
                 jtk_Arrays_copyEx_b(loader->m_bytes, loader->m_size, loader->m_index,
                     value, length, 0, length);
+                loader->m_index += length;
 
                 zen_ConstantPoolUtf8_t* constantPoolUtf8 = jtk_Memory_allocate(zen_ConstantPoolUtf8_t, 1);
                 constantPoolUtf8->m_tag = ZEN_CONSTANT_POOL_TAG_UTF8;
@@ -557,6 +567,10 @@ void zen_SymbolLoader_parseFunction(zen_SymbolLoader_t* loader) {
     uint16_t descriptorIndex = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
         (loader->m_bytes[loader->m_index++] & 0xFF);
 
+    // Define function
+
+    printf("Function defined!\n");
+
     // Skip attribute table
     zen_SymbolLoader_skipAttributeTable(loader);
 }
@@ -570,6 +584,7 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* loader, uint8_t* bytes,
     loader->m_bytes = bytes;
     loader->m_size = size;
 
+    zen_Symbol_t* symbol = NULL;
     if (loader->m_index + ZEN_FEB_HEADER_SIZE < size) {
         uint32_t magicNumber = ((loader->m_bytes[loader->m_index++] & 0xFF) << 24) |
                                ((loader->m_bytes[loader->m_index++] & 0xFF) << 16) |
@@ -584,14 +599,13 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* loader, uint8_t* bytes,
             if ((majorVersion < ZEN_BINARY_ENTITY_FORMAT_MAJOR_VERSION) ||
                 ((majorVersion == ZEN_BINARY_ENTITY_FORMAT_MAJOR_VERSION) &&
                 (minorVersion <= ZEN_BINARY_ENTITY_FORMAT_MINOR_VERSION))) {
-                uint16_t flags = (uint16_t)(((uint32_t)(loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
+                uint16_t entityFlags = (uint16_t)(((uint32_t)(loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
                     (loader->m_bytes[loader->m_index++] & 0xFF));
 
                 // Constant Pool
                 zen_SymbolLoader_parseConstantPool(loader);
 
                 /* Parse the entity */
-
                 uint8_t type = (loader->m_bytes[loader->m_index++] & 0xFF);
                 uint16_t flags = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
                                 (loader->m_bytes[loader->m_index++] & 0xFF);
@@ -639,5 +653,15 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* loader, uint8_t* bytes,
         }
     }
 
-    return NULL;
+    /* Reset the symbol loader. */
+    loader->m_index = 0;
+    loader->m_bytes = NULL;
+    loader->m_size = 0;
+    if (loader->m_constantPool.m_entries != NULL) {
+        jtk_Memory_deallocate(loader->m_constantPool.m_entries);
+    }
+    loader->m_constantPool.m_size = 0;
+    loader->m_constantPool.m_entries = NULL;
+
+    return symbol;
 }
