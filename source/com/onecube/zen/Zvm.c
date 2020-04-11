@@ -208,9 +208,9 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
         zen_VirtualMachine_shutDown(virtualMachine);
 
         /* Destroy the virtual machine and its configuration. Objects allocated
-        * via the VirtualMachine class are automatically collected by the garbage
-        * collector.
-        */
+         * via the VirtualMachine class are automatically collected by the garbage
+         * collector.
+         */
         zen_VirtualMachine_delete(virtualMachine);
         zen_VirtualMachineConfiguration_delete(configuration);
     }

@@ -70,6 +70,11 @@ typedef void (*zen_ErrorHandler_OnSyntacticalErrorFunction_t)(void* context, zen
 typedef void (*zen_ErrorHandler_OnSemanticalErrorFunction_t)(void* context, void* origin, zen_Error_t* error);
 
 /**
+ * @memberof ErrorHandler
+ */
+typedef void (*zen_ErrorHandler_OnGeneralErrorFunction_t)(void* context, void* origin, zen_Error_t* error);
+
+/**
  * @class ErrorHandler
  * @author Samuel Rowe
  * @ingroup zen_compiler
@@ -83,6 +88,7 @@ struct zen_ErrorHandler_t {
     zen_ErrorHandler_OnLexicalErrorFunction_t m_onLexicalError;
     zen_ErrorHandler_OnSyntacticalErrorFunction_t m_onSyntacticalError;
     zen_ErrorHandler_OnSemanticalErrorFunction_t m_onSemanticalError;
+    zen_ErrorHandler_OnGeneralErrorFunction_t m_onGeneralError;
 
     jtk_ArrayList_t* m_errors;
     bool m_active;
@@ -180,6 +186,12 @@ zen_ErrorHandler_OnSemanticalErrorFunction_t zen_ErrorHandler_getOnSemanticalErr
  */
 void zen_ErrorHandler_handleSemanticalError(zen_ErrorHandler_t* handler,
     void* origin, zen_ErrorCode_t errorCode, zen_Token_t* token);
+
+/**
+ * @memberof ErrorHandler
+ */
+void zen_ErrorHandler_handleGeneralError(zen_ErrorHandler_t* handler,
+    void* origin, zen_ErrorCode_t errorCode);
 
 // Errors
 

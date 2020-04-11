@@ -23,14 +23,14 @@
  * SymbolLoader                                                                *
  *******************************************************************************/
 
+#include <com/onecube/zen/Configuration.h>
+#include <com/onecube/zen/compiler/symbol-table/Symbol.h>
+#include <com/onecube/zen/virtual-machine/feb/EntityFile.h>
+
 #include <jtk/collection/Iterator.h>
 #include <jtk/collection/map/HashMap.h>
 #include <jtk/collection/list/DoublyLinkedList.h>
 #include <jtk/fs/Path.h>
-
-#include <com/onecube/zen/Configuration.h>
-#include <com/onecube/zen/compiler/symbol-table/Symbol.h>
-#include <com/onecube/zen/virtual-machine/feb/EntityFile.h>
 
 #define ZEN_ENTITY_LOADER_FLAG_PRIORITIZE_DIRECTORIES (1 << 0)
 #define ZEN_ENTITY_LOADER_FLAG_IGNORE_CORRUPT_ENTITY (1 << 1)

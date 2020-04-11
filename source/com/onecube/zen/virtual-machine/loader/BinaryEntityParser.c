@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2020 Samuel Rowe
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -301,7 +301,7 @@ void zen_BinaryEntityParser_parseEntity(zen_BinaryEntityParser_t* parser) {
 
     zen_Entity_t* entity = &parser->m_entityFile->m_entity;
     uint8_t type = jtk_Tape_readUncheckedByte(parser->m_tape);
-    
+
     entity->m_type = type;
 
     uint16_t flags = jtk_Tape_readUncheckedShort(parser->m_tape);
@@ -521,7 +521,7 @@ zen_FieldEntity_t* zen_BinaryEntityParser_parseField(zen_BinaryEntityParser_t* p
 /*zen_ClassEntity_t* zen_BinaryEntityParser_parseClass(zen_BinaryEntityParser_t* parser) {
     jtk_Assert_assertObject(parser, "The specified binary entity parser is null.");
 
-    
+
     return classEntity;
 }
 */

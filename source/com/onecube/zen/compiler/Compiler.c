@@ -324,7 +324,12 @@ const uint8_t* zen_ErrorCode_messages[] = {
     "Redeclaration of symbol as class",
     "Unknown class",
     "Redeclaration of symbol previously imported",
-    "Cannot declare function and class in the same compilation unit"
+    "Cannot declare function and class in the same compilation unit",
+
+    // General Errors
+
+    "Corrupted binary entity",
+    "Binary entity encoded in unrecognizable FEB version"
 };
 
 void zen_Compiler_printErrors(zen_Compiler_t* compiler) {

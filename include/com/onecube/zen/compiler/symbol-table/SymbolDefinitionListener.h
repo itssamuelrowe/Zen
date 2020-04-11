@@ -19,6 +19,7 @@
 #ifndef COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_SYMBOL_DEFINITION_LISTENER_H
 #define COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_SYMBOL_DEFINITION_LISTENER_H
 
+#include <com/onecube/zen/Configuration.h>
 #include <com/onecube/zen/compiler/Compiler.h>
 #include <com/onecube/zen/compiler/ast/ASTListener.h>
 #include <com/onecube/zen/compiler/ast/context/Context.h>

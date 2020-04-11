@@ -165,6 +165,22 @@ void zen_ErrorHandler_handleSemanticalError(zen_ErrorHandler_t* handler,
     }
 }
 
+void zen_ErrorHandler_handleGeneralError(zen_ErrorHandler_t* handler,
+    void* origin, zen_ErrorCode_t errorCode) {
+    jtk_Assert_assertObject(handler, "The specified error handler is null.");
+
+    zen_Error_t* error = zen_Error_new(errorCode, NULL);
+    jtk_ArrayList_add(handler->m_errors, error);
+
+    // if (handler->m_handleGeneralError != NULL) {
+    //     handler->m_handleGeneralError(handler->m_context, origin, error);
+    // }
+
+    if (handler->m_active && (handler->m_onGeneralError != NULL)) {
+        handler->m_onGeneralError(handler->m_context, origin, error);
+    }
+}
+
 // Errors
 
 jtk_ArrayList_t* zen_ErrorHandler_getErrors(zen_ErrorHandler_t* handler) {
