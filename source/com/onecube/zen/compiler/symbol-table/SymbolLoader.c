@@ -529,7 +529,65 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* symbolLoader, uint8_t* 
                     }
                 }
 
-                // Entity
+                /* Parse the entity */
+
+                uint8_t type = (bytes[index++] & 0xFF);
+                uint16_t flags = ((bytes[index++] & 0xFF) << 8) |
+                                (bytes[index++] & 0xFF);
+                uint16_t reference = ((bytes[index++] & 0xFF) << 8) |
+                                (bytes[index++] & 0xFF);
+                uint16_t superclassCount = ((bytes[index++] & 0xFF) << 8) |
+                    (bytes[index++] & 0xFF);
+                uint16_t* superclasses = zen_Memory_allocate(uint16_t, superclassCount);
+                int32_t i;
+                for (i = 0; i < superclassCount; i++) {
+                    superclasses[i] = ((bytes[index++] & 0xFF) << 8) |
+                        (bytes[index++] & 0xFF);
+                }
+
+                /* Parse attribute table */
+                uint16_t size = ((bytes[index++] & 0xFF) << 8) |
+                    (bytes[index++] & 0xFF);
+                for (i = 0; i < size; i++) {
+                    uint16_t nameIndex = ((bytes[index++] & 0xFF) << 8) |
+                    (bytes[index++] & 0xFF);
+                    uint32_t length = ((bytes[index++] & 0xFF) << 24) |
+                        ((bytes[index++] & 0xFF) << 16) |
+                        ((bytes[index++] & 0xFF) << 8) |
+                        (bytes[index++] & 0xFF);
+
+                    /* Skip the bytes occupied by the unrecognized attribute. */
+                    index += length;
+                }
+
+                /* Parse fields
+                 * fieldCount fieldEntity*
+                 */
+
+                uint16_t fieldCount = ((bytes[index++] & 0xFF) << 8) |
+                    (bytes[index++] & 0xFF);
+                fields = (fieldCount > 0)?
+                    jtk_Memory_allocate(zen_FieldEntity_t*, fieldCount) : NULL;
+
+                int32_t j;
+                for (j = 0; j < fieldCount; j++) {
+                    zen_FieldEntity_t* fieldEntity = zen_BinaryEntityParser_parseField(parser);
+                    entity->m_fields[j] = fieldEntity;
+                }
+
+                // functionCount functionEntity*
+
+                uint16_t functionCount = ((bytes[index++] & 0xFF) << 8) |
+                    (bytes[index++] & 0xFF);
+
+                functions = (functionCount > 0)?
+                    jtk_Memory_allocate(zen_FunctionEntity_t*, functionCount) : NULL;
+
+                int32_t k;
+                for (k = 0; k < functionCount; k++) {
+                    zen_FunctionEntity_t* functionEntity = zen_BinaryEntityParser_parseFunction(parser);
+                    entity->m_functions[k] = functionEntity;
+                }
             }
             else {
                 zen_ErrorHandler_handleGeneralError(errorHandler, ZEN_ERROR_CODE_INVALID_FEB_VERSION);
