@@ -3903,7 +3903,7 @@ void zen_Interpreter_invokeThreadExceptionHandler(zen_Interpreter_t* interpreter
             class0->m_descriptorSize, functionClassDescriptor,
             class0->m_descriptorSize + 1);
         printf("        at %s%s%s(%s) %s\n", functionClassDescriptor,
-            ":", // zen_Function_isStatic(function)? "#" : ":",
+            "#", // zen_Function_isStatic(function)? "#" : ":",
             function->m_name, friendlyDescriptor,
             zen_Function_isNative(function)? "\033[1;37m[native]\033[0m" : "");
     }
