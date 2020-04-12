@@ -37,6 +37,8 @@
 struct zen_FunctionSignature_t {
     jtk_ArrayList_t* m_fixedParameters;
     zen_ASTNode_t* m_variableParameter;
+    uint8_t* m_descriptor;
+    int32_t m_descriptorSize;
 };
 
 /**
@@ -51,6 +53,9 @@ typedef struct zen_FunctionSignature_t zen_FunctionSignature_t;
  */
 zen_FunctionSignature_t* zen_FunctionSignature_new(jtk_ArrayList_t* fixedParameters,
     zen_ASTNode_t* variableParameter);
+
+zen_FunctionSignature_t* zen_FunctionSignature_newEx(const uint8_t* descriptor,
+    int32_t descriptorSize);
 
 // Destructor
 

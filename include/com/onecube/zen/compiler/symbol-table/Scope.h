@@ -128,6 +128,12 @@ bool zen_Scope_isLocalScope(zen_Scope_t* scope);
  */
 void zen_Scope_define(zen_Scope_t* scope, zen_Symbol_t* symbol);
 
+/**
+ * @memberof Scope
+ */
+void zen_Scope_defineEx(zen_Scope_t* scope, const uint8_t* descriptor,
+    int32_t descriptorSize, zen_Symbol_t* symbol);
+
 // Enclosing Scope
 
 /**

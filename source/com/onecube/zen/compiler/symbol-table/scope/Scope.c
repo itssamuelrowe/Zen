@@ -103,7 +103,12 @@ zen_Scope_t* zen_Scope_getEnclosingScope(zen_Scope_t* scope) {
 
 void zen_Scope_define(zen_Scope_t* scope, zen_Symbol_t* symbol) {
     const uint8_t* text = ((zen_Token_t*)symbol->m_identifier->m_context)->m_text;
-    if (!jtk_HashMap_putStrictly(scope->m_symbols, (void*)text, symbol)) {
+    zen_Scope_defineEx(scope, text, -1, symbol);
+}
+
+void zen_Scope_defineEx(zen_Scope_t* scope, const uint8_t* descriptor,
+    int32_t descriptorSize, zen_Symbol_t* symbol) {
+    if (!jtk_HashMap_putStrictly(scope->m_symbols, (void*)descriptor, symbol)) {
         fprintf(stderr, "[internal error] zen_Scope_define() invoked to redefine a symbol.\n");
     }
 }

@@ -555,6 +555,13 @@ void zen_SymbolLoader_parseField(zen_SymbolLoader_t* loader) {
     zen_SymbolLoader_skipAttributeTable(loader);
 }
 
+void zen_SymbolLoader_declareFunction(zen_SymbolLoader_t* loader,
+    zen_Symbol_t* symbol, const uint8_t* descriptor, int32_t descriptorSize) {
+    zen_FunctionSymbol_t* functionSymbol = &symbol->m_context.m_asFunction;
+    zen_FunctionSignature_t* signature = zen_FunctionSignature_newEx(descriptor, descriptorSize);
+    zen_FunctionSymbol_addSignature(functionSymbol, signature);
+}
+
 void zen_SymbolLoader_parseFunction(zen_SymbolLoader_t* loader) {
     // Flags
     uint16_t flags = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
@@ -563,6 +570,7 @@ void zen_SymbolLoader_parseFunction(zen_SymbolLoader_t* loader) {
     // Name Index
     uint16_t nameIndex = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
         (loader->m_bytes[loader->m_index++] & 0xFF);
+    zen_ConstantPoolUtf8_t* name = loader->m_constantPool.m_entries[nameIndex];
 
     // Descriptor Index
     uint16_t descriptorIndex = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
@@ -573,15 +581,18 @@ void zen_SymbolLoader_parseFunction(zen_SymbolLoader_t* loader) {
     zen_Symbol_t* classSymbol = loader->m_symbol;
     zen_Scope_t* classScope = classSymbol->m_context.m_asClass.m_classScope;
     zen_Symbol_t* functionSymbol = zen_Scope_resolve(classScope, descriptor->m_bytes);
-    if (functionSymbol != NULL) {
-        zen_FunctionSymbol_t* context = &functionSymbol->m_context.m_asFunction;
-        // zen_SymbolLoader_declareOverloadedFunction();
-    }
-    else {
+    if (functionSymbol == NULL) {
         functionSymbol = zen_Symbol_forFunction(NULL, classScope);
-        zen_Scope_defineEx(classScope, descriptor->m_bytes, descriptor->m_length,
-            functionSymbol);
+        const uint8_t* name0 = name->m_bytes;
+        int32_t nameSize0 = name->m_length;
+        if (jtk_CString_equals(name->m_bytes, name->m_length, "<initialize>", 12)) {
+            name0 = "new";
+            nameSize0 = 3;
+        }
+        zen_Scope_defineEx(classScope, name0, nameSize0, functionSymbol);
     }
+    zen_SymbolLoader_declareFunction(loader, functionSymbol, descriptor->m_bytes,
+        descriptor->m_length);
 
     // Skip attribute table
     zen_SymbolLoader_skipAttributeTable(loader);
