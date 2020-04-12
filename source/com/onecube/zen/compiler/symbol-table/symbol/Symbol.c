@@ -163,3 +163,7 @@ bool zen_Symbol_hasModifiers(zen_Symbol_t* symbol, uint32_t modifiers) {
 
     return (symbol->m_modifiers & modifiers) == modifiers;
 }
+
+bool zen_Symbol_isStatic(zen_Symbol_t* symbol) {
+    return (symbol->m_modifiers & ZEN_MODIFIER_STATIC) != 0;
+}

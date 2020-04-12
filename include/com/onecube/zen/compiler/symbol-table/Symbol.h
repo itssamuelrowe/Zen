@@ -140,6 +140,8 @@ bool zen_Symbol_isEnumeration(zen_Symbol_t* symbol);
  */
 bool zen_Symbol_isExternal(zen_Symbol_t* symbol);
 
+bool zen_Symbol_isStatic(zen_Symbol_t* symbol);
+
 // Enclosing Scope
 
 /**
