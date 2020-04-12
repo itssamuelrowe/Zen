@@ -1433,7 +1433,7 @@ void zen_SymbolResolutionListener_onExitPostfixExpression(zen_ASTListener_t* ast
                         primarySymbol = symbol;
                     }
 
-                    if (zen_Scope_isLocalScope(enclosingScope)) {
+                    if ((enclosingScope != NULL) && zen_Scope_isLocalScope(enclosingScope)) {
                         zen_Token_t* symbolToken = (zen_Token_t*)symbol->m_identifier->m_context;
                         if (token->m_startIndex <= symbolToken->m_startIndex) {
                             zen_ErrorHandler_handleSemanticalError(errorHandler, listener,

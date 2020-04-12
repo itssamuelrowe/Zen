@@ -80,5 +80,10 @@ zen_Symbol_t* zen_SymbolTable_resolve(zen_SymbolTable_t* symbolTable, const uint
             scope = zen_Scope_getEnclosingScope(scope);
         }
     }
+
+    if ((symbol != NULL) && zen_Symbol_isExternal(symbol)) {
+        symbol = symbol->m_context.m_asExternal;
+    }
+
     return symbol;
 }

@@ -1112,6 +1112,11 @@ void zen_VirtualMachine_loadDefaultLibraries(zen_VirtualMachine_t* virtualMachin
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Array", 5,
         "getSize", 7, "(zen/core/Object):v", 19, zen_Array_getSize);
 
+
+    // Object Test.print(Object format)
+    zen_VirtualMachine_registerNativeFunction(virtualMachine, "zen/core/ZenKernel", 18,
+        "print", 5, "(zen/core/Object):(zen/core/Object)", 35, zen_print);
+
     // Object Test.print(Object format)
     zen_VirtualMachine_registerNativeFunction(virtualMachine, "Test", 4,
         "print", 5, "(zen/core/Object):(zen/core/Object)", 35, zen_print);

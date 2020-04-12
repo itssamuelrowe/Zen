@@ -6661,22 +6661,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
 
         switch (zen_Token_getType(token)) {
             case ZEN_TOKEN_IDENTIFIER: {
-                /*zen_ASTNode_t* assignmentExpression = zen_ASTHelper_getAncestor(primaryExpressionContext->m_expression, ZEN_AST_NODE_ASSIGNMENT_EXPRESSION);
-                zen_AssignmentExpressionContext_t* assignmentExpressionContext = (zen_AssignmentExpressionContext_t*)assignmentExpression->m_context;
-                if (assignmentExpression != NULL) {
-                    zen_ASTNode_t* assignmentOperator = assignmentExpressionContext->m_assignmentOperator;
-                    if (assignmentOperator != NULL) {
-                        zen_Token_t* operatorToken = (zen_Token_t*)(assignmentOperator->m_context);
-                        if (zen_Token_getType(operatorToken) == ZEN_TOKEN_EQUAL) {
-                            if (token->m_startIndex < operatorToken->m_startIndex) {
-                                return;
-                            }
-                        }
-                    }
-                }
-                */
-
-                /* Retrieve the string equivalent to the identifier node. */
+               /* Retrieve the string equivalent to the identifier node. */
                 int32_t identifierSize;
                 uint8_t* identifierText = zen_ASTNode_toCString(expression, &identifierSize);
                 uint16_t identifierIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
@@ -7187,6 +7172,8 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                     }
                 }
 
+                bool staticTarget = false;
+
                 if (functionArguments != NULL) {
                     zen_FunctionArgumentsContext_t* functionArgumentsContext =
                         (zen_FunctionArgumentsContext_t*)functionArguments->m_context;
@@ -7196,6 +7183,38 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                      * result of Zen not supporting nested classes.
                      */
 
+                    if (zen_Symbol_isClass(primarySymbol)) {
+                        staticTarget = true;
+
+                        zen_ClassSymbol_t* classSymbol = &primarySymbol->m_context.m_asClass;
+                        uint8_t qualifiedName[classSymbol->m_qualifiedNameSize + 1];
+                        int32_t k;
+                        for (k = 0; k < classSymbol->m_qualifiedNameSize; k++) {
+                            if (classSymbol->m_qualifiedName[k] == '.') {
+                                qualifiedName[k] = '/';
+                            }
+                            else {
+                                qualifiedName[k] = classSymbol->m_qualifiedName[k];
+                            }
+                        }
+                        qualifiedName[k] = '\0';
+
+                        int32_t classIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
+                            generator->m_constantPoolBuilder, qualifiedName,
+                            classSymbol->m_qualifiedNameSize);
+
+                        /* Push the name of the target function on the operand stack. */
+                        zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
+                            classIndex);
+
+                        /* Log the emission of the load_cpr instruction. */
+                        jtk_Logger_debug(logger, "Emitted load_cpr %d", classIndex);
+                    }
+                    else {
+                        // TODO: ?
+                    }
+
+
                     /* Push the name of the target function on the operand stack. */
                     zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
                         targetNameIndex);
@@ -7203,7 +7222,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                     /* Log the emission of the load_cpr instruction. */
                     jtk_Logger_debug(logger, "Emitted load_cpr %d", targetNameIndex);
 
-                    int32_t index = invokeIndex;
+                    int32_t index = staticTarget? invokeStaticIndex : invokeIndex;
 
                     zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
                     if (expressions != NULL) {
@@ -7250,7 +7269,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                                 jtk_Logger_debug(logger, "Emitted store_aa");
                             }
 
-                            index = invokeExIndex;
+                            index = staticTarget? invokeStaticExIndex : invokeExIndex;
                         }
                     }
 
@@ -8427,9 +8446,9 @@ void zen_BinaryEntityGenerator_onEnterNewExpression(zen_ASTListener_t* astListen
         printf("[warning] Looks like a resolution phase failure was detected.\n");
     }
 
-    if (zen_Symbol_isExternal(symbol)) {
-        symbol = symbol->m_context.m_asExternal;
-    }
+    // if (zen_Symbol_isExternal(symbol)) {
+    //     symbol = symbol->m_context.m_asExternal;
+    // }
 
     if (!zen_Symbol_isClass(symbol)) {
         printf("[error] %s is a non-class symbol\n", typeNameText);
