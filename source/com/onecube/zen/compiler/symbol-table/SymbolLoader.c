@@ -562,6 +562,9 @@ void zen_SymbolLoader_declareFunction(zen_SymbolLoader_t* loader,
     zen_FunctionSymbol_addSignature(functionSymbol, signature);
 }
 
+
+static const uint8_t* newName = "new";
+
 void zen_SymbolLoader_parseFunction(zen_SymbolLoader_t* loader) {
     // Flags
     uint16_t flags = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
@@ -586,9 +589,12 @@ void zen_SymbolLoader_parseFunction(zen_SymbolLoader_t* loader) {
         const uint8_t* name0 = name->m_bytes;
         int32_t nameSize0 = name->m_length;
         if (jtk_CString_equals(name->m_bytes, name->m_length, "<initialize>", 12)) {
-            name0 = "new";
+            name0 = newName;
             nameSize0 = 3;
         }
+        functionSymbol->m_name = name0;
+        functionSymbol->m_nameSize = nameSize0;
+        functionSymbol->m_modifiers = flags;
         zen_Scope_defineEx(classScope, name0, nameSize0, functionSymbol);
     }
     zen_SymbolLoader_declareFunction(loader, functionSymbol, descriptor->m_bytes,
@@ -701,13 +707,15 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* loader, uint8_t* bytes,
 
     zen_Symbol_t* result = loader->m_symbol;
 
+
     /* Reset the symbol loader. */
     loader->m_index = 0;
     loader->m_bytes = NULL;
     loader->m_size = 0;
-    if (loader->m_constantPool.m_entries != NULL) {
+    // TODO: The constant pool needs to be freed.
+    /*if (loader->m_constantPool.m_entries != NULL) {
         zen_SymbolLoader_destroyConstantPool(loader);
-    }
+    }*/
     loader->m_constantPool.m_size = 0;
     loader->m_constantPool.m_entries = NULL;
     loader->m_symbol = NULL;

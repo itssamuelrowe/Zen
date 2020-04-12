@@ -7036,11 +7036,13 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                             int32_t classNameSize = -1;
                             if (zen_Scope_isClassScope(enclosingScope)) {
                                 zen_Symbol_t* classSymbol = enclosingScope->m_symbol;
-                                zen_ASTNode_t* identifier = classSymbol->m_identifier;
-                                zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+                                zen_ClassSymbol_t* context = &classSymbol->m_context.m_asClass;
+                                // zen_ASTNode_t* identifier = classSymbol->m_identifier;
+                                // zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
 
-                                className = identifierToken->m_text;
-                                classNameSize = identifierToken->m_length;
+                                className = jtk_CString_newEx(context->m_qualifiedName, context->m_qualifiedNameSize);
+                                classNameSize = context->m_qualifiedNameSize;
+                                jtk_Arrays_replace_b(className, classNameSize, '.', '/');
                             }
                             else {
                                 className = generator->m_className;
@@ -7055,7 +7057,6 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
 
                             /* Log the emission of the load_cpr instruction. */
                             jtk_Logger_debug(logger, "Emitted load_cpr %d", identifierIndex);
-
                         }
                         else {
                             /* The "this" reference is always stored at the zeroth position
@@ -7072,13 +7073,13 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                             index = invokeIndex;
                         }
 
-                        zen_ASTNode_t* primarySymbolIdentifier = primarySymbol->m_identifier;
-                        zen_Token_t* primarySymbolToken = (zen_Token_t*)primarySymbolIdentifier->m_context;
+                        // zen_ASTNode_t* primarySymbolIdentifier = primarySymbol->m_identifier;
+                        // zen_Token_t* primarySymbolToken = (zen_Token_t*)primarySymbolIdentifier->m_context;
 
                         /* The name of the function to invoke. */
                         int32_t targetNameIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
-                            generator->m_constantPoolBuilder, primarySymbolToken->m_text,
-                            primarySymbolToken->m_length);
+                            generator->m_constantPoolBuilder, primarySymbol->m_name,
+                            primarySymbol->m_nameSize);
 
                         /* Push the name of the target function on the operand stack. */
                         zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,

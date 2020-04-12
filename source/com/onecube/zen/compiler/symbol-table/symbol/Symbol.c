@@ -17,6 +17,7 @@
 // Monday, January 08, 2018
 
 #include <com/onecube/zen/compiler/symbol-table/Symbol.h>
+#include <com/onecube/zen/compiler/lexer/Token.h>
 #include <jtk/core/CString.h>
 
 /*******************************************************************************
@@ -33,6 +34,11 @@ zen_Symbol_t* zen_Symbol_new(zen_SymbolCategory_t category,
     symbol->m_ticket = (enclosingScope != NULL)? enclosingScope->m_nextTicket++ : -1;
     symbol->m_index = -1;
     symbol->m_flags = 0;
+    if (identifier != NULL) {
+        zen_Token_t* token = (zen_Token_t*)identifier->m_context;
+        symbol->m_name = token->m_text;
+        symbol->m_nameSize = token->m_length;
+    }
 
     if (category == ZEN_SYMBOL_CATEGORY_FUNCTION) {
         zen_FunctionSymbol_initialize(&symbol->m_context.m_asFunction);

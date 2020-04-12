@@ -53,6 +53,9 @@ struct zen_Symbol_t {
     int32_t m_ticket;
     int32_t m_index;
     uint32_t m_flags;
+
+    uint8_t* m_name;
+    int32_t m_nameSize;
 };
 
 /**

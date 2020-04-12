@@ -390,6 +390,22 @@ void zen_SymbolResolutionListener_onExitEveryRule(zen_ASTListener_t* astListener
 
 /* compilationUnit */
 
+void zen_SymbolResolutionListener_applyDefaultImports(zen_SymbolResolutionListener_t* listener) {
+    zen_Compiler_t* compiler = listener->m_compiler;
+    zen_Symbol_t* symbol = zen_Compiler_resolveSymbol(compiler, "zen.core.ZenKernel", 18);
+    zen_ClassSymbol_t* classSymbol = &symbol->m_context.m_asClass;
+    zen_Scope_t* currentScope = listener->m_symbolTable->m_currentScope;
+
+    jtk_Iterator_t* iterator = jtk_HashMap_getEntryIterator(classSymbol->m_classScope->m_symbols);
+    while (jtk_Iterator_hasNext(iterator)) {
+        jtk_HashMapEntry_t* entry = (jtk_HashMapEntry_t*)jtk_Iterator_getNext(iterator);
+        const uint8_t* name = (const uint8_t*)entry->m_key;
+        zen_Symbol_t* functionSymbol = (zen_Symbol_t*)entry->m_value;
+        zen_Scope_defineEx(currentScope, name, -1, functionSymbol);
+    }
+    jtk_Iterator_delete(iterator);
+}
+
 void zen_SymbolResolutionListener_onEnterCompilationUnit(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
@@ -398,6 +414,8 @@ void zen_SymbolResolutionListener_onEnterCompilationUnit(zen_ASTListener_t* astL
     zen_SymbolResolutionListener_t* listener = (zen_SymbolResolutionListener_t*)astListener->m_context;
     zen_Scope_t* scope = zen_ASTAnnotations_get(listener->m_scopes, node);
     zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
+
+    zen_SymbolResolutionListener_applyDefaultImports(listener);
 }
 
 void zen_SymbolResolutionListener_onExitCompilationUnit(zen_ASTListener_t* astListener,
