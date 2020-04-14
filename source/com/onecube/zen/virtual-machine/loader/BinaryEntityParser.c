@@ -109,12 +109,6 @@ zen_EntityFile_t* zen_BinaryEntityParser_parseEntityFile(zen_BinaryEntityParser_
             if ((majorVersion < ZEN_BINARY_ENTITY_FORMAT_MAJOR_VERSION) ||
                 ((majorVersion == ZEN_BINARY_ENTITY_FORMAT_MAJOR_VERSION) &&
                  (minorVersion <= ZEN_BINARY_ENTITY_FORMAT_MINOR_VERSION))) {
-                // uint32_t size = ((parser->m_bytes[parser->m_index++] & 0xFF) << 24) |
-                    ((parser->m_bytes[parser->m_index++] & 0xFF) << 16) |
-                    ((parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
-                    (parser->m_bytes[parser->m_index++] & 0xFF);
-                // entityFile->m_size = size;
-
                 uint16_t flags = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
                 (parser->m_bytes[parser->m_index++] & 0xFF));
                 entityFile->m_flags = flags;
