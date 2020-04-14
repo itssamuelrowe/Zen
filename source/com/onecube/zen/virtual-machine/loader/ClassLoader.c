@@ -117,104 +117,40 @@ bool zen_ClassLoader_addDirectory(zen_ClassLoader_t* classLoader,
     return true;
 }
 
+// Find
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-zen_EntityFile_t* zen_ClassLoader_loadEntity(zen_ClassLoader_t* classLoader,
+zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
     const uint8_t* descriptor, int32_t descriptorSize) {
-    jtk_Assert_assertObject(classLoader, "The specified entity loader is null.");
-    jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
+    jtk_Assert_assertObject(classLoader, "The specified class loader is null.");
 
-    zen_EntityFile_t* result = NULL;
+    zen_Class_t* class0 = (zen_Class_t*)jtk_HashMap_getValue(classLoader->m_classes,
+        descriptor);
 
-    /* Question. Why is joining two strings so complicated?! */
-    // const uint8_t* strings[] = { descriptor, ".feb" };
-    // jtk_String_t* entityName = jtk_String_newFromJoinEx(strings, 2);
-    int32_t entityNameSize;
-    uint8_t* entityName = jtk_CString_joinEx(descriptor, descriptorSize, ".feb",
-        4, &entityNameSize);
-    jtk_Path_t* entityFile = jtk_Path_newFromStringEx(entityName, entityNameSize);
-    jtk_CString_delete(entityName);
+    /* The class with the specified descriptor was not found. Try to load it from
+     * the entity loader.
+     */
+    if (class0 == NULL) {
+        class0 = zen_ClassLoader_loadClass(classLoader, descriptor, descriptorSize);
 
-    /* Retrieve an iterator over the list of registered entity directories. */
-    jtk_Iterator_t* iterator = jtk_DoublyLinkedList_getIterator(classLoader->m_directories);
-    while (jtk_Iterator_hasNext(iterator)) {
-        /* Retrieve the next directory for searching the entity file. */
-        jtk_Path_t* directoryPath = (jtk_Path_t*)jtk_Iterator_getNext(iterator);
-        jtk_PathHandle_t* directoryHandle = jtk_PathHandle_newFromPath(directoryPath);
-        /* The specified path may point to a regular file. Therefore, make sure
-         * the path is a directory to provide a warning.
-         *
-         * NOTE: The entity file path can be directly constructed without checking
-         * if the entity directory exists. This makes the lookup process faster.
-         * Right now, the original algorithm is maintained to print debugging
-         * information. Probably should use conditional directives to enable and
-         * disable the check at compile time.
-         */
-        if ((directoryHandle != NULL) && jtk_PathHandle_isDirectory(directoryHandle)) {
-            /* Construct a hypothetical path to the entity file. */
-            jtk_Path_t* entityPath = jtk_Path_newWithParentAndChild_oo(directoryPath, entityFile);
-            jtk_PathHandle_t* entityPathHandle = jtk_PathHandle_newFromPath(entityPath);
-            if (entityPathHandle != NULL) {
-                if (jtk_PathHandle_isRegularFile(entityPathHandle)) {
-                    // NOTE: The loader should not maintain any reference to entity path.
-                    result = zen_ClassLoader_loadEntityFromHandle(loader, entityPathHandle);
-                    if (result != NULL) {
-                        /* Honestly, there's no requirement of the `zen_EntityDescriptor_t` type.
-                         * Unfortunately, at this moment JTK library does not implement an aggregate
-                         * type for strings. It seems like a distraction to implement it right now.
-                         *
-                         * Also, it seems right for an entity descriptor to have its own type.
-                         *
-                         * ** After a few minutes **
-                         * Damn it! Let's go implement that String class! -_-
-                         */
-                        uint8_t* entityDescriptor = jtk_CString_newEx(descriptor, descriptorSize);
-
-                        jtk_HashMap_put(classLoader->m_entities, entityDescriptor, result);
-                    }
-                    else {
-                        /* At this point, the entity loader found an entity file. Unfortunately, the
-                         * entity file is corrupted. The entity loader may continue to look for entities
-                         * in different files. It terminates here if the entity loader is not configured
-                         * to ignore corrupt entity files.
-                         */
-                        if (!zen_ClassLoader_shouldIgnoreCorruptEntity(loader)) {
-                            break;
-                        }
-                    }
-                }
-                /* Destroy the entity path handle created earlier. */
-                jtk_PathHandle_delete(entityPathHandle);
-            }
-            else {
-                // log("Could not find entity file here.");
-            }
-            jtk_Path_delete(entityPath);
-        }
-        else {
-            fprintf(stderr, "[warning] Cannot find find directory.\n");
+        /* An entity file was found. Convert it to a class. */
+        if (class0 != NULL) {
+            class0 = zen_ClassLoader_loadFromEntityFile(classLoader,
+                descriptor, descriptorSize, class0);
         }
     }
-    jtk_Path_delete(entityFile);
 
-    return result;
+    return class0;
 }
 
-// Load Entity From File
+zen_Class_t* zen_ClassLoader_getClass(zen_ClassLoader_t* classLoader,
+    const uint8_t* descriptor, int32_t descriptorSize) {
+    jtk_Assert_assertObject(classLoader, "The specified class loader is null.");
+
+    return (zen_Class_t*)jtk_HashMap_getValue(classLoader->m_classes,
+        descriptor);
+}
+
+// Load
 
 // Tuesday, March 17, 2020
 
@@ -276,38 +212,99 @@ jtk_ByteArray_t* jtk_InputStreamHelper_toArray(jtk_InputStream_t* stream) {
     return array;
 }
 
-zen_EntityFile_t* zen_ClassLoader_loadEntityFromHandle(zen_ClassLoader_t* classLoader,
-    jtk_PathHandle_t* handle) {
+zen_Class_t* zen_ClassLoader_loadClass(zen_ClassLoader_t* classLoader,
+    const uint8_t* descriptor, int32_t descriptorSize) {
     jtk_Assert_assertObject(classLoader, "The specified entity loader is null.");
-    jtk_Assert_assertObject(handle, "The specified entity path handle is null.");
+    jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
 
-    zen_EntityFile_t* result = NULL;
-    jtk_FileInputStream_t* fileInputStream = jtk_FileInputStream_newFromHandle(handle);
-    if (fileInputStream != NULL) {
-        jtk_BufferedInputStream_t* bufferedInputStream = jtk_BufferedInputStream_newEx(
-            fileInputStream->m_inputStream, ZEN_ENTITY_LOADER_BUFFER_SIZE);
-        jtk_InputStream_t* inputStream = bufferedInputStream->m_inputStream;
+    zen_Class_t* result = NULL;
 
-        jtk_ByteArray_t* input = jtk_InputStreamHelper_toArray(inputStream);
+    int32_t entityNameSize;
+    uint8_t* entityName = jtk_CString_joinEx(descriptor, descriptorSize, ".feb",
+        4, &entityNameSize);
+    jtk_Path_t* entityFile = jtk_Path_newFromStringEx(entityName, entityNameSize);
+    jtk_CString_delete(entityName);
 
-        zen_BinaryEntityParser_t* parser = zen_BinaryEntityParser_new(
-            classLoader->m_attributeParseRules, input->m_values, input->m_size);
-        result = zen_BinaryEntityParser_parse(parser, inputStream);
+    /* Retrieve an iterator over the list of registered entity directories. */
+    jtk_Iterator_t* iterator = jtk_DoublyLinkedList_getIterator(classLoader->m_directories);
+    while (jtk_Iterator_hasNext(iterator)) {
+        /* Retrieve the next directory for searching the entity file. */
+        jtk_Path_t* directoryPath = (jtk_Path_t*)jtk_Iterator_getNext(iterator);
+        jtk_PathHandle_t* directoryHandle = jtk_PathHandle_newFromPath(directoryPath);
+        /* The specified path may point to a regular file. Therefore, make sure
+         * the path is a directory to provide a warning.
+         *
+         * NOTE: The entity file path can be directly constructed without checking
+         * if the entity directory exists. This makes the lookup process faster.
+         * Right now, the original algorithm is maintained to print debugging
+         * information. Probably should use conditional directives to enable and
+         * disable the check at compile time.
+         */
+        if ((directoryHandle != NULL) && jtk_PathHandle_isDirectory(directoryHandle)) {
+            /* Construct a hypothetical path to the entity file. */
+            jtk_Path_t* entityPath = jtk_Path_newWithParentAndChild_oo(directoryPath, entityFile);
+            jtk_PathHandle_t* entityPathHandle = jtk_PathHandle_newFromPath(entityPath);
+            if (entityPathHandle != NULL) {
+                if (jtk_PathHandle_isRegularFile(entityPathHandle)) {
+                    // NOTE: The loader should not maintain any reference to entity path.
+                    zen_Class_t* result = NULL;
+                    jtk_FileInputStream_t* fileInputStream = jtk_FileInputStream_newFromHandle(entityPathHandle);
+                    if (fileInputStream != NULL) {
+                        jtk_BufferedInputStream_t* bufferedInputStream = jtk_BufferedInputStream_newEx(
+                            fileInputStream->m_inputStream, ZEN_ENTITY_LOADER_BUFFER_SIZE);
+                        jtk_InputStream_t* inputStream = bufferedInputStream->m_inputStream;
 
-        zen_BinaryEntityParser_delete(parser);
-        jtk_ByteArray_delete(input);
-        jtk_InputStream_destroy(inputStream);
+                        jtk_ByteArray_t* input = jtk_InputStreamHelper_toArray(inputStream);
+
+                        zen_BinaryEntityParser_t* parser = zen_BinaryEntityParser_new(
+                            classLoader->m_attributeParseRules, input->m_values, input->m_size);
+                        zen_EntityFile_t* entityFile = zen_BinaryEntityParser_parse(parser, inputStream);
+
+                        result = zen_Class_new(classLoader->m_virtualMachine,
+                                entityFile);
+                        if (result == NULL) {
+                            /* At this point, the entity loader found an entity file. Unfortunately, the
+                                * entity file is corrupted. The entity loader may continue to look for entities
+                                * in different files. It terminates here if the entity loader is not configured
+                                * to ignore corrupt entity files.
+                                */
+                            if (!zen_ClassLoader_shouldIgnoreCorruptEntity(classLoader)) {
+                                break;
+                            }
+                        }
+                        else {
+                            uint8_t* descriptorCopy = jtk_CString_newEx(descriptor, descriptorSize);
+                            jtk_HashMap_put(classLoader->m_classes, descriptorCopy, result);
+                        }
+
+                        zen_BinaryEntityParser_delete(parser);
+                        jtk_ByteArray_delete(input);
+                        jtk_InputStream_destroy(inputStream);
+                    }
+                    else {
+                        // Warning: Failed to load entity from handle.
+                    }
+                }
+                /* Destroy the entity path handle created earlier. */
+                jtk_PathHandle_delete(entityPathHandle);
+            }
+            else {
+                // log("Could not find entity file here.");
+            }
+            jtk_Path_delete(entityPath);
+        }
+        else {
+            fprintf(stderr, "[warning] Cannot find find directory.\n");
+        }
     }
-    else {
-        // Warning: Failed to load entity from handle.
-    }
+    jtk_Path_delete(entityFile);
 
     return result;
 }
 
 // Ignore Corrupt Entity
 
-bool zen_ClassLoader_shouldIgnoreCorruptEntity(zen_ClassLoader_t* loader) {
+bool zen_ClassLoader_shouldIgnoreCorruptEntity(zen_ClassLoader_t* classLoader) {
     jtk_Assert_assertObject(classLoader, "The specified entity loader is null.");
 
     return (classLoader->m_flags & ZEN_ENTITY_LOADER_FLAG_IGNORE_CORRUPT_ENTITY) != 0;
@@ -320,67 +317,4 @@ void zen_ClassLoader_setIgnoreCorruptEntity(zen_ClassLoader_t* classLoader,
     classLoader->m_flags = ignoreCorruptEntity?
         (classLoader->m_flags | ZEN_ENTITY_LOADER_FLAG_IGNORE_CORRUPT_ENTITY) :
         (classLoader->m_flags & ~ZEN_ENTITY_LOADER_FLAG_IGNORE_CORRUPT_ENTITY);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Class
-
-zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
-    const uint8_t* descriptor, int32_t descriptorSize) {
-    jtk_Assert_assertObject(classLoader, "The specified class loader is null.");
-
-    zen_Class_t* class0 = (zen_Class_t*)jtk_HashMap_getValue(classLoader->m_classes,
-        descriptor);
-
-    /* The class with the specified descriptor was not found. Try to load it from
-     * the entity loader.
-     */
-    if (class0 == NULL) {
-        zen_EntityFile_t* entityFile = (zen_EntityFile_t*)jtk_HashMap_getValue(
-                classLoader->m_classes, descriptor);
-        if (entityFile == NULL) {
-            entityFile = zen_ClassLoader_loadEntity(loader, descriptor, descriptorSize);
-        }
-
-        /* An entity file was found. Convert it to a class. */
-        if (entityFile != NULL) {
-            class0 = zen_ClassLoader_loadFromEntityFile(classLoader,
-                descriptor, descriptorSize, entityFile);
-        }
-    }
-
-    return class0;
-}
-
-// Load
-
-zen_Class_t* zen_ClassLoader_loadFromEntityFile(zen_ClassLoader_t* classLoader,
-    const uint8_t* descriptor, int32_t descriptorSize,
-    zen_EntityFile_t* entityFile) {
-    jtk_Assert_assertObject(classLoader, "The specified class loader is null.");
-    jtk_Assert_assertObject(descriptor, "The specified class descriptor is null.");
-    jtk_Assert_assertObject(entityFile, "The specified entity file is null.");
-
-    zen_Class_t* class0 = zen_Class_new(classLoader->m_virtualMachine,
-        entityFile);
-    uint8_t* descriptorCopy = jtk_CString_newEx(descriptor, descriptorSize);
-    jtk_HashMap_put(classLoader->m_classes, descriptorCopy, class0);
-
-    return class0;
 }

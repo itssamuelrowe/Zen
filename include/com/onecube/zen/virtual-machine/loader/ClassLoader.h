@@ -89,7 +89,12 @@ zen_ClassLoader_t* zen_ClassLoader_new(
 
 void zen_ClassLoader_delete(zen_ClassLoader_t* classLoader);
 
-// Class
+// Directory
+
+bool zen_ClassLoader_addDirectory(zen_ClassLoader_t* loader, const uint8_t* directory,
+    int32_t directorySize);
+
+// Find
 
 /**
  * First, it tries to find a previously loaded class with the specified
@@ -154,8 +159,5 @@ zen_Class_t* zen_ClassLoader_loadFromEntityFile(zen_ClassLoader_t* classLoader,
 
 bool zen_ClassLoader_shouldIgnoreCorruptEntity(zen_ClassLoader_t* loader);
 void zen_ClassLoader_setIgnoreCorruptEntity(zen_ClassLoader_t* loader, bool ignoreCorruptEntity);
-
-bool zen_ClassLoader_addDirectory(zen_ClassLoader_t* loader, const uint8_t* directory,
-    int32_t directorySize);
 
 #endif /* COM_ONECUBE_ZEN_VIRTUAL_MACHINE_LOADER_CLASS_LOADER_H */
