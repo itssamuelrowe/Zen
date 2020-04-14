@@ -544,7 +544,7 @@ void zen_Compiler_destroyNestedScopes(zen_ASTAnnotations_t* scopes) {
         int32_t i;
         for (i = 0; i < limit; i++) {
             zen_Symbol_t* symbol = (zen_Symbol_t*)jtk_ArrayList_getValue(temporary, i);
-            zen_Symbol_delete(symbol);
+            // zen_Symbol_delete(symbol);
         }
 
         /* At this point, the symbols retrieved form the scope are destroyed.

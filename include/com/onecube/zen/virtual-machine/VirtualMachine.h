@@ -31,7 +31,6 @@
 #include <com/onecube/zen/virtual-machine/object/Function.h>
 #include <com/onecube/zen/virtual-machine/object/NativeFunction.h>
 #include <com/onecube/zen/virtual-machine/object/ObjectArray.h>
-#include <com/onecube/zen/virtual-machine/loader/EntityLoader.h>
 #include <com/onecube/zen/virtual-machine/loader/ClassLoader.h>
 #include <com/onecube/zen/virtual-machine/processor/Interpreter.h>
 
@@ -48,7 +47,6 @@
 struct zen_VirtualMachine_t {
     jtk_Logger_t* m_logger;
     zen_VirtualMachineConfiguration_t* m_configuration;
-    zen_EntityLoader_t* m_entityLoader;
     zen_ClassLoader_t* m_classLoader;
     zen_Interpreter_t* m_interpreter;
     jtk_HashMap_t* m_nativeFunctions;
@@ -112,11 +110,6 @@ zen_Class_t* zen_VirtualMachine_getClassEx(zen_VirtualMachine_t* context,
 /* Clear */
 
 bool zen_VirtualMachine_isClear(zen_VirtualMachine_t* virtualMachine);
-
-// Entity Loader
-
-zen_EntityLoader_t* zen_VirtualMachine_getEntityLoader(
-    zen_VirtualMachine_t* virtualMachine);
 
 // Field
 

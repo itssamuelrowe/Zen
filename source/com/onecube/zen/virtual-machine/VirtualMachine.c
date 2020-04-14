@@ -26,7 +26,6 @@
 #include <com/onecube/zen/virtual-machine/ExceptionManager.h>
 #include <com/onecube/zen/virtual-machine/VirtualMachine.h>
 #include <com/onecube/zen/virtual-machine/processor/Interpreter.h>
-#include <com/onecube/zen/virtual-machine/loader/EntityLoader.h>
 #include <com/onecube/zen/virtual-machine/object/Class.h>
 
 /* Object */
@@ -828,8 +827,7 @@ zen_VirtualMachine_t* zen_VirtualMachine_new(zen_VirtualMachineConfiguration_t* 
 
     zen_VirtualMachine_t* virtualMachine = zen_Memory_allocate(zen_VirtualMachine_t, 1);
     virtualMachine->m_configuration = configuration;
-    virtualMachine->m_entityLoader = zen_EntityLoader_newWithEntityDirectories(entityDirectoryIterator);
-    virtualMachine->m_classLoader = zen_ClassLoader_new(virtualMachine, virtualMachine->m_entityLoader);
+    virtualMachine->m_classLoader = zen_ClassLoader_new(virtualMachine, entityDirectoryIterator);
     virtualMachine->m_interpreter = zen_Interpreter_new(NULL, virtualMachine, NULL);
     virtualMachine->m_nativeFunctions = jtk_HashMap_newEx(stringObjectAdapter, NULL,
         JTK_HASH_MAP_DEFAULT_CAPACITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
@@ -853,7 +851,6 @@ void zen_VirtualMachine_delete(zen_VirtualMachine_t* virtualMachine) {
     zen_VirtualMachine_unloadLibraries(virtualMachine);
 
     zen_ClassLoader_delete(virtualMachine->m_classLoader);
-    zen_EntityLoader_delete(virtualMachine->m_entityLoader);
     jtk_Memory_deallocate(virtualMachine);
 }
 
@@ -943,15 +940,6 @@ zen_Class_t* zen_VirtualMachine_getClass(zen_VirtualMachine_t* virtualMachine,
 
 bool zen_VirtualMachine_isClear(zen_VirtualMachine_t* virtualMachine) {
     return true;
-}
-
-// Entity Loader
-
-zen_EntityLoader_t* zen_VirtualMachine_getEntityLoader(
-    zen_VirtualMachine_t* virtualMachine) {
-    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
-
-    return virtualMachine->m_entityLoader;
 }
 
 // Field
