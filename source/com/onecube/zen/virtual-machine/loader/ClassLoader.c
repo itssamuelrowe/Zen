@@ -49,10 +49,9 @@ zen_ClassLoader_t* zen_ClassLoader_new(zen_VirtualMachine_t* virtualMachine,
         ZEN_CLASS_LOADER_DEFAULT_CLASSES_MAP_CAPCITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
     classLoader->m_attributeParseRules = zen_AttributeParseRules_new();
 
-    zen_ClassLoader_t* loader = zen_ClassLoader_new();
     while (jtk_Iterator_hasNext(entityDirectoryIterator)) {
         uint8_t* directory = (uint8_t*)jtk_Iterator_getNext(entityDirectoryIterator);
-        zen_ClassLoader_addDirectory(loader, directory, -1);
+        zen_ClassLoader_addDirectory(classLoader, directory, -1);
     }
 
     return classLoader;
@@ -131,12 +130,6 @@ zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
      */
     if (class0 == NULL) {
         class0 = zen_ClassLoader_loadClass(classLoader, descriptor, descriptorSize);
-
-        /* An entity file was found. Convert it to a class. */
-        if (class0 != NULL) {
-            class0 = zen_ClassLoader_loadFromEntityFile(classLoader,
-                descriptor, descriptorSize, class0);
-        }
     }
 
     return class0;
@@ -247,7 +240,6 @@ zen_Class_t* zen_ClassLoader_loadClass(zen_ClassLoader_t* classLoader,
             if (entityPathHandle != NULL) {
                 if (jtk_PathHandle_isRegularFile(entityPathHandle)) {
                     // NOTE: The loader should not maintain any reference to entity path.
-                    zen_Class_t* result = NULL;
                     jtk_FileInputStream_t* fileInputStream = jtk_FileInputStream_newFromHandle(entityPathHandle);
                     if (fileInputStream != NULL) {
                         jtk_BufferedInputStream_t* bufferedInputStream = jtk_BufferedInputStream_newEx(
@@ -264,11 +256,11 @@ zen_Class_t* zen_ClassLoader_loadClass(zen_ClassLoader_t* classLoader,
                                 entityFile);
                         if (result == NULL) {
                             /* At this point, the entity loader found an entity file. Unfortunately, the
-                                * entity file is corrupted. The entity loader may continue to look for entities
-                                * in different files. It terminates here if the entity loader is not configured
-                                * to ignore corrupt entity files.
-                                */
-                            if (!zen_ClassLoader_shouldIgnoreCorruptEntity(classLoader)) {
+                             * entity file is corrupted. The entity loader may continue to look for entities
+                             * in different files. It terminates here if the entity loader is not configured
+                             * to ignore corrupt entity files.
+                             */
+                            if ((classLoader->m_flags & ZEN_ENTITY_LOADER_FLAG_IGNORE_CORRUPT_ENTITY) == 0) {
                                 break;
                             }
                         }
