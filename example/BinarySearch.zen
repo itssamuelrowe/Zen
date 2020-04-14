@@ -1,0 +1,22 @@
+function search(values, key)
+    var start = 0
+    var end = values.size - 1
+    var result = null
+    for var i in range(0, end)
+        var middle = (end - start) / 2
+        if values[i] == key
+            result = i
+            break
+        else if values[i] > key
+            end = middle - 1
+        else
+            end = middle + 1
+    return result
+
+function main(...arguments)
+    var values = array(53, 118, 519, 1216)
+    var result = search(values, 27)
+    if result != null
+        printf('Found key 27 at index %d.\n', result)
+    else
+        print('Could not find key 27.')

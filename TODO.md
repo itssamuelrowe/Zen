@@ -45,5 +45,5 @@ class Example
  * Implement @Property
  * Implicit classes created from functions declared in compilation unit cannot be instantiated.
 
-
  Python: 0.153s, Zen: 0.744s, JavaScript: 0.273s
+ Python: 0.292s (2.64x faster), Zen: 0.773s, JavaScript: 0.319s (2.42x faster)
