@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2020 Samuel Rowe
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,11 +53,12 @@
  *******************************************************************************/
 
 struct zen_BinaryEntityParser_t {
-    jtk_Tape_t* m_tape;
     zen_AttributeParseRules_t* m_attributeParseRules;
-    zen_MemoryManager_t* m_memoryManager;
     jtk_Logger_t* m_logger;
     zen_EntityFile_t* m_entityFile;
+    int32_t m_index;
+    uint8_t* m_bytes;
+    int32_t m_size;
 };
 
 typedef struct zen_BinaryEntityParser_t zen_BinaryEntityParser_t;
@@ -66,7 +67,7 @@ typedef struct zen_BinaryEntityParser_t zen_BinaryEntityParser_t;
 
 // zen_BinaryEntityParser_t* zen_BinaryEntityParser_new(zen_MemoryManager_t* memoryManager, zen_AttributeParseRules_t* AttributeParseRules, uint8_t* bytes, int32_t size);
 
-zen_BinaryEntityParser_t* zen_BinaryEntityParser_new(zen_AttributeParseRules_t* AttributeParseRules, uint8_t* bytes, int32_t size);
+zen_BinaryEntityParser_t* zen_BinaryEntityParser_new(zen_AttributeParseRules_t* AttributeParseRules);
 
 /* Destructor */
 
@@ -75,7 +76,7 @@ void zen_BinaryEntityParser_delete(zen_BinaryEntityParser_t* parser);
 /* Parse */
 
 zen_EntityFile_t* zen_BinaryEntityParser_parse(zen_BinaryEntityParser_t* parser,
-    jtk_InputStream_t* inputStream);
+    uint8_t* bytes, int32_t size);
 
 /* Parse Entity File */
 
@@ -92,12 +93,12 @@ void zen_BinaryEntityParser_parseEntity(zen_BinaryEntityParser_t* parser);
 /* Parse Attribute Table */
 
 void zen_BinaryEntityParser_parseAttributeTable(zen_BinaryEntityParser_t* parser, zen_AttributeTable_t* attributeTable);
-    
+
 /* Parse Instruction Attribute */
 
 zen_InstructionAttribute_t* zen_BinaryEntityParser_parseInstructionAttribute(
     zen_BinaryEntityParser_t* parser, uint16_t nameIndex, uint32_t length);
-    
+
 /* Parse Exception Table */
 
 void zen_BinaryEntityParser_parseExceptionTable(zen_BinaryEntityParser_t* parser,

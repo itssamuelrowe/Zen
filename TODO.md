@@ -43,3 +43,7 @@ class Example
  * Call other constructors
  * Implement printf()
  * Implement @Property
+ * Implicit classes created from functions declared in compilation unit cannot be instantiated.
+
+
+ Python: 0.153s, Zen: 0.744s, JavaScript: 0.273s

@@ -73,6 +73,8 @@ struct zen_ClassLoader_t {
     zen_VirtualMachine_t* m_virtualMachine;
 
     zen_AttributeParseRules_t* m_attributeParseRules;
+
+    zen_BinaryEntityParser_t* m_parser;
 };
 
 /**

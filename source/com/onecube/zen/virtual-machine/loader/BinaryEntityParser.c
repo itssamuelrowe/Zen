@@ -27,17 +27,19 @@
 #define ZEN_BINARY_ENTITY_PARSER_FLAG_READY (1 << 1)
 #define ZEN_BINARY_ENTITY_PARSER_FLAG_HIT_EOS (1 << 2)
 
-const uint8_t* ZEN_BINARY_ENTITY_PARSER_TAG = "com.onecube.zen.virtualmachine.loader.BinaryEntityParser";
+const uint8_t* ZEN_BINARY_ENTITY_PARSER_TAG = "com.onecube.zen.virtualmachine.parser.BinaryEntityParser";
 
 /* Constructor */
 
 zen_BinaryEntityParser_t* zen_BinaryEntityParser_new(
-    zen_AttributeParseRules_t* attributeParseRules, uint8_t* bytes, int32_t size) {
+    zen_AttributeParseRules_t* attributeParseRules) {
     zen_BinaryEntityParser_t* parser = zen_Memory_allocate(zen_BinaryEntityParser_t, 1);
-    parser->m_tape = jtk_Tape_wrap(bytes, size);
     parser->m_attributeParseRules = attributeParseRules;
-
-    // parser->m_memoryManager = memoryManager;
+    parser->m_logger = NULL;
+    parser->m_entityFile = NULL;
+    parser->m_index = 0;
+    parser->m_bytes = NULL;
+    parser->m_size = -1;
 
     return parser;
 }
@@ -57,9 +59,18 @@ void zen_BinaryEntityParser_delete(zen_BinaryEntityParser_t* parser) {
  * binary entity parser independent of the object.
  */
 zen_EntityFile_t* zen_BinaryEntityParser_parse(zen_BinaryEntityParser_t* parser,
-    jtk_InputStream_t* inputStream) {
-    // parser->m_tape = inputStream;
-    return zen_BinaryEntityParser_parseEntityFile(parser);
+    uint8_t* bytes, int32_t size) {
+    parser->m_bytes = bytes;
+    parser->m_size = size;
+
+    zen_EntityFile_t* result = zen_BinaryEntityParser_parseEntityFile(parser);
+
+    parser->m_index = 0;
+    parser->m_bytes = NULL;
+    parser->m_size = 0;
+    parser->m_entityFile = NULL;
+
+    return result;
 }
 
 /* Parse Entity File */
@@ -70,21 +81,26 @@ zen_EntityFile_t* zen_BinaryEntityParser_parseEntityFile(zen_BinaryEntityParser_
     zen_EntityFile_t* entityFile = jtk_Memory_allocate(zen_EntityFile_t, 1);
     parser->m_entityFile = entityFile;
 
-    if (jtk_Tape_isAvailable(parser->m_tape, 12)) {
+    if (parser->m_index + 12 < parser->m_size) {
         /* The magic number is a simple measure to identify corrupt streams.
          * It is represented with four bytes, that is, a 32-bit integer.
          *
          * Read the magic number and verify whether it is equal to 0xFEB72000.
          */
-        uint32_t magicNumber = jtk_Tape_readUncheckedInteger(parser->m_tape);
+        uint32_t magicNumber = ((parser->m_bytes[parser->m_index++] & 0xFF) << 24) |
+            ((parser->m_bytes[parser->m_index++] & 0xFF) << 16) |
+            ((parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+            (parser->m_bytes[parser->m_index++] & 0xFF);
 
         if (magicNumber == ZEN_BINARY_ENTITY_FORMAT_MAGIC_NUMBER) {
             entityFile->m_magicNumber = magicNumber;
 
-            uint16_t majorVersion = jtk_Tape_readUncheckedShort(parser->m_tape);
+            uint16_t majorVersion = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                (parser->m_bytes[parser->m_index++] & 0xFF));
             entityFile->m_version.m_majorVersion = majorVersion;
 
-            uint16_t minorVersion = jtk_Tape_readUncheckedShort(parser->m_tape);
+            uint16_t minorVersion = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                (parser->m_bytes[parser->m_index++] & 0xFF));
             entityFile->m_version.m_minorVersion = minorVersion;
 
             /* Make sure that the major and minor version numbers are recognized by
@@ -93,10 +109,14 @@ zen_EntityFile_t* zen_BinaryEntityParser_parseEntityFile(zen_BinaryEntityParser_
             if ((majorVersion < ZEN_BINARY_ENTITY_FORMAT_MAJOR_VERSION) ||
                 ((majorVersion == ZEN_BINARY_ENTITY_FORMAT_MAJOR_VERSION) &&
                  (minorVersion <= ZEN_BINARY_ENTITY_FORMAT_MINOR_VERSION))) {
-                // uint32_t size = jtk_Tape_readUncheckedInteger(parser->m_tape);
+                // uint32_t size = ((parser->m_bytes[parser->m_index++] & 0xFF) << 24) |
+                    ((parser->m_bytes[parser->m_index++] & 0xFF) << 16) |
+                    ((parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                    (parser->m_bytes[parser->m_index++] & 0xFF);
                 // entityFile->m_size = size;
 
-                uint16_t flags = jtk_Tape_readUncheckedShort(parser->m_tape);
+                uint16_t flags = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                (parser->m_bytes[parser->m_index++] & 0xFF));
                 entityFile->m_flags = flags;
 
                 zen_BinaryEntityParser_parseConstantPool(parser);
@@ -127,7 +147,8 @@ void zen_BinaryEntityParser_parseConstantPool(
 
     // jtk_Logger_info(parser->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Parsing constant pool entries...");
 
-    uint16_t size = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t size = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                (parser->m_bytes[parser->m_index++] & 0xFF));
 
     zen_ConstantPool_t* constantPool = &parser->m_entityFile->m_constantPool;
     constantPool->m_size = size;
@@ -136,11 +157,14 @@ void zen_BinaryEntityParser_parseConstantPool(
 
     int32_t index;
     for (index = 1; index <= size; index++) {
-        uint8_t tag = jtk_Tape_readUncheckedByte(parser->m_tape);
+        uint8_t tag = parser->m_bytes[parser->m_index++];
 
         switch (tag) {
             case ZEN_CONSTANT_POOL_TAG_INTEGER: {
-                uint32_t bytes = jtk_Tape_readUncheckedInteger(parser->m_tape);
+                uint32_t bytes = ((parser->m_bytes[parser->m_index++] & 0xFF) << 24) |
+                    ((parser->m_bytes[parser->m_index++] & 0xFF) << 16) |
+                    ((parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                    (parser->m_bytes[parser->m_index++] & 0xFF);
 
                 zen_ConstantPoolInteger_t* constantPoolInteger = jtk_Memory_allocate(zen_ConstantPoolInteger_t, 1);
                 constantPoolInteger->m_tag = ZEN_CONSTANT_POOL_TAG_INTEGER;
@@ -154,8 +178,14 @@ void zen_BinaryEntityParser_parseConstantPool(
             }
 
             case ZEN_CONSTANT_POOL_TAG_LONG: {
-                uint32_t highBytes = jtk_Tape_readUncheckedInteger(parser->m_tape);
-                uint32_t lowBytes = jtk_Tape_readUncheckedInteger(parser->m_tape);
+                uint32_t highBytes = ((parser->m_bytes[parser->m_index++] & 0xFF) << 24) |
+                    ((parser->m_bytes[parser->m_index++] & 0xFF) << 16) |
+                    ((parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                    (parser->m_bytes[parser->m_index++] & 0xFF);
+                uint32_t lowBytes = ((parser->m_bytes[parser->m_index++] & 0xFF) << 24) |
+                    ((parser->m_bytes[parser->m_index++] & 0xFF) << 16) |
+                    ((parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                    (parser->m_bytes[parser->m_index++] & 0xFF);
 
                 zen_ConstantPoolLong_t* constantPoolLong = jtk_Memory_allocate(zen_ConstantPoolLong_t, 1);
                 constantPoolLong->m_tag = ZEN_CONSTANT_POOL_TAG_LONG;
@@ -170,7 +200,10 @@ void zen_BinaryEntityParser_parseConstantPool(
             }
 
             case ZEN_CONSTANT_POOL_TAG_FLOAT: {
-                uint32_t bytes = jtk_Tape_readUncheckedInteger(parser->m_tape);
+                uint32_t bytes = ((parser->m_bytes[parser->m_index++] & 0xFF) << 24) |
+                    ((parser->m_bytes[parser->m_index++] & 0xFF) << 16) |
+                    ((parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                    (parser->m_bytes[parser->m_index++] & 0xFF);
 
                 zen_ConstantPoolFloat_t* constantPoolFloat = jtk_Memory_allocate(zen_ConstantPoolFloat_t, 1);
                 constantPoolFloat->m_tag = ZEN_CONSTANT_POOL_TAG_FLOAT;
@@ -184,8 +217,14 @@ void zen_BinaryEntityParser_parseConstantPool(
             }
 
             case ZEN_CONSTANT_POOL_TAG_DOUBLE: {
-                uint32_t highBytes = jtk_Tape_readUncheckedInteger(parser->m_tape);
-                uint32_t lowBytes = jtk_Tape_readUncheckedInteger(parser->m_tape);
+                uint32_t highBytes = ((parser->m_bytes[parser->m_index++] & 0xFF) << 24) |
+                    ((parser->m_bytes[parser->m_index++] & 0xFF) << 16) |
+                    ((parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                    (parser->m_bytes[parser->m_index++] & 0xFF);
+                uint32_t lowBytes = ((parser->m_bytes[parser->m_index++] & 0xFF) << 24) |
+                    ((parser->m_bytes[parser->m_index++] & 0xFF) << 16) |
+                    ((parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                    (parser->m_bytes[parser->m_index++] & 0xFF);
 
                 zen_ConstantPoolDouble_t* constantPoolDouble = jtk_Memory_allocate(zen_ConstantPoolDouble_t, 1);
                 constantPoolDouble->m_tag = ZEN_CONSTANT_POOL_TAG_DOUBLE;
@@ -200,7 +239,8 @@ void zen_BinaryEntityParser_parseConstantPool(
             }
 
             case ZEN_CONSTANT_POOL_TAG_UTF8: {
-                uint16_t length = jtk_Tape_readUncheckedShort(parser->m_tape);
+                uint16_t length = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                (parser->m_bytes[parser->m_index++] & 0xFF));
                 /* The specification guarantees that an empty string is never stored in a constant pool.
                  *
                  * Although the speciication does not specify the bytes to be null-terminated,
@@ -210,7 +250,9 @@ void zen_BinaryEntityParser_parseConstantPool(
 
                 uint8_t* bytes = jtk_Memory_allocate(uint8_t, length + 1);
                 bytes[length] = '\0';
-                jtk_Tape_readUncheckedBytes(parser->m_tape, bytes, length);
+                jtk_Arrays_copyEx_b(parser->m_bytes, parser->m_size, parser->m_index,
+                    bytes, length, 0, length);
+                parser->m_index += length;
 
                 zen_ConstantPoolUtf8_t* constantPoolUtf8 = jtk_Memory_allocate(zen_ConstantPoolUtf8_t, 1);
                 constantPoolUtf8->m_tag = ZEN_CONSTANT_POOL_TAG_UTF8;
@@ -225,7 +267,8 @@ void zen_BinaryEntityParser_parseConstantPool(
             }
 
             case ZEN_CONSTANT_POOL_TAG_STRING: {
-                uint16_t stringIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
+                uint16_t stringIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                (parser->m_bytes[parser->m_index++] & 0xFF));
 
                 zen_ConstantPoolString_t* constantPoolString = jtk_Memory_allocate(zen_ConstantPoolString_t, 1);
                 constantPoolString->m_tag = ZEN_CONSTANT_POOL_TAG_STRING;
@@ -239,9 +282,12 @@ void zen_BinaryEntityParser_parseConstantPool(
             }
 
             case ZEN_CONSTANT_POOL_TAG_FUNCTION: {
-                uint16_t classIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
-                uint16_t descriptorIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
-                uint16_t nameIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
+                uint16_t classIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                (parser->m_bytes[parser->m_index++] & 0xFF));
+                uint16_t descriptorIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                (parser->m_bytes[parser->m_index++] & 0xFF));
+                uint16_t nameIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                (parser->m_bytes[parser->m_index++] & 0xFF));
 
                 zen_ConstantPoolFunction_t* constantPoolFunction = jtk_Memory_allocate(zen_ConstantPoolFunction_t, 1);
                 constantPoolFunction->m_tag = ZEN_CONSTANT_POOL_TAG_FUNCTION;
@@ -257,8 +303,10 @@ void zen_BinaryEntityParser_parseConstantPool(
             }
 
             case ZEN_CONSTANT_POOL_TAG_FIELD: {
-                uint16_t descriptorIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
-                uint16_t nameIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
+                uint16_t descriptorIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                (parser->m_bytes[parser->m_index++] & 0xFF));
+                uint16_t nameIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                (parser->m_bytes[parser->m_index++] & 0xFF));
 
                 zen_ConstantPoolField_t* constantPoolField = jtk_Memory_allocate(zen_ConstantPoolField_t, 1);
                 constantPoolField->m_tag = ZEN_CONSTANT_POOL_TAG_FIELD;
@@ -273,7 +321,8 @@ void zen_BinaryEntityParser_parseConstantPool(
             }
 
             case ZEN_CONSTANT_POOL_TAG_CLASS: {
-                uint16_t nameIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
+                uint16_t nameIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                (parser->m_bytes[parser->m_index++] & 0xFF));
 
                 zen_ConstantPoolClass_t* constantPoolClass = jtk_Memory_allocate(zen_ConstantPoolClass_t, 1);
                 constantPoolClass->m_tag = ZEN_CONSTANT_POOL_TAG_CLASS;
@@ -300,23 +349,27 @@ void zen_BinaryEntityParser_parseEntity(zen_BinaryEntityParser_t* parser) {
     jtk_Assert_assertObject(parser, "The specified binary entity parser is null.");
 
     zen_Entity_t* entity = &parser->m_entityFile->m_entity;
-    uint8_t type = jtk_Tape_readUncheckedByte(parser->m_tape);
+    uint8_t type = parser->m_bytes[parser->m_index++];
 
     entity->m_type = type;
 
-    uint16_t flags = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t flags = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     entity->m_flags = flags;
 
-    uint16_t reference = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t reference = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     entity->m_reference = reference;
 
-    uint16_t superclassCount = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t superclassCount = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     entity->m_superclassCount = superclassCount;
 
     uint16_t* superclasses = zen_Memory_allocate(uint16_t, superclassCount);
     int32_t i;
     for (i = 0; i < superclassCount; i++) {
-        superclasses[i] = jtk_Tape_readUncheckedShort(parser->m_tape);
+        superclasses[i] = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+            (parser->m_bytes[parser->m_index++] & 0xFF));
     }
     entity->m_superclasses = superclasses;
 
@@ -324,7 +377,8 @@ void zen_BinaryEntityParser_parseEntity(zen_BinaryEntityParser_t* parser) {
 
     // fieldCount fieldEntity*
 
-    uint16_t fieldCount = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t fieldCount = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     entity->m_fieldCount = fieldCount;
     entity->m_fields = (fieldCount > 0)?
         jtk_Memory_allocate(zen_FieldEntity_t*, fieldCount) : NULL;
@@ -337,7 +391,8 @@ void zen_BinaryEntityParser_parseEntity(zen_BinaryEntityParser_t* parser) {
 
     // functionCount functionEntity*
 
-    uint16_t functionCount = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t functionCount = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     entity->m_functionCount = functionCount;
     entity->m_functions = (functionCount > 0)?
         jtk_Memory_allocate(zen_FunctionEntity_t*, functionCount) : NULL;
@@ -357,14 +412,19 @@ void zen_BinaryEntityParser_parseAttributeTable(
     zen_BinaryEntityParser_t* parser, zen_AttributeTable_t* attributeTable) {
     jtk_Assert_assertObject(parser, "The specified binary entity parser is null.");
 
-    uint16_t size = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t size = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     attributeTable->m_size = size;
     attributeTable->m_attributes = (size > 0)?
         jtk_Memory_allocate(zen_Attribute_t*, size) : size;
 
     for (int32_t i = 0; i < size; i++) {
-        uint16_t nameIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
-        uint32_t length = jtk_Tape_readUncheckedInteger(parser->m_tape);
+        uint16_t nameIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+            (parser->m_bytes[parser->m_index++] & 0xFF));
+        uint32_t length = ((parser->m_bytes[parser->m_index++] & 0xFF) << 24) |
+            ((parser->m_bytes[parser->m_index++] & 0xFF) << 16) |
+            ((parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+            (parser->m_bytes[parser->m_index++] & 0xFF);
 
         zen_ConstantPoolUtf8_t* nameConstantPoolUtf8 = zen_ConstantPool_resolveUtf8(
             &parser->m_entityFile->m_constantPool, nameIndex);
@@ -380,7 +440,7 @@ void zen_BinaryEntityParser_parseAttributeTable(
         }
         else {
             /* Skip the bytes occupied by the unrecognized attribute. */
-            jtk_Tape_skipUnchecked(parser->m_tape, length);
+            parser->m_index += length;
 
             /* Do not waste memory representing an unrecognized attribute.
              * It is represented as null in the attributes table.
@@ -401,18 +461,27 @@ zen_InstructionAttribute_t* zen_BinaryEntityParser_parseInstructionAttribute(
     instructionAttribute->m_nameIndex = nameIndex;
     instructionAttribute->m_length = length;
 
-    uint16_t maxStackSize = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t maxStackSize = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     instructionAttribute->m_maxStackSize = maxStackSize;
 
-    uint16_t localVariableCount = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t localVariableCount = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     instructionAttribute->m_localVariableCount = localVariableCount;
 
-    uint32_t instructionLength = jtk_Tape_readUncheckedInteger(parser->m_tape);
+    uint32_t instructionLength = ((parser->m_bytes[parser->m_index++] & 0xFF) << 24) |
+        ((parser->m_bytes[parser->m_index++] & 0xFF) << 16) |
+        ((parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF);
     instructionAttribute->m_instructionLength = instructionLength;
 
-    uint8_t* instructions = (instructionLength > 0)?
-        jtk_Memory_allocate(uint8_t, instructionLength) : NULL;
-    jtk_Tape_readUncheckedBytes(parser->m_tape, instructions, instructionLength);
+    uint8_t* instructions = NULL;
+    if (instructionLength > 0) {
+        instructions = jtk_Memory_allocate(uint8_t, instructionLength);
+        jtk_Arrays_copyEx_b(parser->m_bytes, parser->m_size, parser->m_index,
+            instructions, instructionLength, 0, instructionLength);
+        parser->m_index += instructionLength;
+    }
     instructionAttribute->m_instructions = instructions;
 
     zen_BinaryEntityParser_parseExceptionTable(parser, &(instructionAttribute->m_exceptionTable));
@@ -427,7 +496,8 @@ void zen_BinaryEntityParser_parseExceptionTable(zen_BinaryEntityParser_t* parser
     jtk_Assert_assertObject(parser, "The specified binary entity parser is null.");
     jtk_Assert_assertObject(exceptionTable, "The specified exception table is null.");
 
-    uint16_t size = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t size = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     exceptionTable->m_size = size;
     exceptionTable->m_exceptionHandlerSites = (size > 0)?
         jtk_Memory_allocate(zen_ExceptionHandlerSite_t*, size) : NULL;
@@ -447,16 +517,20 @@ zen_ExceptionHandlerSite_t* zen_BinaryEntityParser_parseExceptionHandlerSite(
 
     zen_ExceptionHandlerSite_t* exceptionHandlerSite = jtk_Memory_allocate(zen_ExceptionHandlerSite_t, 1);
 
-    uint16_t startIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t startIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     exceptionHandlerSite->m_startIndex = startIndex;
 
-    uint16_t stopIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t stopIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     exceptionHandlerSite->m_stopIndex = stopIndex;
 
-    uint16_t handlerIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t handlerIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     exceptionHandlerSite->m_handlerIndex = handlerIndex;
 
-    uint16_t exceptionClassIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t exceptionClassIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     exceptionHandlerSite->m_exceptionClassIndex = exceptionClassIndex;
 
     return exceptionHandlerSite;
@@ -471,15 +545,18 @@ zen_FunctionEntity_t* zen_BinaryEntityParser_parseFunction(zen_BinaryEntityParse
 
     // Flags
 
-    uint16_t flags = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t flags = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     functionEntity->m_flags = flags;
 
     // Name Index
 
-    uint16_t nameIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t nameIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     functionEntity->m_nameIndex = nameIndex;
 
-    uint16_t descriptorIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t descriptorIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     functionEntity->m_descriptorIndex = descriptorIndex;
 
     // Attribute Table
@@ -498,17 +575,20 @@ zen_FieldEntity_t* zen_BinaryEntityParser_parseField(zen_BinaryEntityParser_t* p
 
     // Flags
 
-    uint16_t flags = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t flags = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     fieldEntity->m_flags = flags;
 
     // Name Index
 
-    uint16_t nameIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t nameIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     fieldEntity->m_nameIndex = nameIndex;
 
     // Descriptor Index
 
-    uint16_t descriptorIndex = jtk_Tape_readUncheckedShort(parser->m_tape);
+    uint16_t descriptorIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     fieldEntity->m_descriptorIndex = descriptorIndex;
 
     zen_BinaryEntityParser_parseAttributeTable(parser, &(fieldEntity->m_attributeTable));

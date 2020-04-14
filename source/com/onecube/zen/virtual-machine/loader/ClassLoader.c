@@ -48,6 +48,8 @@ zen_ClassLoader_t* zen_ClassLoader_new(zen_VirtualMachine_t* virtualMachine,
     classLoader->m_classes = jtk_HashMap_newEx(stringObjectAdapter, NULL,
         ZEN_CLASS_LOADER_DEFAULT_CLASSES_MAP_CAPCITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
     classLoader->m_attributeParseRules = zen_AttributeParseRules_new();
+    classLoader->m_parser = zen_BinaryEntityParser_new(
+        classLoader->m_attributeParseRules);
 
     while (jtk_Iterator_hasNext(entityDirectoryIterator)) {
         uint8_t* directory = (uint8_t*)jtk_Iterator_getNext(entityDirectoryIterator);
@@ -87,6 +89,7 @@ void zen_ClassLoader_delete(zen_ClassLoader_t* classLoader) {
     jtk_Iterator_delete(entryIterator);
 
     zen_AttributeParseRules_delete(classLoader->m_attributeParseRules);
+    zen_BinaryEntityParser_delete(classLoader->m_parser);
     jtk_HashMap_delete(classLoader->m_classes);
     jtk_Memory_deallocate(classLoader);
 }
@@ -248,9 +251,8 @@ zen_Class_t* zen_ClassLoader_loadClass(zen_ClassLoader_t* classLoader,
 
                         jtk_ByteArray_t* input = jtk_InputStreamHelper_toArray(inputStream);
 
-                        zen_BinaryEntityParser_t* parser = zen_BinaryEntityParser_new(
-                            classLoader->m_attributeParseRules, input->m_values, input->m_size);
-                        zen_EntityFile_t* entityFile = zen_BinaryEntityParser_parse(parser, inputStream);
+                        zen_EntityFile_t* entityFile = zen_BinaryEntityParser_parse(
+                            classLoader->m_parser, input->m_values, input->m_size);
 
                         result = zen_Class_new(classLoader->m_virtualMachine,
                                 entityFile);
@@ -269,7 +271,6 @@ zen_Class_t* zen_ClassLoader_loadClass(zen_ClassLoader_t* classLoader,
                             jtk_HashMap_put(classLoader->m_classes, descriptorCopy, result);
                         }
 
-                        zen_BinaryEntityParser_delete(parser);
                         jtk_ByteArray_delete(input);
                         jtk_InputStream_destroy(inputStream);
                     }
