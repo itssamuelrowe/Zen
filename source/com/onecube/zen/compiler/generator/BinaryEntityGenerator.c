@@ -7066,6 +7066,13 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                                     int32_t k;
                                     for (k = 0; k < argumentCount; k++) {
                                         jtk_StringBuilder_appendEx_z(builder, "(zen/core/Object)", 17);
+
+                                        /* Retrieve the expression for the current argument. */
+                                        zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+                                            expressionsContext->m_expressions, k);
+
+                                        /* Visit the expression node and generate the relevant instructions. */
+                                        zen_ASTWalker_walk(astListener, argument);
                                     }
                                 }
                                 else {
@@ -7746,6 +7753,13 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
                                     int32_t k;
                                     for (k = 0; k < argumentCount; k++) {
                                         jtk_StringBuilder_appendEx_z(builder, "zen/core/Object", 15);
+
+                                        /* Retrieve the expression for the current argument. */
+                                        zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+                                            expressionsContext->m_expressions, k);
+
+                                        /* Visit the expression node and generate the relevant instructions. */
+                                        zen_ASTWalker_walk(astListener, argument);
                                     }
                                 }
                                 else {
