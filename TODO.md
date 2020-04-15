@@ -47,6 +47,7 @@ class Example
 
  Python: 0.153s, Zen: 0.744s, JavaScript: 0.273s
  Python: 0.292s (2.64x faster), Zen: 0.773s, JavaScript: 0.319s (2.42x faster)
+ Python: 0.043s (17.41x faster), Zen: 0.749s, JavaScript: 0.281s (2.66x faster)
 
 
  let student = new Student()

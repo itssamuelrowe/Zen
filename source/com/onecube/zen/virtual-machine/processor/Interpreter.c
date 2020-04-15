@@ -148,7 +148,8 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
         // TODO: Move stopTracing somewhere more appropriate.
         zen_InvocationStack_stopTracing(interpreter->m_invocationStack);
 
-        uint8_t instruction = instructionAttribute->m_instructions[currentStackFrame->m_ip++];
+        uint8_t* instructions = instructionAttribute->m_instructions;
+        uint8_t instruction = instructions[currentStackFrame->m_ip++];
 
         jtk_Logger_debug(logger, "Fetched instruction... (instruction pointer = %d, instruction = 0x%X, function = %s -> %s)",
             currentStackFrame->m_ip, instruction, zen_Interpreter_getCurrentFunctionName(interpreter),
@@ -721,7 +722,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             /* Check Cast */
 
             case ZEN_BYTE_CODE_CHECK_CAST: { /* check_cast */
-                uint16_t index = zen_Interpreter_readShort(interpreter);
+                uint16_t index = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
             /*
                 zen_Object_t* object = zen_OperandStack_peekReference(currentStackFrame->m_operandStack);
                 if (object != NULL) {
@@ -1105,7 +1106,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 int32_t operand = (int32_t)zen_OperandStack_popLong(currentStackFrame->m_operandStack);
 
                 if (operand == 0) {
-                    uint16_t offset = zen_Interpreter_readShort(interpreter);
+                    uint16_t offset = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                     currentStackFrame->m_ip = offset;
                 }
                 else {
@@ -1129,7 +1130,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 int32_t operand = (int32_t)zen_OperandStack_popLong(currentStackFrame->m_operandStack);
 
                 if (operand != 0) {
-                    uint16_t offset = zen_Interpreter_readShort(interpreter);
+                    uint16_t offset = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                     currentStackFrame->m_ip = offset;
                 }
                 else {
@@ -1150,7 +1151,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 int32_t operand = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
 
                 if (operand < 0) {
-                    uint16_t offset = zen_Interpreter_readShort(interpreter);
+                    uint16_t offset = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                     currentStackFrame->m_ip += offset - 3;
                 }
                 else {
@@ -1171,7 +1172,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 int32_t operand = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
 
                 if (operand > 0) {
-                    uint16_t offset = zen_Interpreter_readShort(interpreter);
+                    uint16_t offset = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                     currentStackFrame->m_ip += offset - 3;
                 }
                 else {
@@ -1192,7 +1193,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 int32_t operand = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
 
                 if (operand <= 0) {
-                    uint16_t offset = zen_Interpreter_readShort(interpreter);
+                    uint16_t offset = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                     currentStackFrame->m_ip += offset - 3;
                 }
                 else {
@@ -1213,7 +1214,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 int32_t operand = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
 
                 if (operand >= 0) {
-                    uint16_t offset = zen_Interpreter_readShort(interpreter);
+                    uint16_t offset = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                     currentStackFrame->m_ip += offset - 3;
                 }
                 else {
@@ -1237,7 +1238,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 int32_t operand1 = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
 
                 if (operand1 == operand2) {
-                    int16_t offset = zen_Interpreter_readShort(interpreter);
+                    int16_t offset = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                     currentStackFrame->m_ip += offset - 3;
 
                     jtk_Logger_debug(logger, "Operands are equal. Branch acknowledged, program counter adjusted accordingly.  (operand1 = %d, operand2 = %d, offset = %d)",
@@ -1264,7 +1265,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 int32_t operand1 = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
 
                 if (operand1 != operand2) {
-                    int16_t offset = zen_Interpreter_readShort(interpreter);
+                    int16_t offset = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                     currentStackFrame->m_ip += offset - 3;
 
                     jtk_Logger_debug(logger, "Operands are unequal. Branch acknowledged, program counter adjusted accordingly.  (operand1 = %d, operand2 = %d, offset = %d)",
@@ -1291,7 +1292,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 int32_t operand1 = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
 
                 if (operand1 < operand2) {
-                    int16_t offset = zen_Interpreter_readShort(interpreter);
+                    int16_t offset = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                     currentStackFrame->m_ip += offset - 3;
 
                     jtk_Logger_debug(logger, "operand1 is lesser than operand2. Branch acknowledged, program counter adjusted accordingly.  (operand1 = %d, operand2 = %d, offset = %d)",
@@ -1318,7 +1319,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 int32_t operand1 = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
 
                 if (operand1 > operand2) {
-                    int16_t offset = zen_Interpreter_readShort(interpreter);
+                    int16_t offset = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                     currentStackFrame->m_ip += offset - 3;
 
                     jtk_Logger_debug(logger, "operand1 is greater than operand2. Branch acknowledged, program counter adjusted accordingly.  (operand1 = %d, operand2 = %d, offset = %d)",
@@ -1345,7 +1346,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 int32_t operand1 = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
 
                 if (operand1 <= operand2) {
-                    int16_t offset = zen_Interpreter_readShort(interpreter);
+                    int16_t offset = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                     currentStackFrame->m_ip += offset - 3;
 
                     jtk_Logger_debug(logger, "operand1 is lesser than or equal to operand2. Branch acknowledged, program counter adjusted accordingly.  (operand1 = %d, operand2 = %d, offset = %d)",
@@ -1372,7 +1373,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 int32_t operand1 = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
 
                 if (operand1 >= operand2) {
-                    int16_t offset = zen_Interpreter_readShort(interpreter);
+                    int16_t offset = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                     currentStackFrame->m_ip += offset - 3;
 
                     jtk_Logger_debug(logger, "operand1 is greater than or equal to operand2. Branch acknowledged, program counter adjusted accordingly.  (operand1 = %d, operand2 = %d, offset = %d)",
@@ -1399,7 +1400,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 uintptr_t operand1 = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
 
                 if (operand1 == operand2) {
-                    int16_t offset = zen_Interpreter_readShort(interpreter);
+                    int16_t offset = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                     currentStackFrame->m_ip += offset - 3;
 
                     jtk_Logger_debug(logger, "Operands are equal. Branch acknowledged, program counter adjusted accordingly.  (operand1 = 0x%X, operand2 = 0x%X, offset = %d)",
@@ -1426,7 +1427,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 uintptr_t operand1 = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
 
                 if (operand1 != operand2) {
-                    int16_t offset = zen_Interpreter_readShort(interpreter);
+                    int16_t offset = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                     currentStackFrame->m_ip += offset - 3;
 
                     jtk_Logger_debug(logger, "Operands are unequal. Branch acknowledged, program counter adjusted accordingly.  (operand1 = 0x%X, operand2 = 0x%X, offset = %d)",
@@ -1451,7 +1452,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 uintptr_t operand = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
 
                 if (operand == ZEN_INTERPRETER_NULL_REFERENCE) {
-                    int16_t offset = zen_Interpreter_readShort(interpreter);
+                    int16_t offset = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                     currentStackFrame->m_ip += offset - 3;
 
                     jtk_Logger_debug(logger, "Operand is equal to null. Branch acknowledged, program counter adjusted accordingly.  (operand = 0x%X, offset = %d)",
@@ -1476,7 +1477,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 uintptr_t operand = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
 
                 if (operand != ZEN_INTERPRETER_NULL_REFERENCE) {
-                    int16_t offset = zen_Interpreter_readShort(interpreter);
+                    int16_t offset = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                     currentStackFrame->m_ip += offset - 3;
 
                     jtk_Logger_debug(logger, "Operand is not equal to null. Branch acknowledged, program counter adjusted accordingly.  (operand = 0x%X, offset = %d)",
@@ -1505,7 +1506,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             /* Invoke */
 
             case ZEN_BYTE_CODE_INVOKE_SPECIAL: { /* invoke_special */
-                uint16_t index = zen_Interpreter_readShort(interpreter);
+                uint16_t index = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
 
                 zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
                 zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
@@ -1557,7 +1558,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             }
 
             case ZEN_BYTE_CODE_INVOKE_VIRTUAL: { /* invoke_virtual */
-                uint16_t index = zen_Interpreter_readShort(interpreter);
+                uint16_t index = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
 
                 zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
                 zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
@@ -1624,7 +1625,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             }
 
             case ZEN_BYTE_CODE_INVOKE_STATIC: { /* invoke_static */
-                uint16_t index = zen_Interpreter_readShort(interpreter);
+                uint16_t index = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
 
                 zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
                 zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
@@ -1685,7 +1686,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             /* Jump */
 
             case ZEN_BYTE_CODE_JUMP: { /* jump */
-                int16_t offset = zen_Interpreter_readShort(interpreter);
+                int16_t offset = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                 currentStackFrame->m_ip = offset;
 
                 /* Log debugging information for assistance in debugging the interpreter. */
@@ -1699,7 +1700,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_LOAD_I: { /* load_i */
                 /* Read the index of the local variable to load. */
-                uint8_t index = zen_Interpreter_readByte(interpreter);
+                uint8_t index = instructions[currentStackFrame->m_ip++];
 
                 /* Retrieve the 32-bit integer value stored in the local variable at
                  * the specified index.
@@ -1717,7 +1718,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_LOAD_L: { /* load_l */
                 /* Read the index of the local variable to load. */
-                int32_t index = zen_Interpreter_readByte(interpreter);
+                int32_t index = instructions[currentStackFrame->m_ip++];
 
                 /* Retrieve the 32-bit integer value stored in the local variable at
                  * the specified index. It represents the low-part of the 64-bit
@@ -1742,7 +1743,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_LOAD_F: { /* load_f */
                 /* Read the index of the local variable to load. */
-                int32_t index = zen_Interpreter_readByte(interpreter);
+                int32_t index = instructions[currentStackFrame->m_ip++];
 
                 /* Retrieve the bit pattern of the 32-bit decimal value stored
                  * in the local variable at the specified index.
@@ -1762,7 +1763,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_LOAD_D: { /* load_d */
                 /* Read the index of the local variable to load. */
-                int32_t index = zen_Interpreter_readByte(interpreter);
+                int32_t index = instructions[currentStackFrame->m_ip++];
 
                 /* Retrieve the 32-bit integer value stored in the local variable at
                  * the specified index. It represents the low-part of the bit pattern
@@ -1787,7 +1788,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_LOAD_A: { /* load_a */
                 /* Read the index of the local variable to load. */
-                uint8_t index = zen_Interpreter_readByte(interpreter);
+                uint8_t index = instructions[currentStackFrame->m_ip++];
 
                 /* Retrieve the object reference stored in the local variable at
                  * the specified index.
@@ -2162,7 +2163,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             }
 
             case ZEN_BYTE_CODE_LOAD_CPR: { /* load_cpr */
-                int32_t index = zen_Interpreter_readByte(interpreter);
+                int32_t index = instructions[currentStackFrame->m_ip++];
 
                 zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
                 zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
@@ -2470,7 +2471,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
             /* New */
 
             case ZEN_BYTE_CODE_NEW: { /* new */
-                uint16_t index = zen_Interpreter_readShort(interpreter);
+                uint16_t index = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
 
                 zen_EntityFile_t* entityFile = currentStackFrame->m_class->m_entityFile;
                 zen_ConstantPool_t* constantPool = &entityFile->m_constantPool;
@@ -2504,7 +2505,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_NEW_ARRAY_A: { /* new_array_a */
                 /* Read the class index from the instruction stream. */
-                uint16_t index = zen_Interpreter_readShort(interpreter);
+                uint16_t index = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                 /* Retrieve the size of the array from the operand stack. */
                 int32_t size = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
                 /* TODO: Create a new reference array. */
@@ -2740,7 +2741,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_PUSH_B: { /* push_b */
                 /* Read the 8-bit integer value to push on the stack. */
-                int8_t value = zen_Interpreter_readByte(interpreter);
+                int8_t value = instructions[currentStackFrame->m_ip++];
                 /* Push the 8-bit integer value on the stack. It is extended to
                  * a 32-bit integer; zeroes are used as padding.
                  */
@@ -2755,7 +2756,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_PUSH_S: { /* push_s */
                 /* Read the 16-bit integer value to push on the stack. */
-                int16_t value = zen_Interpreter_readShort(interpreter);
+                int16_t value = (((uint16_t)instructions[currentStackFrame->m_ip++] << 8) | (uint16_t)instructions[currentStackFrame->m_ip++]);
                 /* Push the 16-bit integer value on the stack. It is extended to
                  * a 32-bit integer; zeroes are used as padding.
                  */
@@ -2898,7 +2899,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_STORE_I: { /* store_i */
                 /* Read the index of the local variable to modify. */
-                uint8_t index = zen_Interpreter_readByte(interpreter);
+                uint8_t index = instructions[currentStackFrame->m_ip++];
                 /* Retrieve the operand from the operand stack. */
                 int32_t operand = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
                 /* Update the value of the local variable with the specified index. */
@@ -2965,7 +2966,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_STORE_L: { /* store_l */
                 /* Read the index of the local variable to modify. */
-                uint8_t index = zen_Interpreter_readByte(interpreter);
+                uint8_t index = instructions[currentStackFrame->m_ip++];
                 /* Retrieve the operand from the operand stack. */
                 int64_t operand = zen_OperandStack_popLong(currentStackFrame->m_operandStack);
                 /* Update the value of the local variable with the specified index. */
@@ -3130,7 +3131,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_STORE_F: { /* store_f */
                 /* Read the index of the local variable to modify. */
-                uint8_t index = zen_Interpreter_readByte(interpreter);
+                uint8_t index = instructions[currentStackFrame->m_ip++];
                 /* Retrieve the operand from the operand stack. */
                 int32_t operand = zen_OperandStack_popInteger(currentStackFrame->m_operandStack);
                 /* Update the value of the local variable with the specified index. */
@@ -3219,7 +3220,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_STORE_D: { /* store_d */
                 /* Read the index of the local variable to modify. */
-                uint8_t index = zen_Interpreter_readByte(interpreter);
+                uint8_t index = instructions[currentStackFrame->m_ip++];
                 /* Retrieve the operand from the operand stack. */
                 int64_t operand = zen_OperandStack_popLong(currentStackFrame->m_operandStack);
                 /* Update the value of the local variable with the specified index. */
@@ -3370,7 +3371,7 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
 
             case ZEN_BYTE_CODE_STORE_A: { /* store_a */
                 /* Read the index of the local variable to modify. */
-                uint8_t index = zen_Interpreter_readByte(interpreter);
+                uint8_t index = instructions[currentStackFrame->m_ip++];
                 /* Retrieve the operand from the operand stack. */
                 intptr_t operand = zen_OperandStack_popReference(currentStackFrame->m_operandStack);
                 /* Update the value of the local variable with the specified index. */
@@ -4005,24 +4006,6 @@ void zen_Interpreter_loadArguments(zen_Interpreter_t* interpreter,
             }
         }
     }
-}
-
-/* Read */
-
-uint8_t zen_Interpreter_readByte(zen_Interpreter_t* interpreter) {
-    zen_StackFrame_t* currentStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
-    zen_InstructionAttribute_t* instructionAttribute = currentStackFrame->m_instructionAttribute;
-
-    return instructionAttribute->m_instructions[currentStackFrame->m_ip++];
-}
-
-uint16_t zen_Interpreter_readShort(zen_Interpreter_t* interpreter) {
-zen_StackFrame_t* currentStackFrame = zen_InvocationStack_peekStackFrame(interpreter->m_invocationStack);
-    zen_InstructionAttribute_t* instructionAttribute = currentStackFrame->m_instructionAttribute;
-
-    uint8_t byte0 = instructionAttribute->m_instructions[currentStackFrame->m_ip++];
-    uint8_t byte1 = instructionAttribute->m_instructions[currentStackFrame->m_ip++];
-    return (byte0 << 8) | byte1;
 }
 
 /* Throw */
