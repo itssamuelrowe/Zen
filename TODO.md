@@ -1,11 +1,11 @@
   * Implement a wildcard search
  * Implement virtual function tables, static function tables, instance field tables, and static field tables.
- * Static functions should not go through ZenKernel.invokeStatic()!
  * Native code should be able throw and catch exceptions.
  * Implement line numbers for exceptions.
  * Generate default constructors when no constructor is provided.
  * Move semantic errors from the code generator to definition and resolution phases.
  * Use symbol->m_name instead of symbol->m_context.as_Class.qualifiedName
+  * Hexadecimal integer literals are not working
  * The compiler generates error for
 ```
 class Example
@@ -49,3 +49,4 @@ class Example
  Python: 0.292s (2.64x faster), Zen: 0.773s, JavaScript: 0.319s (2.42x faster)
  Python: 0.043s (17.41x faster), Zen: 0.749s, JavaScript: 0.281s (2.66x faster)
  Python: 0.042s (15.19x faster), Zen: 0.638s, JavaScript: 0.274s (2.32x faster)
+ Python: 0.045s (15.11x faster), Zen: 0.680s, JavaScript: 0.315s (2.15x faster)

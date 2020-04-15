@@ -3975,9 +3975,16 @@ void zen_BinaryEntityGenerator_onExitTryStatement(zen_ASTListener_t* astListener
                 int32_t exceptionClassNameSize;
                 uint8_t* exceptionClassName = zen_ASTNode_toCString(catchClauseContext->m_catchFilter,
                     &exceptionClassNameSize);
+                zen_Symbol_t* exceptionClass = zen_SymbolTable_resolve(generator->m_symbolTable,
+                    exceptionClassName);
+                exceptionClassNameSize = exceptionClass->m_context.m_asClass.m_qualifiedNameSize;
+                uint8_t* descriptor = jtk_CString_newEx(exceptionClass->m_context.m_asClass.m_qualifiedName,
+                    exceptionClass->m_context.m_asClass.m_qualifiedNameSize);
+                jtk_Arrays_replace_b(descriptor, exceptionClassNameSize, '.', '/');
                 // TODO: Resolve the symbol of the class with the given name.
                 uint16_t exceptionClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
-                    generator->m_constantPoolBuilder, exceptionClassName, exceptionClassNameSize);
+                    generator->m_constantPoolBuilder, descriptor, exceptionClassNameSize);
+                jtk_CString_delete(descriptor);
 
                 /* In this exception handler site, the exceptions triggered within the
                  * try clause are handled by the catch clauses. These exceptions are
