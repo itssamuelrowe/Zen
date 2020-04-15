@@ -105,7 +105,7 @@ zen_Object_t* zen_VirtualMachine_newBoolean(zen_VirtualMachine_t* virtualMachine
 zen_Class_t* zen_VirtualMachine_getClass(zen_VirtualMachine_t* context, const uint8_t* descriptor,
     int32_t descriptorSize);
 zen_Class_t* zen_VirtualMachine_getClassEx(zen_VirtualMachine_t* context,
-    const uint8_t* descriptor, int32_t descriptorSize);
+    const uint8_t* descriptor, int32_t descriptorSize, int32_t* descriptorHashCode);
 
 /* Clear */
 

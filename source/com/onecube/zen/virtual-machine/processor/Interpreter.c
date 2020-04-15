@@ -1517,8 +1517,9 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_ConstantPoolClass_t* classEntry = constantPool->m_entries[constructorEntry->m_classIndex];
                 zen_ConstantPoolUtf8_t* classNameEntry = constantPool->m_entries[classEntry->m_nameIndex];
 
-                zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine,
-                    classNameEntry->m_bytes, classNameEntry->m_length);
+                zen_Class_t* targetClass = zen_VirtualMachine_getClassEx(interpreter->m_virtualMachine,
+                    classNameEntry->m_bytes, classNameEntry->m_length,
+                    &classNameEntry->m_hashCode);
 
                 zen_Function_t* constructor = zen_Class_getConstructor(targetClass,
                     descriptorEntry->m_bytes, descriptorEntry->m_length);
@@ -1636,8 +1637,8 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_ConstantPoolClass_t* classEntry = constantPool->m_entries[functionEntry->m_classIndex];
                 zen_ConstantPoolUtf8_t* classNameEntry = constantPool->m_entries[classEntry->m_nameIndex];
 
-                zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine,
-                    classNameEntry->m_bytes, classNameEntry->m_length);
+                zen_Class_t* targetClass = zen_VirtualMachine_getClassEx(interpreter->m_virtualMachine,
+                    classNameEntry->m_bytes, classNameEntry->m_length, &classNameEntry->m_hashCode);
 
                 zen_Function_t* function = zen_Class_getStaticFunction(targetClass,
                     nameEntry->m_bytes, nameEntry->m_length,
@@ -2479,8 +2480,8 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                     (zen_ConstantPoolClass_t*)constantPool->m_entries[index];
                 zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[classEntry->m_nameIndex];
 
-                zen_Class_t* targetClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine,
-                    nameEntry->m_bytes, nameEntry->m_length);
+                zen_Class_t* targetClass = zen_VirtualMachine_getClassEx(interpreter->m_virtualMachine,
+                    nameEntry->m_bytes, nameEntry->m_length, &nameEntry->m_hashCode);
 
                 if (targetClass != NULL) {
                     zen_Object_t* result = zen_VirtualMachine_allocateObject(interpreter->m_virtualMachine,
@@ -4082,8 +4083,8 @@ bool zen_Interpreter_throw(zen_Interpreter_t* interpreter,
                             (zen_ConstantPoolClass_t*)constantPool->m_entries[site->m_exceptionClassIndex];
                         zen_ConstantPoolUtf8_t* nameEntry = constantPool->m_entries[classEntry->m_nameIndex];
 
-                        zen_Class_t* filterClass = zen_VirtualMachine_getClass(interpreter->m_virtualMachine,
-                            nameEntry->m_bytes, nameEntry->m_length);
+                        zen_Class_t* filterClass = zen_VirtualMachine_getClassEx(interpreter->m_virtualMachine,
+                            nameEntry->m_bytes, nameEntry->m_length, &nameEntry->m_hashCode);
 
                         if (exceptionClass == filterClass) {
                             found = true;

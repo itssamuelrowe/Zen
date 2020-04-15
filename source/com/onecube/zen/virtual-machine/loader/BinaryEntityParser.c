@@ -252,6 +252,7 @@ void zen_BinaryEntityParser_parseConstantPool(
                 constantPoolUtf8->m_tag = ZEN_CONSTANT_POOL_TAG_UTF8;
                 constantPoolUtf8->m_length = length;
                 constantPoolUtf8->m_bytes = bytes;
+                constantPoolUtf8->m_hashCode = -1;
 
                 constantPool->m_entries[index] = constantPoolUtf8;
 

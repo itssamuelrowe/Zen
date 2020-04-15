@@ -921,6 +921,21 @@ zen_Object_t* zen_VirtualMachine_newBoolean(zen_VirtualMachine_t* virtualMachine
 
 // Class
 
+zen_Class_t* zen_VirtualMachine_getClassEx(zen_VirtualMachine_t* virtualMachine,
+    const uint8_t* descriptor, int32_t descriptorSize, int32_t* descriptorHashCode) {
+    jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
+    jtk_Assert_assertObject(descriptor, "The specified class descriptor is null.");
+
+    zen_Class_t* class0 = zen_ClassLoader_findClassEx(
+        virtualMachine->m_classLoader, descriptor, descriptorSize, descriptorHashCode);
+
+    if (class0 == NULL) {
+        zen_VirtualMachine_raiseClassNotFoundException(virtualMachine, descriptor);
+    }
+
+    return class0;
+}
+
 zen_Class_t* zen_VirtualMachine_getClass(zen_VirtualMachine_t* virtualMachine,
     const uint8_t* descriptor, int32_t descriptorSize) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");

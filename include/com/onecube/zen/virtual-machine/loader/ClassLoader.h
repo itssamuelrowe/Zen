@@ -109,6 +109,10 @@ bool zen_ClassLoader_addDirectory(zen_ClassLoader_t* loader, const uint8_t* dire
 zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
     const uint8_t* descriptor, int32_t descriptorSize);
 
+zen_Class_t* zen_ClassLoader_findClassEx(zen_ClassLoader_t* classLoader,
+    const uint8_t* descriptor, int32_t descriptorSize,
+    int32_t* descriptorHashCode);
+
 
 /**
  * It tries to find a previously loaded class with the specified descriptor in

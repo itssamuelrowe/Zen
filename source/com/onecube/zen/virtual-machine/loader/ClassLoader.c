@@ -121,6 +121,25 @@ bool zen_ClassLoader_addDirectory(zen_ClassLoader_t* classLoader,
 
 // Find
 
+zen_Class_t* zen_ClassLoader_findClassEx(zen_ClassLoader_t* classLoader,
+    const uint8_t* descriptor, int32_t descriptorSize,
+    int32_t* descriptorHashCode) {
+    jtk_Assert_assertObject(classLoader, "The specified class loader is null.");
+
+    zen_Class_t* class0 = (zen_Class_t*)jtk_HashMap_getValueFast(classLoader->m_classes,
+        descriptor, descriptorHashCode);
+
+    /* The class with the specified descriptor was not found. Try to load it from
+     * the entity loader.
+     */
+    if (class0 == NULL) {
+        class0 = zen_ClassLoader_loadClass(classLoader, descriptor, descriptorSize);
+    }
+
+    return class0;
+}
+
+
 zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
     const uint8_t* descriptor, int32_t descriptorSize) {
     jtk_Assert_assertObject(classLoader, "The specified class loader is null.");
