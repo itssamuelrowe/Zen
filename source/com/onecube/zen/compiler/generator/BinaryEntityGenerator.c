@@ -6657,12 +6657,15 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
         loadFieldDescriptor, loadFieldDescriptorSize, loadFieldName,
         loadFieldNameSize);
 
+    zen_Token_t* primaryToken = NULL;
+
     /* Emit a push instruction if the primary expression is a literal or an
      * identifier.
      */
     if (zen_ASTNode_isTerminal(expression)) {
         /* Retrieve the token that the primary expression represents. */
         zen_Token_t* token = (zen_Token_t*)expression->m_context;
+        primaryToken = token;
 
         switch (zen_Token_getType(token)) {
             case ZEN_TOKEN_IDENTIFIER: {
@@ -7048,105 +7051,130 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                                 className = generator->m_className;
                                 classNameSize = generator->m_classNameSize;
                             }
-                            uint16_t identifierIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
-                                    generator->m_constantPoolBuilder, className,
-                                    classNameSize);
+                            // uint16_t identifierIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
+                            //         generator->m_constantPoolBuilder, className,
+                            //         classNameSize);
 
-                            // TODO: Should retrieve a constant pool index to a class entry.
-                            zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
-
-                            /* Log the emission of the load_cpr instruction. */
-                            jtk_Logger_debug(logger, "Emitted load_cpr %d", identifierIndex);
-                        }
-                        else {
-                            /* The "this" reference is always stored at the zeroth position
-                             * in the local variable array. Further, we assume that the
-                             * class member and the expression being processed appear in
-                             * in the same class. Therefore, emit a load reference to the
-                             * this reference.
-                             */
-                            zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
-
-                            /* Log the emission of the load_a instruction. */
-                            jtk_Logger_debug(logger, "Emitted load_a 0");
-
-                            index = invokeIndex;
-                        }
-
-                        // zen_ASTNode_t* primarySymbolIdentifier = primarySymbol->m_identifier;
-                        // zen_Token_t* primarySymbolToken = (zen_Token_t*)primarySymbolIdentifier->m_context;
-
-                        /* The name of the function to invoke. */
-                        int32_t targetNameIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
-                            generator->m_constantPoolBuilder, primarySymbol->m_name,
-                            primarySymbol->m_nameSize);
-
-                        /* Push the name of the target function on the operand stack. */
-                        zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
-                            targetNameIndex);
-
-                        zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
-                        if (expressions != NULL) {
-                            zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
-                            int32_t argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
-                            if (argumentCount > 0) {
-                                /* Push the size of the list onto the operand stack. */
-                                zen_BinaryEntityGenerator_loadInteger(generator, argumentCount);
-
-                                /* In Zen, function invocations are simulated using the ZenKerenel.dispatch()
-                                 * function. It requires the arguments of the function invocation in an array.
-                                 * Therefore, create an array and fill it with the arguments.
-                                 *
-                                 * Emit the new_array_a instruction to create the array.
-                                 */
-                                zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_builder,
-                                    objectClassIndex);
-
-                                /* Log the emission of the new_array_a instruction. */
-                                jtk_Logger_debug(logger, "Emitted new_array_a %d", objectClassIndex);
-
-                                int32_t argumentIndex;
-                                for (argumentIndex = 0; argumentIndex < argumentCount; argumentIndex++) {
-                                    /* Retrieve the expression for the current argument. */
-                                    zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
-                                        expressionsContext->m_expressions, argumentIndex);
-
-                                    /* Duplicate the reference to the argument array. */
-                                    zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
-
-                                    /* Log the emission of the duplicate instruction. */
-                                    jtk_Logger_debug(logger, "Emitted duplicate");
-
-                                    /* Push the index at which the result of the expression will be stored. */
-                                    zen_BinaryEntityGenerator_loadInteger(generator, argumentIndex);
-
-                                    /* Visit the expression node and generate the relevant instructions. */
-                                    zen_ASTWalker_walk(astListener, argument);
-
-                                    /* Store the result in the argument array. */
-                                    zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_builder);
-
-                                    /* Log the emission of the store_aa instruction. */
-                                    jtk_Logger_debug(logger, "Emitted store_aa");
-
+                            // // TODO: Should retrieve a constant pool index to a class entry.
+                            // zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
+                                jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+                                jtk_StringBuilder_appendEx_z(builder, "(zen/core/Object):", 18);
+                                zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
+                                if (expressions != NULL) {
+                                    zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
+                                    int32_t argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
+                                    int32_t k;
+                                    for (k = 0; k < argumentCount; k++) {
+                                        jtk_StringBuilder_appendEx_z(builder, "(zen/core/Object)", 17);
+                                    }
                                 }
+                                else {
+                                    jtk_StringBuilder_appendEx_z(builder, "v", 1);
+                                }
+                                int32_t descriptorSize;
+                                uint8_t* descriptor = jtk_StringBuilder_toCString(builder, &descriptorSize);
+                                jtk_StringBuilder_delete(builder);
 
-                                index = !zen_Modifier_hasStatic(primarySymbol->m_modifiers)?
-                                    invokeExIndex : invokeStaticExIndex;
-                            }
+                                int32_t index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+                                    generator->m_constantPoolBuilder, className,
+                                    classNameSize,
+                                    descriptor, descriptorSize, primaryToken->m_text,
+                                    primaryToken->m_length
+                                );
+                                zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, index);
+
+                                /* Log the emission of the load_cpr instruction. */
+                                jtk_Logger_debug(logger, "Emitted load_cpr %d", identifierIndex);
                         }
+                        // else {
+                        //     /* The "this" reference is always stored at the zeroth position
+                        //      * in the local variable array. Further, we assume that the
+                        //      * class member and the expression being processed appear in
+                        //      * in the same class. Therefore, emit a load reference to the
+                        //      * this reference.
+                        //      */
+                        //     zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
 
-                        /* Invoke the ZenKernel.dispatch() function to simulate a function
-                         * call.
-                         */
-                        zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, index);
+                        //     /* Log the emission of the load_a instruction. */
+                        //     jtk_Logger_debug(logger, "Emitted load_a 0");
 
-                        /* Log the emission of the invoke_static instruction. */
-                        jtk_Logger_debug(logger, "Emitted invoke_static %d", index);
+                        //     index = invokeIndex;
+                        // }
+
+                        // // zen_ASTNode_t* primarySymbolIdentifier = primarySymbol->m_identifier;
+                        // // zen_Token_t* primarySymbolToken = (zen_Token_t*)primarySymbolIdentifier->m_context;
+
+                        // /* The name of the function to invoke. */
+                        // int32_t targetNameIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
+                        //     generator->m_constantPoolBuilder, primarySymbol->m_name,
+                        //     primarySymbol->m_nameSize);
+
+                        // /* Push the name of the target function on the operand stack. */
+                        // zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
+                        //     targetNameIndex);
+
+                        // zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
+                        // if (expressions != NULL) {
+                        //     zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
+                        //     int32_t argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
+                        //     if (argumentCount > 0) {
+                        //         /* Push the size of the list onto the operand stack. */
+                        //         zen_BinaryEntityGenerator_loadInteger(generator, argumentCount);
+
+                        //         /* In Zen, function invocations are simulated using the ZenKerenel.dispatch()
+                        //          * function. It requires the arguments of the function invocation in an array.
+                        //          * Therefore, create an array and fill it with the arguments.
+                        //          *
+                        //          * Emit the new_array_a instruction to create the array.
+                        //          */
+                        //         zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_builder,
+                        //             objectClassIndex);
+
+                        //         /* Log the emission of the new_array_a instruction. */
+                        //         jtk_Logger_debug(logger, "Emitted new_array_a %d", objectClassIndex);
+
+                        //         int32_t argumentIndex;
+                        //         for (argumentIndex = 0; argumentIndex < argumentCount; argumentIndex++) {
+                        //             /* Retrieve the expression for the current argument. */
+                        //             zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+                        //                 expressionsContext->m_expressions, argumentIndex);
+
+                        //             /* Duplicate the reference to the argument array. */
+                        //             zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
+
+                        //             /* Log the emission of the duplicate instruction. */
+                        //             jtk_Logger_debug(logger, "Emitted duplicate");
+
+                        //             /* Push the index at which the result of the expression will be stored. */
+                        //             zen_BinaryEntityGenerator_loadInteger(generator, argumentIndex);
+
+                        //             /* Visit the expression node and generate the relevant instructions. */
+                        //             zen_ASTWalker_walk(astListener, argument);
+
+                        //             /* Store the result in the argument array. */
+                        //             zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_builder);
+
+                        //             /* Log the emission of the store_aa instruction. */
+                        //             jtk_Logger_debug(logger, "Emitted store_aa");
+
+                        //         }
+
+                        //         index = !zen_Modifier_hasStatic(primarySymbol->m_modifiers)?
+                        //             invokeExIndex : invokeStaticExIndex;
+                        //     }
+                        // }
+
+                        // /* Invoke the ZenKernel.dispatch() function to simulate a function
+                        //  * call.
+                        //  */
+                        // zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, index);
+
+                        // /* Log the emission of the invoke_static instruction. */
+                        // jtk_Logger_debug(logger, "Emitted invoke_static %d", index);
                     }
-                    else {
-                        printf("[internal error] Trying to invoke a non-function entity. The phases prior to the code generation must have malfunctioned.\n");
-                    }
+                    // else {
+                    //     printf("[internal error] Trying to invoke a non-function entity. The phases prior to the code generation must have malfunctioned.\n");
+                    // }
                 }
                 else {
                     printf("[internal error] Control should not reach here.\n");
@@ -7702,94 +7730,120 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
                                 zen_ASTNode_t* identifier = classSymbol->m_identifier;
                                 zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
 
-                                uint16_t identifierIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
-                                    generator->m_constantPoolBuilder, identifierToken->m_text,
-                                    identifierToken->m_length);
+                                // uint16_t identifierIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
+                                //     generator->m_constantPoolBuilder, identifierToken->m_text,
+                                //     identifierToken->m_length);
 
                                 // TODO: Should retrieve a constant pool index to a class entry.
-                                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
+                                // zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
+
+                                jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+                                jtk_StringBuilder_appendEx_z(builder, "zen/core/Object:", 16);
+                                zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
+                                if (expressions != NULL) {
+                                    zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
+                                    int32_t argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
+                                    int32_t k;
+                                    for (k = 0; k < argumentCount; k++) {
+                                        jtk_StringBuilder_appendEx_z(builder, "zen/core/Object", 15);
+                                    }
+                                }
+                                else {
+                                    jtk_StringBuilder_appendEx_z(builder, "v", 1);
+                                }
+                                int32_t descriptorSize;
+                                uint8_t* descriptor = jtk_StringBuilder_toCString(builder, &descriptorSize);
+                                jtk_StringBuilder_delete(builder);
+
+                                int32_t index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+                                    generator->m_constantPoolBuilder, classSymbol->m_context.m_asClass.m_qualifiedName,
+                                    classSymbol->m_context.m_asClass.m_qualifiedNameSize,
+                                    descriptor, descriptorSize, identifierToken->m_text,
+                                    identifierToken->m_length
+                                );
+                                zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, index);
 
                                 /* Log the emission of the load_cpr instruction. */
                                 jtk_Logger_debug(logger, "Emitted load_cpr %d", identifierIndex);
 
                             }
-                            else {
-                                /* The "this" reference is always stored at the zeroth position
-                                 * in the local variable array. Further, we assume that the
-                                 * class member and the expression being processed appear in
-                                 * in the same class. Therefore, emit a load reference to the
-                                 * this reference.
-                                 */
-                                zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
+                            // else {
+                            //     /* The "this" reference is always stored at the zeroth position
+                            //      * in the local variable array. Further, we assume that the
+                            //      * class member and the expression being processed appear in
+                            //      * in the same class. Therefore, emit a load reference to the
+                            //      * this reference.
+                            //      */
+                            //     zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
 
-                                /* Log the emission of the load_a instruction. */
-                                jtk_Logger_debug(logger, "Emitted load_a 0");
+                            //     /* Log the emission of the load_a instruction. */
+                            //     jtk_Logger_debug(logger, "Emitted load_a 0");
 
-                                index = invokeIndex;
-                            }
+                            //     index = invokeIndex;
+                            // }
 
-                            zen_ASTNode_t* primarySymbolIdentifier = primarySymbol->m_identifier;
-                            zen_Token_t* primarySymbolToken = (zen_Token_t*)primarySymbolIdentifier->m_context;
+                            // zen_ASTNode_t* primarySymbolIdentifier = primarySymbol->m_identifier;
+                            // zen_Token_t* primarySymbolToken = (zen_Token_t*)primarySymbolIdentifier->m_context;
 
-                            /* The name of the function to invoke. */
-                            int32_t targetNameIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
-                                generator->m_constantPoolBuilder, primarySymbolToken->m_text,
-                                primarySymbolToken->m_length);
+                            // /* The name of the function to invoke. */
+                            // int32_t targetNameIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
+                            //     generator->m_constantPoolBuilder, primarySymbolToken->m_text,
+                            //     primarySymbolToken->m_length);
 
-                            /* Push the name of the target function on the operand stack. */
-                            zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
-                                targetNameIndex);
+                            // /* Push the name of the target function on the operand stack. */
+                            // zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
+                            //     targetNameIndex);
 
-                            zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
-                            if (expressions != NULL) {
-                                zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
-                                int32_t argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
-                                if (argumentCount > 0) {
-                                    /* Push the size of the list onto the operand stack. */
-                                    zen_BinaryEntityGenerator_loadInteger(generator, argumentCount);
+                            // zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
+                            // if (expressions != NULL) {
+                            //     zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
+                            //     int32_t argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
+                            //     if (argumentCount > 0) {
+                            //         /* Push the size of the list onto the operand stack. */
+                            //         zen_BinaryEntityGenerator_loadInteger(generator, argumentCount);
 
-                                    /* In Zen, function invocations are simulated using the ZenKerenel.dispatch()
-                                     * function. It requires the arguments of the function invocation in an array.
-                                     * Therefore, create an array and fill it with the arguments.
-                                     *
-                                     * Emit the new_array_a instruction to create the array.
-                                     */
-                                    zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_builder,
-                                        objectClassIndex);
+                            //         /* In Zen, function invocations are simulated using the ZenKerenel.dispatch()
+                            //          * function. It requires the arguments of the function invocation in an array.
+                            //          * Therefore, create an array and fill it with the arguments.
+                            //          *
+                            //          * Emit the new_array_a instruction to create the array.
+                            //          */
+                            //         zen_BinaryEntityBuilder_emitNewReferenceArray(generator->m_builder,
+                            //             objectClassIndex);
 
-                                    /* Log the emission of the new_array_a instruction. */
-                                    jtk_Logger_debug(logger, "Emitted new_array_a %d", objectClassIndex);
+                            //         /* Log the emission of the new_array_a instruction. */
+                            //         jtk_Logger_debug(logger, "Emitted new_array_a %d", objectClassIndex);
 
-                                    int32_t argumentIndex;
-                                    for (argumentIndex = 0; argumentIndex < argumentCount; argumentIndex++) {
-                                        /* Retrieve the expression for the current argument. */
-                                        zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
-                                            expressionsContext->m_expressions, argumentIndex);
+                            //         int32_t argumentIndex;
+                            //         for (argumentIndex = 0; argumentIndex < argumentCount; argumentIndex++) {
+                            //             /* Retrieve the expression for the current argument. */
+                            //             zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+                            //                 expressionsContext->m_expressions, argumentIndex);
 
-                                        /* Duplicate the reference to the argument array. */
-                                        zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
+                            //             /* Duplicate the reference to the argument array. */
+                            //             zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
 
-                                        /* Log the emission of the duplicate instruction. */
-                                        jtk_Logger_debug(logger, "Emitted duplicate");
+                            //             /* Log the emission of the duplicate instruction. */
+                            //             jtk_Logger_debug(logger, "Emitted duplicate");
 
-                                        /* Push the index at which the result of the expression will be stored. */
-                                        zen_BinaryEntityGenerator_loadInteger(generator, argumentIndex);
+                            //             /* Push the index at which the result of the expression will be stored. */
+                            //             zen_BinaryEntityGenerator_loadInteger(generator, argumentIndex);
 
-                                        /* Visit the expression node and generate the relevant instructions. */
-                                        zen_ASTWalker_walk(astListener, argument);
+                            //             /* Visit the expression node and generate the relevant instructions. */
+                            //             zen_ASTWalker_walk(astListener, argument);
 
-                                        /* Store the result in the argument array. */
-                                        zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_builder);
+                            //             /* Store the result in the argument array. */
+                            //             zen_BinaryEntityBuilder_emitStoreArrayReference(generator->m_builder);
 
-                                        /* Log the emission of the store_aa instruction. */
-                                        jtk_Logger_debug(logger, "Emitted store_aa");
+                            //             /* Log the emission of the store_aa instruction. */
+                            //             jtk_Logger_debug(logger, "Emitted store_aa");
 
-                                    }
+                            //         }
 
-                                    index = !zen_Modifier_hasStatic(primarySymbol->m_modifiers)?
-                                        invokeExIndex : invokeStaticExIndex;
-                                }
-                            }
+                            //         index = !zen_Modifier_hasStatic(primarySymbol->m_modifiers)?
+                            //             invokeExIndex : invokeStaticExIndex;
+                            //     }
+                            // }
 
                             /* Invoke the ZenKernel.dispatch() function to simulate a function
                              * call.
