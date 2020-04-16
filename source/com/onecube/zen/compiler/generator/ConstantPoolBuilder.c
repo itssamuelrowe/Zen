@@ -334,8 +334,8 @@ zen_ConstantPoolFunction_t* zen_ConstantPoolBuilder_getFunctionEntry(
 
 int32_t zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
     zen_ConstantPoolBuilder_t* builder, const uint8_t* class0,
-        int32_t classSize, const uint8_t* descriptor, int32_t descriptorSize,
-        const uint8_t* name, int32_t nameSize) {
+    int32_t classSize, const uint8_t* descriptor, int32_t descriptorSize,
+    const uint8_t* name, int32_t nameSize, uint16_t tableIndex) {
     jtk_Assert_assertObject(builder, "The specified constant pool builder is null.");
 
     /* 1. Find the class entry with the given sequence of bytes for class name.
@@ -427,10 +427,12 @@ int32_t zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
          * UTF-8 entry which holds the descriptor details.
          */
         constantPoolFunction->m_descriptorIndex = descriptorIndex;
-        /* Update the name index of the function entyr to point to the
+        /* Update the name index of the function entry to point to the
          * UTF-8 entry which holds the name details.
          */
         constantPoolFunction->m_nameIndex = nameIndex;
+        /* Update the index at which this function exists within the function table. */
+        constantPoolFunction->m_tableIndex = tableIndex;
 
         /* Add the new constant pool class entry to the list. */
         jtk_ArrayList_add(builder->m_entries, constantPoolFunction);

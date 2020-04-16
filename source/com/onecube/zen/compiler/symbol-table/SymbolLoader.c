@@ -581,6 +581,12 @@ void zen_SymbolLoader_parseFunction(zen_SymbolLoader_t* loader) {
         (loader->m_bytes[loader->m_index++] & 0xFF);
     zen_ConstantPoolUtf8_t* descriptor = loader->m_constantPool.m_entries[descriptorIndex];
 
+    uint16_t parameterThreshold = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
+        (loader->m_bytes[loader->m_index++] & 0xFF);
+
+    uint16_t tableIndex = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
+        (loader->m_bytes[loader->m_index++] & 0xFF);
+
     // Define function
     zen_Symbol_t* classSymbol = loader->m_symbol;
     zen_Scope_t* classScope = classSymbol->m_context.m_asClass.m_classScope;

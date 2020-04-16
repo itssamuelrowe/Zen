@@ -111,7 +111,7 @@ zen_ConstantPoolFunction_t* zen_ConstantPoolBuilder_getFunctionEntry(
 int32_t zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
     zen_ConstantPoolBuilder_t* builder, const uint8_t* class0, int32_t classSize,
     const uint8_t* descriptor, int32_t descriptorSize, const uint8_t* name,
-    int32_t nameSize);
+    int32_t nameSize, uint16_t tableIndex);
 
 // Integer Entry
 

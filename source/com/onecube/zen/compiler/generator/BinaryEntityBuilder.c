@@ -415,8 +415,9 @@ uint16_t zen_BinaryEntityBuilder_writeConstantPoolString(zen_BinaryEntityBuilder
     return builder->m_constantPoolIndex++;
 }
 
-uint16_t zen_BinaryEntityBuilder_writeConstantPoolFunction(zen_BinaryEntityBuilder_t* builder, uint16_t classIndex, uint16_t descriptorIndex,
-    uint16_t nameIndex) {
+uint16_t zen_BinaryEntityBuilder_writeConstantPoolFunction(
+    zen_BinaryEntityBuilder_t* builder, uint16_t classIndex, uint16_t descriptorIndex,
+    uint16_t nameIndex, uint16_t tableIndex) {
     jtk_Assert_assertObject(builder, "The specified builder is null.");
     jtk_Assert_assertTrue(builder->m_activeChannelIndex >= 0, "Please activate a channel before emitting instructions.");
 
@@ -430,6 +431,8 @@ uint16_t zen_BinaryEntityBuilder_writeConstantPoolFunction(zen_BinaryEntityBuild
     channel->m_bytes[channel->m_index++] = (descriptorIndex & 0x000000FF);
     channel->m_bytes[channel->m_index++] = (nameIndex & 0x0000FF00) >> 8; // name index
     channel->m_bytes[channel->m_index++] = (nameIndex & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (tableIndex & 0x0000FF00) >> 8; // name index
+    channel->m_bytes[channel->m_index++] = (tableIndex & 0x000000FF);
 
     return builder->m_constantPoolIndex++;
 }
@@ -545,7 +548,8 @@ int32_t zen_BinaryEntityBuilder_writeConstantPoolEntry(zen_BinaryEntityBuilder_t
             result = zen_BinaryEntityBuilder_writeConstantPoolFunction(builder,
                 constantPoolFunction->m_classIndex,
                 constantPoolFunction->m_descriptorIndex,
-                constantPoolFunction->m_nameIndex);
+                constantPoolFunction->m_nameIndex,
+                constantPoolFunction->m_tableIndex);
 
             break;
         }

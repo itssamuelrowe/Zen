@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2020 Samuel Rowe
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -57,6 +57,15 @@ struct zen_ConstantPoolFunction_t {
      * function.
      */
     uint16_t m_nameIndex;
+
+    /**
+     * A valid index into the function table in the class whose member this
+     * function is. The entry at this index is a `zen_FunctionEntity_t`.
+     * Further, the value `0` is reserved and when in use, the virtual machine
+     * searches all the functions based on the other details in this structure
+     * to identify the function.
+     */
+    uint16_t m_tableIndex;
 };
 
 typedef struct zen_ConstantPoolFunction_t zen_ConstantPoolFunction_t;
