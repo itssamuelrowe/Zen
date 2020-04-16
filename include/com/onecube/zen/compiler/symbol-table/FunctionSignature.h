@@ -57,7 +57,7 @@ zen_FunctionSignature_t* zen_FunctionSignature_new(jtk_ArrayList_t* fixedParamet
     zen_ASTNode_t* variableParameter, uint16_t modifiers);
 
 zen_FunctionSignature_t* zen_FunctionSignature_newEx(const uint8_t* descriptor,
-    int32_t descriptorSize);
+    int32_t descriptorSize, uint16_t modifiers);
 
 // Destructor
 

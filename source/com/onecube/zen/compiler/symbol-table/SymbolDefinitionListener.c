@@ -316,7 +316,7 @@ void zen_SymbolDefinitionListener_declareOverloadedFunction(
 
 zen_Symbol_t* zen_SymbolDefinitionListener_declareFunction(zen_SymbolTable_t* symbolTable,
     zen_ASTNode_t* identifier, jtk_ArrayList_t* fixedParameters,
-    zen_ASTNode_t* variableParameter) {
+    zen_ASTNode_t* variableParameter, uint16_t modifiers) {
     /* Create a member function symbol to store in the symbol table. */
     zen_Symbol_t* symbol = zen_Symbol_forFunction(identifier, symbolTable->m_currentScope);
     zen_FunctionSymbol_t* functionSymbol = &symbol->m_context.m_asFunction;
@@ -329,7 +329,8 @@ zen_Symbol_t* zen_SymbolDefinitionListener_declareFunction(zen_SymbolTable_t* sy
      * corresponding to the function being declared to the newly
      * created member function symbol.
      */
-    zen_FunctionSignature_t* signature = zen_FunctionSignature_new(fixedParameters, variableParameter);
+    zen_FunctionSignature_t* signature = zen_FunctionSignature_new(fixedParameters,
+        variableParameter, modifiers);
     zen_FunctionSymbol_addSignature(functionSymbol, signature);
 
     /* Define the symbol in the symbol table. */

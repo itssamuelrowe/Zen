@@ -25,31 +25,38 @@ zen_FunctionSignature_t* zen_FunctionSignature_new(jtk_ArrayList_t* fixedParamet
     signature->m_fixedParameters = fixedParameters;
     signature->m_variableParameter = variableParameter;
     signature->m_modifiers = modifiers;
+    signature->m_tableIndex = -1;
 
     jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
     jtk_StringBuilder_appendEx_z(builder, "(zen/core/Object):", 18);
     int32_t argumentCount = jtk_ArrayList_getSize(fixedParameters);
     jtk_StringBuilder_multiply_z(builder, "(zen/core/Object)", 17, argumentCount);
     if (variableParameter != NULL) {
-        jtk_StringBuilder_appendEx(builder, "@(zen/core/Object)", 18);
+        jtk_StringBuilder_appendEx_z(builder, "@(zen/core/Object)", 18);
     }
+    signature->m_descriptor = jtk_StringBuilder_toCString(builder,
+        &signature->m_descriptorSize);
+    jtk_StringBuilder_delete(builder);
 
     return signature;
 }
 
 zen_FunctionSignature_t* zen_FunctionSignature_newEx(const uint8_t* descriptor,
-    int32_t descriptorSize) {
+    int32_t descriptorSize, uint16_t modifiers) {
     zen_FunctionSignature_t* signature = zen_Memory_allocate(zen_FunctionSignature_t, 1);
     signature->m_fixedParameters = NULL;
     signature->m_variableParameter = NULL;
     signature->m_descriptor = jtk_CString_make(descriptor, &descriptorSize);
     signature->m_descriptorSize = descriptorSize;
+    signature->m_tableIndex = -1;
+    signature->m_modifiers = modifiers;
 
     return signature;
 }
 
-
 void zen_FunctionSignature_delete(zen_FunctionSignature_t* signature) {
     jtk_Assert_assertObject(signature, "The specified signature is null.");
+
+    jtk_CString_delete(signature->m_descriptor);
     jtk_Memory_deallocate(signature);
 }
