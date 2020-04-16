@@ -10,7 +10,6 @@ more about the language, tools, getting started, and more.
 
 This repository contains the reference implementation of the Zen compiler.
 Please explore the following links to find other relevant resources.
- * [PulsarVM](https://github.com/itssamuelrowe/PulsarVM)
  * [The Zen Programming Language Specification](https://github.com/itssamuelrowe/The-Zen-Programming-Language-Specification)
  * [The Zen Virtual Machine Specification](https://github.com/itssamuelrowe/The-Zen-Virtual-Machine-Specification)
  * [The Zen Programming Language Manual](https://github.com/itssamuelrowe/The-Zen-Programming-Language-Manual)

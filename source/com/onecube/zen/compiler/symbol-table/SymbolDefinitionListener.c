@@ -200,6 +200,144 @@ void zen_SymbolDefinitionListener_onExitCompilationUnit(zen_ASTListener_t* astLi
 
 /* functionDeclaration */
 
+// TODO: constructorArguments
+
+// TODO: Declare function even if it has no parameters.
+
+void zen_SymbolDefinitionListener_declareOverloadedFunction(
+    zen_SymbolDefinitionListener_t* listener, zen_Symbol_t* symbol,
+    jtk_ArrayList_t* fixedParameters, zen_ASTNode_t* variableParameter,
+    uint32_t modifiers, zen_Token_t* reference) {
+    zen_Compiler_t* compiler = listener->m_compiler;
+    zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
+    zen_FunctionSymbol_t* functionSymbol = &symbol->m_context.m_asFunction;
+    zen_Token_t* identifierToken = (zen_Token_t*)symbol->m_identifier->m_context;
+
+    /* Determines whether the overloaded function is semantically erroneous. */
+    bool error = false;
+
+    /* If the enclosing scope is same as the current scope, we
+     * need to verify the signature of the function being declared
+     * to be unique.
+     */
+
+    /* Let X be a function. If an overload of function X, say Xi, has k
+     * fixed parameters and a variable parameter, then the maximum number
+     * of fixed parameters for any overload of function X is limited to k - 1.
+     * Where, k is known as the parameter threshold of function X.
+     */
+    int32_t parameterThreshold = zen_FunctionSymbol_getParameterThreshold(functionSymbol);
+
+    /* If currently there is no parameter threshold, try to update the
+     * threshold.
+     */
+    int32_t fixedParameterCount = (fixedParameters != NULL)? jtk_ArrayList_getSize(fixedParameters) : 0;
+    if (parameterThreshold < 0) {
+        /* Update the threshold if the function being declared has a variable
+         * parameter.
+         */
+        if (variableParameter != NULL) {
+            parameterThreshold = fixedParameterCount;
+            zen_FunctionSymbol_setParameterThreshold(functionSymbol, parameterThreshold);
+        }
+    }
+
+    /* Retrieve the overloaded signatures of the function symbol. */
+    jtk_ArrayList_t* signatures = zen_FunctionSymbol_getSignatures(functionSymbol);
+    /* Determine the number of signatures. */
+    int32_t size = jtk_ArrayList_getSize(signatures);
+    /* Iterate over the signatures to determine if the signature of the
+     * function being declared to be unique, or not.
+     */
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        zen_FunctionSignature_t* signature = (zen_FunctionSignature_t*)jtk_ArrayList_getValue(signatures, i);
+        if ((signature->m_variableParameter != NULL) && (variableParameter != NULL)) {
+            zen_ErrorHandler_handleSemanticalError(errorHandler,
+                listener, ZEN_ERROR_CODE_MULTIPLE_FUNCTION_OVERLOADS_WITH_VARIABLE_PARAMETER,
+                (zen_Token_t*)(variableParameter->m_context));
+
+            error = true;
+        }
+        else {
+            int32_t fixedParameterCount0 = jtk_ArrayList_getSize(signature->m_fixedParameters);
+            /* Determine whether the function being declared was duplicately
+             * overloaded, or not.
+             */
+            if ((fixedParameterCount0 == fixedParameterCount) &&
+                (signature->m_variableParameter == NULL)) {
+                zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
+                    ZEN_ERROR_CODE_DUPLICATE_FUNCTION_OVERLOAD, identifierToken);
+                error = true;
+                break;
+            }
+            else {
+                if (variableParameter != NULL) {
+                    /* The function being declared caused the update of parameter
+                     * threshold. Make sure that the number of parameters is
+                     * less than the parameter threshold for previously defined
+                     * functions.
+                     */
+                    if (fixedParameterCount0 >= parameterThreshold) {
+                        /* NOTE: The error report does not point to the actual error.
+                         * Instead it points to the function currently being declared.
+                         */
+                        zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
+                            ZEN_ERROR_CODE_FUNCTION_DECLARATION_CAUSES_ANOTHER_FUNCTION_TO_EXCEED_PARAMETER_THRESHOLD,
+                            reference);
+                        error = true;
+                    }
+                }
+                else {
+                    /* The function being declared did not cause the update of parameter threshold.
+                     * A parameter threshold may have existed before this event was fired. Make sure
+                     * that the function obliges the parameter threshold.
+                     */
+                    if ((parameterThreshold >= 0) && (fixedParameterCount >= parameterThreshold)) {
+                        zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
+                            ZEN_ERROR_CODE_FUNCTION_DECLARATION_EXCEEDS_PARAMETER_THRESHOLD,
+                            reference);
+                        error = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if (!error) {
+        /* The function being declared is an overload of an existing
+         * function. Add the signature of the function.
+         */
+        zen_FunctionSignature_t* signature = zen_FunctionSignature_new(fixedParameters, variableParameter, modifiers);
+        zen_FunctionSymbol_addSignature(functionSymbol, signature);
+    }
+}
+
+zen_Symbol_t* zen_SymbolDefinitionListener_declareFunction(zen_SymbolTable_t* symbolTable,
+    zen_ASTNode_t* identifier, jtk_ArrayList_t* fixedParameters,
+    zen_ASTNode_t* variableParameter) {
+    /* Create a member function symbol to store in the symbol table. */
+    zen_Symbol_t* symbol = zen_Symbol_forFunction(identifier, symbolTable->m_currentScope);
+    zen_FunctionSymbol_t* functionSymbol = &symbol->m_context.m_asFunction;
+    if (variableParameter != NULL) {
+        int32_t parameterThreshold = jtk_ArrayList_getSize(fixedParameters);
+        zen_FunctionSymbol_setParameterThreshold(functionSymbol, parameterThreshold);
+    }
+    /* In order to enable the symbol table to store overloaded functions,
+     * we employ function signatures. Add the function signature
+     * corresponding to the function being declared to the newly
+     * created member function symbol.
+     */
+    zen_FunctionSignature_t* signature = zen_FunctionSignature_new(fixedParameters, variableParameter);
+    zen_FunctionSymbol_addSignature(functionSymbol, signature);
+
+    /* Define the symbol in the symbol table. */
+    zen_SymbolTable_define(symbolTable, symbol);
+
+    return symbol;
+}
+
 void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
@@ -209,29 +347,24 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
     zen_Compiler_t* compiler = listener->m_compiler;
     zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
     zen_FunctionDeclarationContext_t* functionDeclarationContext = (zen_FunctionDeclarationContext_t*)node->m_context;
-    zen_FunctionParametersContext_t* functionParametersContext = NULL;
 
     /* Retrieve the identifier associated with the function declaration. */
     zen_ASTNode_t* identifier = functionDeclarationContext->m_identifier;
     zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
     /* Retrieve the text representation of the identifier. */
     uint8_t* const identifierText = ((zen_Token_t*)identifier->m_context)->m_text;
-    /* Retrieve the variableParameter associated with the context of the
-     * function arguments.
-     */
-    jtk_ArrayList_t* fixedParameters = NULL;
-    /* Retrieve the variableParameter associated with the context of the
-     * function arguments.
-     */
-    zen_ASTNode_t* variableParameter = NULL;
-    int32_t fixedParameterCount = 0;
 
-    if (functionDeclarationContext->m_functionParameters != NULL) {
-        functionParametersContext = (zen_FunctionParametersContext_t*)functionDeclarationContext->m_functionParameters->m_context;
-        fixedParameters = functionParametersContext->m_fixedParameters;
-        variableParameter = functionParametersContext->m_variableParameter;
-        fixedParameterCount = jtk_ArrayList_getSize(fixedParameters);
-    }
+    zen_FunctionParametersContext_t* functionParametersContext =
+        (zen_FunctionParametersContext_t*)functionDeclarationContext->m_functionParameters->m_context;
+    /* Retrieve the fixed parameters associated with the context of the
+     * function arguments.
+     */
+    jtk_ArrayList_t* fixedParameters = functionParametersContext->m_fixedParameters;
+    /* Retrieve the variable parameter associated with the context of the
+     * function arguments, if any.
+     */
+    zen_ASTNode_t* variableParameter = functionParametersContext->m_variableParameter;
+    int32_t fixedParameterCount = jtk_ArrayList_getSize(fixedParameters);
 
     /* Retrieve the symbol table associated with this listener. */
     zen_SymbolTable_t* symbolTable = listener->m_symbolTable;
@@ -244,18 +377,29 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
             ZEN_ERROR_CODE_STATIC_INITIALIZER_WITH_PARAMETERS, identifierToken);
     }
     else {
-        if (zen_Scope_isCompilationUnitScope(currentScope) || zen_Scope_isClassScope(currentScope) || zen_Scope_isLocalScope(currentScope)) {
+        if (zen_Scope_isCompilationUnitScope(currentScope) ||
+            zen_Scope_isClassScope(currentScope)) {
             /* Resolve the identifier within the scope of the compilation unit. */
             zen_Symbol_t* symbol = zen_SymbolTable_resolve(symbolTable, identifierText);
+            uint32_t modifiers = 0;
 
-            /*
             if (zen_Scope_isClassScope(currentScope)) {
-                symbol = zen_Scope_resolve(currentScope, identifierText);
+                zen_ClassMemberContext_t* classMemberContext = (zen_ClassMemberContext_t*)node->m_parent->m_context;
+                int32_t modifierCount = jtk_ArrayList_getSize(classMemberContext->m_modifiers);
+                int32_t i;
+                for (i = 0; i < modifierCount; i++) {
+                    zen_ASTNode_t* modifier =
+                        (zen_ASTNode_t*)jtk_ArrayList_getValue(classMemberContext->m_modifiers, i);
+                    zen_Token_t* token = (zen_Token_t*)modifier->m_context;
+                    modifiers |= zen_TokenType_toModifiers(token->m_type);
+                }
             }
             else {
-                symbol = zen_SymbolTable_resolve(symbolTable, identifierText);
+                /* NOTE: Functions declared in the compilation unit cannot have modifiers
+                 * specified explicitly. However, by default they are all static.
+                 */
+                modifiers |= ZEN_TOKEN_KEYWORD_STATIC;
             }
-            */
 
             if (symbol != NULL) {
                 /* If a symbol with the given identifier exists, make sure it is
@@ -267,7 +411,8 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
                      */
                     zen_FunctionSymbol_t* functionSymbol = &symbol->m_context.m_asFunction;
                     zen_SymbolDefinitionListener_declareOverloadedFunction(listener,
-                        symbol, fixedParameters, variableParameter);
+                        symbol, fixedParameters, variableParameter, modifiers,
+                        identifierToken);
                 }
                 else {
                     zen_ErrorHandler_handleSemanticalError(errorHandler,
@@ -276,29 +421,12 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
                 }
             }
             else {
-                symbol = zen_SymbolDefinitionListener_declareFunction(listener->m_symbolTable, identifier,
-                    fixedParameters, variableParameter);
-
-                // NOTE: Functions declared in the compilation unit cannot have modifiers.
-                if (zen_Scope_isClassScope(currentScope)) {
-                    zen_ClassMemberContext_t* classMemberContext = (zen_ClassMemberContext_t*)node->m_parent->m_context;
-                    int32_t modifierCount = jtk_ArrayList_getSize(classMemberContext->m_modifiers);
-                    int32_t i;
-                    for (i = 0; i < modifierCount; i++) {
-                        zen_ASTNode_t* modifier =
-                            (zen_ASTNode_t*)jtk_ArrayList_getValue(classMemberContext->m_modifiers, i);
-                        zen_Token_t* token = (zen_Token_t*)modifier->m_context;
-                        uint32_t modifiers = zen_TokenType_toModifiers(token->m_type);
-                        zen_Symbol_addModifiers(symbol, modifiers);
-                    }
-                }
-                else {
-                    zen_Symbol_addModifiers(symbol, ZEN_TOKEN_KEYWORD_STATIC);
-                }
+                zen_SymbolDefinitionListener_declareFunction(listener->m_symbolTable, identifier,
+                    fixedParameters, variableParameter, modifiers);
             }
         }
         else {
-            printf("[internal error] Declaring function in unsuitable scope\n");
+            printf("[internal error] Declaring function in unsuitable scope.\n");
         }
     }
 
@@ -352,149 +480,6 @@ void zen_SymbolDefinitionListener_onExitFunctionDeclaration(
 }
 
 /* functionParameters */
-
-// TODO: constructorArguments
-
-// TODO: Declare function even if it has no parameters.
-
-void zen_SymbolDefinitionListener_declareOverloadedFunction(
-    zen_SymbolDefinitionListener_t* listener, zen_Symbol_t* symbol,
-    jtk_ArrayList_t* fixedParameters, zen_ASTNode_t* variableParameter) {
-
-    zen_FunctionSymbol_t* functionSymbol = &symbol->m_context.m_asFunction;
-
-    zen_Compiler_t* compiler = listener->m_compiler;
-    zen_ErrorHandler_t* errorHandler = compiler->m_errorHandler;
-
-    zen_Token_t* identifierToken = (zen_Token_t*)symbol->m_identifier->m_context;
-
-    /* Determines whether the overloaded function is semantically erroneous. */
-    bool error = false;
-
-    /* If the enclosing scope is same as the current scope, we
-     * need to verify the signature of the function being declared
-     * to be unique.
-     */
-
-    /* Let X be a function. If an overload of function X, say Xi, has k
-     * fixed parameters and a variable parameter, then the maximum number
-     * of fixed parameters for any overload of function X is limited to k - 1.
-     * Where, k is known as the parameter threshold of function X.
-     */
-    int32_t parameterThreshold = zen_FunctionSymbol_getParameterThreshold(functionSymbol);
-
-    /* If currently there is no parameter threshold, try to update the
-     * threshold.
-     */
-    int32_t fixedParameterCount = (fixedParameters != NULL)? jtk_ArrayList_getSize(fixedParameters) : 0;
-    if (parameterThreshold < 0) {
-        /* Update the threshold if the function being declared has a variable
-         * parameter.
-         */
-        if (variableParameter != NULL) {
-            parameterThreshold = fixedParameterCount;
-            zen_FunctionSymbol_setParameterThreshold(functionSymbol, parameterThreshold);
-        }
-    }
-
-    /* Retrieve the overloaded signatures of the function symbol. */
-    jtk_ArrayList_t* signatures = zen_FunctionSymbol_getSignatures(functionSymbol);
-    /* Determine the number of signatures. */
-    int32_t size = jtk_ArrayList_getSize(signatures);
-    /* Iterate over the signatures to determine if the signature of the
-     * function being declared to be unique, or not.
-     */
-    int32_t i;
-    for (i = 0; i < size; i++) {
-        zen_FunctionSignature_t* signature = (zen_FunctionSignature_t*)jtk_ArrayList_getValue(signatures, i);
-        if ((signature->m_variableParameter != NULL) && (variableParameter != NULL)) {
-            zen_ErrorHandler_handleSemanticalError(errorHandler,
-                listener, ZEN_ERROR_CODE_MULTIPLE_FUNCTION_OVERLOADS_WITH_VARIABLE_PARAMETER,
-                (zen_Token_t*)(variableParameter->m_context));
-
-            error = true;
-        }
-        else {
-            int32_t fixedParameterCount0 = (signature->m_fixedParameters != NULL)? jtk_ArrayList_getSize(signature->m_fixedParameters) : 0;
-            /* Determine whether the function being declared was duplicately
-             * overloaded, or not.
-             */
-            if ((fixedParameterCount0 == fixedParameterCount) &&
-                ((signature->m_variableParameter == NULL) &&
-                 (variableParameter == NULL))) {
-                zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
-                    ZEN_ERROR_CODE_DUPLICATE_FUNCTION_OVERLOAD, identifierToken);
-                error = true;
-                break;
-            }
-            else {
-                if (variableParameter != NULL) {
-                    /* The function being declared caused the update of parameter
-                     * threshold. Make sure that the number of parameters is
-                     * less than the parameter threshold for previously defined
-                     * functions.
-                     */
-                    if (fixedParameterCount0 >= parameterThreshold) {
-                        // BUG: The error report does not point to the actual error.
-                        // We should do something about FunctionSignature.
-                        zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
-                            ZEN_ERROR_CODE_FUNCTION_DECLARATION_EXCEEDS_PARAMETER_THRESHOLD,
-                            identifierToken);
-                        error = true;
-                        /* TODO: Flag the section that is concerened with handling identification
-                         * of function violating the parameter threshold.
-                         */
-                    }
-                }
-                else {
-                    /* The function being declared did not cause the update of parameter threshold.
-                     * A parameter threshold may have existed before this event was fired. Make sure
-                     * that the function obliges the parameter threshold.
-                     */
-                    if ((parameterThreshold >= 0) && (fixedParameterCount >= parameterThreshold)) {
-                        zen_ErrorHandler_handleSemanticalError(errorHandler, listener,
-                            ZEN_ERROR_CODE_FUNCTION_DECLARATION_EXCEEDS_PARAMETER_THRESHOLD,
-                            identifierToken);
-                        error = true;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    if (!error) {
-        /* The function being declared is an overload of an existing
-         * function. Add the signature of the function.
-         */
-        zen_FunctionSignature_t* signature = zen_FunctionSignature_new(fixedParameters, variableParameter);
-        zen_FunctionSymbol_addSignature(functionSymbol, signature);
-    }
-}
-
-zen_Symbol_t* zen_SymbolDefinitionListener_declareFunction(zen_SymbolTable_t* symbolTable,
-    zen_ASTNode_t* identifier, jtk_ArrayList_t* fixedParameters,
-    zen_ASTNode_t* variableParameter) {
-    /* Create a member function symbol to store in the symbol table. */
-    zen_Symbol_t* symbol = zen_Symbol_forFunction(identifier, symbolTable->m_currentScope);
-    zen_FunctionSymbol_t* functionSymbol = &symbol->m_context.m_asFunction;
-    if (variableParameter != NULL) {
-        int32_t parameterThreshold = jtk_ArrayList_getSize(fixedParameters);
-        zen_FunctionSymbol_setParameterThreshold(functionSymbol, parameterThreshold);
-    }
-    /* In order to enable the symbol table to store overloaded functions,
-     * we employ function signatures. Add the function signature
-     * corresponding to the function being declared to the newly
-     * created member function symbol.
-     */
-    zen_FunctionSignature_t* signature = zen_FunctionSignature_new(fixedParameters, variableParameter);
-    zen_FunctionSymbol_addSignature(functionSymbol, signature);
-
-    /* Define the symbol in the symbol table. */
-    zen_SymbolTable_define(symbolTable, symbol);
-
-    return symbol;
-}
 
 void zen_SymbolDefinitionListener_onEnterStatementSuite(
     zen_ASTListener_t* astListener, zen_ASTNode_t* node) {

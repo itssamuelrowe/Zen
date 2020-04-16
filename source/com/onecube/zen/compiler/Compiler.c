@@ -310,6 +310,7 @@ const uint8_t* zen_ErrorCode_messages[] = {
     "Unknown class",
     "Redeclaration of symbol previously imported",
     "Cannot declare function and class in the same compilation unit",
+    "Function declaration causes another function to exceed parameter threshold",
 
     // General Errors
 

@@ -19,12 +19,14 @@
 #include <com/onecube/zen/compiler/symbol-table/FunctionSignature.h>
 
 zen_FunctionSignature_t* zen_FunctionSignature_new(jtk_ArrayList_t* fixedParameters,
-    zen_ASTNode_t* variableParameter) {
+    zen_ASTNode_t* variableParameter, uint16_t modifiers) {
     zen_FunctionSignature_t* signature = zen_Memory_allocate(zen_FunctionSignature_t, 1);
     signature->m_fixedParameters = fixedParameters;
     signature->m_variableParameter = variableParameter;
     signature->m_descriptor = NULL;
     signature->m_descriptorSize = 0;
+    signature->m_modifiers = modifiers;
+
 
     return signature;
 }
