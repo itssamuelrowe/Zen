@@ -16,6 +16,7 @@
 
 // Saturday, February 24, 2018
 
+#include <jtk/core/StringBuilder.h>
 #include <com/onecube/zen/compiler/symbol-table/FunctionSignature.h>
 
 zen_FunctionSignature_t* zen_FunctionSignature_new(jtk_ArrayList_t* fixedParameters,
@@ -23,10 +24,15 @@ zen_FunctionSignature_t* zen_FunctionSignature_new(jtk_ArrayList_t* fixedParamet
     zen_FunctionSignature_t* signature = zen_Memory_allocate(zen_FunctionSignature_t, 1);
     signature->m_fixedParameters = fixedParameters;
     signature->m_variableParameter = variableParameter;
-    signature->m_descriptor = NULL;
-    signature->m_descriptorSize = 0;
     signature->m_modifiers = modifiers;
 
+    jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+    jtk_StringBuilder_appendEx_z(builder, "(zen/core/Object):", 18);
+    int32_t argumentCount = jtk_ArrayList_getSize(fixedParameters);
+    jtk_StringBuilder_multiply_z(builder, "(zen/core/Object)", 17, argumentCount);
+    if (variableParameter != NULL) {
+        jtk_StringBuilder_appendEx(builder, "@(zen/core/Object)", 18);
+    }
 
     return signature;
 }
