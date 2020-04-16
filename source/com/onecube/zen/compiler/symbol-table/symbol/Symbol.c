@@ -173,3 +173,26 @@ bool zen_Symbol_hasModifiers(zen_Symbol_t* symbol, uint32_t modifiers) {
 bool zen_Symbol_isStatic(zen_Symbol_t* symbol) {
     return (symbol->m_modifiers & ZEN_MODIFIER_STATIC) != 0;
 }
+
+
+zen_FunctionSignature_t* zen_Symbol_getFunctionSignature(zen_Symbol_t* symbol,
+    int32_t argumentCount) {
+    zen_FunctionSymbol_t* functionSymbol = &symbol->m_context.m_asFunction;
+    if (argumentCount >= functionSymbol->m_parameterThreshold) {
+        argumentCount = functionSymbol->m_parameterThreshold;
+    }
+
+    zen_FunctionSignature_t* result = NULL;
+    int32_t i;
+    int32_t count = jtk_ArrayList_getSize(functionSymbol->m_signatures);
+    for (i = 0; i < count; i++) {
+        zen_FunctionSignature_t* signature = (zen_FunctionSignature_t*)
+            jtk_ArrayList_getValue(functionSymbol->m_signatures, i);
+        int32_t parameterCount = jtk_ArrayList_getSize(signature->m_fixedParameters);
+        if (parameterCount == argumentCount) {
+            result = signature;
+            break;
+        }
+    }
+    return result;
+}

@@ -7751,16 +7751,13 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
                                 // TODO: Should retrieve a constant pool index to a class entry.
                                 // zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
 
-                                jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
-                                jtk_StringBuilder_appendEx_z(builder, "zen/core/Object:", 16);
                                 zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
+                                int32_t argumentCount = 0;
                                 if (expressions != NULL) {
                                     zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
-                                    int32_t argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
+                                    argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
                                     int32_t k;
                                     for (k = 0; k < argumentCount; k++) {
-                                        jtk_StringBuilder_appendEx_z(builder, "zen/core/Object", 15);
-
                                         /* Retrieve the expression for the current argument. */
                                         zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
                                             expressionsContext->m_expressions, k);
@@ -7769,17 +7766,16 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
                                         zen_ASTWalker_walk(astListener, argument);
                                     }
                                 }
-                                else {
-                                    jtk_StringBuilder_appendEx_z(builder, "v", 1);
+
+                                zen_FunctionSignature_t* signature = zen_Symbol_getFunctionSignature(primarySymbol, argumentCount);
+                                if (signature == NULL) {
+                                    printf("[error] Cannot find a suitable static function\n");
                                 }
-                                int32_t descriptorSize;
-                                uint8_t* descriptor = jtk_StringBuilder_toCString(builder, &descriptorSize);
-                                jtk_StringBuilder_delete(builder);
 
                                 int32_t index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
                                     generator->m_constantPoolBuilder, classSymbol->m_context.m_asClass.m_qualifiedName,
                                     classSymbol->m_context.m_asClass.m_qualifiedNameSize,
-                                    descriptor, descriptorSize, identifierToken->m_text,
+                                    signature->m_descriptor, signature->m_descriptorSize, identifierToken->m_text,
                                     identifierToken->m_length
                                 );
                                 zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, index);
