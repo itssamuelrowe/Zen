@@ -2899,8 +2899,9 @@ void zen_BinaryEntityGenerator_onExitConstantDeclarator(zen_ASTListener_t* astLi
 
 // assertStatement
 
-#define ZEN_BINARY_ENTITY_GENERATOR_CPF_COUNT 1
+#define ZEN_BINARY_ENTITY_GENERATOR_CPF_COUNT 2
 #define ZEN_BINARY_ENTITY_GENERATOR_BOOLEAN_GET_VALUE 0
+#define ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_EVALUATE 1
 
 uint16_t zen_Symbol_findFunctionIndex(zen_Symbol_t* symbol, const uint8_t* functionName,
     int32_t functionNameSize, const uint8_t* descriptor, uint8_t* descriptorSize) {
@@ -2917,10 +2918,16 @@ void zen_BinaryEntityGenerator_initializeCPFCache(zen_BinaryEntityGenerator_t* g
 
     // Boolean
     zen_Symbol_t* booleanClass = zen_Compiler_resolveSymbol(generator->m_compiler,
-        "zen/core/Boolean", 16);
+        "zen.core.Boolean", 16);
      // TODO: "z:v", 3
     generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_BOOLEAN_GET_VALUE] =
         zen_Symbol_findFunctionIndex(booleanClass, "getValue", 8, "(zen/core/Object):v", 19);
+
+    // ZenKernel
+    zen_Symbol_t* zenKernelClass = zen_Compiler_resolveSymbol(generator->m_compiler,
+        "zen.core.ZenKernel", 18);
+    generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_EVALUATE] =
+        zen_Symbol_findFunctionIndex(zenKernelClass, "evaluate", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)", 69);
 
 }
 
@@ -3260,18 +3267,7 @@ void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
     jtk_Logger_t* logger = generator->m_compiler->m_logger;
     zen_IfStatementContext_t* context = (zen_IfStatementContext_t*)node->m_context;
 
-    const uint8_t* booleanClassName = "zen/core/Boolean";
-    int32_t booleanClassNameSize = 16;
-    // const uint8_t* getValueDescriptor = "z:v";
-    // int32_t getValueDescriptorSize = 3;
-    const uint8_t* getValueDescriptor = "(zen/core/Object):v";
-    int32_t getValueDescriptorSize = 19;
-    const uint8_t* getValueName = "getValue";
-    int32_t getValueNameSize = 8;
-    uint16_t getValueIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, booleanClassName, booleanClassNameSize,
-        getValueDescriptor, getValueDescriptorSize, getValueName,
-        getValueNameSize);
+    uint16_t getValueIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_BOOLEAN_GET_VALUE];
 
     int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
          generator->m_builder);
@@ -3528,18 +3524,7 @@ void zen_BinaryEntityGenerator_onExitWhileStatement(zen_ASTListener_t* astListen
     jtk_Logger_t* logger = generator->m_compiler->m_logger;
     zen_WhileStatementContext_t* context = (zen_WhileStatementContext_t*)node->m_context;
 
-    const uint8_t* booleanClassName = "zen/core/Boolean";
-    int32_t booleanClassNameSize = 16;
-    // const uint8_t* getValueDescriptor = "z:v";
-    // int32_t getValueDescriptorSize = 3;
-    const uint8_t* getValueDescriptor = "(zen/core/Object):v";
-    int32_t getValueDescriptorSize = 19;
-    const uint8_t* getValueName = "getValue";
-    int32_t getValueNameSize = 8;
-    uint16_t getValueIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, booleanClassName, booleanClassNameSize,
-        getValueDescriptor, getValueDescriptorSize, getValueName,
-        getValueNameSize);
+    uint16_t getValueIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_BOOLEAN_GET_VALUE];
 
     int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
         generator->m_builder);
@@ -3616,7 +3601,7 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
     uint16_t getIteratorIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
         generator->m_constantPoolBuilder, iterableClassName, iterableClassNameSize,
         getIteratorDescriptor, getIteratorDescriptorSize, getIteratorName,
-        getIteratorNameSize);
+        getIteratorNameSize, 0);
 
     int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
         generator->m_builder);
@@ -3632,7 +3617,7 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
     uint16_t hasNextIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
         generator->m_constantPoolBuilder, iteratorClassName, iteratorClassNameSize,
         hasNextDescriptor, hasNextDescriptorSize, hasNextName,
-        hasNextNameSize);
+        hasNextNameSize, 0);
 
     const uint8_t* getNextDescriptor = "(zen/core/Object):v";
     int32_t getNextDescriptorSize = 19;
@@ -3641,20 +3626,9 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
     uint16_t getNextIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
         generator->m_constantPoolBuilder, iteratorClassName, iteratorClassNameSize,
         getNextDescriptor, getNextDescriptorSize, getNextName,
-        getNextNameSize);
+        getNextNameSize, 0);
 
-    const uint8_t* booleanClassName = "zen/core/Boolean";
-    int32_t booleanClassNameSize = 16;
-    // const uint8_t* getValueDescriptor = "z:v";
-    // int32_t getValueDescriptorSize = 3;
-    const uint8_t* getValueDescriptor = "(zen/core/Object):v";
-    int32_t getValueDescriptorSize = 19;
-    const uint8_t* getValueName = "getValue";
-    int32_t getValueNameSize = 8;
-    uint16_t getValueIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, booleanClassName, booleanClassNameSize,
-        getValueDescriptor, getValueDescriptorSize, getValueName,
-        getValueNameSize);
+    uint16_t getValueIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_BOOLEAN_GET_VALUE];
 
     zen_ASTNode_t* forParameter = context->m_forParameter;
     zen_ForParameterContext_t* forParameterContext =
@@ -4330,7 +4304,7 @@ void zen_BinaryEntityGenerator_onExitSynchronizeStatement(zen_ASTListener_t* ast
     int32_t releaseNameSize = 7;
     uint16_t releaseIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
         generator->m_constantPoolBuilder, lockClassName, lockClassNameSize,
-        releaseDescriptor, releaseDescriptorSize, releaseName, releaseNameSize);
+        releaseDescriptor, releaseDescriptorSize, releaseName, releaseNameSize, 0);
 
     /* Generate the instructions for the expression specified to the
      * synchronize statement.
@@ -4743,7 +4717,7 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
     int32_t suppressNameSize = 8;
     uint16_t suppressIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
         generator->m_constantPoolBuilder, throwableClassName, throwableClassNameSize,
-        suppressDescriptor, suppressDescriptorSize, suppressName, suppressNameSize);
+        suppressDescriptor, suppressDescriptorSize, suppressName, suppressNameSize, 0);
 
     int32_t parentChannelIndex = zen_BinaryEntityBuilder_getActiveChannelIndex(
          generator->m_builder);
@@ -6310,16 +6284,7 @@ void zen_BinaryEntityGenerator_invokeEvaluate(zen_BinaryEntityGenerator_t* gener
     zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, symbolIndex);
     jtk_Logger_debug(logger, "Emitted load_cpr %d", symbolIndex);
 
-    const uint8_t* kernelClass = "zen/core/ZenKernel";
-    int32_t kernelClassSize = 18;
-    const uint8_t* evaluateDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)";
-    int32_t evaluateDescriptorSize = 69;
-    const uint8_t* evaluateName = "evaluate";
-    int32_t evaluateNameSize = 8;
-    uint16_t evaluateIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, kernelClass, kernelClassSize,
-        evaluateDescriptor, evaluateDescriptorSize, evaluateName,
-        evaluateNameSize);
+    uint16_t evaluateIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_EVALUATE];
 
     /* Invoke the static function to evaluate the expression. */
     zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder,
@@ -6967,7 +6932,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
     uint16_t invokeIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
         generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
         invokeDescriptor, invokeDescriptorSize, invokeName,
-        invokeNameSize);
+        invokeNameSize, 0);
 
     const uint8_t* invokeExName = "invokeEx";
     int32_t invokeExNameSize = 8;
@@ -6976,27 +6941,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
     uint16_t invokeExIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
         generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
         invokeExDescriptor, invokeExDescriptorSize, invokeExName,
-        invokeExNameSize);
-
-    // const uint8_t* invokeStaticDescriptor = "(zen/core/Object):(zen/core/Class)(zen/core/String)";
-    const uint8_t* invokeStaticDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)";
-    int32_t invokeStaticDescriptorSize = 52;
-    const uint8_t* invokeStaticName = "invokeStatic";
-    int32_t invokeStaticNameSize = 12;
-    uint16_t invokeStaticIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
-        invokeStaticDescriptor, invokeStaticDescriptorSize, invokeStaticName,
-        invokeStaticNameSize);
-
-    // const uint8_t* invokeStaticExDescriptor = "(zen/core/Object):(zen/core/Class)(zen/core/String)@(zen/core/Object)";
-    const uint8_t* invokeStaticExDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)";
-    int32_t invokeStaticExDescriptorSize = 70;
-    const uint8_t* invokeStaticExName = "invokeStaticEx";
-    int32_t invokeStaticExNameSize = 14;
-    uint16_t invokeStaticExIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
-        invokeStaticExDescriptor, invokeStaticExDescriptorSize, invokeStaticExName,
-        invokeStaticExNameSize);
+        invokeExNameSize, 0);
 
     const uint8_t* objectClassName = "zen/core/Object";
     int32_t objectClassNameSize = 15;
@@ -7071,7 +7016,6 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                     }
                     else if (zen_Symbol_isFunction(primarySymbol)) {
                         zen_FunctionSymbol_t* functionSymbol = (zen_FunctionSymbol_t*)&primarySymbol->m_context.m_asFunction;
-                        int32_t index = invokeStaticIndex;
                         if (zen_Modifier_hasStatic(primarySymbol->m_modifiers)) {
                             zen_Scope_t* enclosingScope = primarySymbol->m_enclosingScope;
                             const uint8_t* className = NULL;
@@ -7125,7 +7069,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                                     generator->m_constantPoolBuilder, className,
                                     classNameSize,
                                     descriptor, descriptorSize, primaryToken->m_text,
-                                    primaryToken->m_length
+                                    primaryToken->m_length,
                                 );
                                 zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, index);
 
