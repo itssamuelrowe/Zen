@@ -222,7 +222,7 @@ void zen_BinaryEntityDisassembler_disassembleConstantPool(
     constantPool->m_entries = jtk_Memory_allocate(zen_ConstantPoolEntry_t*, size + 1);
     constantPool->m_entries[0] = NULL;
 
-    printf("[Constant Pool]\nsize = %d\n", size);
+    printf("\n[Constant Pool]\nsize = %d\n", size);
     int32_t index;
     for (index = 1; index <= size; index++) {
         uint8_t tag = disassembler->m_bytes[disassembler->m_index++];
@@ -435,6 +435,9 @@ void zen_BinaryEntityDisassembler_disassembleEntity(zen_BinaryEntityDisassembler
     uint16_t flags = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
 
+    printf("[Entity File]\n    magicNumber = 0x%X, majorVersion=%d, minorVersion=%d, flags=%d\n",
+        magicNumber, majorVersion, minorVersion, flags);
+
     zen_BinaryEntityDisassembler_disassembleConstantPool(disassembler);
 
     uint8_t type = disassembler->m_bytes[disassembler->m_index++];
@@ -445,7 +448,7 @@ void zen_BinaryEntityDisassembler_disassembleEntity(zen_BinaryEntityDisassembler
     uint16_t superclassCount = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
 
-    printf("[Entity]\ntype=%d, flags=%d, reference=%d, superclassCount=%d\n[Superclasses]\n",
+    printf("\n[Entity]\n    type=%d, flags=%d, reference=%d, superclassCount=%d\n[Superclasses]\n",
         type, entityFlags, reference, superclassCount);
 
     int32_t i;
@@ -464,11 +467,11 @@ void zen_BinaryEntityDisassembler_disassembleEntity(zen_BinaryEntityDisassembler
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
     uint16_t fieldTableSize = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    printf("\n[Fields]\nfieldCount=%d, fieldTableSize=%d\n", fieldCount, fieldTableSize);
+    printf("\n[Fields]\n    fieldCount=%d, fieldTableSize=%d\n", fieldCount, fieldTableSize);
 
     int32_t j;
     for (j = 0; j < fieldCount; j++) {
-        printf("----------------\n#%d ", j);
+        printf("--------------------------------\n    #%d ", j);
         zen_BinaryEntityDisassembler_disassembleField(disassembler);
     }
 
@@ -478,12 +481,12 @@ void zen_BinaryEntityDisassembler_disassembleEntity(zen_BinaryEntityDisassembler
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
     uint16_t functionTableSize = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    printf("\n[Functions]\nfunctionCount=%d, functionTableSize=%d\n", functionCount,
+    printf("\n[Functions]\n    functionCount=%d, functionTableSize=%d\n", functionCount,
         functionTableSize);
 
     int32_t k;
     for (k = 0; k < functionCount; k++) {
-        printf("----------------\n#%d ", k);
+        printf("--------------------------------\n    #%d ", k);
         zen_BinaryEntityDisassembler_disassembleFunction(disassembler);
     }
 }
@@ -496,7 +499,7 @@ void zen_BinaryEntityDisassembler_disassembleAttributeTable(
 
     uint16_t size = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    printf("[Attributes]\nsize=%d\n", size);
+    printf("[Attributes]\n    size=%d\n", size);
 
     for (int32_t i = 0; i < size; i++) {
         uint16_t nameIndex = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
@@ -509,7 +512,7 @@ void zen_BinaryEntityDisassembler_disassembleAttributeTable(
         zen_ConstantPoolUtf8_t* nameConstantPoolUtf8 =
             (zen_ConstantPoolUtf8_t*)disassembler->m_constantPool.m_entries[nameIndex];
 
-        printf("[Attribute] %s\nnameIndex=%d, length=%d\n",
+        printf("[Attribute] %s\n    nameIndex=%d, length=%d\n",
             nameConstantPoolUtf8->m_bytes, nameIndex, length);
 
         if (jtk_CString_equals(nameConstantPoolUtf8->m_bytes,
@@ -541,13 +544,15 @@ void zen_BinaryEntityDisassembler_disassembleInstructionAttribute(
         ((disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 16) |
         ((disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF);
-    printf("maxStackSize=%d, localVariableCount=%d, instructionLength=%d\n",
+    printf("    maxStackSize=%d, localVariableCount=%d, instructionLength=%d\n",
         maxStackSize, localVariableCount, instructionLength);
 
     int32_t i;
     for (i = 0; i < instructionLength; i++) {
-        zen_Instruction_t* instruction = zen_Instruction_getInstance(disassembler->m_bytes[i]);
-        printf("#%d %s", i, instruction->m_text);
+        zen_Instruction_t* instruction = zen_Instruction_getInstance(
+            disassembler->m_bytes[disassembler->m_index++]);
+        printf("        #%d %s", i, instruction->m_text);
+
         if (instruction->m_argumentCount != 0) {
             printf(" ");
             switch (disassembler->m_bytes[i])  {
@@ -638,6 +643,7 @@ void zen_BinaryEntityDisassembler_disassembleInstructionAttribute(
                 }
             }
         }
+        puts("");
     }
     zen_BinaryEntityDisassembler_disassembleExceptionTable(disassembler);
 }
@@ -650,7 +656,7 @@ void zen_BinaryEntityDisassembler_disassembleExceptionTable(
 
     uint16_t size = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    printf("[Exception Table]\nsize=%d\n", size);
+    printf("[Exception Table]\n    size=%d\n", size);
     int32_t i;
     for (i = 0; i < size; i++) {
         printf("#%d ", i);
