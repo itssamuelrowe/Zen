@@ -583,7 +583,7 @@ void zen_SymbolResolutionListener_onEnterFunctionDeclaration(
     /* Retrieve the symbol table associated with this listener. */
     zen_SymbolTable_t* symbolTable = listener->m_symbolTable;
     zen_Symbol_t* symbol = zen_SymbolTable_resolve(symbolTable, identifierText);
-    zen_FunctionSignature_t* signature = zen_Symbol_getFunctionSignature(primarySymbol, fixedParameterCount);
+    zen_FunctionSignature_t* signature = zen_Symbol_getFunctionSignature(symbol, fixedParameterCount);
     signature->m_tableIndex = ++listener->m_functionIndex;
 
     // TODO: In inheritance, the index should be generated after following up

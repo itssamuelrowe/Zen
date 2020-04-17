@@ -189,7 +189,7 @@ uint16_t zen_BinaryEntityBuilder_writeConstantPoolString(zen_BinaryEntityBuilder
  * @memberof BinaryEntityBuilder
  */
 uint16_t zen_BinaryEntityBuilder_writeConstantPoolFunction(zen_BinaryEntityBuilder_t* builder, uint16_t classIndex, uint16_t descriptorIndex,
-    uint16_t nameIndex);
+    uint16_t nameIndex, uint16_t tableIndex);
 
 /**
  * @memberof BinaryEntityBuilder

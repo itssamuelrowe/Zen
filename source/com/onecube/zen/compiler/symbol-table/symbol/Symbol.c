@@ -196,3 +196,22 @@ zen_FunctionSignature_t* zen_Symbol_getFunctionSignature(zen_Symbol_t* symbol,
     }
     return result;
 }
+
+zen_FunctionSignature_t* zen_Symbol_getFunctionSignatureEx(zen_Symbol_t* symbol,
+    const uint8_t* descriptor, int32_t descriptorSize) {
+    zen_FunctionSymbol_t* functionSymbol = &symbol->m_context.m_asFunction;
+    zen_FunctionSignature_t* result = NULL;
+    int32_t i;
+    int32_t count = jtk_ArrayList_getSize(functionSymbol->m_signatures);
+    for (i = 0; i < count; i++) {
+        zen_FunctionSignature_t* signature = (zen_FunctionSignature_t*)
+            jtk_ArrayList_getValue(functionSymbol->m_signatures, i);
+        int32_t parameterCount = jtk_ArrayList_getSize(signature->m_fixedParameters);
+        if (jtk_CString_equals(signature->m_descriptor, signature->m_descriptorSize,
+            descriptor, descriptorSize)) {
+            result = signature;
+            break;
+        }
+    }
+    return result;
+}

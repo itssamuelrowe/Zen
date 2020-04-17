@@ -161,4 +161,10 @@ zen_ASTNode_t* zen_Symbol_getIdentifier(zen_Symbol_t* symbol);
 
 void zen_Symbol_addModifiers(zen_Symbol_t* symbol, uint32_t modifiers);
 
+
+zen_FunctionSignature_t* zen_Symbol_getFunctionSignatureEx(zen_Symbol_t* symbol,
+    const uint8_t* descriptor, int32_t descriptorSize);
+zen_FunctionSignature_t* zen_Symbol_getFunctionSignature(zen_Symbol_t* symbol,
+    int32_t argumentCount);
+
 #endif /* COM_ONECUBE_ZEN_COMPILER_SYMBOL_TABLE_SYMBOL_H */
