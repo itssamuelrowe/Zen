@@ -613,7 +613,7 @@ void zen_BinaryEntityDisassembler_disassembleInstructionAttribute(
                 }
 
                 default: {
-                    print("[internal error] Control should not reach here.\n");
+                    printf("[internal error] Control should not reach here.\n");
                 }
             }
         }

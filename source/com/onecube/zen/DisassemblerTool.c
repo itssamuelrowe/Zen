@@ -16,13 +16,17 @@
 
 // Friday, April 17, 2019
 
+#include <jtk/core/CString.h>
 #include <com/onecube/zen/disassembler/BinaryEntityDisassembler.h>
 
 int32_t main(int32_t length, char** arguments) {
-    zen_BinaryEntityDisassembler_t* disassembler = zen_BinaryEntityDisassembler_new(NULL);
-    zen_BinaryEntityDisassembler_addDirectory(disassembler, ".");
+    zen_Instruction_verify();
 
-    zen_BinaryEntityDisassembler_disassembleClass(disassembler, arguments[1]);
+    zen_BinaryEntityDisassembler_t* disassembler = zen_BinaryEntityDisassembler_new(NULL);
+    zen_BinaryEntityDisassembler_addDirectory(disassembler, ".", 1);
+
+    zen_BinaryEntityDisassembler_disassembleClass(disassembler, arguments[1],
+        jtk_CString_getSize(arguments[1]));
 
     zen_BinaryEntityDisassembler_delete(disassembler);
 

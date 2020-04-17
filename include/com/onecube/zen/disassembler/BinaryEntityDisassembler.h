@@ -46,7 +46,56 @@ struct zen_BinaryEntityDisassembler_t {
 
 typedef struct zen_BinaryEntityDisassembler_t zen_BinaryEntityDisassembler_t;
 
-zen_BinaryEntityDisassembler_t* zen_BinaryEntityDisassembler_new();
+zen_BinaryEntityDisassembler_t* zen_BinaryEntityDisassembler_new(
+    jtk_Iterator_t* entityDirectoryIterator);
+
 void zen_BinaryEntityDisassembler_delete(zen_BinaryEntityDisassembler_t* disassembler);
+
+// Directory
+
+bool zen_BinaryEntityDisassembler_addDirectory(zen_BinaryEntityDisassembler_t* disassembler,
+    const uint8_t* directory, int32_t directorySize);
+void zen_BinaryEntityDisassembler_disassemble(zen_BinaryEntityDisassembler_t* disassembler,
+    uint8_t* bytes, int32_t size);
+
+/* Disassemble Constant Pool */
+
+void zen_BinaryEntityDisassembler_disassembleConstantPool(
+    zen_BinaryEntityDisassembler_t* disassembler);
+
+/* Disassemble Entity */
+
+void zen_BinaryEntityDisassembler_disassembleEntity(zen_BinaryEntityDisassembler_t* disassembler);
+
+/* Disassemble Attribute Table */
+
+void zen_BinaryEntityDisassembler_disassembleAttributeTable(
+    zen_BinaryEntityDisassembler_t* disassembler);
+
+/* Disassemble Instruction Attribute */
+
+void zen_BinaryEntityDisassembler_disassembleInstructionAttribute(
+    zen_BinaryEntityDisassembler_t* disassembler, uint16_t nameIndex, uint32_t length);
+
+/* Disassemble Exception Table */
+
+void zen_BinaryEntityDisassembler_disassembleExceptionTable(
+        zen_BinaryEntityDisassembler_t* disassembler);
+
+/* Disassemble Exception Handler Site */
+
+void zen_BinaryEntityDisassembler_disassembleExceptionHandlerSite(
+    zen_BinaryEntityDisassembler_t* disassembler);
+
+/* Disassemble Function */
+
+void zen_BinaryEntityDisassembler_disassembleFunction(zen_BinaryEntityDisassembler_t* disassembler);
+
+/* Disassemble Field */
+
+void zen_BinaryEntityDisassembler_disassembleField(zen_BinaryEntityDisassembler_t* disassembler);
+
+void zen_BinaryEntityDisassembler_disassembleClass(zen_BinaryEntityDisassembler_t* disassembler,
+    const uint8_t* descriptor, int32_t descriptorSize);
 
 #endif /* COM_ONECUBE_ZEN_DISASSEMBLER_BINARY_ENTITY_DISASSEMBLER_H */

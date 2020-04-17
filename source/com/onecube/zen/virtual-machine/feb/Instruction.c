@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2020 Samuel Rowe
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -61,13 +61,13 @@ zen_Instruction_t zen_Instruction_instructions[] = {
 
     /* Cast */
 
-    { "cast_itb", ZEN_BYTE_CODE_CAST_ITL, 0, 1, 1 },
-    { "cast_its", ZEN_BYTE_CODE_CAST_ITL, 0, 1, 1 },
+    { "cast_itb", ZEN_BYTE_CODE_CAST_ITB, 0, 1, 1 },
+    { "cast_its", ZEN_BYTE_CODE_CAST_ITS, 0, 1, 1 },
     { "cast_itl", ZEN_BYTE_CODE_CAST_ITL, 0, 1, 1 },
     { "cast_itf", ZEN_BYTE_CODE_CAST_ITF, 0, 1, 1 },
     { "cast_itd", ZEN_BYTE_CODE_CAST_ITD, 0, 1, 1 },
-    { "cast_ltb", ZEN_BYTE_CODE_CAST_LTI, 0, 1, 1 },
-    { "cast_lts", ZEN_BYTE_CODE_CAST_LTI, 0, 1, 1 },
+    { "cast_ltb", ZEN_BYTE_CODE_CAST_LTB, 0, 1, 1 },
+    { "cast_lts", ZEN_BYTE_CODE_CAST_LTS, 0, 1, 1 },
     { "cast_lti", ZEN_BYTE_CODE_CAST_LTI, 0, 1, 1 },
     { "cast_ltf", ZEN_BYTE_CODE_CAST_LTF, 0, 1, 1 },
     { "cast_ltd", ZEN_BYTE_CODE_CAST_LTD, 0, 1, 1 },
@@ -107,25 +107,6 @@ zen_Instruction_t zen_Instruction_instructions[] = {
     { "duplicate2_x1", ZEN_BYTE_CODE_DUPLICATE2_X1, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "duplicate2_x2", ZEN_BYTE_CODE_DUPLICATE2_X2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
 
-    /* Jump */
-
-    { "jump_eq0_i", ZEN_BYTE_CODE_JUMP_EQ0_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_ne0_i", ZEN_BYTE_CODE_JUMP_NE0_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_lt0_i", ZEN_BYTE_CODE_JUMP_LT0_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_gt0_i", ZEN_BYTE_CODE_JUMP_GT0_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_ge0_i", ZEN_BYTE_CODE_JUMP_GE0_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_le0_i", ZEN_BYTE_CODE_JUMP_LE0_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_eq_i", ZEN_BYTE_CODE_JUMP_EQ_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_ne_i", ZEN_BYTE_CODE_JUMP_NE_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_lt_i", ZEN_BYTE_CODE_JUMP_LT_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_gt_i", ZEN_BYTE_CODE_JUMP_GT_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_ge_i", ZEN_BYTE_CODE_JUMP_GE_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_le_i", ZEN_BYTE_CODE_JUMP_LE_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_eq_a", ZEN_BYTE_CODE_JUMP_EQ_A, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_ne_a", ZEN_BYTE_CODE_JUMP_NE_A, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_eqn_a", ZEN_BYTE_CODE_JUMP_EQN_A, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_nen_a", ZEN_BYTE_CODE_JUMP_NEN_A, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-
     /* Increment */
 
     { "increment_i", ZEN_BYTE_CODE_INCREMENT_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
@@ -140,6 +121,22 @@ zen_Instruction_t zen_Instruction_instructions[] = {
     /* Jump */
 
     { "jump", ZEN_BYTE_CODE_JUMP, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "jump_eq0_i", ZEN_BYTE_CODE_JUMP_EQ0_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "jump_ne0_i", ZEN_BYTE_CODE_JUMP_NE0_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "jump_lt0_i", ZEN_BYTE_CODE_JUMP_LT0_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "jump_gt0_i", ZEN_BYTE_CODE_JUMP_GT0_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "jump_le0_i", ZEN_BYTE_CODE_JUMP_LE0_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "jump_ge0_i", ZEN_BYTE_CODE_JUMP_GE0_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "jump_eq_i", ZEN_BYTE_CODE_JUMP_EQ_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "jump_ne_i", ZEN_BYTE_CODE_JUMP_NE_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "jump_lt_i", ZEN_BYTE_CODE_JUMP_LT_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "jump_gt_i", ZEN_BYTE_CODE_JUMP_GT_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "jump_le_i", ZEN_BYTE_CODE_JUMP_LE_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "jump_ge_i", ZEN_BYTE_CODE_JUMP_GE_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "jump_eq_a", ZEN_BYTE_CODE_JUMP_EQ_A, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "jump_ne_a", ZEN_BYTE_CODE_JUMP_NE_A, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "jump_eqn_a", ZEN_BYTE_CODE_JUMP_EQN_A, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "jump_nen_a", ZEN_BYTE_CODE_JUMP_NEN_A, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
 
     /* Load */
 
@@ -226,11 +223,13 @@ zen_Instruction_t zen_Instruction_instructions[] = {
     { "push_i5", ZEN_BYTE_CODE_PUSH_I5, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "push_l0", ZEN_BYTE_CODE_PUSH_L0, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "push_l1", ZEN_BYTE_CODE_PUSH_L1, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "push_l2", ZEN_BYTE_CODE_PUSH_L2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "push_f0", ZEN_BYTE_CODE_PUSH_F0, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "push_f1", ZEN_BYTE_CODE_PUSH_F1, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "push_f2", ZEN_BYTE_CODE_PUSH_F2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "push_d0", ZEN_BYTE_CODE_PUSH_D0, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "push_d1", ZEN_BYTE_CODE_PUSH_D1, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "push_d1", ZEN_BYTE_CODE_PUSH_D2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "push_b", ZEN_BYTE_CODE_PUSH_B, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "push_s", ZEN_BYTE_CODE_PUSH_S, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
 
@@ -282,8 +281,15 @@ zen_Instruction_t zen_Instruction_instructions[] = {
     { "store_af", ZEN_BYTE_CODE_STORE_AF, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "store_ad", ZEN_BYTE_CODE_STORE_AD, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "store_aa", ZEN_BYTE_CODE_STORE_AA, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_static_field", ZEN_BYTE_CODE_STORE_STATIC_FIELD, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
     { "store_instance_field", ZEN_BYTE_CODE_STORE_INSTANCE_FIELD, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "store_static_field", ZEN_BYTE_CODE_STORE_STATIC_FIELD, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+
+    /* Subtract */
+
+    { "subtract_i", ZEN_BYTE_CODE_SUBTRACT_I, 0, 2, 1 },
+    { "subtract_l", ZEN_BYTE_CODE_SUBTRACT_L, 0, 2, 1 },
+    { "subtract_f", ZEN_BYTE_CODE_SUBTRACT_F, 0, 2, 1 },
+    { "subtract_d", ZEN_BYTE_CODE_SUBTRACT_D, 0, 2, 1 },
 
     /* Swap */
 
@@ -309,7 +315,9 @@ bool zen_Instruction_verify() {
     for (i = 0; i < (int32_t)ZEN_BYTE_CODE_WIDE; i++) {
         zen_Instruction_t* instruction = &zen_Instruction_instructions[i];
         if (instruction->m_byteCode != i) {
-            fprintf(stderr, "[internal error] The instruction index and byte pair is invalid. (index=%d, ibc=%d, abc=%d, text=%s)\n", i, instruction->m_byteCode, i, instruction->m_text);
+            fprintf(stderr, "[internal error] The instruction index and byte pair is invalid. "
+                "(index=%d, byteCode=%d, text=%s)\n",
+                i, instruction->m_byteCode, instruction->m_text);
             fflush(stdout);
             result = false;
         }
