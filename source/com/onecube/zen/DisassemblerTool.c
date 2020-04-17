@@ -17,6 +17,7 @@
 // Friday, April 17, 2019
 
 #include <jtk/core/CString.h>
+#include <jtk/collection/array/Arrays.h>
 #include <com/onecube/zen/disassembler/BinaryEntityDisassembler.h>
 
 int32_t main(int32_t length, char** arguments) {
@@ -25,8 +26,12 @@ int32_t main(int32_t length, char** arguments) {
     zen_BinaryEntityDisassembler_t* disassembler = zen_BinaryEntityDisassembler_new(NULL);
     zen_BinaryEntityDisassembler_addDirectory(disassembler, ".", 1);
 
-    zen_BinaryEntityDisassembler_disassembleClass(disassembler, arguments[1],
-        jtk_CString_getSize(arguments[1]));
+    int32_t descriptorSize = -1;
+    uint8_t* descriptor = jtk_CString_make(arguments[1], &descriptorSize);
+    jtk_Arrays_replace_b(descriptor, descriptorSize, '.', '/');
+    zen_BinaryEntityDisassembler_disassembleClass(disassembler, descriptor,
+        descriptorSize);
+    jtk_CString_delete(descriptor);
 
     zen_BinaryEntityDisassembler_delete(disassembler);
 

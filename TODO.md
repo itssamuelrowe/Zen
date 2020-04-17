@@ -13,6 +13,7 @@
  * Throw an exception when dividing by zero.
  * Implement the array function.
  * Implement standard packages
+ * Add tableIndex to field constant pool entry.
 
 
 
