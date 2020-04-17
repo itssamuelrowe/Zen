@@ -230,26 +230,30 @@ void zen_BinaryEntityBuilder_writeAttributeCount(zen_BinaryEntityBuilder_t* buil
 /**
  * @memberof BinaryEntityBuilder
  */
-void zen_BinaryEntityBuilder_writeFieldsHeader(zen_BinaryEntityBuilder_t* builder, uint16_t fieldCount);
+void zen_BinaryEntityBuilder_writeFieldsHeader(zen_BinaryEntityBuilder_t* builder,
+    uint16_t fieldCount, uint16_t fieldTableSize);
 
 /**
  * @memberof BinaryEntityBuilder
  */
-void zen_BinaryEntityBuilder_writeField(zen_BinaryEntityBuilder_t* builder, uint16_t flags, uint16_t nameIndex,
-    uint16_t descriptorIndex);
+void zen_BinaryEntityBuilder_writeField(zen_BinaryEntityBuilder_t* builder,
+    uint16_t flags, uint16_t nameIndex, uint16_t descriptorIndex,
+    uint16_t tableIndex);
 
 // Function
 
 /**
  * @memberof BinaryEntityBuilder
  */
-void zen_BinaryEntityBuilder_writeFunctionsHeader(zen_BinaryEntityBuilder_t* builder, uint16_t functionCount);
+void zen_BinaryEntityBuilder_writeFunctionsHeader(zen_BinaryEntityBuilder_t* builder,
+    uint16_t functionCount, uint16_t functionTableSize);
 
 /**
  * @memberof BinaryEntityBuilder
  */
-void zen_BinaryEntityBuilder_writeFunction(zen_BinaryEntityBuilder_t* builder, uint16_t nameIndex, uint16_t descriptorIndex,
-    uint16_t flags);
+void zen_BinaryEntityBuilder_writeFunction(zen_BinaryEntityBuilder_t* builder,
+    uint16_t flags, uint16_t nameIndex, uint16_t descriptorIndex,
+    uint16_t tableIndex);
 
 // Instruction Attribute
 

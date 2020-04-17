@@ -1,4 +1,4 @@
- * Implement static function tables
+ * Implement static function tables and disassembler
  * Implement virtual function tables
  * Implement instance field tables
  * Implement static field tables.
@@ -13,7 +13,6 @@
  * Throw an exception when dividing by zero.
  * Implement the array function.
  * Implement standard packages
-
 
 
 

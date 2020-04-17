@@ -110,6 +110,8 @@ zen_SymbolResolutionListener_t* zen_SymbolResolutionListener_new(
     listener->m_symbolTable = NULL;
     listener->m_scopes = NULL;
     listener->m_label = ZEN_EXPRESSION_ANNOTATION_UNKNOWN;
+    listener->m_functionIndex = 0;
+    listener->m_fieldIndex = 0;
 
     zen_ASTListener_t* astListener = listener->m_astListener;
 
@@ -370,6 +372,8 @@ void zen_SymbolResolutionListener_reset(zen_SymbolResolutionListener_t* listener
     listener->m_symbolTable = symbolTable;
     listener->m_scopes = scopes;
     listener->m_label = ZEN_EXPRESSION_ANNOTATION_UNKNOWN;
+    listener->m_fieldIndex = 0;
+    listener->m_functionIndex = 0;
 }
 
 // Event Handlers
@@ -561,6 +565,29 @@ void zen_SymbolResolutionListener_onEnterFunctionDeclaration(
     zen_Scope_t* scope = zen_ASTAnnotations_get(listener->m_scopes, node);
     zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
     zen_Scope_t* enclosingScope = zen_Scope_getEnclosingScope(scope);
+
+    /* Retrieve the identifier associated with the function declaration. */
+    zen_ASTNode_t* identifier = context->m_identifier;
+    zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+    /* Retrieve the text representation of the identifier. */
+    const uint8_t* identifierText = ((zen_Token_t*)identifier->m_context)->m_text;
+
+    zen_FunctionParametersContext_t* functionParametersContext =
+        (zen_FunctionParametersContext_t*)context->m_functionParameters->m_context;
+    /* Retrieve the fixed parameters associated with the context of the
+     * function arguments.
+     */
+    jtk_ArrayList_t* fixedParameters = functionParametersContext->m_fixedParameters;
+    int32_t fixedParameterCount = jtk_ArrayList_getSize(fixedParameters);
+
+    /* Retrieve the symbol table associated with this listener. */
+    zen_SymbolTable_t* symbolTable = listener->m_symbolTable;
+    zen_Symbol_t* symbol = zen_SymbolTable_resolve(symbolTable, identifierText);
+    zen_FunctionSignature_t* signature = zen_Symbol_getFunctionSignature(primarySymbol, fixedParameterCount);
+    signature->m_tableIndex = ++listener->m_functionIndex;
+
+    // TODO: In inheritance, the index should be generated after following up
+    // the hierarchy to address overriding.
 
     /* NOTE: Previously a different approach was taken to resolve clashes in
      *       inheritance. The original idea was to apply BFS algorithm against

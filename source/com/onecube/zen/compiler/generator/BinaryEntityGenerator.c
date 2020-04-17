@@ -419,6 +419,8 @@ void zen_BinaryEntityGenerator_reset(zen_BinaryEntityGenerator_t* generator,
     generator->m_classPrepared = false;
     generator->m_className = NULL;
     generator->m_classNameSize = -1;
+    generator->m_functionIndex = 0;
+    generator->m_fieldIndex = 0;
 }
 
 // Event Handlers
@@ -643,7 +645,9 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
     /* Retrieve the field count. */
     int32_t fieldCount = jtk_ArrayList_getSize(generator->m_fields);
     /* Write the field count. */
-    zen_BinaryEntityBuilder_writeFieldsHeader(generator->m_builder, fieldCount);
+    // TODO: The field table size should be computed when inheritance is implemented.
+    zen_BinaryEntityBuilder_writeFieldsHeader(generator->m_builder, fieldCount,
+        fieldCount);
 
     if (generator->m_compiler->m_dumpInstructions) {
         /* Log the constant pool details, including the number of entries and the trends
@@ -669,7 +673,8 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
 
         /* Write the field to the data channel. */
         zen_BinaryEntityBuilder_writeField(generator->m_builder, fieldEntity->m_flags,
-            fieldEntity->m_nameIndex, fieldEntity->m_descriptorIndex);
+            fieldEntity->m_nameIndex, fieldEntity->m_descriptorIndex,
+            fieldEntity->m_tableIndex);
 
         /* Write the attribute count. */
         zen_BinaryEntityBuilder_writeAttributeCount(generator->m_builder, fieldEntity->m_attributeTable.m_size);
@@ -689,7 +694,9 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
     /* Retrieve the function count. */
     int32_t functionCount = jtk_ArrayList_getSize(generator->m_functions);
     /* Write the function count. */
-    zen_BinaryEntityBuilder_writeFunctionsHeader(generator->m_builder, functionCount);
+    // TODO: Function table size should be computed when inheritance is supported.
+    zen_BinaryEntityBuilder_writeFunctionsHeader(generator->m_builder, functionCount,
+        functionCount);
     /* Log the function count. */
     jtk_Logger_debug(logger, "Entity has %d functions.", functionCount);
 
@@ -701,8 +708,8 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
 
         /* Write the function to the data channel. */
         zen_BinaryEntityBuilder_writeFunction(generator->m_builder,
-            functionEntity->m_nameIndex, functionEntity->m_descriptorIndex,
-            functionEntity->m_flags);
+            functionEntity->m_flags, functionEntity->m_nameIndex,
+            functionEntity->m_descriptorIndex, functionEntity->m_tableIndex);
 
         /* Log the details of the function. */
         jtk_Logger_debug(logger, "A function was written with the features (flags = 0x%X, nameIndex = %d, descriptorIndex = %d).",
@@ -7776,7 +7783,7 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
                                     generator->m_constantPoolBuilder, classSymbol->m_context.m_asClass.m_qualifiedName,
                                     classSymbol->m_context.m_asClass.m_qualifiedNameSize,
                                     signature->m_descriptor, signature->m_descriptorSize, identifierToken->m_text,
-                                    identifierToken->m_length
+                                    identifierToken->m_length,
                                 );
                                 zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, index);
 

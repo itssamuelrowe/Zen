@@ -41,6 +41,8 @@ struct zen_SymbolResolutionListener_t {
     zen_SymbolTable_t* m_symbolTable;
     zen_ASTAnnotations_t* m_scopes;
     zen_ExpressionAnnotation_t m_label;
+    int32_t m_functionIndex;
+    int32_t m_fieldIndex;
 };
 
 /**
