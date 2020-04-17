@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2020 Samuel Rowe
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,7 +52,7 @@ struct zen_Entity_t {
      * of the body may vary. Please refer to the documentation of various entities
      * for further information.
      */
-    
+
     /**
      * The number of super-classes.
      */
@@ -64,9 +64,13 @@ struct zen_Entity_t {
 
     uint16_t m_fieldCount;
 
+    uint16_t m_fieldTableSize;
+
     zen_FieldEntity_t** m_fields;
 
     uint16_t m_functionCount;
+
+    uint16_t m_functionTableSize;
 
     zen_FunctionEntity_t** m_functions;
 };

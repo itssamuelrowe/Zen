@@ -263,7 +263,7 @@ void zen_BinaryEntityParser_parseConstantPool(
 
             case ZEN_CONSTANT_POOL_TAG_STRING: {
                 uint16_t stringIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
-                (parser->m_bytes[parser->m_index++] & 0xFF));
+                    (parser->m_bytes[parser->m_index++] & 0xFF));
 
                 zen_ConstantPoolString_t* constantPoolString = jtk_Memory_allocate(zen_ConstantPoolString_t, 1);
                 constantPoolString->m_tag = ZEN_CONSTANT_POOL_TAG_STRING;
@@ -278,11 +278,13 @@ void zen_BinaryEntityParser_parseConstantPool(
 
             case ZEN_CONSTANT_POOL_TAG_FUNCTION: {
                 uint16_t classIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
-                (parser->m_bytes[parser->m_index++] & 0xFF));
+                    (parser->m_bytes[parser->m_index++] & 0xFF));
                 uint16_t descriptorIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
-                (parser->m_bytes[parser->m_index++] & 0xFF));
+                    (parser->m_bytes[parser->m_index++] & 0xFF));
                 uint16_t nameIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
-                (parser->m_bytes[parser->m_index++] & 0xFF));
+                    (parser->m_bytes[parser->m_index++] & 0xFF));
+                uint16_t tableIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                    (parser->m_bytes[parser->m_index++] & 0xFF));
 
                 zen_ConstantPoolFunction_t* constantPoolFunction = jtk_Memory_allocate(zen_ConstantPoolFunction_t, 1);
                 constantPoolFunction->m_tag = ZEN_CONSTANT_POOL_TAG_FUNCTION;
@@ -299,9 +301,9 @@ void zen_BinaryEntityParser_parseConstantPool(
 
             case ZEN_CONSTANT_POOL_TAG_FIELD: {
                 uint16_t descriptorIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
-                (parser->m_bytes[parser->m_index++] & 0xFF));
+                    (parser->m_bytes[parser->m_index++] & 0xFF));
                 uint16_t nameIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
-                (parser->m_bytes[parser->m_index++] & 0xFF));
+                    (parser->m_bytes[parser->m_index++] & 0xFF));
 
                 zen_ConstantPoolField_t* constantPoolField = jtk_Memory_allocate(zen_ConstantPoolField_t, 1);
                 constantPoolField->m_tag = ZEN_CONSTANT_POOL_TAG_FIELD;
@@ -374,7 +376,10 @@ void zen_BinaryEntityParser_parseEntity(zen_BinaryEntityParser_t* parser) {
 
     uint16_t fieldCount = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
         (parser->m_bytes[parser->m_index++] & 0xFF));
+    uint16_t fieldTableSize = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     entity->m_fieldCount = fieldCount;
+    entity->m_fieldTableSize = fieldTableSize;
     entity->m_fields = (fieldCount > 0)?
         jtk_Memory_allocate(zen_FieldEntity_t*, fieldCount) : NULL;
 
@@ -388,7 +393,10 @@ void zen_BinaryEntityParser_parseEntity(zen_BinaryEntityParser_t* parser) {
 
     uint16_t functionCount = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
         (parser->m_bytes[parser->m_index++] & 0xFF));
+    uint16_t functionTableSize = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
     entity->m_functionCount = functionCount;
+    entity->m_functionTableSize = functionTableSize;
     entity->m_functions = (functionCount > 0)?
         jtk_Memory_allocate(zen_FunctionEntity_t*, functionCount) : NULL;
 
@@ -550,12 +558,17 @@ zen_FunctionEntity_t* zen_BinaryEntityParser_parseFunction(zen_BinaryEntityParse
         (parser->m_bytes[parser->m_index++] & 0xFF));
     functionEntity->m_nameIndex = nameIndex;
 
+    // Descriptor Index
     uint16_t descriptorIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
         (parser->m_bytes[parser->m_index++] & 0xFF));
     functionEntity->m_descriptorIndex = descriptorIndex;
 
-    // Attribute Table
+    // Table Index
+    uint16_t tableIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
+    functionEntity->m_tableIndex = tableIndex;
 
+    // Attribute Table
     zen_BinaryEntityParser_parseAttributeTable(parser, &(functionEntity->m_attributeTable));
 
     return functionEntity;
@@ -569,22 +582,29 @@ zen_FieldEntity_t* zen_BinaryEntityParser_parseField(zen_BinaryEntityParser_t* p
     zen_FieldEntity_t* fieldEntity = jtk_Memory_allocate(zen_FieldEntity_t, 1);
 
     // Flags
-
     uint16_t flags = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
         (parser->m_bytes[parser->m_index++] & 0xFF));
     fieldEntity->m_flags = flags;
 
     // Name Index
-
     uint16_t nameIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
         (parser->m_bytes[parser->m_index++] & 0xFF));
     fieldEntity->m_nameIndex = nameIndex;
 
     // Descriptor Index
-
     uint16_t descriptorIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
         (parser->m_bytes[parser->m_index++] & 0xFF));
     fieldEntity->m_descriptorIndex = descriptorIndex;
+
+    // Parameter Threshold
+    uint16_t parameterThreshold = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
+    fieldEntity->m_parameterThreshold = parameterThreshold;
+
+    // Table Index
+    uint16_t tableIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+        (parser->m_bytes[parser->m_index++] & 0xFF));
+    fieldEntity->m_tableIndex = tableIndex;
 
     zen_BinaryEntityParser_parseAttributeTable(parser, &(fieldEntity->m_attributeTable));
 

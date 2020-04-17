@@ -422,7 +422,7 @@ uint16_t zen_BinaryEntityBuilder_writeConstantPoolFunction(
     jtk_Assert_assertTrue(builder->m_activeChannelIndex >= 0, "Please activate a channel before emitting instructions.");
 
     zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(builder->m_channels, builder->m_activeChannelIndex);
-    zen_DataChannel_requestCapacity(channel, 7);
+    zen_DataChannel_requestCapacity(channel, 9);
 
     channel->m_bytes[channel->m_index++] = ZEN_CONSTANT_POOL_TAG_FUNCTION; // Tag
     channel->m_bytes[channel->m_index++] = (classIndex & 0x0000FF00) >> 8; // class index
@@ -431,7 +431,7 @@ uint16_t zen_BinaryEntityBuilder_writeConstantPoolFunction(
     channel->m_bytes[channel->m_index++] = (descriptorIndex & 0x000000FF);
     channel->m_bytes[channel->m_index++] = (nameIndex & 0x0000FF00) >> 8; // name index
     channel->m_bytes[channel->m_index++] = (nameIndex & 0x000000FF);
-    channel->m_bytes[channel->m_index++] = (tableIndex & 0x0000FF00) >> 8; // name index
+    channel->m_bytes[channel->m_index++] = (tableIndex & 0x0000FF00) >> 8; // table index
     channel->m_bytes[channel->m_index++] = (tableIndex & 0x000000FF);
 
     return builder->m_constantPoolIndex++;
@@ -629,24 +629,28 @@ void zen_BinaryEntityBuilder_writeAttributeCount(zen_BinaryEntityBuilder_t* buil
     channel->m_bytes[channel->m_index++] = (attributeCount & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_writeFieldCount(zen_BinaryEntityBuilder_t* builder, uint16_t fieldCount) {
+void zen_BinaryEntityBuilder_writeFieldsHeader(zen_BinaryEntityBuilder_t* builder,
+    uint16_t fieldCount, uint16_t fieldTableSize) {
     jtk_Assert_assertObject(builder, "The specified builder is null.");
     jtk_Assert_assertTrue(builder->m_activeChannelIndex >= 0, "Please activate a channel before emitting instructions.");
 
     zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(builder->m_channels, builder->m_activeChannelIndex);
-    zen_DataChannel_requestCapacity(channel, 2);
+    zen_DataChannel_requestCapacity(channel, 4);
 
     channel->m_bytes[channel->m_index++] = (fieldCount & 0x0000FF00) >> 8; // field count
     channel->m_bytes[channel->m_index++] = (fieldCount & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (fieldTableSize & 0x0000FF00) >> 8; // field table size
+    channel->m_bytes[channel->m_index++] = (fieldTableSize & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_writeField(zen_BinaryEntityBuilder_t* builder, uint16_t flags, uint16_t nameIndex,
-    uint16_t descriptorIndex) {
+void zen_BinaryEntityBuilder_writeField(zen_BinaryEntityBuilder_t* builder,
+    uint16_t flags, uint16_t nameIndex, uint16_t descriptorIndex,
+    uint16_t tableIndex) {
     jtk_Assert_assertObject(builder, "The specified builder is null.");
     jtk_Assert_assertTrue(builder->m_activeChannelIndex >= 0, "Please activate a channel before emitting instructions.");
 
     zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(builder->m_channels, builder->m_activeChannelIndex);
-    zen_DataChannel_requestCapacity(channel, 6);
+    zen_DataChannel_requestCapacity(channel, 8);
 
     channel->m_bytes[channel->m_index++] = (flags & 0x0000FF00) >> 8; // flags
     channel->m_bytes[channel->m_index++] = (flags & 0x000000FF);
@@ -654,26 +658,32 @@ void zen_BinaryEntityBuilder_writeField(zen_BinaryEntityBuilder_t* builder, uint
     channel->m_bytes[channel->m_index++] = (nameIndex & 0x000000FF);
     channel->m_bytes[channel->m_index++] = (descriptorIndex & 0x0000FF00) >> 8; // descriptor index
     channel->m_bytes[channel->m_index++] = (descriptorIndex & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (tableIndex & 0x0000FF00) >> 8; // table index
+    channel->m_bytes[channel->m_index++] = (tableIndex & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_writeFunctionCount(zen_BinaryEntityBuilder_t* builder, uint16_t functionCount) {
+void zen_BinaryEntityBuilder_writeFunctionsHeader(zen_BinaryEntityBuilder_t* builder,
+    uint16_t functionCount, uint16_t functionTableSize) {
     jtk_Assert_assertObject(builder, "The specified builder is null.");
     jtk_Assert_assertTrue(builder->m_activeChannelIndex >= 0, "Please activate a channel before emitting instructions.");
 
     zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(builder->m_channels, builder->m_activeChannelIndex);
-    zen_DataChannel_requestCapacity(channel, 2);
+    zen_DataChannel_requestCapacity(channel, 4);
 
     channel->m_bytes[channel->m_index++] = (functionCount & 0x0000FF00) >> 8; // function count
     channel->m_bytes[channel->m_index++] = (functionCount & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (functionTableSize & 0x0000FF00) >> 8; // function table size
+    channel->m_bytes[channel->m_index++] = (functionTableSize & 0x000000FF);
 }
 
-void zen_BinaryEntityBuilder_writeFunction(zen_BinaryEntityBuilder_t* builder, uint16_t nameIndex, uint16_t descriptorIndex,
-    uint16_t flags) {
+void zen_BinaryEntityBuilder_writeFunction(zen_BinaryEntityBuilder_t* builder,
+    uint16_t flags, uint16_t nameIndex, uint16_t descriptorIndex,
+    uint16_t tableIndex) {
     jtk_Assert_assertObject(builder, "The specified builder is null.");
     jtk_Assert_assertTrue(builder->m_activeChannelIndex >= 0, "Please activate a channel before emitting instructions.");
 
     zen_DataChannel_t* channel = (zen_DataChannel_t*)jtk_ArrayList_getValue(builder->m_channels, builder->m_activeChannelIndex);
-    zen_DataChannel_requestCapacity(channel, 6);
+    zen_DataChannel_requestCapacity(channel, 8);
 
     channel->m_bytes[channel->m_index++] = (flags & 0x0000FF00) >> 8; // flags
     channel->m_bytes[channel->m_index++] = (flags & 0x000000FF);
@@ -681,6 +691,8 @@ void zen_BinaryEntityBuilder_writeFunction(zen_BinaryEntityBuilder_t* builder, u
     channel->m_bytes[channel->m_index++] = (nameIndex & 0x000000FF);
     channel->m_bytes[channel->m_index++] = (descriptorIndex & 0x0000FF00) >> 8; // descriptor index
     channel->m_bytes[channel->m_index++] = (descriptorIndex & 0x000000FF);
+    channel->m_bytes[channel->m_index++] = (tableIndex & 0x0000FF00) >> 8; // table index
+    channel->m_bytes[channel->m_index++] = (tableIndex & 0x000000FF);
 }
 
 /* The localVariableCount and maxStackSize are in terms of 4-m_bytes. Therefore,

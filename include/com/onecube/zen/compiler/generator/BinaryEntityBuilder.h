@@ -230,7 +230,7 @@ void zen_BinaryEntityBuilder_writeAttributeCount(zen_BinaryEntityBuilder_t* buil
 /**
  * @memberof BinaryEntityBuilder
  */
-void zen_BinaryEntityBuilder_writeFieldCount(zen_BinaryEntityBuilder_t* builder, uint16_t fieldCount);
+void zen_BinaryEntityBuilder_writeFieldsHeader(zen_BinaryEntityBuilder_t* builder, uint16_t fieldCount);
 
 /**
  * @memberof BinaryEntityBuilder
@@ -243,7 +243,7 @@ void zen_BinaryEntityBuilder_writeField(zen_BinaryEntityBuilder_t* builder, uint
 /**
  * @memberof BinaryEntityBuilder
  */
-void zen_BinaryEntityBuilder_writeFunctionCount(zen_BinaryEntityBuilder_t* builder, uint16_t functionCount);
+void zen_BinaryEntityBuilder_writeFunctionsHeader(zen_BinaryEntityBuilder_t* builder, uint16_t functionCount);
 
 /**
  * @memberof BinaryEntityBuilder

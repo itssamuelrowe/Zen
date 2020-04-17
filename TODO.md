@@ -1,11 +1,25 @@
-  * Implement a wildcard search
- * Implement virtual function tables, static function tables, instance field tables, and static field tables.
+ * Implement static function tables
+ * Implement virtual function tables
+ * Implement instance field tables
+ * Implement static field tables.
  * Native code should be able throw and catch exceptions.
- * Implement line numbers for exceptions.
  * Generate default constructors when no constructor is provided.
+ * Hexadecimal integer literals are not working
  * Move semantic errors from the code generator to definition and resolution phases.
  * Use symbol->m_name instead of symbol->m_context.as_Class.qualifiedName
-  * Hexadecimal integer literals are not working
+ * Implement decimal values!
+ * Implement the logical operators
+ * Function should return null if none is provided
+ * Throw an exception when dividing by zero.
+ * Implement the array function.
+ * Implement standard packages
+
+
+
+
+
+ * Implement a wildcard search
+ * Implement line numbers for exceptions.
  * The compiler generates error for
 ```
 class Example
@@ -29,21 +43,16 @@ class Example
  * Change invoke function pointers for native functions to accept variable arguments.
  * Change zen_Object_t from structure to uint8_t*
  * Implement hash code caching for strings
- * Remove two level caching for entity loader.
- * Remove usage of Tape to improve performance.
- * Implement decimal values!
- * Implement the logical operators
  * Implement the compound assignment operators
- * Throw an exception when dividing by zero.
  * Implement continue statement
  * Change the function keyword to define. Functions should be referenced as methods.
  * Escape sequences!
- * Function should return null if none is provided
  * Function overloading
  * Call other constructors
  * Implement printf()
  * Implement @Property
  * Implicit classes created from functions declared in compilation unit cannot be instantiated.
+ * Throw exception when private members are accessed
 
  Python: 0.153s, Zen: 0.744s, JavaScript: 0.273s
  Python: 0.292s (2.64x faster), Zen: 0.773s, JavaScript: 0.319s (2.42x faster)

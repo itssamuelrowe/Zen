@@ -643,7 +643,7 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
     /* Retrieve the field count. */
     int32_t fieldCount = jtk_ArrayList_getSize(generator->m_fields);
     /* Write the field count. */
-    zen_BinaryEntityBuilder_writeFieldCount(generator->m_builder, fieldCount);
+    zen_BinaryEntityBuilder_writeFieldsHeader(generator->m_builder, fieldCount);
 
     if (generator->m_compiler->m_dumpInstructions) {
         /* Log the constant pool details, including the number of entries and the trends
@@ -689,7 +689,7 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
     /* Retrieve the function count. */
     int32_t functionCount = jtk_ArrayList_getSize(generator->m_functions);
     /* Write the function count. */
-    zen_BinaryEntityBuilder_writeFunctionCount(generator->m_builder, functionCount);
+    zen_BinaryEntityBuilder_writeFunctionsHeader(generator->m_builder, functionCount);
     /* Log the function count. */
     jtk_Logger_debug(logger, "Entity has %d functions.", functionCount);
 

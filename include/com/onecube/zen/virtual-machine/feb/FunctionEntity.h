@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2020 Samuel Rowe
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -50,6 +50,13 @@ struct zen_FunctionEntity_t {
      * an UTF-8 entry which represents the descriptor of this function.
      */
     uint16_t m_descriptorIndex;
+
+    /**
+     * A valid index into the function table in the enclosing class.
+     * For virtual functions and final functions, the index is not unique.
+     * But it is always unique for static functions.
+     */
+    uint16_t m_tableIndex;
 
     zen_AttributeTable_t m_attributeTable;
 };

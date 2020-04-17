@@ -329,6 +329,7 @@ void zen_SymbolLoader_setIgnoreCorruptEntity(zen_SymbolLoader_t* loader,
 #define ZEN_FEB_HEADER_SIZE 12
 
 void zen_SymbolLoader_parseConstantPool(zen_SymbolLoader_t* loader) {
+    jtk_Logger_t* logger = loader->m_compiler->m_logger;
     zen_ConstantPool_t* constantPool = &loader->m_constantPool;
     constantPool->m_size = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
         (loader->m_bytes[loader->m_index++] & 0xFF);
@@ -442,7 +443,7 @@ void zen_SymbolLoader_parseConstantPool(zen_SymbolLoader_t* loader) {
 
                 constantPool->m_entries[i] = constantPoolUtf8;
 
-                jtk_Logger_debug(logger, "Parsed constant pool entry `zen_ConstantPoolUtf8_t`, stored at index %d.", index);
+                // jtk_Logger_debug(logger, "Parsed constant pool entry `zen_ConstantPoolUtf8_t`, stored at index %d.", index);
 
                 break;
             }
@@ -469,12 +470,15 @@ void zen_SymbolLoader_parseConstantPool(zen_SymbolLoader_t* loader) {
                     (loader->m_bytes[loader->m_index++] & 0xFF);
                 uint16_t nameIndex = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
                     (loader->m_bytes[loader->m_index++] & 0xFF);
+                uint16_t tableIndex = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
+                    (loader->m_bytes[loader->m_index++] & 0xFF);
 
                 zen_ConstantPoolFunction_t* constantPoolFunction = jtk_Memory_allocate(zen_ConstantPoolFunction_t, 1);
                 constantPoolFunction->m_tag = ZEN_CONSTANT_POOL_TAG_FUNCTION;
                 constantPoolFunction->m_classIndex = classIndex;
                 constantPoolFunction->m_descriptorIndex = descriptorIndex;
                 constantPoolFunction->m_nameIndex = nameIndex;
+                constantPoolFunction->m_tableIndex = tableIndex;
 
                 constantPool->m_entries[i] = constantPoolFunction;
 
@@ -549,6 +553,10 @@ void zen_SymbolLoader_parseField(zen_SymbolLoader_t* loader) {
     uint16_t descriptorIndex = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
         (loader->m_bytes[loader->m_index++] & 0xFF);
 
+    // Table Index
+    uint16_t tableIndex = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
+        (loader->m_bytes[loader->m_index++] & 0xFF);
+
     // Define field
 
     // Skip attribute table
@@ -581,6 +589,10 @@ void zen_SymbolLoader_parseFunction(zen_SymbolLoader_t* loader) {
         (loader->m_bytes[loader->m_index++] & 0xFF);
     zen_ConstantPoolUtf8_t* descriptor = loader->m_constantPool.m_entries[descriptorIndex];
 
+    /* NOTE: Parameter threshold set by a statically typed language prevents
+     * a dynamically typed language such as Zen from declaring functions with
+     * variable parameters.
+     */
     uint16_t parameterThreshold = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
         (loader->m_bytes[loader->m_index++] & 0xFF);
 
@@ -687,6 +699,8 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* loader, uint8_t* bytes,
                  */
                 uint16_t fieldCount = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
                     (loader->m_bytes[loader->m_index++] & 0xFF);
+                uint16_t fieldTableSize = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
+                    (loader->m_bytes[loader->m_index++] & 0xFF);
                 int32_t j;
                 for (j = 0; j < fieldCount; j++) {
                     zen_SymbolLoader_parseField(loader);
@@ -697,6 +711,8 @@ zen_Symbol_t* zen_SymbolLoader_parse(zen_SymbolLoader_t* loader, uint8_t* bytes,
                  */
 
                 uint16_t functionCount = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
+                    (loader->m_bytes[loader->m_index++] & 0xFF);
+                uint16_t functionTableSize = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
                     (loader->m_bytes[loader->m_index++] & 0xFF);
                 int32_t k;
                 for (k = 0; k < functionCount; k++) {
