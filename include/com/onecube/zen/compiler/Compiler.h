@@ -55,6 +55,7 @@ struct zen_Compiler_t {
     zen_SymbolLoader_t* m_symbolLoader;
     jtk_HashMap_t* m_repository;
     jtk_ArrayList_t* m_trash;
+    bool m_coreApi;
 };
 
 /**

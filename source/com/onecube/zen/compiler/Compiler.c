@@ -194,6 +194,7 @@ zen_Compiler_t* zen_Compiler_new() {
     compiler->m_symbolLoader = zen_SymbolLoader_new(compiler);
     compiler->m_repository = jtk_HashMap_new(stringObjectAdapter, NULL);
     compiler->m_trash = NULL;
+    compiler->m_coreApi = true;
 #ifdef JTK_LOGGER_DISABLE
     compiler->m_logger = NULL;
 #else
@@ -571,17 +572,20 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
     int32_t i;
     for (i = 1; i < length; i++) {
         if (arguments[i][0] == '-') {
-            if (strcmp(arguments[i], "--internal-dump-tokens") == 0) {
+            if (strcmp(arguments[i], "--dump-tokens") == 0) {
                 compiler->m_dumpTokens = true;
             }
-            else if (strcmp(arguments[i], "--internal-dump-nodes") == 0) {
+            else if (strcmp(arguments[i], "--dump-nodes") == 0) {
                 compiler->m_dumpNodes = true;
             }
-            else if (strcmp(arguments[i], "--internal-footprint") == 0) {
+            else if (strcmp(arguments[i], "--footprint") == 0) {
                 compiler->m_footprint = true;
             }
-            else if (strcmp(arguments[i], "--internal-dump-instructions") == 0) {
+            else if (strcmp(arguments[i], "--dump-instructions") == 0) {
                 compiler->m_dumpInstructions = true;
+            }
+            else if (strcmp(arguments[i], "--core-api") == 0) {
+                compiler->m_coreApi = true;
             }
             else if (strcmp(arguments[i], "--log") == 0) {
                 if ((i + 1) < length) {

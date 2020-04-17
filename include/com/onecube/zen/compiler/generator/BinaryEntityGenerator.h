@@ -148,6 +148,10 @@ zen_BinaryEntityGenerator_t* zen_BinaryEntityGenerator_new(zen_Compiler_t* compi
  */
 void zen_BinaryEntityGenerator_delete(zen_BinaryEntityGenerator_t* generator);
 
+// Initialize
+
+void zen_BinaryEntityGenerator_initializeCPFCache(zen_BinaryEntityGenerator_t* generator);
+
 // Generate
 
 /**
