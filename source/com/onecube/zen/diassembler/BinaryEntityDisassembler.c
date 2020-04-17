@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 Samuel Rowe
+ * Copyright 2017-2020 Samuel Rowe
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,9 +64,11 @@ zen_BinaryEntityDisassembler_t* zen_BinaryEntityDisassembler_new(
     disassembler->m_constantPool.m_entries = NULL;
     disassembler->m_constantPool.m_size = 0;
 
-    while (jtk_Iterator_hasNext(entityDirectoryIterator)) {
-        uint8_t* directory = (uint8_t*)jtk_Iterator_getNext(entityDirectoryIterator);
-        zen_BinaryEntityDisassembler_addDirectory(disassembler, directory, -1);
+    if (entityDirectoryIterator != NULL) {
+        while (jtk_Iterator_hasNext(entityDirectoryIterator)) {
+            uint8_t* directory = (uint8_t*)jtk_Iterator_getNext(entityDirectoryIterator);
+            zen_BinaryEntityDisassembler_addDirectory(disassembler, directory, -1);
+        }
     }
 
     return disassembler;
@@ -74,8 +76,22 @@ zen_BinaryEntityDisassembler_t* zen_BinaryEntityDisassembler_new(
 
 // Destructor
 
+void zen_BinaryEntityDisassembler_destroyConstantPool(zen_BinaryEntityDisassembler_t* disassembler) {
+    zen_ConstantPool_t* constantPool = &disassembler->m_constantPool;
+    int32_t i;
+    for (i = 1; i <= constantPool->m_size; i++) {
+        zen_ConstantPoolEntry_t* entry = (zen_ConstantPoolEntry_t*)constantPool->m_entries[i];
+        if (entry->m_tag == ZEN_CONSTANT_POOL_TAG_UTF8) {
+            zen_ConstantPoolUtf8_t* utf8Entry = (zen_ConstantPoolUtf8_t*)entry;
+            jtk_Memory_deallocate(utf8Entry->m_bytes);
+        }
+        jtk_Memory_deallocate(entry);
+    }
+    jtk_Memory_deallocate(disassembler->m_constantPool.m_entries);
+}
+
 void zen_BinaryEntityDisassembler_delete(zen_BinaryEntityDisassembler_t* disassembler) {
-    jtk_Assert_assertObject(disassembler, "The specified class loader is null.");
+    jtk_Assert_assertObject(disassembler, "The specified class disassembler is null.");
 
     int32_t size = jtk_DoublyLinkedList_getSize(disassembler->m_directories);
     jtk_Iterator_t* iterator = jtk_DoublyLinkedList_getIterator(disassembler->m_directories);
@@ -93,7 +109,7 @@ void zen_BinaryEntityDisassembler_delete(zen_BinaryEntityDisassembler_t* disasse
 
 bool zen_BinaryEntityDisassembler_addDirectory(zen_BinaryEntityDisassembler_t* disassembler,
     const uint8_t* directory, int32_t directorySize) {
-    jtk_Assert_assertObject(disassembler, "The specified entity loader is null.");
+    jtk_Assert_assertObject(disassembler, "The specified entity disassembler is null.");
     jtk_Assert_assertObject(directory, "The specified directory is null.");
 
     jtk_Path_t* path = jtk_Path_newFromStringEx(directory, directorySize);
@@ -178,6 +194,16 @@ void zen_BinaryEntityDisassembler_disassemble(zen_BinaryEntityDisassembler_t* di
     disassembler->m_size = size;
 
     zen_BinaryEntityDisassembler_disassembleEntity(disassembler);
+
+    /* Reset the disassembler. */
+    disassembler->m_index = 0;
+    disassembler->m_bytes = NULL;
+    disassembler->m_size = 0;
+    if (disassembler->m_bytes != NULL) {
+        zen_BinaryEntityDisassembler_destroyConstantPool(disassembler);
+    }
+    disassembler->m_constantPool.m_size = 0;
+    disassembler->m_constantPool.m_entries = NULL;
 }
 
 /* Disassemble Constant Pool */
@@ -672,7 +698,7 @@ void zen_BinaryEntityDisassembler_disassembleField(zen_BinaryEntityDisassembler_
 
 void zen_BinaryEntityDisassembler_disassembleClass(zen_BinaryEntityDisassembler_t* disassembler,
     const uint8_t* descriptor, int32_t descriptorSize) {
-    jtk_Assert_assertObject(disassembler, "The specified entity loader is null.");
+    jtk_Assert_assertObject(disassembler, "The specified entity disassembler is null.");
     jtk_Assert_assertObject(descriptor, "The specified descriptor is null.");
 
     int32_t entityNameSize;
@@ -704,7 +730,7 @@ void zen_BinaryEntityDisassembler_disassembleClass(zen_BinaryEntityDisassembler_
             jtk_PathHandle_t* entityPathHandle = jtk_PathHandle_newFromPath(entityPath);
             if (entityPathHandle != NULL) {
                 if (jtk_PathHandle_isRegularFile(entityPathHandle)) {
-                    // NOTE: The loader should not maintain any reference to entity path.
+                    // NOTE: The disassembler should not maintain any reference to entity path.
                     jtk_FileInputStream_t* fileInputStream = jtk_FileInputStream_newFromHandle(entityPathHandle);
                     if (fileInputStream != NULL) {
                         jtk_BufferedInputStream_t* bufferedInputStream = jtk_BufferedInputStream_newEx(

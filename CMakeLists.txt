@@ -182,6 +182,15 @@ set (
     ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/Zvm.c
 )
 
+
+set (
+    ZEN_DISASSEMBLER_SOURCE
+
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/virtual-machine/feb/Instruction.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/disassembler/BinaryEntityDisassembler.c
+    ${PROJECT_SOURCE_DIR}/source/com/onecube/zen/DisassemblerTool.c
+)
+
 # Compile
 
 set(CMAKE_VERBOSE_MAKEFILE off)
@@ -205,3 +214,10 @@ target_include_directories(zvm SYSTEM PUBLIC ${JTK_INCLUDE_DIRS})
 #target_compile_options(zvm PUBLIC -O3 -DNDEBUG -DJTK_LOGGER_DISABLE -w ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
 target_compile_options(zvm PUBLIC -g -w ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
 # target_compile_options(zvm PUBLIC -g -Wall ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
+
+add_executable(zd ${ZEN_COMMON_SOURCE} ${ZEN_DISASSEMBLER_SOURCE})
+target_link_libraries(zd ${JTK_LIBRARIES} -lm)
+target_include_directories(zd SYSTEM PUBLIC ${JTK_INCLUDE_DIRS})
+#target_compile_options(zd PUBLIC -O3 -DNDEBUG -DJTK_LOGGER_DISABLE -w ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
+target_compile_options(zd PUBLIC -g -w ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
+# target_compile_options(zd PUBLIC -g -Wall ${JTK_CFLAGS} ${JTK_CFLAGS_OTHER})
