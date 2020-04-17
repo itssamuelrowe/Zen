@@ -640,6 +640,9 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
                     invalidCommandLine = true;
                 }
             }
+            else {
+                printf("[error] Unknown flag `%s`\n", arguments[i]);
+            }
         }
         else {
             // jtk_String_t* path = jtk_String_new(arguments[i]);

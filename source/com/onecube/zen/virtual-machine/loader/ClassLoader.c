@@ -139,7 +139,6 @@ zen_Class_t* zen_ClassLoader_findClassEx(zen_ClassLoader_t* classLoader,
     return class0;
 }
 
-
 zen_Class_t* zen_ClassLoader_findClass(zen_ClassLoader_t* classLoader,
     const uint8_t* descriptor, int32_t descriptorSize) {
     jtk_Assert_assertObject(classLoader, "The specified class loader is null.");

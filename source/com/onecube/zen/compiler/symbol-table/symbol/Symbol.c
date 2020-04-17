@@ -174,11 +174,11 @@ bool zen_Symbol_isStatic(zen_Symbol_t* symbol) {
     return (symbol->m_modifiers & ZEN_MODIFIER_STATIC) != 0;
 }
 
-
 zen_FunctionSignature_t* zen_Symbol_getFunctionSignature(zen_Symbol_t* symbol,
     int32_t argumentCount) {
     zen_FunctionSymbol_t* functionSymbol = &symbol->m_context.m_asFunction;
-    if (argumentCount >= functionSymbol->m_parameterThreshold) {
+    if ((argumentCount >= functionSymbol->m_parameterThreshold) &&
+        (functionSymbol->m_parameterThreshold >= 0)) {
         argumentCount = functionSymbol->m_parameterThreshold;
     }
 

@@ -419,7 +419,9 @@ void zen_SymbolResolutionListener_onEnterCompilationUnit(zen_ASTListener_t* astL
     zen_Scope_t* scope = zen_ASTAnnotations_get(listener->m_scopes, node);
     zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
 
-    zen_SymbolResolutionListener_applyDefaultImports(listener);
+    if (!listener->m_compiler->m_coreApi) {
+        zen_SymbolResolutionListener_applyDefaultImports(listener);
+    }
 }
 
 void zen_SymbolResolutionListener_onExitCompilationUnit(zen_ASTListener_t* astListener,
