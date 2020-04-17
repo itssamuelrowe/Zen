@@ -29,7 +29,23 @@
 #include <jtk/io/BufferedInputStream.h>
 #include <jtk/io/InputStream.h>
 
-#include <com/onecube/zen/disassembler/disassembler.h>
+#include <com/onecube/zen/disassembler/BinaryEntityDisassembler.h>
+
+#include <com/onecube/zen/virtual-machine/feb/BinaryEntityFormat.h>
+#include <com/onecube/zen/virtual-machine/feb/Instruction.h>
+#include <com/onecube/zen/virtual-machine/feb/ByteCode.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPool.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolClass.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolDouble.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolField.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFloat.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolFunction.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolInteger.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolLong.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolString.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolTag.h>
+#include <com/onecube/zen/virtual-machine/feb/constant-pool/ConstantPoolUtf8.h>
+#include <com/onecube/zen/virtual-machine/feb/attribute/PredefinedAttribute.h>
 
 /*******************************************************************************
  * disassembler                                                    *
@@ -37,13 +53,16 @@
 
 // Constructor
 
-zen_BinaryEntityDisassembler_t* zen_BinaryEntityDisassembler_new(zen_VirtualMachine_t* virtualMachine,
+zen_BinaryEntityDisassembler_t* zen_BinaryEntityDisassembler_new(
     jtk_Iterator_t* entityDirectoryIterator) {
     jtk_ObjectAdapter_t* stringObjectAdapter = jtk_CStringObjectAdapter_getInstance();
 
     zen_BinaryEntityDisassembler_t* disassembler = jtk_Memory_allocate(zen_BinaryEntityDisassembler_t, 1);
     disassembler->m_directories = jtk_DoublyLinkedList_new();
-    disassembler->m_flags = ZEN_ENTITY_LOADER_FLAG_PRIORITIZE_DIRECTORIES;
+    disassembler->m_index = 0;
+    disassembler->m_bytes = NULL;
+    disassembler->m_constantPool.m_entries = NULL;
+    disassembler->m_constantPool.m_size = 0;
 
     while (jtk_Iterator_hasNext(entityDirectoryIterator)) {
         uint8_t* directory = (uint8_t*)jtk_Iterator_getNext(entityDirectoryIterator);
@@ -153,72 +172,13 @@ jtk_ByteArray_t* jtk_InputStreamHelper_toArray(jtk_InputStream_t* stream) {
     return array;
 }
 
-void zen_BinaryEntityDisassembler_disassemble(zen_BinaryEntityDisassembler_t* disassembler) {
+void zen_BinaryEntityDisassembler_disassemble(zen_BinaryEntityDisassembler_t* disassembler,
+    uint8_t* bytes, int32_t size) {
     disassembler->m_bytes = bytes;
     disassembler->m_size = size;
 
     zen_BinaryEntityDisassembler_disassembleEntity(disassembler);
 }
-
-/* Disassemble Entity File */
-
-zen_EntityFile_t* zen_BinaryEntityDisassembler_disassembleEntityFile(zen_BinaryEntityDisassembler_t* disassembler) {
-    jtk_Assert_assertObject(disassembler, "The specified binary entity disassembler is null.");
-
-    zen_EntityFile_t* entityFile = jtk_Memory_allocate(zen_EntityFile_t, 1);
-    disassembler->m_entityFile = entityFile;
-
-    if (disassembler->m_index + 12 < disassembler->m_size) {
-        /* The magic number is a simple measure to identify corrupt streams.
-         * It is represented with four bytes, that is, a 32-bit integer.
-         *
-         * Read the magic number and verify whether it is equal to 0xFEB72000.
-         */
-        uint32_t magicNumber = ((disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 24) |
-            ((disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 16) |
-            ((disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
-            (disassembler->m_bytes[disassembler->m_index++] & 0xFF);
-
-        if (magicNumber == ZEN_BINARY_ENTITY_FORMAT_MAGIC_NUMBER) {
-            entityFile->m_magicNumber = magicNumber;
-
-            uint16_t majorVersion = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
-                (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-            entityFile->m_version.m_majorVersion = majorVersion;
-
-            uint16_t minorVersion = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
-                (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-            entityFile->m_version.m_minorVersion = minorVersion;
-
-            /* Make sure that the major and minor version numbers are recognized by
-             * the binary entity disassembler.
-             */
-            if ((majorVersion < ZEN_BINARY_ENTITY_FORMAT_MAJOR_VERSION) ||
-                ((majorVersion == ZEN_BINARY_ENTITY_FORMAT_MAJOR_VERSION) &&
-                 (minorVersion <= ZEN_BINARY_ENTITY_FORMAT_MINOR_VERSION))) {
-                uint16_t flags = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
-                (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-                entityFile->m_flags = flags;
-
-                zen_BinaryEntityDisassembler_disassembleConstantPool(disassembler);
-                zen_BinaryEntityDisassembler_disassembleEntity(disassembler);
-            }
-            else {
-                // Error: Virtual machine version is lesser than the binary entity file version.
-            }
-        }
-        else {
-            // Error: Unknown magic number
-        }
-    }
-
-    return entityFile;
-}
-
-/* NOTE: The following functions have been sorted with respect to the specification
- * of the Binary Entity Format. This is simply a convenience for the developers.
- * It holds no special meaning or whatsoever.
- */
 
 /* Disassemble Constant Pool */
 
@@ -231,7 +191,7 @@ void zen_BinaryEntityDisassembler_disassembleConstantPool(
     uint16_t size = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
                 (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
 
-    zen_ConstantPool_t* constantPool = &disassembler->m_entityFile->m_constantPool;
+    zen_ConstantPool_t* constantPool = &disassembler->m_constantPool;
     constantPool->m_size = size;
     constantPool->m_entries = jtk_Memory_allocate(zen_ConstantPoolEntry_t*, size + 1);
     constantPool->m_entries[0] = NULL;
@@ -330,7 +290,7 @@ void zen_BinaryEntityDisassembler_disassembleConstantPool(
                  */
 
                 uint8_t* bytes = jtk_Memory_allocate(uint8_t, length + 1);
-                bytes[length] = '\0';
+                disassembler->m_bytes[length] = '\0';
                 jtk_Arrays_copyEx_b(disassembler->m_bytes, disassembler->m_size, disassembler->m_index,
                     bytes, length, 0, length);
                 disassembler->m_index += length;
@@ -451,7 +411,7 @@ void zen_BinaryEntityDisassembler_disassembleEntity(zen_BinaryEntityDisassembler
 
     }
 
-    zen_BinaryEntityDisassembler_disassembleAttributeTable(disassembler, &entity ->m_attributeTable);
+    zen_BinaryEntityDisassembler_disassembleAttributeTable(disassembler);
 
     // fieldCount fieldEntity*
 
@@ -484,12 +444,12 @@ void zen_BinaryEntityDisassembler_disassembleEntity(zen_BinaryEntityDisassembler
 /* Disassemble Attribute Table */
 
 void zen_BinaryEntityDisassembler_disassembleAttributeTable(
-    zen_BinaryEntityDisassembler_t* disassembler, zen_AttributeTable_t* attributeTable) {
+    zen_BinaryEntityDisassembler_t* disassembler) {
     jtk_Assert_assertObject(disassembler, "The specified binary entity disassembler is null.");
 
     uint16_t size = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    printf("[Attributes]\nsize=%d\n", size)
+    printf("[Attributes]\nsize=%d\n", size);
 
     for (int32_t i = 0; i < size; i++) {
         uint16_t nameIndex = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
@@ -500,7 +460,7 @@ void zen_BinaryEntityDisassembler_disassembleAttributeTable(
             (disassembler->m_bytes[disassembler->m_index++] & 0xFF);
 
         zen_ConstantPoolUtf8_t* nameConstantPoolUtf8 =
-            (zen_ConstantPoolUtf8_t*)disassembler->m_entries[nameIndex];
+            (zen_ConstantPoolUtf8_t*)disassembler->m_constantPool.m_entries[nameIndex];
 
         printf("[Attribute] %s\nnameIndex=%d, length=%d\n",
             nameConstantPoolUtf8->m_bytes, nameIndex, length);
@@ -522,7 +482,7 @@ void zen_BinaryEntityDisassembler_disassembleAttributeTable(
 
 /* Disassemble Instruction Attribute */
 
-zen_InstructionAttribute_t* zen_BinaryEntityDisassembler_disassembleInstructionAttribute(
+void zen_BinaryEntityDisassembler_disassembleInstructionAttribute(
     zen_BinaryEntityDisassembler_t* disassembler, uint16_t nameIndex, uint32_t length) {
     jtk_Assert_assertObject(disassembler, "The specified binary entity disassembler is null.");
 
@@ -562,13 +522,13 @@ zen_InstructionAttribute_t* zen_BinaryEntityDisassembler_disassembleInstructionA
                 case ZEN_BYTE_CODE_JUMP_NEN_A:
                 case ZEN_BYTE_CODE_JUMP:
                 {
-                    uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                    uint16_t offset = (disassembler->m_bytes[++i] << 8) | disassembler->m_bytes[++i];
                     printf("offset=%d\n", offset);
                     break;
                 }
 
                 case ZEN_BYTE_CODE_INCREMENT_I: {
-                    printf("index=%d, constant=%d", bytes[++i], bytes[++i]);
+                    printf("index=%d, constant=%d", disassembler->m_bytes[++i], disassembler->m_bytes[++i]);
                     break;
                 }
 
@@ -583,7 +543,7 @@ zen_InstructionAttribute_t* zen_BinaryEntityDisassembler_disassembleInstructionA
                 case ZEN_BYTE_CODE_STORE_STATIC_FIELD:
                 case ZEN_BYTE_CODE_STORE_INSTANCE_FIELD:
                 {
-                    uint16_t index = (bytes[++i] << 8) | bytes[++i];
+                    uint16_t index = (disassembler->m_bytes[++i] << 8) | disassembler->m_bytes[++i];
                     printf("index=%d", index);
                     break;
                 }
@@ -603,25 +563,25 @@ zen_InstructionAttribute_t* zen_BinaryEntityDisassembler_disassembleInstructionA
                 case ZEN_BYTE_CODE_STORE_D:
                 case ZEN_BYTE_CODE_STORE_A:
                 {
-                    printf("index=%d", bytes[++i]);
+                    printf("index=%d", disassembler->m_bytes[++i]);
                     break;
                 }
 
                 case ZEN_BYTE_CODE_NEW_ARRAY_AN: {
-                    uint16_t index = (bytes[++i] << 8) | bytes[++i];
-                    uint8_t dimensions = bytes[++i];
+                    uint16_t index = (disassembler->m_bytes[++i] << 8) | disassembler->m_bytes[++i];
+                    uint8_t dimensions = disassembler->m_bytes[++i];
                     printf("index=%d, dimensions=%d\n", index, dimensions);
                     break;
                 }
 
 
                 case ZEN_BYTE_CODE_PUSH_B: {
-                    printf("value=%d\n", bytes[++i]);
+                    printf("value=%d\n", disassembler->m_bytes[++i]);
                     break;
                 }
 
                 case ZEN_BYTE_CODE_PUSH_S: {
-                    uint16_t value = (bytes[++i] << 8) | bytes[++i];
+                    uint16_t value = (disassembler->m_bytes[++i] << 8) | disassembler->m_bytes[++i];
                     printf("value=%d\n", value);
                     break;
                 }
@@ -633,16 +593,13 @@ zen_InstructionAttribute_t* zen_BinaryEntityDisassembler_disassembleInstructionA
         }
     }
     zen_BinaryEntityDisassembler_disassembleExceptionTable(disassembler);
-
-    return instructionAttribute;
 }
 
 /* Disassemble Exception Table */
 
-void zen_BinaryEntityDisassembler_disassembleExceptionTable(zen_BinaryEntityDisassembler_t* disassembler,
-    zen_ExceptionTable_t* exceptionTable) {
+void zen_BinaryEntityDisassembler_disassembleExceptionTable(
+        zen_BinaryEntityDisassembler_t* disassembler) {
     jtk_Assert_assertObject(disassembler, "The specified binary entity disassembler is null.");
-    jtk_Assert_assertObject(exceptionTable, "The specified exception table is null.");
 
     uint16_t size = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
@@ -712,7 +669,6 @@ void zen_BinaryEntityDisassembler_disassembleField(zen_BinaryEntityDisassembler_
     printf("flags=%d, nameIndex=%d, descriptorIndex=%d, parameterThreshold=%d, tableIndex=%d\n",
         flags, nameIndex, descriptorIndex, parameterThreshold, tableIndex);
 }
-
 
 void zen_BinaryEntityDisassembler_disassembleClass(zen_BinaryEntityDisassembler_t* disassembler,
     const uint8_t* descriptor, int32_t descriptorSize) {
@@ -785,21 +741,4 @@ void zen_BinaryEntityDisassembler_disassembleClass(zen_BinaryEntityDisassembler_
     if (!found) {
         printf("[error] Could not find class '%s'.\n", descriptor);
     }
-}
-
-// Ignore Corrupt Entity
-
-bool zen_BinaryEntityDisassembler_shouldIgnoreCorruptEntity(zen_BinaryEntityDisassembler_t* disassembler) {
-    jtk_Assert_assertObject(disassembler, "The specified entity loader is null.");
-
-    return (disassembler->m_flags & ZEN_ENTITY_LOADER_FLAG_IGNORE_CORRUPT_ENTITY) != 0;
-}
-
-void zen_BinaryEntityDisassembler_setIgnoreCorruptEntity(zen_BinaryEntityDisassembler_t* disassembler,
-    bool ignoreCorruptEntity) {
-    jtk_Assert_assertObject(disassembler, "The specified entity loader is null.");
-
-    disassembler->m_flags = ignoreCorruptEntity?
-        (disassembler->m_flags | ZEN_ENTITY_LOADER_FLAG_IGNORE_CORRUPT_ENTITY) :
-        (disassembler->m_flags & ~ZEN_ENTITY_LOADER_FLAG_IGNORE_CORRUPT_ENTITY);
 }
