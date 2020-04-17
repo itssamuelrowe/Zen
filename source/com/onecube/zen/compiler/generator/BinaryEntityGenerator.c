@@ -2899,6 +2899,31 @@ void zen_BinaryEntityGenerator_onExitConstantDeclarator(zen_ASTListener_t* astLi
 
 // assertStatement
 
+#define ZEN_BINARY_ENTITY_GENERATOR_CPF_COUNT 1
+#define ZEN_BINARY_ENTITY_GENERATOR_BOOLEAN_GET_VALUE 0
+
+uint16_t zen_Symbol_findFunctionIndex(zen_Symbol_t* symbol, const uint8_t* functionName,
+    int32_t functionNameSize, const uint8_t* descriptor, uint8_t* descriptorSize) {
+
+    zen_Symbol_t* function = zen_Scope_resolve(&symbol->m_context.m_asClass,
+        functionName);
+    zen_FunctionSignature_t* signature = zen_Symbol_getFunctionSignatureEx(
+        function, descriptor, descriptorSize);
+    return signature->m_tableIndex;
+}
+
+void zen_BinaryEntityGenerator_initializeCPFCache(zen_BinaryEntityGenerator_t* generator) {
+    generator->m_cpfIndexes = jtk_Memory_allocate(uint16_t, ZEN_BINARY_ENTITY_GENERATOR_CPF_COUNT);
+
+    // Boolean
+    zen_Symbol_t* booleanClass = zen_Compiler_resolveSymbol(generator->m_compiler,
+        "zen/core/Boolean", 16);
+     // TODO: "z:v", 3
+    generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_BOOLEAN_GET_VALUE] =
+        zen_Symbol_findFunctionIndex(booleanClass, "getValue", 8, "(zen/core/Object):v", 19);
+
+}
+
 /*
  * ALGORITHM TO GENERATE INSTRUCTIONS CORRESPONDING TO ASSERT STATEMENT
  *
@@ -2982,14 +3007,14 @@ void zen_BinaryEntityGenerator_onExitAssertStatement(zen_ASTListener_t* astListe
     uint16_t constructor1Index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
         generator->m_constantPoolBuilder, assertionErrorClassName,
         assertionErrorClassNameSize, constructor1Descriptor, constructor1DescriptorSize,
-        constructorName, constructorNameSize);
+        constructorName, constructorNameSize, 0);
 
     const uint8_t* constructor2Descriptor = "v:v";
     int32_t constructor2DescriptorSize = 3;
     uint16_t constructor2Index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
         generator->m_constantPoolBuilder, assertionErrorClassName,
         assertionErrorClassNameSize, constructor2Descriptor, constructor2DescriptorSize,
-        constructorName, constructorNameSize);
+        constructorName, constructorNameSize, 0);
 
     /* Emit the load_static_field instruction. */
     zen_BinaryEntityBuilder_emitLoadStaticField(generator->m_builder,

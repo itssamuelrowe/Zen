@@ -125,6 +125,8 @@ struct zen_BinaryEntityGenerator_t {
     bool m_classPrepared;
     uint8_t* m_className;
     int32_t m_classNameSize;
+
+    uint16_t* m_cpfIndexes;
 };
 
 /**
