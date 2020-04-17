@@ -508,7 +508,8 @@ void zen_BinaryEntityDisassembler_disassembleAttributeTable(
         if (jtk_CString_equals(nameConstantPoolUtf8->m_bytes,
             nameConstantPoolUtf8->m_length, ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION,
             ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION_SIZE)) {
-            zen_BinaryEntityDisassembler_disassembleInstructionAttribute(disassembler);
+            zen_BinaryEntityDisassembler_disassembleInstructionAttribute(disassembler,
+                nameIndex, length);
         }
         else {
             /* Skip the bytes occupied by the unrecognized attribute. */
@@ -525,34 +526,113 @@ zen_InstructionAttribute_t* zen_BinaryEntityDisassembler_disassembleInstructionA
     zen_BinaryEntityDisassembler_t* disassembler, uint16_t nameIndex, uint32_t length) {
     jtk_Assert_assertObject(disassembler, "The specified binary entity disassembler is null.");
 
-    zen_InstructionAttribute_t* instructionAttribute = jtk_Memory_allocate(zen_InstructionAttribute_t, 1);
-    instructionAttribute->m_nameIndex = nameIndex;
-    instructionAttribute->m_length = length;
-
     uint16_t maxStackSize = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    instructionAttribute->m_maxStackSize = maxStackSize;
-
     uint16_t localVariableCount = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    instructionAttribute->m_localVariableCount = localVariableCount;
-
     uint32_t instructionLength = ((disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 24) |
         ((disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 16) |
         ((disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF);
-    instructionAttribute->m_instructionLength = instructionLength;
+    printf("maxStackSize = %d, localVariableCount = %d, instructionLength = %d\n",
+        maxStackSize, localVariableCount, instructionLength);
 
-    uint8_t* instructions = NULL;
-    if (instructionLength > 0) {
-        instructions = jtk_Memory_allocate(uint8_t, instructionLength);
-        jtk_Arrays_copyEx_b(disassembler->m_bytes, disassembler->m_size, disassembler->m_index,
-            instructions, instructionLength, 0, instructionLength);
-        disassembler->m_index += instructionLength;
+    int32_t i;
+    for (i = 0; i < instructionLength; i++) {
+        zen_Instruction_t* instruction = zen_Instruction_getInstance(disassembler->m_bytes[i]);
+        printf("#%d %s", i, instruction->m_text);
+        if (instruction->m_argumentCount != 0) {
+            printf(" ");
+            switch (disassembler->m_bytes[i])  {
+                case ZEN_BYTE_CODE_JUMP_EQ0_I:
+                case ZEN_BYTE_CODE_JUMP_NE0_I:
+                case ZEN_BYTE_CODE_JUMP_LT0_I:
+                case ZEN_BYTE_CODE_JUMP_GT0_I:
+                case ZEN_BYTE_CODE_JUMP_GE0_I:
+                case ZEN_BYTE_CODE_JUMP_LE0_I:
+                case ZEN_BYTE_CODE_JUMP_EQ_I:
+                case ZEN_BYTE_CODE_JUMP_NE_I:
+                case ZEN_BYTE_CODE_JUMP_LT_I:
+                case ZEN_BYTE_CODE_JUMP_GT_I:
+                case ZEN_BYTE_CODE_JUMP_GE_I:
+                case ZEN_BYTE_CODE_JUMP_LE_I:
+                case ZEN_BYTE_CODE_JUMP_EQ_A:
+                case ZEN_BYTE_CODE_JUMP_NE_A:
+                case ZEN_BYTE_CODE_JUMP_EQN_A:
+                case ZEN_BYTE_CODE_JUMP_NEN_A:
+                case ZEN_BYTE_CODE_JUMP:
+                {
+                    uint16_t offset = (bytes[++i] << 8) | bytes[++i];
+                    printf("offset=%d\n", offset);
+                    break;
+                }
+
+                case ZEN_BYTE_CODE_INCREMENT_I: {
+                    printf("index=%d, constant=%d", bytes[++i], bytes[++i]);
+                    break;
+                }
+
+                case ZEN_BYTE_CODE_INVOKE_SPECIAL:
+                case ZEN_BYTE_CODE_INVOKE_VIRTUAL:
+                case ZEN_BYTE_CODE_INVOKE_DYNAMIC:
+                case ZEN_BYTE_CODE_INVOKE_STATIC:
+                case ZEN_BYTE_CODE_LOAD_INSTANCE_FIELD:
+                case ZEN_BYTE_CODE_LOAD_STATIC_FIELD:
+                case ZEN_BYTE_CODE_NEW:
+                case ZEN_BYTE_CODE_NEW_ARRAY_A:
+                case ZEN_BYTE_CODE_STORE_STATIC_FIELD:
+                case ZEN_BYTE_CODE_STORE_INSTANCE_FIELD:
+                {
+                    uint16_t index = (bytes[++i] << 8) | bytes[++i];
+                    printf("index=%d", index);
+                    break;
+                }
+
+                /* Load */
+
+                case ZEN_BYTE_CODE_LOAD_I:
+                case ZEN_BYTE_CODE_LOAD_L:
+                case ZEN_BYTE_CODE_LOAD_F:
+                case ZEN_BYTE_CODE_LOAD_D:
+                case ZEN_BYTE_CODE_LOAD_A:
+                case ZEN_BYTE_CODE_LOAD_CPR:
+                case ZEN_BYTE_CODE_NEW_ARRAY:
+                case ZEN_BYTE_CODE_STORE_I:
+                case ZEN_BYTE_CODE_STORE_L:
+                case ZEN_BYTE_CODE_STORE_F:
+                case ZEN_BYTE_CODE_STORE_D:
+                case ZEN_BYTE_CODE_STORE_A:
+                {
+                    printf("index=%d", bytes[++i]);
+                    break;
+                }
+
+                case ZEN_BYTE_CODE_NEW_ARRAY_AN: {
+                    uint16_t index = (bytes[++i] << 8) | bytes[++i];
+                    uint8_t dimensions = bytes[++i];
+                    printf("index=%d, dimensions=%d\n", index, dimensions);
+                    break;
+                }
+
+
+                case ZEN_BYTE_CODE_PUSH_B: {
+                    printf("value=%d\n", bytes[++i]);
+                    break;
+                }
+
+                case ZEN_BYTE_CODE_PUSH_S: {
+                    uint16_t value = (bytes[++i] << 8) | bytes[++i];
+                    printf("value=%d\n", value);
+                    break;
+                }
+
+                default: {
+                    print("[internal error] Control should not reach here.\n");
+                }
+            }
+        }
     }
-    instructionAttribute->m_instructions = instructions;
-
-    zen_BinaryEntityDisassembler_disassembleExceptionTable(disassembler, &(instructionAttribute->m_exceptionTable));
+    zen_BinaryEntityDisassembler_disassembleExceptionTable(disassembler);
 
     return instructionAttribute;
 }
