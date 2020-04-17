@@ -440,7 +440,7 @@ void zen_BinaryEntityDisassembler_disassembleEntity(zen_BinaryEntityDisassembler
     uint16_t superclassCount = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
 
-    printf("[Entity]\ntype = %d, flags = %d, reference = %d\nsuperclassCount = %d\n", type, flags, reference,
+    printf("[Entity]\ntype=%d, flags=%d, reference=%d\nsuperclassCount=%d\n", type, flags, reference,
         superclassCount);
 
     int32_t i;
@@ -459,7 +459,7 @@ void zen_BinaryEntityDisassembler_disassembleEntity(zen_BinaryEntityDisassembler
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
     uint16_t fieldTableSize = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    printf("[Fields]\nfieldCount = %d, fieldTableSize = %d\n", fieldCount, fieldTableSize);
+    printf("[Fields]\nfieldCount=%d, fieldTableSize=%d\n", fieldCount, fieldTableSize);
 
     int32_t j;
     for (j = 0; j < fieldCount; j++) {
@@ -472,7 +472,7 @@ void zen_BinaryEntityDisassembler_disassembleEntity(zen_BinaryEntityDisassembler
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
     uint16_t functionTableSize = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    printf("[Functions]\nfunctionCount = %d, functionTableSize = %d\n", functionCount,
+    printf("[Functions]\nfunctionCount=%d, functionTableSize=%d\n", functionCount,
         functionTableSize);
 
     int32_t k;
@@ -502,7 +502,7 @@ void zen_BinaryEntityDisassembler_disassembleAttributeTable(
         zen_ConstantPoolUtf8_t* nameConstantPoolUtf8 =
             (zen_ConstantPoolUtf8_t*)disassembler->m_entries[nameIndex];
 
-        printf("[Attribute] %s\nnameIndex = %d, length = %d\n",
+        printf("[Attribute] %s\nnameIndex=%d, length=%d\n",
             nameConstantPoolUtf8->m_bytes, nameIndex, length);
 
         if (jtk_CString_equals(nameConstantPoolUtf8->m_bytes,
@@ -534,7 +534,7 @@ zen_InstructionAttribute_t* zen_BinaryEntityDisassembler_disassembleInstructionA
         ((disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 16) |
         ((disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF);
-    printf("maxStackSize = %d, localVariableCount = %d, instructionLength = %d\n",
+    printf("maxStackSize=%d, localVariableCount=%d, instructionLength=%d\n",
         maxStackSize, localVariableCount, instructionLength);
 
     int32_t i;
@@ -646,42 +646,31 @@ void zen_BinaryEntityDisassembler_disassembleExceptionTable(zen_BinaryEntityDisa
 
     uint16_t size = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    exceptionTable->m_size = size;
-    exceptionTable->m_exceptionHandlerSites = (size > 0)?
-        jtk_Memory_allocate(zen_ExceptionHandlerSite_t*, size) : NULL;
-
+    printf("[Exception Table]\nsize=%d\n", size);
     int32_t i;
     for (i = 0; i < size; i++) {
-        zen_ExceptionHandlerSite_t* exceptionHandlerSite = zen_BinaryEntityDisassembler_disassembleExceptionHandlerSite(disassembler);
-        exceptionTable->m_exceptionHandlerSites[i] = exceptionHandlerSite;
+        printf("#%d ", i);
+        zen_BinaryEntityDisassembler_disassembleExceptionHandlerSite(disassembler);
     }
 }
 
 /* Disassemble Exception Handler Site */
 
-zen_ExceptionHandlerSite_t* zen_BinaryEntityDisassembler_disassembleExceptionHandlerSite(
+void zen_BinaryEntityDisassembler_disassembleExceptionHandlerSite(
     zen_BinaryEntityDisassembler_t* disassembler) {
     jtk_Assert_assertObject(disassembler, "The specified binary entity disassembler is null.");
 
-    zen_ExceptionHandlerSite_t* exceptionHandlerSite = jtk_Memory_allocate(zen_ExceptionHandlerSite_t, 1);
-
     uint16_t startIndex = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    exceptionHandlerSite->m_startIndex = startIndex;
-
     uint16_t stopIndex = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    exceptionHandlerSite->m_stopIndex = stopIndex;
-
     uint16_t handlerIndex = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    exceptionHandlerSite->m_handlerIndex = handlerIndex;
-
     uint16_t exceptionClassIndex = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    exceptionHandlerSite->m_exceptionClassIndex = exceptionClassIndex;
 
-    return exceptionHandlerSite;
+    printf("startIndex=%d, stopIndex=%d, handlerIndex=%d, exceptionClassIndex=%d",
+        startIndex, stopIndex, handlerIndex, exceptionClassIndex);
 }
 
 /* Disassemble Function */
