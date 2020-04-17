@@ -440,7 +440,7 @@ void zen_BinaryEntityDisassembler_disassembleEntity(zen_BinaryEntityDisassembler
     uint16_t superclassCount = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
 
-    printf("type = %d, flags = %d, reference = %d\nsuperclassCount = %d\n", type, flags, reference,
+    printf("[Entity]\ntype = %d, flags = %d, reference = %d\nsuperclassCount = %d\n", type, flags, reference,
         superclassCount);
 
     int32_t i;
@@ -459,7 +459,7 @@ void zen_BinaryEntityDisassembler_disassembleEntity(zen_BinaryEntityDisassembler
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
     uint16_t fieldTableSize = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    printf("fieldCount = %d, fieldTableSize = %d\n", fieldCount, fieldTableSize);
+    printf("[Fields]\nfieldCount = %d, fieldTableSize = %d\n", fieldCount, fieldTableSize);
 
     int32_t j;
     for (j = 0; j < fieldCount; j++) {
@@ -472,7 +472,7 @@ void zen_BinaryEntityDisassembler_disassembleEntity(zen_BinaryEntityDisassembler
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
     uint16_t functionTableSize = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    printf("functionCount = %d, functionTableSize = %d\n", functionCount,
+    printf("[Functions]\nfunctionCount = %d, functionTableSize = %d\n", functionCount,
         functionTableSize);
 
     int32_t k;
@@ -489,9 +489,7 @@ void zen_BinaryEntityDisassembler_disassembleAttributeTable(
 
     uint16_t size = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    attributeTable->m_size = size;
-    attributeTable->m_attributes = (size > 0)?
-        jtk_Memory_allocate(zen_Attribute_t*, size) : size;
+    printf("[Attributes]\nsize=%d\n", size)
 
     for (int32_t i = 0; i < size; i++) {
         uint16_t nameIndex = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
@@ -501,27 +499,22 @@ void zen_BinaryEntityDisassembler_disassembleAttributeTable(
             ((disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
             (disassembler->m_bytes[disassembler->m_index++] & 0xFF);
 
-        zen_ConstantPoolUtf8_t* nameConstantPoolUtf8 = zen_ConstantPool_resolveUtf8(
-            &disassembler->m_entityFile->m_constantPool, nameIndex);
-        zen_AttributeDisassembleRuleFunction_t attributeDisassembleRule =
-            zen_AttributeDisassembleRules_getRuleEx(disassembler->m_attributeDisassembleRules,
-                nameConstantPoolUtf8->m_bytes, nameConstantPoolUtf8->m_length);
+        zen_ConstantPoolUtf8_t* nameConstantPoolUtf8 =
+            (zen_ConstantPoolUtf8_t*)disassembler->m_entries[nameIndex];
 
-        if (attributeDisassembleRule != NULL) {
-            zen_Attribute_t* attribute = attributeDisassembleRule(disassembler, nameIndex, length);
-            attributeTable->m_attributes[i] = attribute;
+        printf("[Attribute] %s\nnameIndex = %d, length = %d\n",
+            nameConstantPoolUtf8->m_bytes, nameIndex, length);
 
-            // jtk_Logger_info(disassembler->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Disassembled attribute `%s`, stored at index %d.", name, i);
+        if (jtk_CString_equals(nameConstantPoolUtf8->m_bytes,
+            nameConstantPoolUtf8->m_length, ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION,
+            ZEN_PREDEFINED_ATTRIBUTE_INSTRUCTION_SIZE)) {
+            zen_BinaryEntityDisassembler_disassembleInstructionAttribute(disassembler);
         }
         else {
             /* Skip the bytes occupied by the unrecognized attribute. */
             disassembler->m_index += length;
 
-            /* Do not waste memory representing an unrecognized attribute.
-             * It is represented as null in the attributes table.
-             */
-
-            // jtk_Logger_info(disassembler->m_logger, ZEN_BINARY_ENTITY_PARSER_TAG, "Skipped unrecognized attribute `%s`. Null value stored at index %d.", name, i);
+            // TODO: Dump hex
         }
     }
 }
