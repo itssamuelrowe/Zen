@@ -675,74 +675,42 @@ void zen_BinaryEntityDisassembler_disassembleExceptionHandlerSite(
 
 /* Disassemble Function */
 
-zen_FunctionEntity_t* zen_BinaryEntityDisassembler_disassembleFunction(zen_BinaryEntityDisassembler_t* disassembler) {
+void zen_BinaryEntityDisassembler_disassembleFunction(zen_BinaryEntityDisassembler_t* disassembler) {
     jtk_Assert_assertObject(disassembler, "The specified binary entity disassembler is null.");
-
-    zen_FunctionEntity_t* functionEntity = jtk_Memory_allocate(zen_FunctionEntity_t, 1);
-
-    // Flags
 
     uint16_t flags = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    functionEntity->m_flags = flags;
-
-    // Name Index
-
     uint16_t nameIndex = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    functionEntity->m_nameIndex = nameIndex;
-
-    // Descriptor Index
     uint16_t descriptorIndex = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    functionEntity->m_descriptorIndex = descriptorIndex;
-
-    // Table Index
     uint16_t tableIndex = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    functionEntity->m_tableIndex = tableIndex;
 
-    // Attribute Table
-    zen_BinaryEntityDisassembler_disassembleAttributeTable(disassembler, &(functionEntity->m_attributeTable));
+    printf("flags=%d, nameIndex=%d, descriptorIndex=%d, tableIndex=%d\n",
+        flags, nameIndex, descriptorIndex, tableIndex);
 
-    return functionEntity;
+    zen_BinaryEntityDisassembler_disassembleAttributeTable(disassembler);
 }
 
 /* Disassemble Field */
 
-zen_FieldEntity_t* zen_BinaryEntityDisassembler_disassembleField(zen_BinaryEntityDisassembler_t* disassembler) {
+void zen_BinaryEntityDisassembler_disassembleField(zen_BinaryEntityDisassembler_t* disassembler) {
     jtk_Assert_assertObject(disassembler, "The specified binary entity disassembler is null.");
 
-    zen_FieldEntity_t* fieldEntity = jtk_Memory_allocate(zen_FieldEntity_t, 1);
-
-    // Flags
     uint16_t flags = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    fieldEntity->m_flags = flags;
-
-    // Name Index
     uint16_t nameIndex = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    fieldEntity->m_nameIndex = nameIndex;
-
-    // Descriptor Index
     uint16_t descriptorIndex = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    fieldEntity->m_descriptorIndex = descriptorIndex;
-
-    // Parameter Threshold
     uint16_t parameterThreshold = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    fieldEntity->m_parameterThreshold = parameterThreshold;
-
-    // Table Index
     uint16_t tableIndex = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
-    fieldEntity->m_tableIndex = tableIndex;
 
-    zen_BinaryEntityDisassembler_disassembleAttributeTable(disassembler, &(fieldEntity->m_attributeTable));
-
-    return fieldEntity;
+    printf("flags=%d, nameIndex=%d, descriptorIndex=%d, parameterThreshold=%d, tableIndex=%d\n",
+        flags, nameIndex, descriptorIndex, parameterThreshold, tableIndex);
 }
 
 
