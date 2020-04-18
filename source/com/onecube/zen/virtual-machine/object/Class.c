@@ -108,7 +108,7 @@ int32_t zen_Class_findFieldOffset(zen_Class_t* class0, const uint8_t* name,
     // TODO: Wrap the byte string in a String object, instead of allocating.
 
     zen_Field_t* field = jtk_HashMap_getValue(class0->m_fields, name);
-    
+
     return (field != NULL)? field->m_offset : -1;
 }
 
@@ -235,7 +235,7 @@ void zen_Class_initialize(zen_VirtualMachine_t* virtualMachine,
 
         zen_Overload_t* newOverload = jtk_Memory_allocate(zen_Overload_t, 1);
         newOverload->m_function = function;
-        
+
         zen_Overload_t* overload = (zen_Overload_t*)jtk_HashMap_getValue(class0->m_overloads, function->m_name);
         if (overload == NULL) {
             newOverload->m_next = NULL;

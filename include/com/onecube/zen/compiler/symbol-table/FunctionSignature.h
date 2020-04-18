@@ -41,6 +41,8 @@ struct zen_FunctionSignature_t {
     int32_t m_descriptorSize;
     uint16_t m_modifiers;
     uint16_t m_tableIndex;
+    int32_t m_fixedParameterCount;
+    bool m_hasVariableParameter;
 };
 
 /**

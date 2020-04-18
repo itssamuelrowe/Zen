@@ -51,8 +51,6 @@ struct zen_FieldEntity_t {
      */
     uint16_t m_descriptorIndex;
 
-    uint16_t m_parameterThreshold;
-
     /**
      * A valid index into the field table. Unlike functions, fields cannot be
      * overriden. Therefore, it is always unique.

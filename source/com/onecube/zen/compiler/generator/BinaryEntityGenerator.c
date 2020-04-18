@@ -52,7 +52,7 @@ bool lhs = false;
 uint16_t zen_Symbol_findFunctionIndex(zen_Symbol_t* symbol, const uint8_t* functionName,
     int32_t functionNameSize, const uint8_t* descriptor, uint8_t* descriptorSize) {
 
-    zen_Symbol_t* function = zen_Scope_resolve(&symbol->m_context.m_asClass,
+    zen_Symbol_t* function = zen_Scope_resolve(symbol->m_context.m_asClass.m_classScope,
         functionName);
     zen_FunctionSignature_t* signature = zen_Symbol_getFunctionSignatureEx(
         function, descriptor, descriptorSize);
