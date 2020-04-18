@@ -600,9 +600,9 @@ zen_FieldEntity_t* zen_BinaryEntityParser_parseField(zen_BinaryEntityParser_t* p
     fieldEntity->m_descriptorIndex = descriptorIndex;
 
     // Parameter Threshold
-    uint16_t parameterThreshold = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
-        (parser->m_bytes[parser->m_index++] & 0xFF));
-    fieldEntity->m_parameterThreshold = parameterThreshold;
+    // uint16_t parameterThreshold = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+    //     (parser->m_bytes[parser->m_index++] & 0xFF));
+    // fieldEntity->m_parameterThreshold = parameterThreshold;
 
     // Table Index
     uint16_t tableIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |

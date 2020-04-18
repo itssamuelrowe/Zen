@@ -539,8 +539,8 @@ void zen_SymbolLoader_parseFunction(zen_SymbolLoader_t* loader) {
      * a dynamically typed language such as Zen from declaring functions with
      * variable parameters.
      */
-    uint16_t parameterThreshold = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
-        (loader->m_bytes[loader->m_index++] & 0xFF);
+    // uint16_t parameterThreshold = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
+    //     (loader->m_bytes[loader->m_index++] & 0xFF);
 
     uint16_t tableIndex = ((loader->m_bytes[loader->m_index++] & 0xFF) << 8) |
         (loader->m_bytes[loader->m_index++] & 0xFF);
