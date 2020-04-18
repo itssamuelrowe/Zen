@@ -101,42 +101,43 @@ zen_Instruction_t zen_Instruction_instructions[] = {
     /* Duplicate */
 
     { "duplicate", ZEN_BYTE_CODE_DUPLICATE, 0, 1, 2 },
-    { "duplicate_x1", ZEN_BYTE_CODE_DUPLICATE_X1, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "duplicate_x2", ZEN_BYTE_CODE_DUPLICATE_X2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "duplicate2", ZEN_BYTE_CODE_DUPLICATE2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "duplicate2_x1", ZEN_BYTE_CODE_DUPLICATE2_X1, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "duplicate2_x2", ZEN_BYTE_CODE_DUPLICATE2_X2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "duplicate_x1", ZEN_BYTE_CODE_DUPLICATE_X1, 0, 2, 3 },
+    { "duplicate_x2", ZEN_BYTE_CODE_DUPLICATE_X2, 0, 3, 4 },
+    { "duplicate2", ZEN_BYTE_CODE_DUPLICATE2, 0, 2, 4 },
+    { "duplicate2_x1", ZEN_BYTE_CODE_DUPLICATE2_X1, 0, 3, 5 },
+    { "duplicate2_x2", ZEN_BYTE_CODE_DUPLICATE2_X2, 0, 4, 6 },
 
     /* Increment */
 
-    { "increment_i", ZEN_BYTE_CODE_INCREMENT_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "increment_i", ZEN_BYTE_CODE_INCREMENT_I, 2, 0, 0 },
 
     /* Invoke */
 
-    { "invoke_special", ZEN_BYTE_CODE_INVOKE_SPECIAL, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "invoke_virtual", ZEN_BYTE_CODE_INVOKE_VIRTUAL, 1, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "invoke_special", ZEN_BYTE_CODE_INVOKE_SPECIAL, 2, 1 /* >1 */, 0 },
+    { "invoke_virtual", ZEN_BYTE_CODE_INVOKE_VIRTUAL, 2, 1 /* >1 */, 0 /* [0, 1] */ },
     { "invoke_dynamic", ZEN_BYTE_CODE_INVOKE_DYNAMIC, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "invoke_static", ZEN_BYTE_CODE_INVOKE_STATIC, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "invoke_static", ZEN_BYTE_CODE_INVOKE_STATIC, 2, 0 /* >0 */, 0 /* [0, 1] */ },
 
     /* Jump */
 
-    { "jump", ZEN_BYTE_CODE_JUMP, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_eq0_i", ZEN_BYTE_CODE_JUMP_EQ0_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_ne0_i", ZEN_BYTE_CODE_JUMP_NE0_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_lt0_i", ZEN_BYTE_CODE_JUMP_LT0_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_gt0_i", ZEN_BYTE_CODE_JUMP_GT0_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_le0_i", ZEN_BYTE_CODE_JUMP_LE0_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_ge0_i", ZEN_BYTE_CODE_JUMP_GE0_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_eq_i", ZEN_BYTE_CODE_JUMP_EQ_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_ne_i", ZEN_BYTE_CODE_JUMP_NE_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_lt_i", ZEN_BYTE_CODE_JUMP_LT_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_gt_i", ZEN_BYTE_CODE_JUMP_GT_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_le_i", ZEN_BYTE_CODE_JUMP_LE_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_ge_i", ZEN_BYTE_CODE_JUMP_GE_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_eq_a", ZEN_BYTE_CODE_JUMP_EQ_A, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_ne_a", ZEN_BYTE_CODE_JUMP_NE_A, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_eqn_a", ZEN_BYTE_CODE_JUMP_EQN_A, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "jump_nen_a", ZEN_BYTE_CODE_JUMP_NEN_A, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "jump", ZEN_BYTE_CODE_JUMP, 2, 0, 0 },
+    { "jump_eq0_i", ZEN_BYTE_CODE_JUMP_EQ0_I, 2, 1, 0 },
+    { "jump_ne0_i", ZEN_BYTE_CODE_JUMP_NE0_I, 2, 1, 0 },
+    { "jump_lt0_i", ZEN_BYTE_CODE_JUMP_LT0_I, 2, 1, 0 },
+    { "jump_gt0_i", ZEN_BYTE_CODE_JUMP_GT0_I, 2, 1, 0 },
+    { "jump_le0_i", ZEN_BYTE_CODE_JUMP_LE0_I, 2, 1, 0 },
+    { "jump_ge0_i", ZEN_BYTE_CODE_JUMP_GE0_I, 2, 1, 0 },
+    { "jump_eq_i", ZEN_BYTE_CODE_JUMP_EQ_I, 2, 2, 0 },
+    { "jump_ne_i", ZEN_BYTE_CODE_JUMP_NE_I, 2, 2, 0 },
+    { "jump_lt_i", ZEN_BYTE_CODE_JUMP_LT_I, 2, 2, 0 },
+    { "jump_gt_i", ZEN_BYTE_CODE_JUMP_GT_I, 2, 2, 0 },
+    { "jump_le_i", ZEN_BYTE_CODE_JUMP_LE_I, 2, 2, 0 },
+    { "jump_ge_i", ZEN_BYTE_CODE_JUMP_GE_I, 2, 2, 0 },
+
+    { "jump_eq_a", ZEN_BYTE_CODE_JUMP_EQ_A, 2, 2, 0 },
+    { "jump_ne_a", ZEN_BYTE_CODE_JUMP_NE_A, 2, 2, 0 },
+    { "jump_eqn_a", ZEN_BYTE_CODE_JUMP_EQN_A, 2, 1, 0 },
+    { "jump_nen_a", ZEN_BYTE_CODE_JUMP_NEN_A, 2, 1, 0 },
 
     /* Load */
 
@@ -180,10 +181,10 @@ zen_Instruction_t zen_Instruction_instructions[] = {
 
     /* Modulo */
 
-    { "modulo_i", ZEN_BYTE_CODE_MODULO_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "modulo_l", ZEN_BYTE_CODE_MODULO_L, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "modulo_f", ZEN_BYTE_CODE_MODULO_F, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "modulo_d", ZEN_BYTE_CODE_MODULO_D, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "modulo_i", ZEN_BYTE_CODE_MODULO_I, 0, 2, 1 },
+    { "modulo_l", ZEN_BYTE_CODE_MODULO_L, 0, 2, 1 },
+    { "modulo_f", ZEN_BYTE_CODE_MODULO_F, 0, 2, 1 },
+    { "modulo_d", ZEN_BYTE_CODE_MODULO_D, 0, 2, 1 },
 
     /* Multiply */
 
@@ -194,53 +195,53 @@ zen_Instruction_t zen_Instruction_instructions[] = {
 
     /* Negate */
 
-    { "negate_i", ZEN_BYTE_CODE_NEGATE_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "negate_l", ZEN_BYTE_CODE_NEGATE_L, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "negate_f", ZEN_BYTE_CODE_NEGATE_F, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "negate_d", ZEN_BYTE_CODE_NEGATE_D, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "negate_i", ZEN_BYTE_CODE_NEGATE_I, 0, 1, 1 },
+    { "negate_l", ZEN_BYTE_CODE_NEGATE_L, 0, 1, 1 },
+    { "negate_f", ZEN_BYTE_CODE_NEGATE_F, 0, 1, 1 },
+    { "negate_d", ZEN_BYTE_CODE_NEGATE_D, 0, 1, 1 },
 
     /* New */
 
-    { "new", ZEN_BYTE_CODE_NEW, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "new_array", ZEN_BYTE_CODE_NEW_ARRAY, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "new_array_a", ZEN_BYTE_CODE_NEW_ARRAY_A, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "new_array_an", ZEN_BYTE_CODE_NEW_ARRAY_AN, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "new", ZEN_BYTE_CODE_NEW, 2, 0, 1 },
+    { "new_array", ZEN_BYTE_CODE_NEW_ARRAY, 1, 1, 1 },
+    { "new_array_a", ZEN_BYTE_CODE_NEW_ARRAY_A, 2, 1, 1 },
+    { "new_array_an", ZEN_BYTE_CODE_NEW_ARRAY_AN, 3, 1 /* >=1 */, 1 },
 
     /* Pop */
 
-    { "pop", ZEN_BYTE_CODE_POP, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "pop2", ZEN_BYTE_CODE_POP2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "pop", ZEN_BYTE_CODE_POP, 0, 1, 0 },
+    { "pop2", ZEN_BYTE_CODE_POP2, 0, 2, 0 },
 
     /* Push */
 
-    { "push_null", ZEN_BYTE_CODE_PUSH_NULL, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "push_in1", ZEN_BYTE_CODE_PUSH_IN1, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "push_i0", ZEN_BYTE_CODE_PUSH_I0, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "push_i1", ZEN_BYTE_CODE_PUSH_I1, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "push_i2", ZEN_BYTE_CODE_PUSH_I2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "push_i3", ZEN_BYTE_CODE_PUSH_I3, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "push_i4", ZEN_BYTE_CODE_PUSH_I4, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "push_i5", ZEN_BYTE_CODE_PUSH_I5, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "push_l0", ZEN_BYTE_CODE_PUSH_L0, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "push_l1", ZEN_BYTE_CODE_PUSH_L1, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "push_l2", ZEN_BYTE_CODE_PUSH_L2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "push_f0", ZEN_BYTE_CODE_PUSH_F0, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "push_f1", ZEN_BYTE_CODE_PUSH_F1, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "push_f2", ZEN_BYTE_CODE_PUSH_F2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "push_d0", ZEN_BYTE_CODE_PUSH_D0, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "push_d1", ZEN_BYTE_CODE_PUSH_D1, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "push_d1", ZEN_BYTE_CODE_PUSH_D2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "push_b", ZEN_BYTE_CODE_PUSH_B, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "push_s", ZEN_BYTE_CODE_PUSH_S, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "push_null", ZEN_BYTE_CODE_PUSH_NULL, 0, 0, 1 },
+    { "push_in1", ZEN_BYTE_CODE_PUSH_IN1, 0, 0, 1} ,
+    { "push_i0", ZEN_BYTE_CODE_PUSH_I0, 0, 0, 1 },
+    { "push_i1", ZEN_BYTE_CODE_PUSH_I1, 0, 0, 1 },
+    { "push_i2", ZEN_BYTE_CODE_PUSH_I2, 0, 0, 1 },
+    { "push_i3", ZEN_BYTE_CODE_PUSH_I3, 0, 0, 1 },
+    { "push_i4", ZEN_BYTE_CODE_PUSH_I4, 0, 0, 1 },
+    { "push_i5", ZEN_BYTE_CODE_PUSH_I5, 0, 0, 1 },
+    { "push_l0", ZEN_BYTE_CODE_PUSH_L0, 0, 0, 1 },
+    { "push_l1", ZEN_BYTE_CODE_PUSH_L1, 0, 0, 1 },
+    { "push_l2", ZEN_BYTE_CODE_PUSH_L2, 0, 0, 1 },
+    { "push_f0", ZEN_BYTE_CODE_PUSH_F0, 0, 0, 1 },
+    { "push_f1", ZEN_BYTE_CODE_PUSH_F1, 0, 0, 1 },
+    { "push_f2", ZEN_BYTE_CODE_PUSH_F2, 0, 0, 1 },
+    { "push_d0", ZEN_BYTE_CODE_PUSH_D0, 0, 0, 1 },
+    { "push_d1", ZEN_BYTE_CODE_PUSH_D1, 0, 0, 1 },
+    { "push_d1", ZEN_BYTE_CODE_PUSH_D2, 0, 0, 1 },
+    { "push_b", ZEN_BYTE_CODE_PUSH_B, 1, 0, 1 },
+    { "push_s", ZEN_BYTE_CODE_PUSH_S, 2, 0, 1 },
 
     /* Return */
 
-    { "return", ZEN_BYTE_CODE_RETURN, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "return_i", ZEN_BYTE_CODE_RETURN_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "return_l", ZEN_BYTE_CODE_RETURN_L, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "return_f", ZEN_BYTE_CODE_RETURN_F, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "return_d", ZEN_BYTE_CODE_RETURN_D, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "return_a", ZEN_BYTE_CODE_RETURN_A, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "return", ZEN_BYTE_CODE_RETURN, 0, 0, 0 },
+    { "return_i", ZEN_BYTE_CODE_RETURN_I, 0, 1, 0 },
+    { "return_l", ZEN_BYTE_CODE_RETURN_L, 0, 1, 0 },
+    { "return_f", ZEN_BYTE_CODE_RETURN_F, 0, 1, 0 },
+    { "return_d", ZEN_BYTE_CODE_RETURN_D, 0, 1, 0 },
+    { "return_a", ZEN_BYTE_CODE_RETURN_A, 0, 1, 0 },
 
     /* RTTI */
 
@@ -248,41 +249,41 @@ zen_Instruction_t zen_Instruction_instructions[] = {
 
     /* Store */
 
-    { "store_i", ZEN_BYTE_CODE_STORE_I, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_i0", ZEN_BYTE_CODE_STORE_I0, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_i1", ZEN_BYTE_CODE_STORE_I1, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_i2", ZEN_BYTE_CODE_STORE_I2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_i3", ZEN_BYTE_CODE_STORE_I3, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_l", ZEN_BYTE_CODE_STORE_L, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_l0", ZEN_BYTE_CODE_STORE_L0, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_l1", ZEN_BYTE_CODE_STORE_L1, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_l2", ZEN_BYTE_CODE_STORE_L2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_l3", ZEN_BYTE_CODE_STORE_L3, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_f", ZEN_BYTE_CODE_STORE_F, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_f0", ZEN_BYTE_CODE_STORE_F0, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_f1", ZEN_BYTE_CODE_STORE_F1, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_f2", ZEN_BYTE_CODE_STORE_F2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_f3", ZEN_BYTE_CODE_STORE_F3, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_d", ZEN_BYTE_CODE_STORE_D, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_d0", ZEN_BYTE_CODE_STORE_D0, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_d1", ZEN_BYTE_CODE_STORE_D1, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_d2", ZEN_BYTE_CODE_STORE_D2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_d3", ZEN_BYTE_CODE_STORE_D3, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_a", ZEN_BYTE_CODE_STORE_A, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_a0", ZEN_BYTE_CODE_STORE_A0, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_a1", ZEN_BYTE_CODE_STORE_A1, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_a2", ZEN_BYTE_CODE_STORE_A2, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_a3", ZEN_BYTE_CODE_STORE_A3, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_ab", ZEN_BYTE_CODE_STORE_AB, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_ac", ZEN_BYTE_CODE_STORE_AC, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_as", ZEN_BYTE_CODE_STORE_AS, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_ai", ZEN_BYTE_CODE_STORE_AI, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_al", ZEN_BYTE_CODE_STORE_AL, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_af", ZEN_BYTE_CODE_STORE_AF, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_ad", ZEN_BYTE_CODE_STORE_AD, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_aa", ZEN_BYTE_CODE_STORE_AA, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_instance_field", ZEN_BYTE_CODE_STORE_INSTANCE_FIELD, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
-    { "store_static_field", ZEN_BYTE_CODE_STORE_STATIC_FIELD, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "store_i", ZEN_BYTE_CODE_STORE_I, 1, 1, 0 },
+    { "store_i0", ZEN_BYTE_CODE_STORE_I0, 0, 1, 0 },
+    { "store_i1", ZEN_BYTE_CODE_STORE_I1, 0, 1, 0 },
+    { "store_i2", ZEN_BYTE_CODE_STORE_I2, 0, 1, 0 },
+    { "store_i3", ZEN_BYTE_CODE_STORE_I3, 0, 1, 0 },
+    { "store_l", ZEN_BYTE_CODE_STORE_L, 1, 1, 0 },
+    { "store_l0", ZEN_BYTE_CODE_STORE_L0, 0, 1, 0 },
+    { "store_l1", ZEN_BYTE_CODE_STORE_L1, 0, 1, 0 },
+    { "store_l2", ZEN_BYTE_CODE_STORE_L2, 0, 1, 0 },
+    { "store_l3", ZEN_BYTE_CODE_STORE_L3, 0, 1, 0 },
+    { "store_f", ZEN_BYTE_CODE_STORE_F, 1, 1, 0 },
+    { "store_f0", ZEN_BYTE_CODE_STORE_F0, 0, 1, 0 },
+    { "store_f1", ZEN_BYTE_CODE_STORE_F1, 0, 1, 0 },
+    { "store_f2", ZEN_BYTE_CODE_STORE_F2, 0, 1, 0 },
+    { "store_f3", ZEN_BYTE_CODE_STORE_F3, 0, 1, 0 },
+    { "store_d", ZEN_BYTE_CODE_STORE_D, 1, 1, 0 },
+    { "store_d0", ZEN_BYTE_CODE_STORE_D0, 0, 1, 0 },
+    { "store_d1", ZEN_BYTE_CODE_STORE_D1, 0, 1, 0 },
+    { "store_d2", ZEN_BYTE_CODE_STORE_D2, 0, 1, 0 },
+    { "store_d3", ZEN_BYTE_CODE_STORE_D3, 0, 1, 0 },
+    { "store_a", ZEN_BYTE_CODE_STORE_A, 1, 1, 0 },
+    { "store_a0", ZEN_BYTE_CODE_STORE_A0, 0, 1, 0 },
+    { "store_a1", ZEN_BYTE_CODE_STORE_A1, 0, 1, 0 },
+    { "store_a2", ZEN_BYTE_CODE_STORE_A2, 0, 1, 0 },
+    { "store_a3", ZEN_BYTE_CODE_STORE_A3, 0, 1, 0 },
+    { "store_ab", ZEN_BYTE_CODE_STORE_AB, 0, 3, 0 },
+    { "store_ac", ZEN_BYTE_CODE_STORE_AC, 0, 3, 0 },
+    { "store_as", ZEN_BYTE_CODE_STORE_AS, 0, 3, 0 },
+    { "store_ai", ZEN_BYTE_CODE_STORE_AI, 0, 3, 0 },
+    { "store_al", ZEN_BYTE_CODE_STORE_AL, 0, 3, 0 },
+    { "store_af", ZEN_BYTE_CODE_STORE_AF, 0, 3, 0 },
+    { "store_ad", ZEN_BYTE_CODE_STORE_AD, 0, 3, 0 },
+    { "store_aa", ZEN_BYTE_CODE_STORE_AA, 0, 3, 0 },
+    { "store_instance_field", ZEN_BYTE_CODE_STORE_INSTANCE_FIELD, 2, 2, 0 },
+    { "store_static_field", ZEN_BYTE_CODE_STORE_STATIC_FIELD, 2, 1, 0 },
 
     /* Subtract */
 
@@ -293,7 +294,7 @@ zen_Instruction_t zen_Instruction_instructions[] = {
 
     /* Swap */
 
-    { "swap", ZEN_BYTE_CODE_SWAP, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "swap", ZEN_BYTE_CODE_SWAP, 0, 2, 2 },
 
     /* Switch */
 
@@ -302,11 +303,11 @@ zen_Instruction_t zen_Instruction_instructions[] = {
 
     /* Throw */
 
-    { "throw", ZEN_BYTE_CODE_THROW, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "throw", ZEN_BYTE_CODE_THROW, 0, 1, 0 },
 
     /* Wide */
 
-    { "wide", ZEN_BYTE_CODE_WIDE, 0x0 /* Unknown */, 0x0 /* Unknown */, 0x0 /* Unknown */ },
+    { "wide", ZEN_BYTE_CODE_WIDE, 0, 0, 0 }
 };
 
 bool zen_Instruction_verify() {

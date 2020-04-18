@@ -537,8 +537,7 @@ void zen_BinaryEntityDisassembler_disassembleInstructionAttribute(
                 case ZEN_BYTE_CODE_NEW:
                 case ZEN_BYTE_CODE_NEW_ARRAY_A:
                 case ZEN_BYTE_CODE_STORE_STATIC_FIELD:
-                case ZEN_BYTE_CODE_STORE_INSTANCE_FIELD:
-                {
+                case ZEN_BYTE_CODE_STORE_INSTANCE_FIELD: {
                     uint16_t index = (disassembler->m_bytes[++i] << 8) | disassembler->m_bytes[++i];
                     printf("index=%d", index);
                     break;
