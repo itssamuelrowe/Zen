@@ -491,15 +491,16 @@ void zen_BinaryEntityDisassembler_disassembleInstructionAttribute(
     printf("    maxStackSize=%d, localVariableCount=%d, instructionLength=%d\n",
         maxStackSize, localVariableCount, instructionLength);
 
-    int32_t i;
-    for (i = 0; i < instructionLength; i++) {
-        zen_Instruction_t* instruction = zen_Instruction_getInstance(
-            disassembler->m_bytes[disassembler->m_index++]);
-        printf("        #%d %s", i, instruction->m_text);
+    int32_t i = 0;
+    int32_t limit = disassembler->m_index + instructionLength;
+    while (disassembler->m_index < limit) {
+        uint8_t byteCode = disassembler->m_bytes[disassembler->m_index++];
+        zen_Instruction_t* instruction = zen_Instruction_getInstance(byteCode);
+        printf("        #%d %s", i++, instruction->m_text);
 
         if (instruction->m_argumentCount != 0) {
             printf(" ");
-            switch (disassembler->m_bytes[i])  {
+            switch (byteCode)  {
                 case ZEN_BYTE_CODE_JUMP_EQ0_I:
                 case ZEN_BYTE_CODE_JUMP_NE0_I:
                 case ZEN_BYTE_CODE_JUMP_LT0_I:
@@ -518,13 +519,14 @@ void zen_BinaryEntityDisassembler_disassembleInstructionAttribute(
                 case ZEN_BYTE_CODE_JUMP_NEN_A:
                 case ZEN_BYTE_CODE_JUMP:
                 {
-                    uint16_t offset = (disassembler->m_bytes[++i] << 8) | disassembler->m_bytes[++i];
-                    printf("offset=%d\n", offset);
+                    uint16_t offset = (disassembler->m_bytes[disassembler->m_index++] << 8) |
+                        disassembler->m_bytes[disassembler->m_index++];
+                    printf("offset=%d", offset);
                     break;
                 }
 
                 case ZEN_BYTE_CODE_INCREMENT_I: {
-                    printf("index=%d, constant=%d", disassembler->m_bytes[++i], disassembler->m_bytes[++i]);
+                    printf("index=%d, constant=%d", disassembler->m_bytes[disassembler->m_index++], disassembler->m_bytes[disassembler->m_index++]);
                     break;
                 }
 
@@ -538,7 +540,7 @@ void zen_BinaryEntityDisassembler_disassembleInstructionAttribute(
                 case ZEN_BYTE_CODE_NEW_ARRAY_A:
                 case ZEN_BYTE_CODE_STORE_STATIC_FIELD:
                 case ZEN_BYTE_CODE_STORE_INSTANCE_FIELD: {
-                    uint16_t index = (disassembler->m_bytes[++i] << 8) | disassembler->m_bytes[++i];
+                    uint16_t index = (disassembler->m_bytes[disassembler->m_index++] << 8) | disassembler->m_bytes[disassembler->m_index++];
                     printf("index=%d", index);
                     break;
                 }
@@ -558,26 +560,26 @@ void zen_BinaryEntityDisassembler_disassembleInstructionAttribute(
                 case ZEN_BYTE_CODE_STORE_D:
                 case ZEN_BYTE_CODE_STORE_A:
                 {
-                    printf("index=%d", disassembler->m_bytes[++i]);
+                    printf("index=%d", disassembler->m_bytes[disassembler->m_index++]);
                     break;
                 }
 
                 case ZEN_BYTE_CODE_NEW_ARRAY_AN: {
-                    uint16_t index = (disassembler->m_bytes[++i] << 8) | disassembler->m_bytes[++i];
-                    uint8_t dimensions = disassembler->m_bytes[++i];
-                    printf("index=%d, dimensions=%d\n", index, dimensions);
+                    uint16_t index = (disassembler->m_bytes[disassembler->m_index++] << 8) | disassembler->m_bytes[disassembler->m_index++];
+                    uint8_t dimensions = disassembler->m_bytes[disassembler->m_index++];
+                    printf("index=%d, dimensions=%d", index, dimensions);
                     break;
                 }
 
 
                 case ZEN_BYTE_CODE_PUSH_B: {
-                    printf("value=%d\n", disassembler->m_bytes[++i]);
+                    printf("value=%d", disassembler->m_bytes[disassembler->m_index++]);
                     break;
                 }
 
                 case ZEN_BYTE_CODE_PUSH_S: {
-                    uint16_t value = (disassembler->m_bytes[++i] << 8) | disassembler->m_bytes[++i];
-                    printf("value=%d\n", value);
+                    uint16_t value = (disassembler->m_bytes[disassembler->m_index++] << 8) | disassembler->m_bytes[disassembler->m_index++];
+                    printf("value=%d", value);
                     break;
                 }
 
