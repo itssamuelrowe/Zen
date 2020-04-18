@@ -194,7 +194,7 @@ zen_Compiler_t* zen_Compiler_new() {
     compiler->m_symbolLoader = zen_SymbolLoader_new(compiler);
     compiler->m_repository = jtk_HashMap_new(stringObjectAdapter, NULL);
     compiler->m_trash = NULL;
-    compiler->m_coreApi = true;
+    compiler->m_coreApi = false;
     compiler->m_disassembler = zen_BinaryEntityDisassembler_new(NULL);
 #ifdef JTK_LOGGER_DISABLE
     compiler->m_logger = NULL;

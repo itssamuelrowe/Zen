@@ -28,6 +28,7 @@
 #include <jtk/fs/FileInputStream.h>
 #include <jtk/io/BufferedInputStream.h>
 #include <jtk/io/InputStream.h>
+#include <jtk/io/InputStreamHelper.h>
 
 #include <com/onecube/zen/virtual-machine/loader/ClassLoader.h>
 
@@ -166,66 +167,6 @@ zen_Class_t* zen_ClassLoader_getClass(zen_ClassLoader_t* classLoader,
 
 // Load
 
-// Tuesday, March 17, 2020
-
-/**
- * @author Samuel Rowe
- * @since JTK 1.1
- */
-struct jtk_ByteArray_t {
-    int8_t* m_values;
-    int32_t m_size;
-};
-
-typedef struct jtk_ByteArray_t jtk_ByteArray_t;
-
-jtk_ByteArray_t* jtk_ByteArray_fromRawArray(int8_t* array, int32_t size) {
-    jtk_Assert_assertObject(array, "The specified array is null.");
-
-    jtk_ByteArray_t* result = jtk_Memory_allocate(jtk_ByteArray_t, 1);
-    result->m_values = jtk_Arrays_clone_b(array, size);
-    result->m_size = size;
-
-    return result;
-}
-
-void jtk_ByteArray_delete(jtk_ByteArray_t* array) {
-    jtk_Assert_assertObject(array, "The specified byte array is null.");
-
-    jtk_Memory_deallocate(array->m_values);
-    jtk_Memory_deallocate(array);
-}
-
-jtk_ByteArray_t* jtk_InputStreamHelper_toArray(jtk_InputStream_t* stream) {
-    uint8_t* result = jtk_Memory_allocate(uint8_t, 1024);
-    int32_t size = 1024;
-    int32_t index = 0;
-    while (true) {
-        int32_t count = jtk_InputStream_readBytesEx(stream, result, size,
-            index, size);
-
-        if (count <= 0) {
-            break;
-        }
-
-        index += count;
-
-        if (index >= (int32_t)(size * 0.85f)) {
-            uint8_t* temporary = result;
-            int32_t newSize = size * 2;
-            result = jtk_Arrays_copyOfEx_b(result, size, newSize, 0, false);
-            jtk_Memory_deallocate(temporary);
-
-            size = newSize;
-        }
-    }
-    jtk_Array_t* array = (index == 0)? NULL : jtk_ByteArray_fromRawArray(result, index);
-
-    jtk_Memory_deallocate(result);
-
-    return array;
-}
-
 zen_Class_t* zen_ClassLoader_loadClass(zen_ClassLoader_t* classLoader,
     const uint8_t* descriptor, int32_t descriptorSize) {
     jtk_Assert_assertObject(classLoader, "The specified entity loader is null.");
@@ -267,7 +208,7 @@ zen_Class_t* zen_ClassLoader_loadClass(zen_ClassLoader_t* classLoader,
                             fileInputStream->m_inputStream, ZEN_ENTITY_LOADER_BUFFER_SIZE);
                         jtk_InputStream_t* inputStream = bufferedInputStream->m_inputStream;
 
-                        jtk_ByteArray_t* input = jtk_InputStreamHelper_toArray(inputStream);
+                        jtk_ByteArray_t* input = jtk_InputStreamHelper_toByteArray(inputStream);
 
                         zen_EntityFile_t* entityFile = zen_BinaryEntityParser_parse(
                             classLoader->m_parser, input->m_values, input->m_size);

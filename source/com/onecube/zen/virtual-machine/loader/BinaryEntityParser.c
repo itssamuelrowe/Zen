@@ -300,6 +300,8 @@ void zen_BinaryEntityParser_parseConstantPool(
             }
 
             case ZEN_CONSTANT_POOL_TAG_FIELD: {
+                uint16_t classIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
+                    (parser->m_bytes[parser->m_index++] & 0xFF));
                 uint16_t descriptorIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
                     (parser->m_bytes[parser->m_index++] & 0xFF));
                 uint16_t nameIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
@@ -307,6 +309,7 @@ void zen_BinaryEntityParser_parseConstantPool(
 
                 zen_ConstantPoolField_t* constantPoolField = jtk_Memory_allocate(zen_ConstantPoolField_t, 1);
                 constantPoolField->m_tag = ZEN_CONSTANT_POOL_TAG_FIELD;
+                constantPoolField->m_classIndex = classIndex;
                 constantPoolField->m_descriptorIndex = descriptorIndex;
                 constantPoolField->m_nameIndex = nameIndex;
 
