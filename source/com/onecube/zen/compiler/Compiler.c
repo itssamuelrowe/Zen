@@ -195,6 +195,7 @@ zen_Compiler_t* zen_Compiler_new() {
     compiler->m_repository = jtk_HashMap_new(stringObjectAdapter, NULL);
     compiler->m_trash = NULL;
     compiler->m_coreApi = true;
+    compiler->m_disassembler = zen_BinaryEntityDisassembler_new(NULL);
 #ifdef JTK_LOGGER_DISABLE
     compiler->m_logger = NULL;
 #else
@@ -562,11 +563,29 @@ void zen_Compiler_destroyNestedScopes(zen_ASTAnnotations_t* scopes) {
     zen_ASTAnnotations_delete(scopes);
 }
 
+jtk_ArrayList_t* zen_CString_split_c(const uint8_t* sequence, int32_t size,
+    uint8_t value, bool inclusive) {
+    jtk_ArrayList_t* result = jtk_ArrayList_new();
+    int32_t i;
+    for (i = 0; i < size; i++) {
+        int32_t startIndex = i;
+        while ((i < size) && (sequence[i] != value)) {
+            i++;
+        }
+        int32_t stopIndex = ((i < size) && inclusive) ? i + 1 : i;
+        uint8_t* substring = jtk_CString_substringEx(sequence, size, startIndex,
+            stopIndex);
+        jtk_ArrayList_add(result, substring);
+    }
+    return result;
+}
+
 bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t length) {
     jtk_Assert_assertObject(compiler, "The specified compiler is null.");
 
     // TODO: Add the --path flag
     zen_SymbolLoader_addDirectory(compiler->m_symbolLoader, ".");
+    zen_BinaryEntityDisassembler_addDirectory(compiler->m_disassembler, ".", 1);
 
     bool invalidCommandLine = false;
     int32_t i;

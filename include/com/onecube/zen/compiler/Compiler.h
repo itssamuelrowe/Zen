@@ -25,6 +25,7 @@
 #include <com/onecube/zen/compiler/symbol-table/SymbolTable.h>
 #include <com/onecube/zen/compiler/symbol-table/SymbolLoader.h>
 #include <com/onecube/zen/compiler/support/ErrorHandler.h>
+#include <com/onecube/zen/disassembler/BinaryEntityDisassembler.h>
 
 #include <jtk/collection/list/ArrayList.h>
 #include <jtk/collection/map/HashMap.h>
@@ -56,6 +57,7 @@ struct zen_Compiler_t {
     jtk_HashMap_t* m_repository;
     jtk_ArrayList_t* m_trash;
     bool m_coreApi;
+    zen_BinaryEntityDisassembler_t* m_disassembler;
 };
 
 /**

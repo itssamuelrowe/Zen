@@ -222,7 +222,7 @@ void zen_BinaryEntityDisassembler_disassembleConstantPool(
     constantPool->m_entries = jtk_Memory_allocate(zen_ConstantPoolEntry_t*, size + 1);
     constantPool->m_entries[0] = NULL;
 
-    printf("\n[Constant Pool]\nsize = %d\n", size);
+    printf("\n[Constant Pool]\n    size = %d\n", size);
     int32_t index;
     for (index = 1; index <= size; index++) {
         uint8_t tag = disassembler->m_bytes[disassembler->m_index++];
@@ -471,7 +471,7 @@ void zen_BinaryEntityDisassembler_disassembleEntity(zen_BinaryEntityDisassembler
 
     int32_t j;
     for (j = 0; j < fieldCount; j++) {
-        printf("--------------------------------\n    #%d ", j);
+        printf("    #%d ", j);
         zen_BinaryEntityDisassembler_disassembleField(disassembler);
     }
 
@@ -719,7 +719,11 @@ void zen_BinaryEntityDisassembler_disassembleField(zen_BinaryEntityDisassembler_
     uint16_t tableIndex = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
 
-    printf("flags=%d, nameIndex=%d, descriptorIndex=%d, parameterThreshold=%d, tableIndex=%d\n",
+    zen_ConstantPoolUtf8_t* nameConstantPoolUtf8 =
+            (zen_ConstantPoolUtf8_t*)disassembler->m_constantPool.m_entries[nameIndex];
+
+    printf("%s\n", nameConstantPoolUtf8->m_bytes);
+    printf("        flags=%d, nameIndex=%d, descriptorIndex=%d, parameterThreshold=%d, tableIndex=%d\n",
         flags, nameIndex, descriptorIndex, parameterThreshold, tableIndex);
 }
 
