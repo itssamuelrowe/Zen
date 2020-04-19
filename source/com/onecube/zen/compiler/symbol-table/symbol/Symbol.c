@@ -188,7 +188,7 @@ zen_FunctionSignature_t* zen_Symbol_getFunctionSignature(zen_Symbol_t* symbol,
     for (i = 0; i < count; i++) {
         zen_FunctionSignature_t* signature = (zen_FunctionSignature_t*)
             jtk_ArrayList_getValue(functionSymbol->m_signatures, i);
-        int32_t parameterCount = jtk_ArrayList_getSize(signature->m_fixedParameters);
+        int32_t parameterCount = signature->m_fixedParameterCount; // jtk_ArrayList_getSize(signature->m_fixedParameters);
         if (parameterCount == argumentCount) {
             result = signature;
             break;

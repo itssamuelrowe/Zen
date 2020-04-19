@@ -5634,9 +5634,10 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                                 jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
                                 jtk_StringBuilder_appendEx_z(builder, "(zen/core/Object):", 18);
                                 zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
+                                int32_t argumentCount = 0;
                                 if (expressions != NULL) {
                                     zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
-                                    int32_t argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
+                                    argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
                                     int32_t k;
                                     for (k = 0; k < argumentCount; k++) {
                                         jtk_StringBuilder_appendEx_z(builder, "(zen/core/Object)", 17);
@@ -5656,12 +5657,14 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
                                 uint8_t* descriptor = jtk_StringBuilder_toCString(builder, &descriptorSize);
                                 jtk_StringBuilder_delete(builder);
 
+                                zen_FunctionSignature_t* signature = zen_Symbol_getFunctionSignature(primarySymbol, argumentCount);
+
                                 int32_t index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
                                     generator->m_constantPoolBuilder, className,
                                     classNameSize,
                                     descriptor, descriptorSize, primaryToken->m_text,
                                     primaryToken->m_length,
-                                    0
+                                    signature->m_tableIndex
                                 );
                                 zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, index);
 

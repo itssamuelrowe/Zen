@@ -1640,9 +1640,14 @@ void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
                 zen_Class_t* targetClass = zen_VirtualMachine_getClassEx(interpreter->m_virtualMachine,
                     classNameEntry->m_bytes, classNameEntry->m_length, &classNameEntry->m_hashCode);
 
-                zen_Function_t* function = zen_Class_getStaticFunction(targetClass,
-                    nameEntry->m_bytes, nameEntry->m_length,
-                    descriptorEntry->m_bytes, descriptorEntry->m_length);
+                zen_Function_t* function = NULL;
+                if (functionEntry->m_tableIndex > 0) {
+                    function = targetClass->m_functionTable[functionEntry->m_tableIndex];
+                } else {
+                    function = zen_Class_getStaticFunction(targetClass,
+                        nameEntry->m_bytes, nameEntry->m_length,
+                        descriptorEntry->m_bytes, descriptorEntry->m_length);
+                }
 
                 if (function != NULL) {
                     int32_t parameterCount = function->m_parameterCount;

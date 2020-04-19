@@ -46,6 +46,8 @@ zen_Class_t* zen_Class_new(zen_VirtualMachine_t* virtualMachine,
     class0->m_fields = jtk_HashMap_newEx(stringObjectAdapter, NULL,
         JTK_HASH_MAP_DEFAULT_CAPACITY, JTK_HASH_MAP_DEFAULT_LOAD_FACTOR);
     class0->m_memoryRequirement = 0;
+    class0->m_functionTable = NULL;
+    class0->m_functionTableSize = 0;
 
     zen_Class_initialize(virtualMachine, class0, entityFile);
 
@@ -221,12 +223,17 @@ void zen_Class_initialize(zen_VirtualMachine_t* virtualMachine,
         }
     }
 
+    class0->m_functionTableSize = entity->m_functionTableSize;
+    class0->m_functionTable = jtk_Memory_allocate(zen_Function_t*, entity->m_functionTableSize + 1);
+    class0->m_functionTable[0] = NULL;
+
     int32_t j;
     int32_t functionCount = entity->m_functionCount;
     for (j = 0; j < functionCount; j++) {
         zen_FunctionEntity_t* functionEntity = (zen_FunctionEntity_t*)entity->m_functions[j];
         zen_Function_t* function = zen_Function_new(virtualMachine,
             class0, functionEntity);
+        class0->m_functionTable[j + 1] = function;
 
         int32_t keySize;
         uint8_t* key = jtk_CString_joinEx(function->m_name, function->m_nameSize,

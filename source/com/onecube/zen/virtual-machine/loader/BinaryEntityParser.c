@@ -291,6 +291,7 @@ void zen_BinaryEntityParser_parseConstantPool(
                 constantPoolFunction->m_classIndex = classIndex;
                 constantPoolFunction->m_descriptorIndex = descriptorIndex;
                 constantPoolFunction->m_nameIndex = nameIndex;
+                constantPoolFunction->m_tableIndex = tableIndex;
 
                 constantPool->m_entries[index] = constantPoolFunction;
 
