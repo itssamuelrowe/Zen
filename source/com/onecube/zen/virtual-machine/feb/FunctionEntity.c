@@ -25,11 +25,12 @@
 // Constructor
 
 zen_FunctionEntity_t* zen_FunctionEntity_new(uint16_t flags, uint16_t nameIndex,
-    uint16_t descriptorIndex) {
+    uint16_t descriptorIndex, uint16_t tableIndex) {
     zen_FunctionEntity_t* functionEntity = zen_Memory_allocate(zen_FunctionEntity_t, 1);
     functionEntity->m_flags = flags;
     functionEntity->m_nameIndex = nameIndex;
     functionEntity->m_descriptorIndex = descriptorIndex;
+    functionEntity->m_tableIndex = tableIndex;
 
     return functionEntity;
 }

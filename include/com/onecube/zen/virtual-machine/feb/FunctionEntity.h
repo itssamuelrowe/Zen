@@ -69,7 +69,7 @@ typedef struct zen_FunctionEntity_t zen_FunctionEntity_t;
 // Constructor
 
 zen_FunctionEntity_t* zen_FunctionEntity_new(uint16_t flags, uint16_t nameIndex,
-    uint16_t descriptorIndex);
+    uint16_t descriptorIndex, uint16_t tableIndex);
 
 // Destructor
 

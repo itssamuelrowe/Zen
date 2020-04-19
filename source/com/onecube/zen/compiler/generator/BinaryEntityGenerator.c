@@ -1103,6 +1103,9 @@ void zen_BinaryEntityGenerator_onExitFunctionDeclaration(
 
     /* Retrieve the context associated with the AST node. */
     zen_FunctionDeclarationContext_t* context = (zen_FunctionDeclarationContext_t*)node->m_context;
+    zen_FunctionParametersContext_t* parameters = (zen_FunctionParametersContext_t*)context->m_functionParameters->m_context;
+    int32_t parameterCount = jtk_ArrayList_getSize(parameters->m_fixedParameters);
+
 
     zen_ASTNode_t* identifier = context->m_identifier;
     zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
@@ -1113,20 +1116,24 @@ void zen_BinaryEntityGenerator_onExitFunctionDeclaration(
     zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, temporary);
     jtk_Memory_deallocate(temporary);
 
-    uint16_t flags = symbol->m_modifiers;
+    // TODO: What happens when variable parameters are present?!
+    zen_FunctionSignature_t* signature = zen_Symbol_getFunctionSignature(symbol,
+        parameterCount);
+
+    uint16_t flags = signature->m_modifiers;
     uint16_t nameIndex = constructor?
         zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
             generator->m_constantPoolBuilder, "<initialize>", 12) :
         zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
             generator->m_constantPoolBuilder, identifierToken->m_text,
             identifierToken->m_length);
-
     uint16_t descriptorIndex = zen_ConstantPoolBuilder_getUtf8EntryIndexEx(
         generator->m_constantPoolBuilder, generator->m_descriptor,
         generator->m_descriptorSize);
+    uint16_t tableIndex = signature->m_tableIndex;
 
     zen_FunctionEntity_t* functionEntity = zen_FunctionEntity_new(flags,
-        nameIndex, descriptorIndex);
+        nameIndex, descriptorIndex, tableIndex);
     zen_AttributeTable_t* attributeTable = &functionEntity->m_attributeTable;
 
     zen_InstructionAttribute_t* instructionAttribute =
