@@ -174,13 +174,13 @@ int32_t zen_FunctionSignature_countParameters(const uint8_t* descriptor,
 }
 
 zen_FunctionSignature_t* zen_FunctionSignature_newEx(const uint8_t* descriptor,
-    int32_t descriptorSize, uint16_t modifiers) {
+    int32_t descriptorSize, uint16_t modifiers, uint16_t tableIndex) {
     zen_FunctionSignature_t* signature = zen_Memory_allocate(zen_FunctionSignature_t, 1);
     signature->m_fixedParameters = NULL;
     signature->m_variableParameter = NULL;
     signature->m_descriptor = jtk_CString_make(descriptor, &descriptorSize);
     signature->m_descriptorSize = descriptorSize;
-    signature->m_tableIndex = -1;
+    signature->m_tableIndex = tableIndex;
     signature->m_modifiers = modifiers;
     signature->m_variableParameter = false; // TODO
     signature->m_fixedParameterCount = zen_FunctionSignature_countParameters(descriptor, descriptorSize);

@@ -604,7 +604,7 @@ void zen_BinaryEntityDisassembler_disassembleExceptionTable(
     printf("[Exception Table]\n    size=%d\n", size);
     int32_t i;
     for (i = 0; i < size; i++) {
-        printf("#%d ", i);
+        printf("    #%d ", i);
         zen_BinaryEntityDisassembler_disassembleExceptionHandlerSite(disassembler);
     }
 }
@@ -624,7 +624,7 @@ void zen_BinaryEntityDisassembler_disassembleExceptionHandlerSite(
     uint16_t exceptionClassIndex = (uint16_t)(((uint32_t)(disassembler->m_bytes[disassembler->m_index++] & 0xFF) << 8) |
         (disassembler->m_bytes[disassembler->m_index++] & 0xFF));
 
-    printf("startIndex=%d, stopIndex=%d, handlerIndex=%d, exceptionClassIndex=%d",
+    printf("startIndex=%d, stopIndex=%d, handlerIndex=%d, exceptionClassIndex=%d\n",
         startIndex, stopIndex, handlerIndex, exceptionClassIndex);
 }
 

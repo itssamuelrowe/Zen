@@ -511,10 +511,10 @@ void zen_SymbolLoader_parseField(zen_SymbolLoader_t* loader) {
 
 void zen_SymbolLoader_declareFunction(zen_SymbolLoader_t* loader,
     zen_Symbol_t* symbol, const uint8_t* descriptor, int32_t descriptorSize,
-    uint16_t modifiers) {
+    uint16_t modifiers, uint16_t tableIndex) {
     zen_FunctionSymbol_t* functionSymbol = &symbol->m_context.m_asFunction;
     zen_FunctionSignature_t* signature = zen_FunctionSignature_newEx(descriptor, descriptorSize,
-        modifiers);
+        modifiers, tableIndex);
     zen_FunctionSymbol_addSignature(functionSymbol, signature);
 }
 
@@ -563,7 +563,7 @@ void zen_SymbolLoader_parseFunction(zen_SymbolLoader_t* loader) {
         zen_Scope_defineEx(classScope, name0, nameSize0, functionSymbol);
     }
     zen_SymbolLoader_declareFunction(loader, functionSymbol, descriptor->m_bytes,
-        descriptor->m_length, flags);
+        descriptor->m_length, flags, tableIndex);
 
     // Skip attribute table
     zen_SymbolLoader_skipAttributeTable(loader);
