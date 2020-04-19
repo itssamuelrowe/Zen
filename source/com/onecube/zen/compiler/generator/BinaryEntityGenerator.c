@@ -49,14 +49,30 @@ bool lhs = false;
 #define ZEN_BINARY_ENTITY_GENERATOR_BOOLEAN_GET_VALUE 0
 #define ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_EVALUATE 1
 
-uint16_t zen_Symbol_findFunctionIndex(zen_Symbol_t* symbol, const uint8_t* functionName,
-    int32_t functionNameSize, const uint8_t* descriptor, uint8_t* descriptorSize) {
-
+uint16_t zen_Symbol_findFunctionIndex(zen_ConstantPoolBuilder_t* builder,
+    zen_Symbol_t* symbol,
+    const uint8_t* functionName, int32_t functionNameSize,
+    const uint8_t* descriptor, uint8_t* descriptorSize) {
     zen_Symbol_t* function = zen_Scope_resolve(symbol->m_context.m_asClass.m_classScope,
         functionName);
     zen_FunctionSignature_t* signature = zen_Symbol_getFunctionSignatureEx(
         function, descriptor, descriptorSize);
-    return signature->m_tableIndex;
+
+    const uint8_t* className = symbol->m_context.m_asClass.m_qualifiedName;
+    int32_t classNameSize = symbol->m_context.m_asClass.m_qualifiedNameSize;
+
+    uint8_t* classDescriptor = jtk_CString_newEx(className, classNameSize);
+    jtk_Arrays_replace_b(classDescriptor, classNameSize, '.', '/');
+
+    uint16_t index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        builder, classDescriptor, classNameSize, descriptor,
+        descriptorSize, functionName, functionNameSize,
+        signature->m_tableIndex
+    );
+
+    jtk_CString_delete(classDescriptor);
+
+    return index;
 }
 
 void zen_BinaryEntityGenerator_initializeCPFCache(zen_BinaryEntityGenerator_t* generator) {
@@ -67,14 +83,15 @@ void zen_BinaryEntityGenerator_initializeCPFCache(zen_BinaryEntityGenerator_t* g
         "zen.core.Boolean", 16);
      // TODO: "z:v", 3
     generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_BOOLEAN_GET_VALUE] =
-        zen_Symbol_findFunctionIndex(booleanClass, "getValue", 8, "(zen/core/Object):v", 19);
+        zen_Symbol_findFunctionIndex(generator->m_constantPoolBuilder,
+            booleanClass, "getValue", 8, "(zen/core/Object):v", 19);
 
     // ZenKernel
     zen_Symbol_t* zenKernelClass = zen_Compiler_resolveSymbol(generator->m_compiler,
         "zen.core.ZenKernel", 18);
     generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_EVALUATE] =
-        zen_Symbol_findFunctionIndex(zenKernelClass, "evaluate", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)", 69);
-
+        zen_Symbol_findFunctionIndex(generator->m_constantPoolBuilder,
+            zenKernelClass, "evaluate", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)", 69);
 }
 
 // Constructor

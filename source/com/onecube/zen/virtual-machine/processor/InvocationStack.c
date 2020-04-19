@@ -80,6 +80,8 @@ zen_StackFrame_t* zen_InvocationStack_pushStackFrame(zen_InvocationStack_t* invo
     jtk_Assert_assertObject(invocationStack, "The specified invocation stack is null.");
     jtk_Assert_assertObject(function, "The specified function is null.");
 
+    // printf("Invoking %s...\n", function->m_name);
+
     zen_StackFrame_t* stackFrame = zen_StackFrame_new(function);
     jtk_DoublyLinkedList_addFirst(invocationStack->m_stackFrames, stackFrame);
 
@@ -101,6 +103,8 @@ void zen_InvocationStack_popStackFrame(zen_InvocationStack_t* invocationStack) {
         (zen_StackFrame_t*)jtk_DoublyLinkedList_getFirst(invocationStack->m_stackFrames);
     jtk_DoublyLinkedList_removeFirst(invocationStack->m_stackFrames);
 
+    // printf("Leaving %s...\n", currentStackFrame->m_function->m_name);
+
     if (invocationStack->m_tracing) {
         jtk_DoublyLinkedList_addLast(invocationStack->m_trace, currentStackFrame);
     }
@@ -117,7 +121,7 @@ void zen_InvocationStack_popStackFrame(zen_InvocationStack_t* invocationStack) {
 
 int32_t zen_InvocationStack_getSize(zen_InvocationStack_t* invocationStack) {
     jtk_Assert_assertObject(invocationStack, "The specified invocation stack is null.");
-    
+
     return jtk_DoublyLinkedList_getSize(invocationStack->m_stackFrames);
 }
 

@@ -93,6 +93,7 @@ void zen_DataChannel_appendBytesRange(zen_DataChannel_t* channel,
 
 void zen_DataChannel_requestCapacity(zen_DataChannel_t* channel, int32_t capacity) {
     if (capacity > 0) {
+        capacity = channel->m_index + capacity;
         int32_t currentCapacity = channel->m_capacity;
         int32_t minimumCapacity = channel->m_index + capacity;
         int32_t requireCapacity = minimumCapacity - currentCapacity;
@@ -106,7 +107,7 @@ void zen_DataChannel_requestCapacity(zen_DataChannel_t* channel, int32_t capacit
                 newCapacity = 0x7FFFFFFF;
             }
             uint8_t* temporary = channel->m_bytes;
-            channel->m_bytes = zen_Memory_allocate(uint8_t, newCapacity);
+            channel->m_bytes = jtk_Memory_allocate(uint8_t, newCapacity);
             int32_t i;
             for (i = 0; i < channel->m_index; i++) {
                 channel->m_bytes[i] = temporary[i];

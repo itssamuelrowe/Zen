@@ -92,7 +92,8 @@ void zen_BinaryEntityBuilder_removeChannel(zen_BinaryEntityBuilder_t* builder,
     zen_DataChannel_t* deadChannel = (zen_DataChannel_t*)jtk_ArrayList_getValue(builder->m_channels,
         index);
     // jtk_ArrayList_removeIndex(builder->m_channels, index);
-    jtk_ArrayList_setValue(builder->m_channels, index, NULL);
+    // jtk_ArrayList_setValue(builder->m_channels, index, NULL);
+    jtk_ArrayList_removeIndex(builder->m_channels, index);
 
     /* if (!jtk_ArrayList_isEmpty(builder->m_channels)) {
         zen_DataChannel_t* activeChannel = (zen_DataChannel_t*)jtk_ArrayList_getValue(

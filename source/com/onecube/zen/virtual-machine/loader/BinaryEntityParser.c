@@ -349,8 +349,8 @@ void zen_BinaryEntityParser_parseEntity(zen_BinaryEntityParser_t* parser) {
     jtk_Assert_assertObject(parser, "The specified binary entity parser is null.");
 
     zen_Entity_t* entity = &parser->m_entityFile->m_entity;
-    uint8_t type = parser->m_bytes[parser->m_index++];
 
+    uint8_t type = parser->m_bytes[parser->m_index++];
     entity->m_type = type;
 
     uint16_t flags = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
@@ -550,13 +550,11 @@ zen_FunctionEntity_t* zen_BinaryEntityParser_parseFunction(zen_BinaryEntityParse
     zen_FunctionEntity_t* functionEntity = jtk_Memory_allocate(zen_FunctionEntity_t, 1);
 
     // Flags
-
     uint16_t flags = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
         (parser->m_bytes[parser->m_index++] & 0xFF));
     functionEntity->m_flags = flags;
 
     // Name Index
-
     uint16_t nameIndex = (uint16_t)(((uint32_t)(parser->m_bytes[parser->m_index++] & 0xFF) << 8) |
         (parser->m_bytes[parser->m_index++] & 0xFF));
     functionEntity->m_nameIndex = nameIndex;
