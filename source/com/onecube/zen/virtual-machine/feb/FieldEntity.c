@@ -1,12 +1,12 @@
 /*
  * Copyright 2018-2019 Samuel Rowe
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,9 @@ zen_FieldEntity_t* zen_FieldEntity_new(uint16_t flags, uint16_t nameIndex,
     entity->m_flags = flags;
     entity->m_nameIndex = nameIndex;
     entity->m_descriptorIndex = descriptorIndex;
-    
+    entity->m_attributeTable.m_size = 0;
+    entity->m_attributeTable.m_attributes = NULL;
+
     return entity;
 }
 
@@ -38,6 +40,6 @@ zen_FieldEntity_t* zen_FieldEntity_new(uint16_t flags, uint16_t nameIndex,
 
 void zen_FieldEntity_delete(zen_FieldEntity_t* entity) {
     jtk_Assert_assertObject(entity, "The specified field entity is null.");
-    
+
     zen_Memory_deallocate(entity);
 }

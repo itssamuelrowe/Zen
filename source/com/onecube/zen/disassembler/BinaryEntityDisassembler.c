@@ -668,6 +668,8 @@ void zen_BinaryEntityDisassembler_disassembleField(zen_BinaryEntityDisassembler_
     printf("%s\n", nameConstantPoolUtf8->m_bytes);
     printf("        flags=%d, nameIndex=%d, descriptorIndex=%d, tableIndex=%d\n",
         flags, nameIndex, descriptorIndex, tableIndex);
+
+    zen_BinaryEntityDisassembler_disassembleAttributeTable(disassembler);
 }
 
 void zen_BinaryEntityDisassembler_disassembleClass(zen_BinaryEntityDisassembler_t* disassembler,
