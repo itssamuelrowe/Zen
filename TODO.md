@@ -1,5 +1,6 @@
  * Break down binary entity generator to smaller functions.
  * Move semantic errors from the code generator to definition and resolution phases.
+ * invoke_dynamic
  * Native code should be able throw and catch exceptions.
  * Generate default constructors when no constructor is provided.
  * Hexadecimal integer literals are not working
@@ -15,10 +16,11 @@
  * Throw an exception when dividing by zero.
  * Implement standard packages
  * Add tableIndex to field constant pool entry.
+ * Conditional operator
 
 
-
-
+ * The code generator generates the instruction attribute for native functions, too!
+ * Move log messages from generator to builder
  * Implement a wildcard search
  * Implement line numbers for exceptions.
  * The compiler generates error for

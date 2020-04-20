@@ -693,63 +693,77 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
         }
     }
 
-    zen_BinaryEntityGenerate_writeOutput(generator, entity);
+    zen_BinaryEntityGenerator_writeOutput(generator, entity);
 }
 
 // importDeclaration
 
-void zen_BinaryEntityGenerator_onEnterImportDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterImportDeclaration(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitImportDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitImportDeclaration(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // annotatedComponentDeclaration
 
-void zen_BinaryEntityGenerator_onEnterAnnotatedComponentDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterAnnotatedComponentDeclaration(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitAnnotatedComponentDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitAnnotatedComponentDeclaration(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // annotations
 
-void zen_BinaryEntityGenerator_onEnterAnnotations(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterAnnotations(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitAnnotations(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitAnnotations(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // annotation
 
-void zen_BinaryEntityGenerator_onEnterAnnotation(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterAnnotation(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitAnnotation(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitAnnotation(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // annotationType
 
-void zen_BinaryEntityGenerator_onEnterAnnotationType(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterAnnotationType(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitAnnotationType(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitAnnotationType(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // annotationAttribute
 
-void zen_BinaryEntityGenerator_onEnterAnnotationAttribute(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterAnnotationAttribute(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitAnnotationAttribute(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitAnnotationAttribute(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // componentDeclaration
 
-void zen_BinaryEntityGenerator_onEnterComponentDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterComponentDeclaration(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitComponentDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitComponentDeclaration(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // functionDeclaration
@@ -851,10 +865,6 @@ void zen_BinaryEntityGenerator_prepareClass(zen_BinaryEntityGenerator_t* generat
 
     generator->m_classPrepared = true;
 }
-
-int32_t jtk_CString_findLast_c(const uint8_t* string, int32_t size, int32_t codePoint);
-uint8_t* jtk_CString_substringEx(const uint8_t* string, int32_t size,
-    int32_t startIndex, int32_t stopIndex);
 
 void zen_BinaryEntityGenerator_initializeClassName(zen_BinaryEntityGenerator_t* generator) {
     zen_Compiler_t* compiler = generator->m_compiler;
@@ -1090,7 +1100,6 @@ void zen_BinaryEntityGenerator_onExitFunctionDeclaration(
     zen_FunctionParametersContext_t* parameters = (zen_FunctionParametersContext_t*)context->m_functionParameters->m_context;
     int32_t parameterCount = jtk_ArrayList_getSize(parameters->m_fixedParameters);
 
-
     zen_ASTNode_t* identifier = context->m_identifier;
     zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
 
@@ -1174,18 +1183,22 @@ void zen_BinaryEntityGenerator_onExitFunctionDeclaration(
 
 // functionParameters
 
-void zen_BinaryEntityGenerator_onEnterFunctionParameters(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterFunctionParameters(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitFunctionParameters(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitFunctionParameters(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // functionBody
 
-void zen_BinaryEntityGenerator_onEnterFunctionBody(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterFunctionBody(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitFunctionBody(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitFunctionBody(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // statementSuite
@@ -1366,20 +1379,24 @@ void zen_BinaryEntityGenerator_onEnterVariableDeclaration(zen_ASTListener_t* ast
     zen_ASTListener_skipChildren(astListener);
 }
 
-void zen_BinaryEntityGenerator_onExitVariableDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitVariableDeclaration(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // variableDeclarator
 
-void zen_BinaryEntityGenerator_onEnterVariableDeclarator(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterVariableDeclarator(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitVariableDeclarator(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitVariableDeclarator(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // constantDeclaration
 
-void zen_BinaryEntityGenerator_onEnterConstantDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterConstantDeclaration(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
     /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     /* Retrieve the logger from the compiler. */
@@ -1476,15 +1493,18 @@ void zen_BinaryEntityGenerator_onEnterConstantDeclaration(zen_ASTListener_t* ast
     zen_ASTListener_skipChildren(astListener);
 }
 
-void zen_BinaryEntityGenerator_onExitConstantDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitConstantDeclaration(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // constantDeclarator
 
-void zen_BinaryEntityGenerator_onEnterConstantDeclarator(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterConstantDeclarator(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitConstantDeclarator(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitConstantDeclarator(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // assertStatement
@@ -1508,7 +1528,8 @@ void zen_BinaryEntityGenerator_onExitConstantDeclarator(zen_ASTListener_t* astLi
  * 7. Generate the instructions required to create and throw an exception.
  *    The exception is an instance of the zen.core.AssertionError class.
  */
-void zen_BinaryEntityGenerator_onEnterAssertStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterAssertStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
     /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     /* Retrieve the context of the AST node. */
@@ -1523,7 +1544,8 @@ void zen_BinaryEntityGenerator_onEnterAssertStatement(zen_ASTListener_t* astList
     zen_ASTListener_skipChildren(astListener);
 }
 
-void zen_BinaryEntityGenerator_onExitAssertStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitAssertStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
     /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     /* Retrieve the logger from the compiler. */
@@ -1697,7 +1719,8 @@ void zen_BinaryEntityGenerator_recordBreak(zen_BinaryEntityGenerator_t* generato
  * ----------------------------------------
  *          break statement record
  */
-void zen_BinaryEntityGenerator_onEnterBreakStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterBreakStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
     /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     /* Retrieve the logger from the compiler. */
@@ -1741,23 +1764,28 @@ void zen_BinaryEntityGenerator_onEnterBreakStatement(zen_ASTListener_t* astListe
     }
 }
 
-void zen_BinaryEntityGenerator_onExitBreakStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitBreakStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // continueStatement
 
-void zen_BinaryEntityGenerator_onEnterContinueStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterContinueStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitContinueStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitContinueStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // returnStatement
 
-void zen_BinaryEntityGenerator_onEnterReturnStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterReturnStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitReturnStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitReturnStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
     /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     /* Retrieve the logger from the compiler. */
@@ -1776,10 +1804,12 @@ void zen_BinaryEntityGenerator_onExitReturnStatement(zen_ASTListener_t* astListe
 
 // throwStatement
 
-void zen_BinaryEntityGenerator_onEnterThrowStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterThrowStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitThrowStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitThrowStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
     /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     /* Retrieve the logger from the compiler. */
@@ -1798,15 +1828,18 @@ void zen_BinaryEntityGenerator_onExitThrowStatement(zen_ASTListener_t* astListen
 
 // compoundStatement
 
-void zen_BinaryEntityGenerator_onEnterCompoundStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterCompoundStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitCompoundStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitCompoundStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // ifStatement
 
-void zen_BinaryEntityGenerator_onEnterIfStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterIfStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_IfStatementContext_t* context = (zen_IfStatementContext_t*)node->m_context;
 
@@ -1819,7 +1852,8 @@ void zen_BinaryEntityGenerator_onEnterIfStatement(zen_ASTListener_t* astListener
     zen_ASTListener_skipChildren(astListener);
 }
 
-void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitIfStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     /* Retrieve the logger from the compiler. */
     jtk_Logger_t* logger = generator->m_compiler->m_logger;
@@ -1983,23 +2017,28 @@ void zen_BinaryEntityGenerator_onExitIfClause(zen_ASTListener_t* astListener,
 
 // elseIfClause
 
-void zen_BinaryEntityGenerator_onEnterElseIfClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterElseIfClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitElseIfClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitElseIfClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // elseClause
 
-void zen_BinaryEntityGenerator_onEnterElseClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterElseClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitElseClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitElseClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // iterativeStatement
 
-void zen_BinaryEntityGenerator_onEnterIterativeStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterIterativeStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
     /* Retrieve the generator associated with the AST listener. */
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     /* Retrieve the logger from the compiler. */
@@ -2011,9 +2050,11 @@ void zen_BinaryEntityGenerator_onEnterIterativeStatement(zen_ASTListener_t* astL
     int32_t loopIdentifier = generator->m_nextLoopLabel++;
 
     if (context->m_labelClause != NULL) {
-        zen_LabelClauseContext_t* labelClauseContext = (zen_LabelClauseContext_t*)context->m_labelClause->m_context;
+        zen_LabelClauseContext_t* labelClauseContext =
+            (zen_LabelClauseContext_t*)context->m_labelClause->m_context;
         int32_t identifierTextSize;
-        uint8_t* identifierText = zen_ASTNode_toCString(labelClauseContext->m_identifier, &identifierTextSize);
+        uint8_t* identifierText = zen_ASTNode_toCString(labelClauseContext->m_identifier,
+            &identifierTextSize);
 
         /* Resolve the parameter symbol in the symbol table. */
         zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, identifierText);
@@ -2049,15 +2090,18 @@ void zen_BinaryEntityGenerator_onEnterIterativeStatement(zen_ASTListener_t* astL
     zen_ASTListener_skipChildren(astListener);
 }
 
-void zen_BinaryEntityGenerator_onExitIterativeStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitIterativeStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // label
 
-void zen_BinaryEntityGenerator_onEnterLabel(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterLabel(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitLabel(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitLabel(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // whileStatement
@@ -2076,7 +2120,8 @@ void zen_BinaryEntityGenerator_onEnterWhileStatement(zen_ASTListener_t* astListe
     zen_ASTListener_skipChildren(astListener);
 }
 
-void zen_BinaryEntityGenerator_onExitWhileStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitWhileStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     /* Retrieve the logger from the compiler. */
     jtk_Logger_t* logger = generator->m_compiler->m_logger;
@@ -2131,7 +2176,8 @@ void zen_BinaryEntityGenerator_onExitWhileStatement(zen_ASTListener_t* astListen
 
 // forStatement
 
-void zen_BinaryEntityGenerator_onEnterForStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterForStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_ForStatementContext_t* context = (zen_ForStatementContext_t*)node->m_context;
 
@@ -2144,7 +2190,8 @@ void zen_BinaryEntityGenerator_onEnterForStatement(zen_ASTListener_t* astListene
     zen_ASTListener_skipChildren(astListener);
 }
 
-void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     /* Retrieve the logger from the compiler. */
     jtk_Logger_t* logger = generator->m_compiler->m_logger;
@@ -2321,10 +2368,12 @@ void zen_BinaryEntityGenerator_onExitForStatement(zen_ASTListener_t* astListener
 
 // forParameters
 
-void zen_BinaryEntityGenerator_onEnterForParameters(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterForParameters(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitForParameters(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitForParameters(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // tryStatement
@@ -2750,26 +2799,32 @@ void zen_BinaryEntityGenerator_onExitTryClause(zen_ASTListener_t* astListener,
 
 // catchClause
 
-void zen_BinaryEntityGenerator_onEnterCatchClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterCatchClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitCatchClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitCatchClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // catchFilter
 
-void zen_BinaryEntityGenerator_onEnterCatchFilter(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterCatchFilter(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitCatchFilter(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitCatchFilter(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // finallyClause
 
-void zen_BinaryEntityGenerator_onEnterFinallyClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterFinallyClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitFinallyClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitFinallyClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // synchronizeStatement
@@ -3521,7 +3576,6 @@ void zen_BinaryEntityGenerator_onExitWithStatement(zen_ASTListener_t* astListene
 
 // classDeclaration
 
-// BUG: Looks like we are not setting the current scope in this function.
 void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
@@ -3660,26 +3714,32 @@ void zen_BinaryEntityGenerator_onExitClassDeclaration(zen_ASTListener_t* astList
 
 // classExtends
 
-void zen_BinaryEntityGenerator_onEnterClassExtendsClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterClassExtendsClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitClassExtendsClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitClassExtendsClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // classSuite
 
-void zen_BinaryEntityGenerator_onEnterClassSuite(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterClassSuite(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitClassSuite(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitClassSuite(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // classMember
 
-void zen_BinaryEntityGenerator_onEnterClassMember(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterClassMember(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitClassMember(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitClassMember(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // void zen_BinaryEntityGenerator_onEnterConstructorDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
@@ -3691,60 +3751,62 @@ void zen_BinaryEntityGenerator_onExitClassMember(zen_ASTListener_t* astListener,
 
 // enumerationDeclaration
 
-void zen_BinaryEntityGenerator_onEnterEnumerationDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterEnumerationDeclaration(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitEnumerationDeclaration(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitEnumerationDeclaration(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // enumerationBaseClass
 
-void zen_BinaryEntityGenerator_onEnterEnumrationBaseClass(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterEnumrationBaseClass(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitEnumerationBaseClause(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitEnumerationBaseClause(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // enumerationSuite
 
-void zen_BinaryEntityGenerator_onEnterEnumerationSuite(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterEnumerationSuite(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitEnumerationSuite(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitEnumerationSuite(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // enumerate
 
-void zen_BinaryEntityGenerator_onEnterEnumerate(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterEnumerate(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitEnumerate(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitEnumerate(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // expressions
 
-void zen_BinaryEntityGenerator_onEnterExpressions(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onEnterExpressions(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
-void zen_BinaryEntityGenerator_onExitExpressions(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitExpressions(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // expression
 
 void zen_BinaryEntityGenerator_onEnterExpression(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
-    /*zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
-    zen_ExpressionContext_t* context = (zen_AssignmentExpressionContext_t*)node->m_context;
-
-    zen_ASTAnnotation_t* annotation = zen_ASTAnnotations_get(generator->m_annotations, node);
-    if (annotation != NULL) {
-        if (zen_ASTAnnotation_getType(annotation) == ZEN_AST_ANNOTATION_TYPE_ASYMETRICAL_CHANNEL_MANAGEMENT) {
-            zen_BinaryEntityBuilder_addChannel(generator->m_builder);
-        }
-    }*/
 }
 
-void zen_BinaryEntityGenerator_onExitExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {
+void zen_BinaryEntityGenerator_onExitExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {
 }
 
 // assignmentExpression
@@ -3786,140 +3848,10 @@ void zen_BinaryEntityGenerator_onEnterAssignmentExpression(zen_ASTListener_t* as
 
         zen_ASTListener_skipChildren(astListener);
     }
-
-    // zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, identifierText);
-    // if (zen_Symbol_isVariable(symbol)) {
-        // int32_t targetIndex;
-        // bool localVariable = false;
-
-        // zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(symbol);
-        // if (zen_Scope_isClassScope(enclosingScope)) {
-           // targetIndex = ;// Retreive the field descriptor index.
-//         }
-   //      else {
-            // targetIndex = ; // Retrieve the index into the local variable array.
-      //   }
-
-        // zen_ASTNode_t* assignmentOperator = context->m_assignmentOperator;
-        // zen_Token_t* operatorToken = (zen_Token_t*)assignmentOperator->m_context;
-        // if (operatorToken->m_type != ZEN_TOKEN_EQUAL) {
-           //  zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, targetIndex);
-
-            /* The values of symbol and symbolSize are the only arbitrary variables
-             * when invoking the zen_BinaryEntityGenerator_invokeEvaluate() function.
-             * Therefore, instead of rewriting the invocation expression multiple
-             * times, I have factored it out.
-             */
-            // uint8_t* symbol = NULL;
-            // int32_t symbolSize = 1;
-            // switch (operatorToken->m_type) {
-               //  case ZEN_AMPERSAND_EQUAL: {
-                    /* The kernel should find a function annotated with the Operator
-                     * annotation that handles the '&' symbol.
-                     */
-                  //   symbol = "&";
-                    // break;
-                // }
-
-                // case ZEN_ASTERISK_EQUAL: {
-                    /* The kernel should find a function annotated with the Operator
-                     * annotation that handles the '*' symbol.
-                     */
-                   //  symbol = "*"
-                    // break;
-                // }
-
-                // case ZEN_TOKEN_PLUS_EQUAL: {
-                    /* The kernel should find a function annotated with the Operator
-                     * annotation that handles the '+' symbol.
-                     */
-                   //  symbol = "+";
-                    // break;
-                // }
-
-                // case ZEN_TOKEN_DASH_EQUAL: {
-                    /* The kernel should find a function annotated with the Operator
-                     * annotation that handles the '-' symbol.
-                     */
-                   //  symbol = "-";
-                    // break;
-                // }
-
-                // case ZEN_FORWARD_SLASH_EQUAL: {
-                    /* The kernel should find a function annotated with the Operator
-                     * annotation that handles the '/' symbol.
-                     */
-                   //  symbol = "/";
-                    // break;
-                // }
-
-                // case ZEN_LEFT_ANGLE_BRACKET_2_EQUAL: {
-                    /* The kernel should find a function annotated with the Operator
-                     * annotation that handles the '<<' symbol.
-                     */
-                   //  symbol = "<<";
-                    // break;
-                // }
-
-                // case ZEN_RIGHT_ANGLE_BRACKET_3_EQUAL: {
-                    /* The kernel should find a function annotated with the Operator
-                     * annotation that handles the '>>>' symbol.
-                     */
-                    // symbol = ">>>";
-                    // break;
-                // }
-
-                // case ZEN_RIGHT_ANGLE_BRACKET_2_EQUAL: {
-                    /* The kernel should find a function annotated with the Operator
-                     * annotation that handles the '>>' symbol.
-                     */
-                   //  symbol = ">>";
-                    // break;
-                // }
-
-                // case VERTICAL_BAR_EQUAL: {
-                    /* The kernel should find a function annotated with the Operator
-                     * annotation that handles the '|' symbol.
-                     */
-                    // symbol = "|";
-                    // break;
-                // }
-
-                // case CARET_EQUAL : {
-                    /* The kernel should find a function annotated with the Operator
-                     * annotation that handles the '^' symbol.
-                     */
-                    // symbol = "^";
-                // }
-
-                // default: {
-                    /* The generator should not reach this code! */
-                    // printf("[internal error] Control should not reach here.\n");
-                // }
-            // }
-
-            /* Generate the instructions corresponding to invoking the
-             * ZenKernel.evaluate() function. Since, Zen is dynamically typed
-             * the compiler cannot determine the type of the operands. Therefore,
-             * the addition and subtraction operations are delegated to
-             * functions annotated with the Operator annotation.
-             */
-            // zen_BinaryEntityGenerator_invokeEvaluate(generator, symbol, symbolSize);
-        // }
-
-        // zen_BinaryEntityGenerator_emitStoreReference(generator->m_builder, targetIndex);
-    // }
-    // else if (zen_Symbol_isConstant(symbol)) {
-        // error: Constant cannot be assigned
-    // }
-    // else {
-        // error: LHS is not variable
-    // }
-
-    // jtk_ArrayList_delete(children);
 }
 
-void zen_BinaryEntityGenerator_onExitAssignmentExpression(zen_ASTListener_t* astListener, zen_ASTNode_t* node) {/*
+void zen_BinaryEntityGenerator_onExitAssignmentExpression(zen_ASTListener_t* astListener,
+    zen_ASTNode_t* node) {/*
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_AssignmentExpressionContext_t* context = (zen_AssignmentExpressionContext_t*)node->m_context;
 
@@ -4045,6 +3977,8 @@ void zen_BinaryEntityGenerator_onExitLogicalOrExpression(zen_ASTListener_t* astL
          * Operator annotation.
          */
         zen_BinaryEntityGenerator_invokeEvaluate(generator, "||", 2);
+
+        // TODO: The instructions generated here are wrong.
     }
 }
 
@@ -4088,6 +4022,8 @@ void zen_BinaryEntityGenerator_onExitLogicalAndExpression(zen_ASTListener_t* ast
          * Operator annotation.
          */
         zen_BinaryEntityGenerator_invokeEvaluate(generator, "&&", 2);
+
+        // TODO: The instructions generated here are wrong.
     }
 }
 
@@ -4807,6 +4743,8 @@ void zen_BinaryEntityGenerator_onEnterUnaryExpression(zen_ASTListener_t* astList
             */
         }
 
+        // TODO: I don't think unary operators work.
+
         /* Generate the instructions corresponding to invoking the
          * ZenKernel.evaluate() function. Since, Zen is dynamically typed
          * the compiler cannot determine the type of the operands. Therefore,
@@ -4830,7 +4768,6 @@ void zen_BinaryEntityGenerator_onExitUnaryExpression(zen_ASTListener_t* astListe
 
 void zen_BinaryEntityGenerator_invokeEvaluate(zen_BinaryEntityGenerator_t* generator,
     uint8_t* symbol, int32_t symbolSize) {
-
     /* Retrieve the logger from the compiler. */
     jtk_Logger_t* logger = generator->m_compiler->m_logger;
 
