@@ -1,17 +1,18 @@
- * Implement static function tables and disassembler
- * Implement virtual function tables
- * Implement instance field tables
- * Implement static field tables.
+ * Break down binary entity generator to smaller functions.
+ * Move semantic errors from the code generator to definition and resolution phases.
  * Native code should be able throw and catch exceptions.
  * Generate default constructors when no constructor is provided.
  * Hexadecimal integer literals are not working
- * Move semantic errors from the code generator to definition and resolution phases.
  * Use symbol->m_name instead of symbol->m_context.as_Class.qualifiedName
  * Implement decimal values!
  * Implement the logical operators
+ * Implement the array function.
+
+ * Implement virtual function tables
+ * Implement instance field tables
+ * Implement static field tables.
  * Function should return null if none is provided
  * Throw an exception when dividing by zero.
- * Implement the array function.
  * Implement standard packages
  * Add tableIndex to field constant pool entry.
 

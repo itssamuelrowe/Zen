@@ -538,33 +538,48 @@ void zen_BinaryEntityGenerator_onExitCompilationUnit(zen_ASTListener_t* astListe
 
 #include <stdio.h>
 
+void zen_BinaryEntityGenerator_writeOutput(zen_BinaryEntityGenerator_t* generator,
+    zen_Entity_t* entity) {
+    zen_ConstantPoolUtf8_t* name = zen_ConstantPoolBuilder_getUtf8Entry(
+        generator->m_constantPoolBuilder, entity->m_reference);
+    jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
+    jtk_StringBuilder_appendEx_z(builder, name->m_bytes, name->m_length);
+    jtk_StringBuilder_appendEx_z(builder, ".feb", 4);
+    int32_t pathSize;
+    uint8_t* path = jtk_StringBuilder_toCString(builder, &pathSize);
+    jtk_StringBuilder_delete(builder);
+
+    zen_DataChannel_t* channel = jtk_ArrayList_getValue(generator->m_builder->m_channels, 0);
+    if (generator->m_compiler->m_dumpInstructions) {
+        zen_BinaryEntityDisassembler_disassemble(generator->m_compiler->m_disassembler,
+            channel->m_bytes, channel->m_index);
+    }
+
+    FILE* fp = fopen(path, "w+");
+    if (fp != NULL) {
+        fwrite(channel->m_bytes, channel->m_index, 1, fp);
+        fclose(fp);
+    }
+    else {
+        fprintf(stderr, "[error] Failed to create output file '%s'.\n", path);
+    }
+    jtk_CString_delete(path);
+}
+
 void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generator) {
     jtk_Logger_t* logger = generator->m_compiler->m_logger;
 
     /* Write magic number, major version, and minor version on the main channel. */
     zen_BinaryEntityBuilder_writeMagicNumber(generator->m_builder);
-    /* Log the magic number written. */
-    jtk_Logger_info(logger, "Encoding stream with magic number 0xFEB72000.");
-
     /* Write the major version of the binary entity file format the stream is encoded in. */
     zen_BinaryEntityBuilder_writeMajorVersion(generator->m_builder,
         generator->m_entityFile->m_version.m_majorVersion);
-
     /* Write the minor version of the binary entity file format the stream is encoded in. */
     zen_BinaryEntityBuilder_writeMinorVersion(generator->m_builder,
         generator->m_entityFile->m_version.m_minorVersion);
-
-    /* Log the version of the target binary entity file format. */
-    jtk_Logger_info(logger, "The target binary entity format version is v%d.%d",
-        generator->m_entityFile->m_version.m_majorVersion,
-        generator->m_entityFile->m_version.m_minorVersion);
-
     /* Write additional flags on how the binary entity file should be loaded. */
     zen_BinaryEntityBuilder_writeStreamFlags(generator->m_builder,
         generator->m_entityFile->m_flags);
-
-    /* Log the flags that determine how the binary entity should be treated. */
-    jtk_Logger_info(logger, "Applying flags 0x%X", generator->m_entityFile->m_flags);
 
     /* At this point, all the constant pool entries required by the binary entity
      * file should be available to the constant pool builder. The constant pool
@@ -576,7 +591,6 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
      * first entry. Therefore, subtract the constant pool entry count by one.
      */
     zen_BinaryEntityBuilder_writeConstantPoolHeader(generator->m_builder, entryCount - 1);
-
     int32_t i;
     for (i = 1; i < entryCount; i++) {
         zen_ConstantPoolEntry_t* entry = zen_ConstantPoolBuilder_getEntry(generator->m_constantPoolBuilder, i);
@@ -585,18 +599,14 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
 
     /* Retrieve the entity to write. */
     zen_Entity_t* entity = &generator->m_entityFile->m_entity;
-
     /* Write the entity header. */
     zen_BinaryEntityBuilder_writeEntityHeader(generator->m_builder, entity->m_type,
         entity->m_flags, entity->m_reference);
-
     /* Write the superclasses. */
     zen_BinaryEntityBuilder_writeSuperclasses(generator->m_builder, entity->m_superclassCount,
         entity->m_superclasses);
-
     /* Write the attribute count. */
     zen_BinaryEntityBuilder_writeAttributeCount(generator->m_builder, entity->m_attributeTable.m_size);
-
     // TODO: Write the attribute
 
     /* Retrieve the field count. */
@@ -643,18 +653,11 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
             functionEntity->m_flags, functionEntity->m_nameIndex,
             functionEntity->m_descriptorIndex, functionEntity->m_tableIndex);
 
-        /* Log the details of the function. */
-        jtk_Logger_debug(logger, "A function was written with the features (flags = 0x%X, nameIndex = %d, descriptorIndex = %d).",
-            functionEntity->m_flags, functionEntity->m_nameIndex, functionEntity->m_descriptorIndex);
-
         /* Retrieve the attribute table for the current function entity. */
         zen_AttributeTable_t* attributeTable = &functionEntity->m_attributeTable;
 
         /* Write the total number of attributes. */
         zen_BinaryEntityBuilder_writeAttributeCount(generator->m_builder, attributeTable->m_size);
-
-        /* Log the total number of attributes declared in the attribute table. */
-        jtk_Logger_debug(logger, "The function has %d attributes.", attributeTable->m_size);
 
         int32_t attributeIndex;
         for (attributeIndex = 0; attributeIndex < attributeTable->m_size; attributeIndex++) {
@@ -686,47 +689,11 @@ void zen_BinaryEntityGenerator_writeEntity(zen_BinaryEntityGenerator_t* generato
                     instructionAttribute->m_instructionLength,
                     instructionAttribute->m_instructions,
                     &instructionAttribute->m_exceptionTable);
-
-                /* Log the details of the instruction attribute. */
-                jtk_Logger_debug(logger, "The function has an instruction attribute with the features "
-                       "(nameIndex = %d, length = %d, maxStackSize = %d, localVariableCount = %d, "
-                       "instructionLength = %d)",
-                        instructionAttribute->m_nameIndex,
-                        instructionAttribute->m_length,
-                        instructionAttribute->m_maxStackSize,
-                        instructionAttribute->m_localVariableCount,
-                        instructionAttribute->m_instructionLength);
-
-                // TODO: Write the exception table.
             }
         }
     }
 
-    zen_ConstantPoolUtf8_t* name = zen_ConstantPoolBuilder_getUtf8Entry(generator->m_constantPoolBuilder, entity->m_reference);
-    jtk_StringBuilder_t* builder = jtk_StringBuilder_new();
-    jtk_StringBuilder_appendEx_z(builder, name->m_bytes, name->m_length);
-    jtk_StringBuilder_appendEx_z(builder, ".feb", 4);
-    int32_t pathSize;
-    uint8_t* path = jtk_StringBuilder_toCString(builder, &pathSize);
-    jtk_StringBuilder_delete(builder);
-
-    zen_DataChannel_t* channel = jtk_ArrayList_getValue(generator->m_builder->m_channels, 0);
-    if (generator->m_compiler->m_dumpInstructions) {
-        zen_BinaryEntityDisassembler_disassemble(generator->m_compiler->m_disassembler,
-            channel->m_bytes, channel->m_index);
-    }
-
-    FILE* fp = fopen(path, "w+");
-    if (fp != NULL) {
-        fwrite(channel->m_bytes, channel->m_index, 1, fp);
-        fclose(fp);
-
-        jtk_Logger_info(logger, "Successfully generated output file '%s'.", path);
-    }
-    else {
-        fprintf(stderr, "[error] Failed to create output file '%s'.\n", path);
-    }
-    jtk_CString_delete(path);
+    zen_BinaryEntityGenerate_writeOutput(generator, entity);
 }
 
 // importDeclaration
