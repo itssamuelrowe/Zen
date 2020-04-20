@@ -1,13 +1,29 @@
+April 20
+
  * Break down binary entity generator to smaller functions.
+ * Move log messages from generator to builder
+
+April 21
  * Move semantic errors from the code generator to definition and resolution phases.
+
+April 22
  * invoke_dynamic
+
+April 23
  * Native code should be able throw and catch exceptions.
  * Generate default constructors when no constructor is provided.
+
+April 24
  * Hexadecimal integer literals are not working
+* Implement decimal values!
+
+April 25
  * Use symbol->m_name instead of symbol->m_context.as_Class.qualifiedName
- * Implement decimal values!
  * Implement the logical operators
  * Implement the array function.
+
+April 26
+ * Write examples!
 
  * Implement virtual function tables
  * Implement instance field tables
@@ -20,7 +36,6 @@
 
 
  * The code generator generates the instruction attribute for native functions, too!
- * Move log messages from generator to builder
  * Implement a wildcard search
  * Implement line numbers for exceptions.
  * The compiler generates error for
@@ -49,7 +64,7 @@ class Example
  * Implement the compound assignment operators
  * Implement continue statement
  * Change the function keyword to define. Functions should be referenced as methods.
- * Escape sequences!
+ * Unicode escape sequences
  * Function overloading
  * Call other constructors
  * Implement printf()

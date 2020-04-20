@@ -45,9 +45,13 @@ bool lhs = false;
 
 // Initialize
 
-#define ZEN_BINARY_ENTITY_GENERATOR_CPF_COUNT 2
+#define ZEN_BINARY_ENTITY_GENERATOR_CPF_COUNT 6
 #define ZEN_BINARY_ENTITY_GENERATOR_BOOLEAN_GET_VALUE 0
 #define ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_EVALUATE 1
+#define ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_STORE_FIELD 2
+#define ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_INVOKE 3
+#define ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_INVOKE_EX 4
+#define ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_LOAD_FIELD 5
 
 uint16_t zen_Symbol_findFunctionIndex(zen_ConstantPoolBuilder_t* builder,
     zen_Symbol_t* symbol,
@@ -92,6 +96,18 @@ void zen_BinaryEntityGenerator_initializeCPFCache(zen_BinaryEntityGenerator_t* g
     generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_EVALUATE] =
         zen_Symbol_findFunctionIndex(generator->m_constantPoolBuilder,
             zenKernelClass, "evaluate", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)", 69);
+    generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_STORE_FIELD] =
+        zen_Symbol_findFunctionIndex(generator->m_constantPoolBuilder,
+            zenKernelClass, "storeField", 10, "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)", 69);
+    generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_INVOKE] =
+        zen_Symbol_findFunctionIndex(generator->m_constantPoolBuilder,
+            zenKernelClass, "invoke", 6, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52);
+    generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_INVOKE_EX] =
+        zen_Symbol_findFunctionIndex(generator->m_constantPoolBuilder,
+            zenKernelClass, "invokeEx", 8, "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)", 70);
+    generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_LOAD_FIELD] =
+        zen_Symbol_findFunctionIndex(generator->m_constantPoolBuilder,
+            zenKernelClass, "loadField", 9, "(zen/core/Object):(zen/core/Object)(zen/core/Object)", 52);
 }
 
 // Constructor
@@ -5261,16 +5277,9 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
     zen_Symbol_t* primarySymbol = NULL;
     int32_t postfixPartCount = jtk_ArrayList_getSize(context->m_postfixParts);
 
-    const uint8_t* kernelClassName = "zen/core/ZenKernel";
-    int32_t kernelClassNameSize = 18;
-    const uint8_t* loadFieldDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)";
-    int32_t loadFieldDescriptorSize = 52;
-    const uint8_t* loadFieldName = "loadField";
-    int32_t loadFieldNameSize = 9;
-    uint16_t loadFieldIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
-        loadFieldDescriptor, loadFieldDescriptorSize, loadFieldName,
-        loadFieldNameSize, 0);
+    uint16_t invokeIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_INVOKE];
+    uint16_t invokeExIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_INVOKE_EX];
+    uint16_t loadFieldIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_LOAD_FIELD];
 
     zen_Token_t* primaryToken = NULL;
 
@@ -5439,29 +5448,6 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
     else {
         // Error: What node do we have here?
     }
-
-    const uint8_t* invokeDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)";
-    int32_t invokeDescriptorSize = 52;
-    const uint8_t* invokeName = "invoke";
-    int32_t invokeNameSize = 6;
-    uint16_t invokeIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
-        invokeDescriptor, invokeDescriptorSize, invokeName,
-        invokeNameSize, 0);
-
-    const uint8_t* invokeExName = "invokeEx";
-    int32_t invokeExNameSize = 8;
-    const uint8_t* invokeExDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)";
-    int32_t invokeExDescriptorSize = 70;
-    uint16_t invokeExIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
-        invokeExDescriptor, invokeExDescriptorSize, invokeExName,
-        invokeExNameSize, 0);
-
-    const uint8_t* objectClassName = "zen/core/Object";
-    int32_t objectClassNameSize = 15;
-    uint16_t objectClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
-        generator->m_constantPoolBuilder, objectClassName, objectClassNameSize);
 
     int32_t i;
     for (i = 0; i < postfixPartCount; i++) {
@@ -5946,24 +5932,12 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
         zen_ASTWalker_walk(astListener, expression);
     }
     else {
-        // Error: What node do we have here?
+        printf("[internal error] What node do we have here?\n");
     }
-
-    const uint8_t* objectClassName = "zen/core/Object";
-    int32_t objectClassNameSize = 15;
-    uint16_t objectClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
-        generator->m_constantPoolBuilder, objectClassName, objectClassNameSize);
 
     const uint8_t* kernelClassName = "zen/core/ZenKernel";
     int32_t kernelClassNameSize = 18;
-    const uint8_t* storeFieldDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)";
-    int32_t storeFieldDescriptorSize = 69;
-    const uint8_t* storeFieldName = "storeField";
-    int32_t storeFieldNameSize = 10;
-    uint16_t storeFieldIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
-        storeFieldDescriptor, storeFieldDescriptorSize, storeFieldName,
-        storeFieldNameSize, 0);
+    uint16_t storeFieldIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_STORE_FIELD];
 
     const uint8_t* storeClassFieldDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)";
     int32_t storeClassFieldDescriptorSize = 69;
@@ -5974,52 +5948,9 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
         storeClassFieldDescriptor, storeClassFieldDescriptorSize, storeClassFieldName,
         storeClassFieldNameSize, 0);
 
-    const uint8_t* invokeDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)";
-    int32_t invokeDescriptorSize = 52;
-    const uint8_t* invokeName = "invoke";
-    int32_t invokeNameSize = 6;
-    uint16_t invokeIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
-        invokeDescriptor, invokeDescriptorSize, invokeName,
-        invokeNameSize, 0);
-
-    const uint8_t* invokeExName = "invokeEx";
-    int32_t invokeExNameSize = 8;
-    const uint8_t* invokeExDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)";
-    int32_t invokeExDescriptorSize = 70;
-    uint16_t invokeExIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
-        invokeExDescriptor, invokeExDescriptorSize, invokeExName,
-        invokeExNameSize, 0);
-
-    // const uint8_t* invokeStaticDescriptor = "(zen/core/Object):(zen/core/Class)(zen/core/String)";
-    const uint8_t* invokeStaticDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)";
-    int32_t invokeStaticDescriptorSize = 52;
-    const uint8_t* invokeStaticName = "invokeStatic";
-    int32_t invokeStaticNameSize = 12;
-    uint16_t invokeStaticIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
-        invokeStaticDescriptor, invokeStaticDescriptorSize, invokeStaticName,
-        invokeStaticNameSize, 0);
-
-    // const uint8_t* invokeStaticExDescriptor = "(zen/core/Object):(zen/core/Class)(zen/core/String)@(zen/core/Object)";
-    const uint8_t* invokeStaticExDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)@(zen/core/Object)";
-    int32_t invokeStaticExDescriptorSize = 70;
-    const uint8_t* invokeStaticExName = "invokeStaticEx";
-    int32_t invokeStaticExNameSize = 14;
-    uint16_t invokeStaticExIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
-        invokeStaticExDescriptor, invokeStaticExDescriptorSize, invokeStaticExName,
-        invokeStaticExNameSize, 0);
-
-    const uint8_t* loadFieldDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)";
-    int32_t loadFieldDescriptorSize = 52;
-    const uint8_t* loadFieldName = "loadField";
-    int32_t loadFieldNameSize = 9;
-    uint16_t loadFieldIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
-        loadFieldDescriptor, loadFieldDescriptorSize, loadFieldName,
-        loadFieldNameSize, 0);
+    uint16_t invokeIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_INVOKE];
+    uint16_t invokeExIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_INVOKE_EX];
+    uint16_t loadFieldIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_LOAD_FIELD];
 
     if (postfixPartCount == 0) {
         if (zen_Symbol_isVariable(primarySymbol) || zen_Symbol_isConstant(primarySymbol)) {
