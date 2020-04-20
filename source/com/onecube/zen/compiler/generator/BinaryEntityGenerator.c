@@ -5208,6 +5208,48 @@ void zen_BinaryEntityGenerator_handleIntegerLiteral(zen_BinaryEntityGenerator_t*
         constructorIndex);
 }
 
+void zen_BinaryEntityGenerator_handleStringLiteral(zen_BinaryEntityGenerator_t* generator,
+    zen_Token_t* token) {
+    int32_t size = 0;
+    int32_t limit = token->m_length - 1;
+    uint8_t* string = jtk_Memory_allocate(uint8_t, limit);
+    int32_t i;
+    for (i = 1; i < limit; i++) {
+        uint8_t next = token->m_text[i];
+        if (token->m_text[i] == '\\') {
+            switch (token->m_text[++i]) {
+                case 'b': next = '\b'; break;
+                case 'f': next = '\f'; break;
+                case 'r': next = '\r'; break;
+                case 'n': next = '\n'; break;
+                case 't': next = '\t'; break;
+                // TODO: 'u'
+
+                default: {
+                    printf("[internal error] Control should not reach here.");
+                }
+            }
+        }
+        string[size++] = next;
+    }
+
+    /* Retrieve a valid index into the constant pool. The entry at
+     * this index is a constant pool string. The token text encloses
+     * the content within double quotes. Therefore, the first quote
+     * is skipped using pointer arithmetic and the last quote
+     * is skipped by subtracting 1 from the length of the text.
+     * Another 1 is subtracted from the text length because the first
+     * quote was skipped.
+     */
+    uint8_t stringIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
+        generator->m_constantPoolBuilder, string, size);
+    /* Emit load_cpr instruction. */
+    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
+        stringIndex);
+
+    jtk_Memory_deallocate(string);
+}
+
 void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
     zen_ASTListener_t* astListener, zen_BinaryEntityGenerator_t* generator,
     zen_PostfixExpressionContext_t* context, zen_PrimaryExpressionContext_t* primaryExpressionContext) {
@@ -5358,24 +5400,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
             }
 
             case ZEN_TOKEN_STRING_LITERAL: {
-                /* Retrieve a valid index into the constant pool. The entry at
-                 * this index is a constant pool string. The token text encloses
-                 * the content within double quotes. Therefore, the first quote
-                 * is skipped using pointer arithmetic and the last quote
-                 * is skipped by subtracting 1 from the length of the text.
-                 * Another 1 is subtracted from the text length because the first
-                 * quote was skipped.
-                 */
-                uint8_t stringIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
-                    generator->m_constantPoolBuilder, token->m_text + 1, token->m_length - 2);
-
-                /* Emit load_cpr instruction. */
-                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
-                    stringIndex);
-
-                /* Log the emission of the instruction. */
-                jtk_Logger_debug(logger, "Emitted load_cpr %d", stringIndex);
-
+                zen_BinaryEntityGenerator_handleStringLiteral(generator, token);
                 break;
             }
 
@@ -5889,24 +5914,7 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
             }
 
             case ZEN_TOKEN_STRING_LITERAL: {
-                /* Retrieve a valid index into the constant pool. The entry at
-                 * this index is a constant pool string. The token text encloses
-                 * the content within double quotes. Therefore, the first quote
-                 * is skipped using pointer arithmetic and the last quote
-                 * is skipped by subtracting 1 from the length of the text.
-                 * Another 1 is subtracted from the text length because the first
-                 * quote was skipped.
-                 */
-                uint8_t stringIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
-                    generator->m_constantPoolBuilder, token->m_text + 1, token->m_length - 2);
-
-                /* Emit load_cpr instruction. */
-                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
-                    stringIndex);
-
-                /* Log the emission of the instruction. */
-                jtk_Logger_debug(logger, "Emitted load_cpr %d", stringIndex);
-
+                zen_BinaryEntityGenerator_handleStringLiteral(generator, token);
                 break;
             }
 
