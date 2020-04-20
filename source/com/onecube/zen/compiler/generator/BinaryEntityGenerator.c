@@ -5134,6 +5134,80 @@ void zen_BinaryEntityGenerator_loadInteger(zen_BinaryEntityGenerator_t* generato
  * instructions as if the code was written in the latter form.
  */
 
+void zen_BinaryEntityGenerator_handleIntegerLiteral(zen_BinaryEntityGenerator_t* generator,
+    zen_Token_t* token) {
+    const uint8_t* integerClassName = "zen/core/Integer";
+    int32_t integerClassNameSize = 16;
+    uint16_t integerClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
+        generator->m_constantPoolBuilder, integerClassName,
+        integerClassNameSize);
+
+    /* Emit the new instruction. */
+    zen_BinaryEntityBuilder_emitNew(generator->m_builder, integerClassIndex);
+    /* Emit the duplicate instruction. */
+    zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
+
+    uint8_t* integerText = zen_Token_getText(token);
+    int32_t actualIntegerLength = zen_Token_getLength(token);
+    int32_t integerLength = actualIntegerLength;
+
+    int32_t radix = 10;
+    if (integerLength > 2) {
+        if ((integerText[0] == '0') && ((integerText[0] == 'x') || (integerText[0] == 'X'))) {
+            radix = 16;
+            integerText += 2;
+            integerLength -= 2;
+        }
+        else if ((integerText[0] == '0') && ((integerText[0] == 'b') || (integerText[0] == 'B'))) {
+            radix = 2;
+            integerText += 2;
+            integerLength -= 2;
+        }
+        else if ((integerText[0] == '0') && ((integerText[0] == 'c') || (integerText[0] == 'C'))) {
+            /* TODO: Octal integer literals begin with 0c or 0C according
+                * to the logic written here. Therefore, please modify the
+                * lexer accordingly.
+                */
+
+            radix = 8;
+            integerText += 2;
+            integerLength -= 2;
+        }
+    }
+
+    // bool longLiteral = (integerText[actualIntegerLength - 1] == 'L') ||
+        // (integerText[actualIntegerLength - 1] == 'l');
+
+    // if (longLiteral) {
+        // integerLength--;
+    // }
+
+    int64_t value = zen_Long_convert(integerText, integerLength, radix);
+
+    // if (longLiteral) {
+        zen_BinaryEntityGenerator_loadLong(generator, value);
+    // }
+    // else {
+        // zen_BinaryEntityGenerator_loadInteger(generator, value);
+    // }
+
+    // TODO: Implement integer interning.
+
+    const uint8_t* constructorName = "<initialize>";
+    int32_t constructorNameSize = 12;
+    // const uint8_t* constructorDescriptor = "v:i";
+    const uint8_t* constructorDescriptor = "v:(zen/core/Object)";
+    int32_t constructorDescriptorSize = 19;
+    uint16_t constructorIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, integerClassName,
+        integerClassNameSize, constructorDescriptor, constructorDescriptorSize,
+        constructorName, constructorNameSize, 0);
+
+    /* Invoke the constructor to initialize the new integer instance. */
+    zen_BinaryEntityBuilder_emitInvokeSpecial(generator->m_builder,
+        constructorIndex);
+}
+
 void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
     zen_ASTListener_t* astListener, zen_BinaryEntityGenerator_t* generator,
     zen_PostfixExpressionContext_t* context, zen_PrimaryExpressionContext_t* primaryExpressionContext) {
@@ -5259,86 +5333,7 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
             }
 
             case ZEN_TOKEN_INTEGER_LITERAL: {
-                const uint8_t* integerClassName = "zen/core/Integer";
-                int32_t integerClassNameSize = 16;
-                uint16_t integerClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
-                    generator->m_constantPoolBuilder, integerClassName,
-                    integerClassNameSize);
-
-                /* Emit the new instruction. */
-                zen_BinaryEntityBuilder_emitNew(generator->m_builder, integerClassIndex);
-
-                /* Log the emission of the new instruction. */
-                jtk_Logger_debug(logger, "Emitted new %d", integerClassIndex);
-
-                /* Emit the duplicate instruction. */
-                zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
-
-                /* Log the emission of the duplicate instruction. */
-                jtk_Logger_debug(logger, "Emitted duplicate");
-
-                uint8_t* integerText = zen_Token_getText(token);
-                int32_t actualIntegerLength = zen_Token_getLength(token);
-                int32_t integerLength = actualIntegerLength;
-
-                int32_t radix = 10;
-                if (integerLength > 2) {
-                    if ((integerText[0] == '0') && ((integerText[0] == 'x') || (integerText[0] == 'X'))) {
-                        radix = 16;
-                        integerText += 2;
-                        integerLength -= 2;
-                    }
-                    else if ((integerText[0] == '0') && ((integerText[0] == 'b') || (integerText[0] == 'B'))) {
-                        radix = 2;
-                        integerText += 2;
-                        integerLength -= 2;
-                    }
-                    else if ((integerText[0] == '0') && ((integerText[0] == 'c') || (integerText[0] == 'C'))) {
-                        /* TODO: Octal integer literals begin with 0c or 0C according
-                         * to the logic written here. Therefore, please modify the
-                         * lexer accordingly.
-                         */
-
-                        radix = 8;
-                        integerText += 2;
-                        integerLength -= 2;
-                    }
-                }
-
-                // bool longLiteral = (integerText[actualIntegerLength - 1] == 'L') ||
-                    // (integerText[actualIntegerLength - 1] == 'l');
-
-                // if (longLiteral) {
-                    // integerLength--;
-                // }
-
-                int64_t value = zen_Long_convert(integerText, integerLength, radix);
-
-                // if (longLiteral) {
-                    zen_BinaryEntityGenerator_loadLong(generator, value);
-                // }
-                // else {
-                    // zen_BinaryEntityGenerator_loadInteger(generator, value);
-                // }
-
-                // TODO: Implement integer interning.
-
-                const uint8_t* constructorName = "<initialize>";
-                int32_t constructorNameSize = 12;
-                // const uint8_t* constructorDescriptor = "v:i";
-                const uint8_t* constructorDescriptor = "v:(zen/core/Object)";
-                int32_t constructorDescriptorSize = 19;
-                uint16_t constructorIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-                    generator->m_constantPoolBuilder, integerClassName,
-                    integerClassNameSize, constructorDescriptor, constructorDescriptorSize,
-                    constructorName, constructorNameSize, 0);
-
-                /* Invoke the constructor to initialize the new integer instance. */
-                zen_BinaryEntityBuilder_emitInvokeSpecial(generator->m_builder,
-                    constructorIndex);
-                /* Log the emission of the invoke_special instruction. */
-                jtk_Logger_debug(logger, "Emitted invoke_special %d", constructorIndex);
-
+                zen_BinaryEntityGenerator_handleIntegerLiteral(generator, primaryToken);
                 break;
             }
 
@@ -5868,50 +5863,7 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
             }
 
             case ZEN_TOKEN_INTEGER_LITERAL: {
-                uint8_t* integerText = zen_Token_getText(token);
-                int32_t actualIntegerLength = zen_Token_getLength(token);
-                int32_t integerLength = actualIntegerLength;
-
-                int32_t radix = 10;
-                if (integerLength > 2) {
-                    if ((integerText[0] == '0') && ((integerText[0] == 'x') || (integerText[0] == 'X'))) {
-                        radix = 16;
-                        integerText += 2;
-                        integerLength -= 2;
-                    }
-                    else if ((integerText[0] == '0') && ((integerText[0] == 'b') || (integerText[0] == 'B'))) {
-                        radix = 2;
-                        integerText += 2;
-                        integerLength -= 2;
-                    }
-                    else if ((integerText[0] == '0') && ((integerText[0] == 'c') || (integerText[0] == 'C'))) {
-                        /* TODO: Octal integer literals begin with 0c or 0C according
-                         * to the logic written here. Therefore, please modify the
-                         * lexer accordingly.
-                         */
-
-                        radix = 8;
-                        integerText += 2;
-                        integerLength -= 2;
-                    }
-                }
-
-                // bool longLiteral = (integerText[actualIntegerLength - 1] == 'L') ||
-                //     (integerText[actualIntegerLength - 1] == 'l');
-
-                // if (longLiteral) {
-                //     integerLength--;
-                // }
-
-                int64_t value = zen_Long_convert(integerText, integerLength, radix);
-
-                // if (longLiteral) {
-                    /* All integers in Zen are 64-bit. */
-                    zen_BinaryEntityGenerator_loadLong(generator, value);
-                // }
-                // else {
-                //     zen_BinaryEntityGenerator_loadInteger(generator, value);
-                // }
+                zen_BinaryEntityGenerator_handleIntegerLiteral(generator, token);
 
                 break;
             }
