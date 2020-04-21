@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg8"
+   sodipodi:docname="zen.svg"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="5.6568543"
+     inkscape:cx="329.78174"
+     inkscape:cy="971.40921"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1850"
+     inkscape:window-height="1009"
+     inkscape:window-x="70"
+     inkscape:window-y="34"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#000000;fill-opacity:1;stroke-width:0.26458332"
+       id="rect391"
+       width="52.571915"
+       height="28.718111"
+       x="56.968498"
+       y="27.592318" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:4.60302782px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.1150757;"
+       x="84.505753"
+       y="47.677891"
+       id="text12"
+       inkscape:export-filename="/home/samuel/project/zen-website/static/images/logo.png"
+       inkscape:export-xdpi="200.60001"
+       inkscape:export-ydpi="200.60001"><tspan
+         sodipodi:role="line"
+         id="tspan10"
+         x="84.505753"
+         y="47.677891"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Righteous;-inkscape-font-specification:Righteous;fill:#ffffff;stroke-width:0.1150757;">Zen</tspan></text>
+    <path
+       style="fill:#ffffff;fill-opacity:1;stroke-width:0.03854969"
+       d="m 299.51172,158.77539 -13.9668,6.91602 v 6.90234 l 13.9668,-6.91602 13.9668,6.91602 v -6.90234 z m 0,10.10352 -13.9668,6.91601 2,6.90039 11.9668,6.91797 11.9668,-6.91797 2,-6.90039 z m 0,6.90039 7,3.46679 -7,3.46485 -7,-3.46485 z"
+       transform="scale(0.26458333)"
+       id="rect3836-3-5-9"
+       inkscape:export-filename="/home/samuel/project/zen-website/static/images/logo.png"
+       inkscape:export-xdpi="200.60001"
+       inkscape:export-ydpi="200.60001"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccccccccccccccccc" />
+    <g
+       id="g235-7"
+       transform="matrix(0.21873676,0,0,0.21873676,47.308271,19.966135)">
+      <rect
+         transform="matrix(0.89614112,0.44376919,0,-1,0,0)"
+         style="fill:#ffffff;fill-opacity:1;stroke-width:0.04925763"
+         y="-44.154457"
+         x="80.299599"
+         height="8.3483534"
+         width="18.852055"
+         id="rect3836-3-5-9-0" />
+      <rect
+         transform="matrix(0.89614112,-0.44376919,0,1,0,0)"
+         style="fill:#ffffff;fill-opacity:1;stroke-width:0.04925763"
+         y="94.855309"
+         x="80.299599"
+         height="8.3483534"
+         width="18.852055"
+         id="rect3838-6-6-1-9" />
+      <rect
+         id="rect3840-7-2-2-3"
+         width="18.852055"
+         height="8.3483534"
+         x="-118.00373"
+         y="6.854486"
+         style="fill:#ffffff;fill-opacity:1;stroke-width:0.04925763"
+         transform="matrix(-0.89614112,-0.44376919,0,1,0,0)" />
+      <rect
+         id="rect3842-5-9-7-6"
+         width="18.852055"
+         height="8.3483534"
+         x="80.299599"
+         y="107.07513"
+         style="fill:#ffffff;fill-opacity:1;stroke-width:0.04925763"
+         transform="matrix(0.89614112,-0.44376919,0,1,0,0)" />
+      <rect
+         id="rect3842-5-9-7-3-0"
+         width="18.852055"
+         height="8.3483534"
+         x="99.151657"
+         y="123.80701"
+         style="fill:#ffffff;fill-opacity:1;stroke-width:0.04925763"
+         transform="matrix(0.89614112,-0.44376919,0,1,0,0)" />
+      <rect
+         transform="matrix(-0.89614112,-0.44376919,0,1,0,0)"
+         style="fill:#ffffff;fill-opacity:1;stroke-width:0.04925763"
+         y="19.074224"
+         x="-118.00373"
+         height="8.3483534"
+         width="18.852055"
+         id="rect3844-3-1-0-6" />
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:4.60302782px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.1150757"
+       x="84.283264"
+       y="37.577515"
+       id="text12-2"
+       inkscape:export-filename="/home/samuel/project/zen-website/static/images/logo.png"
+       inkscape:export-xdpi="200.60001"
+       inkscape:export-ydpi="200.60001"><tspan
+         sodipodi:role="line"
+         id="tspan10-6"
+         x="84.283264"
+         y="37.577515"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Righteous;-inkscape-font-specification:Righteous;fill:#ffffff;stroke-width:0.1150757">Zen</tspan></text>
+    <path
+       inkscape:connector-curvature="0"
+       style="fill:#ffffff;fill-opacity:1;stroke-width:0.01019961"
+       d="m 79.023317,31.908947 -3.695383,1.829863 v 1.826244 l 3.695383,-1.829863 3.695382,1.829863 V 33.73881 Z m 0,2.673223 -3.695383,1.829861 v 1.825728 l 3.695383,1.830379 3.695382,-1.830379 v -1.825728 z m 0,1.825728 1.852083,0.917255 -1.852083,0.916741 -1.852083,-0.916741 z"
+       id="rect3836-3-5-9-1"
+       inkscape:export-filename="/home/samuel/project/zen-website/static/images/logo.png"
+       inkscape:export-xdpi="200.60001"
+       inkscape:export-ydpi="200.60001" />
+  </g>
+</svg>
