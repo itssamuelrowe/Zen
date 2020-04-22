@@ -58,6 +58,7 @@ class Example
     ...
 ```
 
+ * Class and function references
  * Change invoke function pointers for native functions to accept variable arguments.
  * Change zen_Object_t from structure to uint8_t*
  * Implement hash code caching for strings
@@ -80,3 +81,4 @@ class Example
  Python: 0.045s (15.11x faster), Zen: 0.680s, JavaScript: 0.315s (2.15x faster)
 
             0.244, 0.271
+
