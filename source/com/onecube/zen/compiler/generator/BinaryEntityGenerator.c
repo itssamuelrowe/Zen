@@ -5966,57 +5966,26 @@ void zen_BinaryEntityGenerator_handleIdentifier(zen_BinaryEntityGenerator_t* gen
 }
 
 void zen_BinaryEntityGenerator_handleSubscript(zen_BinaryEntityGenerator_t* generator,
-    zen_SubscriptContext_t* subscriptContext) {
+    zen_SubscriptContext_t* subscriptContext, bool lastPostfix) {
     /* Visit the index expression node and generate the relevant
      * instructions.
      */
     zen_ASTWalker_walk(generator->m_astListener, subscriptContext->m_expression);
 
     /* Generate the instructions corresponding to invoking the
-        * ZenKernel.evaluate() function. Since, Zen is dynamically typed
-        * the compiler cannot determine the type of the operands. Therefore,
-        * the subscript operation is delegated to the function annotated
-        * with the Operator annotation.
-        */
-    zen_BinaryEntityGenerator_invokeEvaluate(generator, "[]", 2);
-
-    /* The normal behaviour of the AST walker causes the generator to
-     * emit instructions in an undesirable fashion. Therefore, we partially
-     * switch from the listener to visitor design pattern. The AST walker
-     * can be guided to switch to this mode via zen_ASTListener_skipChildren()
-     * function which causes the AST walker to skip iterating over the children
-     * nodes.
+     * ZenKernel.evaluate() function. Since, Zen is dynamically typed
+     * the compiler cannot determine the type of the operands. Therefore,
+     * the subscript operation is delegated to the function annotated
+     * with the Operator annotation.
      */
+    const uint8_t* operator0 = "[]=";
+    int32_t size = 3;
+    if (!lhs || !lastPostfix) {
+        operator0 = "[]";
+        size = 2;
+    }
+    zen_BinaryEntityGenerator_invokeEvaluate(generator, operator0, size);
     zen_ASTListener_skipChildren(generator->m_astListener);
-
-
-
-
-
-
-                    /* Visit the index expression node and generate the relevant
-                     * instructions.
-                     */
-                    zen_ASTWalker_walk(astListener, subscriptContext->m_expression);
-
-                    /* Generate the instructions corresponding to invoking the
-                     * ZenKernel.evaluate() function.
-                     */
-                    if (i + 1 < postfixPartCount) {
-                        zen_BinaryEntityGenerator_invokeEvaluate(generator, "[]", 2);
-                    }
-                    else {
-                        zen_BinaryEntityGenerator_invokeEvaluate(generator, "[]=", 3);
-                    }
-
-                    /* The normal behaviour of the AST walker causes the generator to
-                     * emit instructions in an undesirable fashion. Therefore, we partially
-                     * switch from the listener to visitor design pattern. The AST walker
-                     * can be guided to switch to this mode via zen_ASTListener_skipChildren()
-                     * function which causes the AST walker to skip iterating over the children
-                     * nodes.
-                     */
-                    zen_ASTListener_skipChildren(astListener);
 }
 
 /*
@@ -6024,7 +5993,7 @@ void zen_BinaryEntityGenerator_handleSubscript(zen_BinaryEntityGenerator_t* gene
  *  i. Only the primary expression is present.
  *  ii. The primary expression along with the postfix parts are present.
  *
- * ALGORITHM FOR GENERATION WHEN ONLY THE PRIMARY EXPRESSION IS PRESENT
+ * ALGORITHM FOR GENERATION OF PRIMARY EXPRESSION
  *
  * 1. For an identifier
  *    a. Resolve the symbol for the given identifier.
@@ -6034,17 +6003,19 @@ void zen_BinaryEntityGenerator_handleSubscript(zen_BinaryEntityGenerator_t* gene
  *       generate load_instance_field, load_static_field, store_instance_field,
  *       or store_static_field depending on the type of the member and expression
  *       side.
- *    d. If the symbol is a class, enumeration, or annotation and there are no
+ *    d. If the symbol is a class or annotation and there are no
  *       postfix parts then generate the load_cpr instruction.
+ *       (This step applies only to RHS.)
  *       Otherwise, pass the reference of the symbol to the next phase, whose
  *       algorithm is described below.
  *    e. If the symbol is a function and there are no postfix parts then generate
- *       the load_cpr instruction. Otherwise, pass the reference of the symbol
- *       to the next phase, whose algorithm is described below.
+ *       the load_cpr instruction. (This step applies only to RHS.)
+ *       Otherwise, pass the reference of the symbol to the next phase, whose
+ *       algorithm is described below.
  *    f. For all other symbols, print an error message that the previous phases
  *       have malfunctioned.
  *
- * 2. For literals
+ * 2. For literals (LHS requires at least one postfix part)
  *    a. For an integer value, generate one of the following instructions depending on
  *       value: load_cpr, push_b, push_s, push_i*, and push_l*.
  *    b. For a floating-point value, generate one of the following instructions
@@ -6056,14 +6027,13 @@ void zen_BinaryEntityGenerator_handleSubscript(zen_BinaryEntityGenerator_t* gene
  * 3. For expressions enclosed in parenthesis, simply walk through the expressions
  *    tree.
  *
- * 4. For map and list expressions, please refer to the algorithms documented with
- *    their respective generators.
+ * 4. For map, list, and new expressions, please refer to the algorithms
+ *    documented with their respective generators.
  *
  * 5. For this keyword, load the reference from the zeroth position in the local
- *    variable array.
+ *    variable array. For LHS, at least one postfix part is required.
  *
- * ALGORITHM FOR GENERATION WHEN BOTH THE PRIMARY EXPRESSION AND THE POSTFIX PARTS
- * ARE PRESENT
+ * ALGORITHM FOR GENERATION WHEN POSTFIX PARTS ARE PRESENT
  *
  * 1. The subscript operator requires an object that implements the operator
  *    on the operand stack, which becomes the first operand. Therefore,
@@ -6071,7 +6041,8 @@ void zen_BinaryEntityGenerator_handleSubscript(zen_BinaryEntityGenerator_t* gene
  *    postfix parts prior to the current postfix part. The second operand should
  *    be evaluated by walking over the tree of the expression specified inside
  *    the square brackets. After which, the ZenKernel.evaluate(operand1, operand2, '[]')
- *    call should be made.
+ *    or ZenKernel.evaluate(operand1, operand2, operand3, '[]=') call should be
+ *    made.
  * 2. For function arguments
  *    a. If function arguments is the very first postfix part, then use the
  *       function symbol resolved in the previous phase. Generate instructions
@@ -6203,7 +6174,8 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
             switch (type) {
                 case ZEN_AST_NODE_TYPE_SUBSCRIPT: {
                     zen_SubscriptContext_t* subscriptContext = (zen_SubscriptContext_t*)postfixPart->m_context;
-                    zen_BinaryEntityGenerator_handleSubscript(generator, (zen_SubscriptContext_t*)postfixPart->m_context);
+                    zen_BinaryEntityGenerator_handleSubscript(generator, (zen_SubscriptContext_t*)postfixPart->m_context,
+                        i + 1 == postfixPartCount);
 
                     break;
                 }
