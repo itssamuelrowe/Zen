@@ -5239,6 +5239,8 @@ void zen_BinaryEntityGenerator_handleStringLiteral(zen_BinaryEntityGenerator_t* 
                 case 'r': next = '\r'; break;
                 case 'n': next = '\n'; break;
                 case 't': next = '\t'; break;
+                case '\'': next: '\''; break;
+                case '\"': next: '\"'; break;
                 // TODO: 'u'
 
                 default: {
@@ -5815,6 +5817,69 @@ void zen_BinaryEntityGenerator_handleRhsPostfixExpression(
     }
 }
 
+void zen_BinaryEntityGenerator_handleIdentifier(zen_BinaryEntityGenerator_t* generator,
+    zen_Symbol_t* symbol) {
+    zen_ASTNode_t* identifier = symbol->m_identifier;
+    zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+    zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(symbol);
+
+    if (zen_Symbol_isVariable(symbol) || zen_Symbol_isConstant(symbol)) {
+        if (zen_Scope_isClassScope(enclosingScope)) {
+            bool instance = !zen_Symbol_isStatic(symbol);
+
+            uint16_t identifierIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
+                generator->m_constantPoolBuilder, identifierToken->m_text,
+                identifierToken->m_length);
+
+            if (instance) {
+                /* The this reference is always stored at the zeroth position
+                    * in the local variable array. Further, we assume that the
+                    * class member and the expression being processed appear in
+                    * in the same class. Therefore, emit a load reference to the
+                    * this reference.
+                    */
+                zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
+                /* Load the name of the field. */
+                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
+                /* Invoke the ZenKernel.storeField() function to update
+                    * the field.
+                    */
+                zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, storeFieldIndex);
+            }
+            else {
+                /* Emit the `load_cpr` instruction to load the reference of the
+                    * class to which the static field belongs.
+                    */
+                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, 0);
+                /* Load the name of the field. */
+                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
+                /* Invoke the ZenKernel.storeField() function to update
+                 * the field.
+                 */
+                zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, storeFieldIndex);
+            }
+        }
+        else if (zen_Scope_isLocalScope(enclosingScope)) {
+            if (zen_Symbol_isVariable(symbol)) {
+                /* Emit the duplicate instruction. */
+                zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
+                /* Emit the store_a instruction. */
+                zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder,
+                    symbol->m_index);
+            }
+            else {
+                printf("[error] Invalid assignment of constant after declaration.\n");
+            }
+        }
+    }
+    else if (zen_Symbol_isFunction(symbol)) {
+        printf("[TODO] Function references are yet to be implemented.\n");
+    }
+    else if (zen_Symbol_isClass(symbol)) {
+        printf("[TODO] Class references are yet to be implemented.\n");
+    }
+}
+
 void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
     zen_ASTListener_t* astListener, zen_BinaryEntityGenerator_t* generator,
     zen_PostfixExpressionContext_t* context,
@@ -5827,19 +5892,14 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
     zen_Symbol_t* primarySymbol = NULL;
     int32_t postfixPartCount = jtk_ArrayList_getSize(context->m_postfixParts);
 
-    /* Load a variable or a constant. */
     if (zen_ASTNode_isTerminal(expression)) {
         /* Retrieve the token that the primary expression represents. */
         zen_Token_t* token = (zen_Token_t*)expression->m_context;
 
         switch (zen_Token_getType(token)) {
             case ZEN_TOKEN_IDENTIFIER: {
-                /* Retrieve the string equivalent to the identifier node. */
-                int32_t identifierSize;
-                uint8_t* identifierText = zen_ASTNode_toCString(expression, &identifierSize);
-
                 /* Resolve the symbol in the symbol table. */
-                zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, identifierText);
+                zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable, token->m_text);
                 /* Pass the reference to the symbol to the next phase. */
                 primarySymbol = symbol;
 
@@ -5908,19 +5968,6 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
         printf("[internal error] What node do we have here?\n");
     }
 
-    const uint8_t* kernelClassName = "zen/core/ZenKernel";
-    int32_t kernelClassNameSize = 18;
-    uint16_t storeFieldIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_STORE_FIELD];
-
-    const uint8_t* storeClassFieldDescriptor = "(zen/core/Object):(zen/core/Object)(zen/core/Object)(zen/core/Object)";
-    int32_t storeClassFieldDescriptorSize = 69;
-    const uint8_t* storeClassFieldName = "storeClassField";
-    int32_t storeClassFieldNameSize = 15;
-    uint16_t storeClassFieldIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, kernelClassName, kernelClassNameSize,
-        storeClassFieldDescriptor, storeClassFieldDescriptorSize, storeClassFieldName,
-        storeClassFieldNameSize, 0);
-
     uint16_t invokeIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_INVOKE];
     uint16_t invokeExIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_INVOKE_EX];
     uint16_t loadFieldIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_LOAD_FIELD];
@@ -5931,86 +5978,7 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
         generator->m_constantPoolBuilder, objectClassName, objectClassNameSize);
 
     if (postfixPartCount == 0) {
-        if (zen_Symbol_isVariable(primarySymbol) || zen_Symbol_isConstant(primarySymbol)) {
-            zen_ASTNode_t* identifier = primarySymbol->m_identifier;
-            zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
-
-            zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(primarySymbol);
-            if (zen_Scope_isClassScope(enclosingScope)) {
-                bool instance = false;
-                instance = true; /* !zen_Symbol_isStatic(primarySymbol); */
-
-                uint16_t identifierIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
-                    generator->m_constantPoolBuilder, identifierToken->m_text,
-                    identifierToken->m_length);
-
-                if (instance) {
-                    /* The this reference is always stored at the zeroth position
-                     * in the local variable array. Further, we assume that the
-                     * class member and the expression being processed appear in
-                     * in the same class. Therefore, emit a load reference to the
-                     * this reference.
-                     */
-                    zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
-
-                    /* Log the emission of the load_a instruction. */
-                    jtk_Logger_debug(logger, "Emitted load_a 0");
-
-                    /* Load the name of the field. */
-                    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
-
-                    /* Log the emission of the load_cpr instruction. */
-                    jtk_Logger_debug(logger, "Emitted load_cpr %d", identifierIndex);
-
-                    /* Invoke the ZenKernel.storeField() function to update
-                     * the field.
-                     */
-                    zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, storeFieldIndex);
-
-                    /* Log the emission of the invoke_static instruction. */
-                    jtk_Logger_debug(logger, "Emitted invoke_static %d", storeFieldIndex);
-                }
-                else {
-                    /* Emit the `load_cpr` instruction to load the reference of the
-                     * class to which the static field belongs.
-                     */
-                    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, 0);
-
-                    /* Log the emission of the load_cpr instruction. */
-                    jtk_Logger_debug(logger, "Emitted load_cpr 0 (dummy)");
-
-                    /* Load the name of the field. */
-                    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
-
-                    /* Log the emission of the load_cpr instruction. */
-                    jtk_Logger_debug(logger, "Emitted load_cpr %d", identifierIndex);
-
-                    /* Invoke the ZenKernel.storeField() function to update
-                     * the field.
-                     */
-                    zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, storeFieldIndex);
-
-                    /* Log the emission of the invoke_static instruction. */
-                    jtk_Logger_debug(logger, "Emitted invoke_static %d", storeFieldIndex);
-                }
-            }
-            else if (zen_Scope_isLocalScope(enclosingScope)) {
-                if (zen_Symbol_isVariable(primarySymbol)) {
-                    /* Emit the duplicate instruction. */
-                    zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
-
-                    /* Emit the store_a instruction. */
-                    zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder,
-                        primarySymbol->m_index);
-
-                    /* Log the emission of the store_a instruction. */
-                    jtk_Logger_debug(logger, "Emitted store_a %d", primarySymbol->m_index);
-                }
-                else {
-                    printf("[error] Invalid assignment of constant after declaration.\n");
-                }
-            }
-        }
+        zen_BinaryEntityGenerator_handleIdentifier(generator, primarySymbol);
     }
     else {
         int32_t i;
@@ -6377,8 +6345,8 @@ void zen_BinaryEntityGenerator_handleLhsPostfixExpression(
  * ALGORITHM FOR GENERATION WHEN ONLY THE PRIMARY EXPRESSION IS PRESENT
  *
  * 1. For an identifier
- *    a. Resolve the symbol for with the given identifier.
- *    b. If there are not postfix parts and the symbol is local and variable/constant,
+ *    a. Resolve the symbol for the given identifier.
+ *    b. If there are no postfix parts and the symbol is local and variable/constant,
  *       then generate the load_a instruction.
  *    c. If the symbol is a class member and variable or constant, then
  *       generate load_instance_field or load_static_field instruction depending
