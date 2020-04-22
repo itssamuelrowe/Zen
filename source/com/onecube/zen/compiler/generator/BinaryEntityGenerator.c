@@ -5272,6 +5272,10 @@ void zen_BinaryEntityGenerator_handleFunctionInvocation(zen_ASTListener_t* astLi
     zen_BinaryEntityGenerator_t* generator,
     zen_FunctionArgumentsContext_t* functionArgumentsContext,
     zen_Token_t* primaryToken, zen_Symbol_t* primarySymbol) {
+
+    uint16_t invokeIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_INVOKE];
+    uint16_t invokeExIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_INVOKE_EX];
+
     if (primarySymbol == NULL) {
         printf("[internal error] Variable treated as function. Looks like the semantic analysis phase malfunctioned.\n");
     }
@@ -5592,6 +5596,8 @@ void zen_BinaryEntityGenerator_handleMemberAccess(zen_BinaryEntityGenerator_t* g
     zen_ASTNode_t* identifier = memberAccessContext->m_identifier;
     zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
 
+    uint16_t loadFieldIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_LOAD_FIELD];
+
     /* The name of the function/field to invoke/load. */
     int32_t targetNameIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
         generator->m_constantPoolBuilder, identifierToken->m_text,
@@ -5877,51 +5883,77 @@ void zen_BinaryEntityGenerator_handleIdentifier(zen_BinaryEntityGenerator_t* gen
     zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(symbol);
 
     if (zen_Symbol_isVariable(symbol) || zen_Symbol_isConstant(symbol)) {
-        if (zen_Scope_isClassScope(enclosingScope)) {
-            bool instance = !zen_Symbol_isStatic(symbol);
+        if (lhs) {
+            if (zen_Scope_isClassScope(enclosingScope)) {
+                bool instance = !zen_Symbol_isStatic(symbol);
 
-            uint16_t identifierIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
-                generator->m_constantPoolBuilder, identifierToken->m_text,
-                identifierToken->m_length);
+                uint16_t identifierIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
+                    generator->m_constantPoolBuilder, identifierToken->m_text,
+                    identifierToken->m_length);
 
-            if (instance) {
-                /* The this reference is always stored at the zeroth position
-                    * in the local variable array. Further, we assume that the
-                    * class member and the expression being processed appear in
-                    * in the same class. Therefore, emit a load reference to the
-                    * this reference.
-                    */
-                zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
-                /* Load the name of the field. */
-                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
-                /* Invoke the ZenKernel.storeField() function to update
+                if (instance) {
+                    /* The this reference is always stored at the zeroth position
+                        * in the local variable array. Further, we assume that the
+                        * class member and the expression being processed appear in
+                        * in the same class. Therefore, emit a load reference to the
+                        * this reference.
+                        */
+                    zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
+                    /* Load the name of the field. */
+                    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
+                    /* Invoke the ZenKernel.storeField() function to update
+                        * the field.
+                        */
+                    zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, storeFieldIndex);
+                }
+                else {
+                    /* Emit the `load_cpr` instruction to load the reference of the
+                        * class to which the static field belongs.
+                        */
+                    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, 0);
+                    /* Load the name of the field. */
+                    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
+                    /* Invoke the ZenKernel.storeField() function to update
                     * the field.
                     */
-                zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, storeFieldIndex);
+                    zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, storeFieldIndex);
+                }
             }
-            else {
-                /* Emit the `load_cpr` instruction to load the reference of the
-                    * class to which the static field belongs.
-                    */
-                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, 0);
-                /* Load the name of the field. */
-                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
-                /* Invoke the ZenKernel.storeField() function to update
-                 * the field.
-                 */
-                zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, storeFieldIndex);
+            else if (zen_Scope_isLocalScope(enclosingScope)) {
+                if (zen_Symbol_isVariable(symbol)) {
+                    /* Emit the duplicate instruction. */
+                    zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
+                    /* Emit the store_a instruction. */
+                    zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder,
+                        symbol->m_index);
+                }
+                else {
+                    printf("[error] Invalid assignment of constant after declaration.\n");
+                }
             }
         }
-        else if (zen_Scope_isLocalScope(enclosingScope)) {
-            if (zen_Symbol_isVariable(symbol)) {
-                /* Emit the duplicate instruction. */
-                zen_BinaryEntityBuilder_emitDuplicate(generator->m_builder);
-                /* Emit the store_a instruction. */
-                zen_BinaryEntityBuilder_emitStoreReference(generator->m_builder,
-                    symbol->m_index);
+        else {
+            if (zen_Scope_isClassScope(enclosingScope)) {
+                if (!zen_Symbol_isStatic(symbol)) {
+                    /* The this reference is always stored at the zeroth position
+                        * in the local variable array. Further, we assume that the
+                        * class member and the expression being processed appear in
+                        * in the same class. Therefore, emit a load reference to the
+                        * this reference.
+                        */
+                    zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
+                    /* Load the instance field. */
+                    zen_BinaryEntityBuilder_emitLoadInstanceField(generator->m_builder, 0);
+                }
+                else {
+                    /* Load the static field. */
+                    zen_BinaryEntityGenerator_emitLoadStaticField(generator, 0);
+                }
             }
-            else {
-                printf("[error] Invalid assignment of constant after declaration.\n");
+            else if (zen_Scope_isLocalScope(enclosingScope)) {
+                /* Emit the store_a instruction. */
+                zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder,
+                    symbol->m_index);
             }
         }
     }
@@ -5931,67 +5963,6 @@ void zen_BinaryEntityGenerator_handleIdentifier(zen_BinaryEntityGenerator_t* gen
     else if (zen_Symbol_isClass(symbol)) {
         printf("[TODO] Class references are yet to be implemented.\n");
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(symbol);
-                if (zen_Symbol_isVariable(symbol) || zen_Symbol_isConstant(symbol)) {
-                    if (zen_Scope_isClassScope(enclosingScope)) {
-                        if (zen_Symbol_isVariable(symbol)) {
-                            if (true /* !zen_Symbol_isStatic(symbol)) */) {
-                                /* The this reference is always stored at the zeroth position
-                                 * in the local variable array. Further, we assume that the
-                                 * class member and the expression being processed appear in
-                                 * in the same class. Therefore, emit a load reference to the
-                                 * this reference.
-                                 */
-                                zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
-                                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
-                                /* Invoke the ZenKernel.loadField() function to load
-                                 * the field.
-                                 */
-                                zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, loadFieldIndex);
-                            }
-                            else {
-                                /* Load the static field. */
-                                zen_BinaryEntityBuilder_emitLoadStaticField(generator->m_builder, 0);
-                            }
-                        }
-                        else {
-                            if (true /* !zen_Symbol_isStatic(symbol)) */) {
-                                /* The this reference is always stored at the zeroth position
-                                 * in the local variable array. Further, we assume that the
-                                 * class member and the expression being processed appear in
-                                 * in the same class. Therefore, emit a load reference to the
-                                 * this reference.
-                                 */
-                                zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
-                                /* Load the instance field. */
-                                zen_BinaryEntityBuilder_emitLoadInstanceField(generator->m_builder, 0);
-                            }
-                            else {
-                                /* Load the static field. */
-                                zen_BinaryEntityGenerator_emitLoadStaticField(generator, 0);
-                            }
-                        }
-                    }
-                    else if (zen_Scope_isLocalScope(enclosingScope) ||
-                        zen_Scope_isFunctionScope(enclosingScope)) {
-                        /* Emit the load_a instruction. */
-                        zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, symbol->m_index);
-                    }
 }
 
 void zen_BinaryEntityGenerator_handleSubscript(zen_BinaryEntityGenerator_t* generator,
@@ -6190,10 +6161,6 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
     else {
         printf("[internal error] What node do we have here?\n");
     }
-
-    uint16_t invokeIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_INVOKE];
-    uint16_t invokeExIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_INVOKE_EX];
-    uint16_t loadFieldIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_LOAD_FIELD];
 
     const uint8_t* objectClassName = "zen/core/Object";
     int32_t objectClassNameSize = 15;
