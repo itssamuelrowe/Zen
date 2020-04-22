@@ -1,3 +1,5 @@
+Wrap functions declared in compilation unit with class scope.
+
 April 20
 
  * Break down binary entity generator to smaller functions.

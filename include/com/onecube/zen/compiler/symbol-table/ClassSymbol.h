@@ -39,6 +39,9 @@ struct zen_ClassSymbol_t {
     uint8_t* m_qualifiedName;
     int32_t m_qualifiedNameSize;
     zen_Scope_t* m_classScope;
+
+    uint8_t* m_descriptor;
+    int32_t m_descriptorSize;
 };
 
 /**

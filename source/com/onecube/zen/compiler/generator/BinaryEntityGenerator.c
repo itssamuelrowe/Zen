@@ -5268,95 +5268,27 @@ void zen_BinaryEntityGenerator_handleStringLiteral(zen_BinaryEntityGenerator_t* 
     jtk_Memory_deallocate(string);
 }
 
-void invokeDynamic(zen_BinaryEntityGenerator_t* generator) {
-    /* The "this" reference is always stored at the zeroth position
-     * in the local variable array. Further, we assume that the
-     * class member and the expression being processed appear in
-     * in the same class. Therefore, emit a load reference to the
-     * this reference.
-     */
-    zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
+void zen_BinaryEntityGenerator_handleDirectFunction(
+    zen_BinaryEntityGenerator_t* generator,
+    zen_Symbol_t* symbol,
+    zen_FunctionArgumentsContext_t* functionArgumentsContext) {
 
-    /* Log the emission of the load_a instruction. */
-    jtk_Logger_debug(logger, "Emitted load_a 0");
-
-    index = invokeIndex;
-
-
-    zen_ASTNode_t* primarySymbolIdentifier = primarySymbol->m_identifier;
-    zen_Token_t* primarySymbolToken = (zen_Token_t*)primarySymbolIdentifier->m_context;
-
-    /* The name of the function to invoke. */
-    int32_t targetNameIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
-        generator->m_constantPoolBuilder, primarySymbolToken->m_text,
-        primarySymbolToken->m_length);
-
-    /* Push the name of the target function on the operand stack. */
-    zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder,
-        targetNameIndex);
-
-}
-
-void invokeStatic(zen_BinaryEntityGenerator_t* generator) {
-    // NOTE: I am assuming that only class members can be declared as static.
-    zen_Scope_t* enclosingScope = primarySymbol->m_enclosingScope;
-    zen_Symbol_t* classSymbol = enclosingScope->m_symbol;
-    zen_ASTNode_t* identifier = classSymbol->m_identifier;
-    zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
-
-    // uint16_t identifierIndex = zen_ConstantPoolBuilder_getStringEntryIndexEx(
-    //     generator->m_constantPoolBuilder, identifierToken->m_text,
-    //     identifierToken->m_length);
-
-    // TODO: Should retrieve a constant pool index to a class entry.
-    // zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
+    bool instance = !zen_Modifier_hasStatic(symbol->m_modifiers);
+    if (instance) {
+        /* The "this" reference is always stored at the zeroth position
+        * in the local variable array. Further, we assume that the
+        * class member and the expression being processed appear in
+        * in the same class. Therefore, emit a load reference to the
+        * this reference.
+        */
+        zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
+    }
 
     zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
     int32_t argumentCount = 0;
     if (expressions != NULL) {
         zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
         argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
-        int32_t k;
-        for (k = 0; k < argumentCount; k++) {
-            /* Retrieve the expression for the current argument. */
-            zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
-                expressionsContext->m_expressions, k);
-
-            /* Visit the expression node and generate the relevant instructions. */
-            zen_ASTWalker_walk(astListener, argument);
-        }
-    }
-
-    zen_FunctionSignature_t* signature = zen_Symbol_getFunctionSignature(primarySymbol, argumentCount);
-    if (signature == NULL) {
-        printf("[error] Cannot find a suitable static function\n");
-    }
-
-    int32_t index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-        generator->m_constantPoolBuilder, classSymbol->m_context.m_asClass.m_qualifiedName,
-        classSymbol->m_context.m_asClass.m_qualifiedNameSize,
-        signature->m_descriptor, signature->m_descriptorSize, identifierToken->m_text,
-        identifierToken->m_length,
-        signature->m_tableIndex
-    );
-    zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, index);
-}
-
-void zen_BinaryEntityGenerator_handleFunctionInvocation(zen_ASTListener_t* astListener,
-    zen_BinaryEntityGenerator_t* generator,
-    zen_FunctionArgumentsContext_t* functionArgumentsContext,
-    zen_Token_t* primaryToken, zen_Symbol_t* primarySymbol) {
-
-    uint16_t invokeIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_INVOKE];
-    uint16_t invokeExIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_INVOKE_EX];
-
-    zen_FunctionSymbol_t* functionSymbol = &primarySymbol->m_context.m_asFunction;
-    int32_t index ;// = invokeStaticIndex;
-
-    zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
-    if (expressions != NULL) {
-        zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
-        int32_t argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
         int32_t argumentIndex;
         for (argumentIndex = 0; argumentIndex < argumentCount; argumentIndex++) {
             /* Retrieve the expression for the current argument. */
@@ -5364,15 +5296,28 @@ void zen_BinaryEntityGenerator_handleFunctionInvocation(zen_ASTListener_t* astLi
                 expressionsContext->m_expressions, argumentIndex);
 
             /* Visit the expression node and generate the relevant instructions. */
-            zen_ASTWalker_walk(astListener, argument);
+            zen_ASTWalker_walk(generator->m_astListener, argument);
         }
     }
 
-    if (zen_Modifier_hasStatic(primarySymbol->m_modifiers)) {
-        invokeStatic(generator);
+    zen_Scope_t* enclosingScope = symbol->m_enclosingScope;
+    zen_Symbol_t* classSymbol = enclosingScope->m_symbol;
+    const uint8_t* classDescriptor = classSymbol->m_context.m_asClass.m_descriptor;
+    uint16_t classDescriptorSize = classSymbol->m_context.m_asClass.m_descriptorSize;
+    zen_FunctionSignature_t* signature = zen_Symbol_getFunctionSignature(symbol, argumentCount);
+    if (signature == NULL) {
+        printf("[error] Cannot find a suitable static function\n");
+    }
+    int32_t index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+        generator->m_constantPoolBuilder, classDescriptor,
+        classDescriptorSize, signature->m_descriptor, signature->m_descriptorSize,
+        symbol->m_name, symbol->m_nameSize, signature->m_tableIndex);
+
+    if (instance) {
+        zen_BinaryEntityBuilder_emitInvokeVirtual(generator->m_builder, index);
     }
     else {
-        invokeDynamic(generator);
+        zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, index);
     }
 }
 
@@ -5969,7 +5914,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                 case ZEN_AST_NODE_TYPE_FUNCTION_ARGUMENTS: {
                     zen_FunctionArgumentsContext_t* functionArgumentsContext =
                         (zen_FunctionArgumentsContext_t*)postfixPart->m_context;
-                    zen_BinaryEntityGenerator_handleFunctionInvocation(generator,
+                    zen_BinaryEntityGenerator_handleDirectFunction(generator,
                         functionArgumentsContext);
 
                     break;
