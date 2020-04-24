@@ -5321,11 +5321,109 @@ void zen_BinaryEntityGenerator_handleDirectFunction(
     }
 }
 
-void zen_BinaryEntityGenerator_handleMemberAccess(zen_BinaryEntityGenerator_t* generator,
+void zen_BinaryEntityGenerator_handleDirectAccess(zen_BinaryEntityGenerator_t* generator,
+    zen_MemberAccessContext_t* context, zen_Token_t* primaryToken,
+    zen_Symbol_t* primarySymbol, jtk_ArrayList_t* postfixParts, int32_t* index) {
+
+    zen_ASTNode_t* identifier = context->m_identifier;
+    zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+
+    zen_Symbol_t* targetSymbol = NULL;
+    zen_Symbol_t* classSymbol = NULL;
+    switch (primaryToken->m_type) {
+        case ZEN_TOKEN_IDENTIFIER: {
+            // NOTE: I am assuming the primary symbol is a class!
+            // If you try to access field.object the compiler will crash.
+            // For field.object, handleDynamicAccess() must be invoked.
+            classSymbol = primarySymbol;
+            break;
+        }
+
+        case ZEN_TOKEN_INTEGER_LITERAL: {
+            classSymbol = zen_Compiler_resolveSymbol(
+                generator->m_compiler, "zen.core.Integer", 16);
+
+            break;
+        }
+
+        case ZEN_TOKEN_STRING_LITERAL: {
+            classSymbol = zen_Compiler_resolveSymbol(generator->m_compiler,
+                "zen.core.String", 15);
+            break;
+        }
+
+        case ZEN_TOKEN_KEYWORD_TRUE:
+        case ZEN_TOKEN_KEYWORD_FALSE: {
+            classSymbol = zen_Compiler_resolveSymbol(
+                generator->m_compiler, "zen.core.Boolean", 16);
+        }
+
+        case ZEN_TOKEN_KEYWORD_NULL: {
+            printf("[error] Why would you access a member of the null literal?\n");
+            break;
+        }
+
+        case ZEN_TOKEN_KEYWORD_THIS: {
+            classSymbol = generator->m_symbolTable->m_currentScope->m_enclosingScope->m_symbol;
+            break;
+        }
+    }
+
+    targetSymbol = zen_Scope_resolve(primarySymbol->m_context.m_asClass.m_classScope,
+        identifierToken->m_text);
+
+    int32_t postfixPartCount = jtk_ArrayList_getSize(postfixParts);
+    if ((*index + 1) < postfixPartCount) {
+        zen_ASTNode_t* nextPostfixPart = (zen_ASTNode_t*)jtk_ArrayList_getValue(
+            postfixParts, *index + 1);
+        zen_ASTNodeType_t nextPostfixPartType = zen_ASTNode_getType(nextPostfixPart);
+
+        if (nextPostfixPartType == ZEN_AST_NODE_TYPE_FUNCTION_ARGUMENTS) {
+            zen_ASTNode_t* functionArguments = nextPostfixPart;
+            *index++;
+
+            zen_FunctionArgumentsContext_t* functionArgumentsContext =
+                (zen_FunctionArgumentsContext_t*)functionArguments->m_context;
+
+            zen_ExpressionsContext_t* expressionsContext = NULL;
+            zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
+            if (expressions != NULL) {
+                expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
+            }
+
+            zen_BinaryEntityGenerator_handleDirectFunction(generator,
+                targetSymbol, expressionsContext);
+        }
+    }
+    else {
+        if (zen_Symbol_isFunction(targetSymbol)) {
+            jtk_ArrayList_t* signatures = targetSymbol->m_context.m_asFunction.m_signatures;
+            if (jtk_ArrayList_getSize(signatures) > 1) {
+                printf("[error] Cannot reference an overloaded function.\n");
+            }
+            else {
+                zen_FunctionSignature_t* signature = jtk_ArrayList_getValue(signatures, 0);
+                zen_ClassSymbol_t* symbolContext = &classSymbol->m_context.m_asClass;
+                int32_t cpIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+                    generator->m_constantPoolBuilder, symbolContext->m_descriptor,
+                    symbolContext->m_descriptorSize, signature->m_descriptor, signature->m_descriptorSize,
+                    identifierToken->m_text, identifierToken->m_length, signature->m_tableIndex);
+                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, cpIndex);
+            }
+        }
+        else {
+            // handleDirectField();
+        }
+    }
+}
+
+void zen_BinaryEntityGenerator_handleDynamicAccess(zen_BinaryEntityGenerator_t* generator,
     zen_PostfixExpressionContext_t* context, zen_MemberAccessContext_t* memberAccessContext,
     zen_Symbol_t* primarySymbol, int32_t* index, int32_t postfixPartCount) {
     zen_ASTNode_t* identifier = memberAccessContext->m_identifier;
     zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
+
+
 
     uint16_t loadFieldIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_LOAD_FIELD];
 
@@ -5335,7 +5433,6 @@ void zen_BinaryEntityGenerator_handleMemberAccess(zen_BinaryEntityGenerator_t* g
         identifierToken->m_length);
 
     zen_ASTNode_t* functionArguments = NULL;
-
     if ((*index + 1) < postfixPartCount) {
         zen_ASTNode_t* nextPostfixPart = (zen_ASTNode_t*)jtk_ArrayList_getValue(
             context->m_postfixParts, *index + 1);
@@ -5806,21 +5903,24 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
 
     zen_Symbol_t* primarySymbol = NULL;
     int32_t postfixPartCount = jtk_ArrayList_getSize(context->m_postfixParts);
+    zen_Token_t* primaryToken = NULL;
+    zen_TokenType_t primaryTokenType = ZEN_TOKEN_UNKNOWN;
 
     if (zen_ASTNode_isTerminal(expression)) {
         /* Retrieve the token that the primary expression represents. */
-        zen_Token_t* token = (zen_Token_t*)expression->m_context;
+        primaryToken = (zen_Token_t*)expression->m_context;
 
-        switch (zen_Token_getType(token)) {
+        primaryTokenType = zen_Token_getType(primaryToken);
+        switch (primaryTokenType) {
             case ZEN_TOKEN_IDENTIFIER: {
                 /* Resolve the symbol and pass it to the next phase. */
                 primarySymbol = zen_SymbolTable_resolve(generator->m_symbolTable,
-                    token->m_text);
+                    primaryToken->m_text);
                 break;
             }
 
             case ZEN_TOKEN_INTEGER_LITERAL: {
-                zen_BinaryEntityGenerator_handleIntegerLiteral(generator, token);
+                zen_BinaryEntityGenerator_handleIntegerLiteral(generator, primaryToken);
                 break;
             }
 
@@ -5837,7 +5937,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
             }
 
             case ZEN_TOKEN_STRING_LITERAL: {
-                zen_BinaryEntityGenerator_handleStringLiteral(generator, token);
+                zen_BinaryEntityGenerator_handleStringLiteral(generator, primaryToken);
                 break;
             }
 
@@ -5915,7 +6015,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                     zen_FunctionArgumentsContext_t* functionArgumentsContext =
                         (zen_FunctionArgumentsContext_t*)postfixPart->m_context;
                     zen_BinaryEntityGenerator_handleDirectFunction(generator,
-                        functionArgumentsContext);
+                        primarySymbol, functionArgumentsContext);
 
                     break;
                 }
@@ -5924,9 +6024,16 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                     zen_MemberAccessContext_t* memberAccessContext =
                         (zen_MemberAccessContext_t*)postfixPart->m_context;
 
-                    zen_BinaryEntityGenerator_handleMemberAccess(generator, context,
-                        (zen_MemberAccessContext_t*)postfixPart->m_context, primarySymbol,
-                        &i, postfixPartCount);
+                    if (i == 0) {
+                        zen_BinaryEntityGenerator_handleDirectAccess(generator,
+                            memberAccessContext, primaryToken, primarySymbol,
+                            context->m_postfixParts, &i);
+                    }
+                    else {
+                        zen_BinaryEntityGenerator_handleDynamicAccess(generator, context,
+                            (zen_MemberAccessContext_t*)postfixPart->m_context, primarySymbol,
+                            &i, postfixPartCount);
+                    }
 
                     break;
                 }

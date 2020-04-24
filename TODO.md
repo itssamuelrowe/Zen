@@ -37,6 +37,9 @@ April 26
  * Conditional operator
 
 
+ * The resolution for a specific class scope should only look through the hierarchy. The resolution from within a class should cause look through the hierarchy and outside the class.
+ Otherwise, member access will be wrong.
+
  * The code generator generates the instruction attribute for native functions, too!
  * Implement a wildcard search
  * Implement line numbers for exceptions.
