@@ -5321,6 +5321,75 @@ void zen_BinaryEntityGenerator_handleDirectFunction(
     }
 }
 
+/* This function assumes that the reference for instance fields is already
+ * pushed onto the operand stack.
+ */
+void zen_BinaryEntityGenerator_handleDirectField(zen_BinaryEntityGenerator_t* generator,
+    zen_Symbol_t* classSymbol, zen_Symbol_t* targetSymbol, bool last) {
+    zen_ClassSymbol_t* classSymbolContext = &classSymbol->m_context.m_asClass;
+    if (zen_Symbol_isFunction(targetSymbol)) {
+        jtk_ArrayList_t* signatures = targetSymbol->m_context.m_asFunction.m_signatures;
+        if (jtk_ArrayList_getSize(signatures) > 1) {
+            printf("[error] Cannot reference an overloaded function. Consider using the reflection package.\n");
+        }
+        else {
+            zen_FunctionSignature_t* signature = jtk_ArrayList_getValue(signatures, 0);
+
+            int32_t cpIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
+                generator->m_constantPoolBuilder, classSymbolContext->m_descriptor,
+                classSymbolContext->m_descriptorSize, signature->m_descriptor, signature->m_descriptorSize,
+                targetSymbol->m_name, targetSymbol->m_nameSize, signature->m_tableIndex);
+            zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, cpIndex);
+        }
+    }
+    else if (zen_Symbol_isConstant(targetSymbol) ||
+        zen_Symbol_isVariable(targetSymbol)) {
+        // TODO: Add table indexes to fields!
+        uint16_t cpIndex = zen_ConstantPoolBuilder_getFieldEntryIndexEx(
+            generator->m_constantPoolBuilder, classSymbolContext->m_descriptor,
+                classSymbolContext->m_descriptorSize, "(zen/core/Object)", 17,
+                targetSymbol->m_name, targetSymbol->m_nameSize);
+        bool instance = !zen_Symbol_isStatic(targetSymbol);
+        if (last && lhs) {
+            if (instance) {
+                zen_BinaryEntityBuilder_emitStoreInstanceField(generator->m_builder,
+                    cpIndex);
+            }
+            else {
+                zen_BinaryEntityBuilder_emitStoreStaticField(generator->m_builder,
+                    cpIndex);
+            }
+        }
+        else {
+            if (instance) {
+                zen_BinaryEntityBuilder_emitLoadInstanceField(generator->m_builder,
+                    cpIndex);
+            }
+            else {
+                zen_BinaryEntityBuilder_emitLoadStaticField(generator->m_builder,
+                    cpIndex);
+            }
+        }
+    }
+    else {
+        printf("[internal error] Control should not reach here.");
+    }
+}
+
+/* A direct member access can take one of the following forms.
+ * primary.function()
+ * primary.field
+ * primary.function
+ * primary.field =
+ * primary.function = (TODO: The compiler should generate a compile-time error.)
+ * primary.field() = (TODO: The compiler should generate a compile-time error.)
+ * null.<anything> (TODO: The compiler should generate a compile-time error.)
+ *
+ * TODO: Decimal literal!
+ *
+ * Here, primary can an identifier referencing a class, integer literal, string
+ * literal, Boolean literal, or this reference.
+ */
 void zen_BinaryEntityGenerator_handleDirectAccess(zen_BinaryEntityGenerator_t* generator,
     zen_MemberAccessContext_t* context, zen_Token_t* primaryToken,
     zen_Symbol_t* primarySymbol, jtk_ArrayList_t* postfixParts, int32_t* index) {
@@ -5332,9 +5401,6 @@ void zen_BinaryEntityGenerator_handleDirectAccess(zen_BinaryEntityGenerator_t* g
     zen_Symbol_t* classSymbol = NULL;
     switch (primaryToken->m_type) {
         case ZEN_TOKEN_IDENTIFIER: {
-            // NOTE: I am assuming the primary symbol is a class!
-            // If you try to access field.object the compiler will crash.
-            // For field.object, handleDynamicAccess() must be invoked.
             classSymbol = primarySymbol;
             break;
         }
@@ -5397,25 +5463,7 @@ void zen_BinaryEntityGenerator_handleDirectAccess(zen_BinaryEntityGenerator_t* g
     }
     else {
         // If lhs and last postfix part, data should be stored!
-
-        if (zen_Symbol_isFunction(targetSymbol)) {
-            jtk_ArrayList_t* signatures = targetSymbol->m_context.m_asFunction.m_signatures;
-            if (jtk_ArrayList_getSize(signatures) > 1) {
-                printf("[error] Cannot reference an overloaded function. Consider using the reflection package.\n");
-            }
-            else {
-                zen_FunctionSignature_t* signature = jtk_ArrayList_getValue(signatures, 0);
-                zen_ClassSymbol_t* symbolContext = &classSymbol->m_context.m_asClass;
-                int32_t cpIndex = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
-                    generator->m_constantPoolBuilder, symbolContext->m_descriptor,
-                    symbolContext->m_descriptorSize, signature->m_descriptor, signature->m_descriptorSize,
-                    identifierToken->m_text, identifierToken->m_length, signature->m_tableIndex);
-                zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, cpIndex);
-            }
-        }
-        else {
-            // handleDirectField();
-        }
+        zen_BinaryEntityGenerator_handleDirectField(generator, (*index + 1) == postfixPartCount);
     }
 }
 
@@ -5819,15 +5867,19 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
                     zen_MemberAccessContext_t* memberAccessContext =
                         (zen_MemberAccessContext_t*)postfixPart->m_context;
 
-                    if (i == 0) {
+                    /* The primary symbol should be a class for the current member
+                     * access to be considered as direct. Otherwise, the expression
+                     * `variable.field` will crash the compiler.
+                     */
+                    if ((i == 0) && !zen_Symbol_isVariable(primarySymbol) &&
+                        !zen_Symbol_isConstant(primarySymbol)) {
                         zen_BinaryEntityGenerator_handleDirectAccess(generator,
                             memberAccessContext, primaryToken, primarySymbol,
                             context->m_postfixParts, &i);
                     }
                     else {
-                        zen_BinaryEntityGenerator_handleDynamicAccess(generator, context,
-                            (zen_MemberAccessContext_t*)postfixPart->m_context, primarySymbol,
-                            &i, postfixPartCount);
+                        zen_BinaryEntityGenerator_handleDynamicAccess(generator,
+                            memberAccessContext, context->m_postfixParts, &i);
                     }
 
                     break;
