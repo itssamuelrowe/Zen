@@ -1,11 +1,19 @@
-function download(url)
+import zen.net.UrlHelper
+import zen.concurrent.WaitGroup
+
+function download(group, url)
 	try
 		var result = UrlHelper.readAll(url)
 		print(result)
 		print('[info] Downloaded ' + url)
 	catch Exception exception
 		print(exception)
+	finally
+		group.signal()
 
 function main(...arguments)
+	var group = new WaitGroup()
 	for var argument in arguments
-		spawn download(argument)
+		group.add(1)
+		spawn download(group, argument)
+	group.wait()
