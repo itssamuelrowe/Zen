@@ -1,0 +1,11 @@
+function download(url)
+	try
+		var result = UrlHelper.readAll(url)
+		print(result)
+		print('[info] Downloaded ' + url)
+	catch Exception exception
+		print(exception)
+
+function main(...arguments)
+	for var argument in arguments
+		spawn download(argument)
