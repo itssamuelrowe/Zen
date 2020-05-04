@@ -5239,8 +5239,8 @@ void zen_BinaryEntityGenerator_handleStringLiteral(zen_BinaryEntityGenerator_t* 
                 case 'r': next = '\r'; break;
                 case 'n': next = '\n'; break;
                 case 't': next = '\t'; break;
-                case '\'': next: '\''; break;
-                case '\"': next: '\"'; break;
+                case '\'': next = '\''; break;
+                case '\"': next = '\"'; break;
                 // TODO: 'u'
 
                 default: {
@@ -5463,7 +5463,8 @@ void zen_BinaryEntityGenerator_handleDirectAccess(zen_BinaryEntityGenerator_t* g
     }
     else {
         // If lhs and last postfix part, data should be stored!
-        zen_BinaryEntityGenerator_handleDirectField(generator, (*index + 1) == postfixPartCount);
+        zen_BinaryEntityGenerator_handleDirectField(generator, classSymbol,
+            targetSymbol, (*index + 1) == postfixPartCount);
     }
 }
 
@@ -5553,6 +5554,7 @@ void zen_BinaryEntityGenerator_handleIdentifier(zen_BinaryEntityGenerator_t* gen
     zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
     zen_Scope_t* enclosingScope = zen_Symbol_getEnclosingScope(symbol);
 
+    uint16_t storeFieldIndex = generator->m_cpfIndexes[ZEN_BINARY_ENTITY_GENERATOR_ZEN_KERNEL_STORE_FIELD];
     if (zen_Symbol_isVariable(symbol) || zen_Symbol_isConstant(symbol)) {
         if (lhs) {
             if (zen_Scope_isClassScope(enclosingScope)) {
@@ -5573,8 +5575,8 @@ void zen_BinaryEntityGenerator_handleIdentifier(zen_BinaryEntityGenerator_t* gen
                     /* Load the name of the field. */
                     zen_BinaryEntityBuilder_emitLoadCPR(generator->m_builder, identifierIndex);
                     /* Invoke the ZenKernel.storeField() function to update
-                        * the field.
-                        */
+                     * the field.
+                     */
                     zen_BinaryEntityBuilder_emitInvokeStatic(generator->m_builder, storeFieldIndex);
                 }
                 else {
@@ -5618,7 +5620,7 @@ void zen_BinaryEntityGenerator_handleIdentifier(zen_BinaryEntityGenerator_t* gen
                 }
                 else {
                     /* Load the static field. */
-                    zen_BinaryEntityGenerator_emitLoadStaticField(generator, 0);
+                    zen_BinaryEntityBuilder_emitLoadStaticField(generator->m_builder, 0);
                 }
             }
             else if (zen_Scope_isLocalScope(enclosingScope)) {
