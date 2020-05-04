@@ -1432,12 +1432,22 @@ void zen_VirtualMachine_raiseException(zen_VirtualMachine_t* virtualMachine,
     printf("[debug] An exception was raised.\n");
 }
 
+void raise(zen_Interpreter_t* interpreter, zen_Object_t* exception) {
+    interpreter->m_state |= ZEN_INTERPRETER_STATE_EXCEPTION_THROWN;
+    zen_Interpreter_throw(interpreter, exception);
+}
+
 void zen_VirtualMachine_raiseUnknownFieldException(zen_VirtualMachine_t* virtualMachine,
     const uint8_t* fieldDescriptor, int32_t fieldDescriptorSize) {
     jtk_Assert_assertObject(virtualMachine, "The specified virtual machine is null.");
     jtk_Assert_assertObject(fieldDescriptor, "The specified field descriptor is null.");
 
-    printf("[error] UnknownFieldException was thrown!\n");
+    // zen_Object_t* exception = zen_VirtualMachine_newStringFromUtf8(
+    //     virtualMachine, "The specified field is unknown.", 31);
+
+    zen_Object_t* exception = zen_VirtualMachine_newObjectEx(virtualMachine,
+        "zen/core/UnknownFieldException", 30, "v:v", 3, NULL);
+    raise(virtualMachine->m_interpreter, exception);
 }
 
 void zen_VirtualMachine_raiseNullReferenceException(zen_VirtualMachine_t* virtualMachine) {
