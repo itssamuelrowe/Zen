@@ -5814,7 +5814,7 @@ void zen_BinaryEntityGenerator_onExitPostfixExpression(zen_ASTListener_t* astLis
     uint16_t objectClassIndex = zen_ConstantPoolBuilder_getClassEntryIndexEx(
         generator->m_constantPoolBuilder, objectClassName, objectClassNameSize);
 
-    if (postfixPartCount == 0) {
+    if ((postfixPartCount == 0) && (primaryTokenType == ZEN_TOKEN_IDENTIFIER)) {
         zen_BinaryEntityGenerator_handleIdentifier(generator, primarySymbol);
     }
     else {
