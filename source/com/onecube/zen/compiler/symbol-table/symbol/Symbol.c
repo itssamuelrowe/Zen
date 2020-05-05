@@ -109,7 +109,6 @@ zen_Symbol_t* zen_Symbol_forClassAlt(zen_Scope_t* classScope, const uint8_t* des
         descriptorSize);
     jtk_Arrays_replace_b(qualifiedName, descriptorSize, '/', '.');
 
-
     zen_Symbol_t* symbol = zen_Symbol_new(ZEN_SYMBOL_CATEGORY_CLASS, NULL, NULL);
     zen_ClassSymbol_t* classSymbol = &symbol->m_context.m_asClass;
     classSymbol->m_qualifiedName = qualifiedName;
