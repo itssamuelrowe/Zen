@@ -61,8 +61,12 @@
 
 void zen_Compiler_registerSymbol(zen_Compiler_t* compiler, const uint8_t* identifier,
     int32_t identifierSize, zen_Symbol_t* symbol) {
-    uint8_t* copy = jtk_CString_newEx(identifier, identifierSize);
-    jtk_HashMap_put(compiler->m_repository, copy, symbol);
+    // uint8_t* copy = jtk_CString_newEx(identifier, identifierSize);
+    /* NOTE: Do not create a copy of the qualified name because the string belongs
+     * to the symbol we are mapping. Therefore, the lifetime of both the qualified
+     * name and the symbol are equivalent.
+     */
+    jtk_HashMap_put(compiler->m_repository, identifier, symbol);
 }
 
 zen_Symbol_t* zen_Compiler_resolveSymbol(zen_Compiler_t* compiler,

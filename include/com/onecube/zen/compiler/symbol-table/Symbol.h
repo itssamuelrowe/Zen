@@ -81,8 +81,8 @@ zen_Symbol_t* zen_Symbol_forFunction(zen_ASTNode_t* identifier,
     zen_Scope_t* enclosingScope);
 
 zen_Symbol_t* zen_Symbol_forClass(zen_ASTNode_t* identifier,
-    zen_Scope_t* enclosingScope, zen_Scope_t* classScope, const uint8_t* qualifiedName,
-    int32_t qualifiedNameSize);
+    zen_Scope_t* enclosingScope, zen_Scope_t* classScope, const uint8_t* name,
+    int32_t nameSize, const uint8_t* package, int32_t packageSize);
 
 zen_Symbol_t* zen_Symbol_forLabel(zen_ASTNode_t* identifier,
     zen_Scope_t* enclosingScope);

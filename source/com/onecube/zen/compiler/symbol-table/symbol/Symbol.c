@@ -68,12 +68,36 @@ zen_Symbol_t* zen_Symbol_forFunction(zen_ASTNode_t* identifier,
 }
 
 zen_Symbol_t* zen_Symbol_forClass(zen_ASTNode_t* identifier,
-    zen_Scope_t* enclosingScope, zen_Scope_t* classScope, const uint8_t* qualifiedName,
-    int32_t qualifiedNameSize) {
+    zen_Scope_t* enclosingScope, zen_Scope_t* classScope, const uint8_t* name,
+    int32_t nameSize, const uint8_t* package, int32_t packageSize) {
+    uint8_t* qualifiedName = NULL;
+    int32_t qualifiedNameSize = -1;
+    if (package != NULL) {
+        uint8_t* strings[] = {
+            package,
+            ".",
+            name
+        };
+        int32_t sizes[] = {
+            packageSize,
+            1,
+            nameSize
+        };
+        qualifiedName = jtk_CString_joinAll(strings, sizes, 3, &qualifiedNameSize);
+    }
+    else {
+        qualifiedName = jtk_CString_make(qualifiedName, &qualifiedNameSize);
+    }
+
+    uint8_t* descriptor = jtk_CString_newEx(qualifiedName, qualifiedNameSize);
+    jtk_CString_replace_c(descriptor, qualifiedNameSize, '.', '/');
+
     zen_Symbol_t* symbol = zen_Symbol_new(ZEN_SYMBOL_CATEGORY_CLASS, identifier, enclosingScope);
     zen_ClassSymbol_t* classSymbol = &symbol->m_context.m_asClass;
-    classSymbol->m_qualifiedName = jtk_CString_make(qualifiedName, &qualifiedNameSize);
+    classSymbol->m_qualifiedName = qualifiedName;
     classSymbol->m_qualifiedNameSize = qualifiedNameSize;
+    classSymbol->m_descriptor = descriptor;
+    classSymbol->m_descriptorSize = qualifiedNameSize;
     classSymbol->m_classScope = classScope;
 
     return symbol;
