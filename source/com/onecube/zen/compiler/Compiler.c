@@ -587,6 +587,22 @@ jtk_ArrayList_t* zen_CString_split_c(const uint8_t* sequence, int32_t size,
 
 int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length);
 
+void zen_Compiler_printHelp() {
+    printf(
+        "[Usage]\n"
+        "    zc [--tokens] [--nodes] [--footprint] [--instructions] [--core-api] [--run <virtualMachineFlags>] [--log <level>] [--help] <inputFiles>\n\n"
+        "[Options]\n"
+        "    --tokens        Print the tokens recognized by the lexer.\n"
+        "    --nodes         Print the AST recognized by the parser.\n"
+        "    --footprint     Print diagnostic information about the memory footprint of the compiler.\n"
+        "    --instructions  Disassemble the binary entity generated.\n"
+        "    --core-api      Disables the internal constant pool function index cache. This flag is valid only when compiling foreign function interfaces.\n"
+        "    --run           Run the virtual machine after compiling the source files.\n"
+        "    --log           Generate log messages. This flag is valid only if log messages were enabled at compile time.\n"
+        "    --help          Print the help message.\n"
+        );
+}
+
 bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t length) {
     jtk_Assert_assertObject(compiler, "The specified compiler is null.");
 
@@ -601,16 +617,16 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
     int32_t i;
     for (i = 1; i < length; i++) {
         if (arguments[i][0] == '-') {
-            if (strcmp(arguments[i], "--dump-tokens") == 0) {
+            if (strcmp(arguments[i], "--tokens") == 0) {
                 compiler->m_dumpTokens = true;
             }
-            else if (strcmp(arguments[i], "--dump-nodes") == 0) {
+            else if (strcmp(arguments[i], "--nodes") == 0) {
                 compiler->m_dumpNodes = true;
             }
             else if (strcmp(arguments[i], "--footprint") == 0) {
                 compiler->m_footprint = true;
             }
-            else if (strcmp(arguments[i], "--dump-instructions") == 0) {
+            else if (strcmp(arguments[i], "--instructions") == 0) {
                 compiler->m_dumpInstructions = true;
             }
             else if (strcmp(arguments[i], "--core-api") == 0) {
@@ -626,6 +642,10 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
                     printf("[error] Please specify the main class.");
                     invalidCommandLine = true;
                 }
+            }
+            else if (strcmp(arguments[i], "--help") == 0) {
+                zen_Compiler_printHelp();
+                exit(0);
             }
             else if (strcmp(arguments[i], "--log") == 0) {
                 if ((i + 1) < length) {
@@ -692,16 +712,17 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
     }
 
     int32_t size = jtk_ArrayList_getSize(compiler->m_inputFiles);
+    bool noErrors = false;
     if (size == 0) {
         fprintf(stderr, "[error] Please specify input files.\n");
     }
     else {
         zen_Compiler_initialize(compiler);
         zen_Compiler_buildAST(compiler);
-        if (!zen_ErrorHandler_hasErrors(compiler->m_errorHandler)) {
+        if ((noErrors = !zen_ErrorHandler_hasErrors(compiler->m_errorHandler))) {
             zen_Compiler_analyze(compiler);
 
-            if (!zen_ErrorHandler_hasErrors(compiler->m_errorHandler)) {
+            if ((noErrors = !zen_ErrorHandler_hasErrors(compiler->m_errorHandler))) {
                 zen_Compiler_generate(compiler);
             }
         }
@@ -734,7 +755,7 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
         printf("Memory Footprint = %.2f KB\n", footprint / 1024.0f);
     }
 
-    if (vmArguments != NULL) {
+    if ((vmArguments != NULL) && noErrors) {
         zen_ZenVirtualMachine_main(vmArguments, vmArgumentsSize);
     }
 
