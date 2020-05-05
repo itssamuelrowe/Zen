@@ -45,6 +45,10 @@ struct zen_SymbolDefinitionListener_t {
     zen_ASTAnnotations_t* m_scopes;
     const uint8_t* m_package;
     int32_t m_packageSize;
+    zen_ASTNodeType_t m_mainComponent;
+    bool m_classPrepared;
+    uint8_t* m_className;
+    int32_t m_classNameSize;
 };
 
 /**

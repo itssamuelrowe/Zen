@@ -880,6 +880,10 @@ void zen_BinaryEntityGenerator_prepareClass(zen_BinaryEntityGenerator_t* generat
     entity->m_functions = NULL;
 
     generator->m_classPrepared = true;
+
+    zen_Symbol_t* symbol = zen_SymbolTable_resolve(generator->m_symbolTable,
+        generator->m_className);
+    zen_SymbolTable_setCurrentScope(generator->m_symbolTable, symbol->m_context.m_asClass.m_classScope);
 }
 
 void zen_BinaryEntityGenerator_initializeClassName(zen_BinaryEntityGenerator_t* generator) {

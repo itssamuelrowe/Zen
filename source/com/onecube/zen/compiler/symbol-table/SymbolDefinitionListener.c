@@ -126,6 +126,10 @@ zen_SymbolDefinitionListener_t* zen_SymbolDefinitionListener_new(
     listener->m_scopes = NULL;
     listener->m_package = NULL;
     listener->m_packageSize = -1;
+    listener->m_mainComponent = ZEN_AST_NODE_TYPE_UNKNOWN;
+    listener->m_classPrepared = false;
+    listener->m_className = NULL;
+    listener->m_classNameSize = 0;
 
     zen_ASTListener_t* astListener = listener->m_astListener;
 
@@ -170,6 +174,14 @@ void zen_SymbolDefinitionListener_reset(
     listener->m_scopes = scopes;
     listener->m_package = package;
     listener->m_packageSize = packageSize;
+    listener->m_mainComponent = ZEN_AST_NODE_TYPE_UNKNOWN;
+    listener->m_classPrepared = false;
+
+    if (listener->m_className != NULL) {
+        jtk_CString_delete(listener->m_className);
+        listener->m_className = NULL;
+        listener->m_classNameSize = 0;
+    }
 }
 
 /* compilationUnit */
@@ -339,6 +351,39 @@ zen_Symbol_t* zen_SymbolDefinitionListener_declareFunction(zen_SymbolTable_t* sy
     return symbol;
 }
 
+void zen_SymbolDefinitionListener_initializeClassName(zen_SymbolDefinitionListener_t* listener) {
+    zen_Compiler_t* compiler = listener->m_compiler;
+    const uint8_t* fileName = (const uint8_t*)jtk_ArrayList_getValue(
+        compiler->m_inputFiles, compiler->m_currentFileIndex);
+    int32_t size = jtk_CString_getSize(fileName);
+    int32_t slashIndex = jtk_CString_findLast_c(fileName, size, '/');
+    int32_t dotIndex = jtk_CString_findLast_c(fileName, size, '.');
+    listener->m_className = jtk_CString_substringEx(fileName, size, slashIndex + 1,
+        dotIndex);
+    listener->m_classNameSize = dotIndex - (slashIndex + 1);
+}
+
+void zen_SymbolDefinitionListener_defineClass(zen_SymbolDefinitionListener_t* listener) {
+    zen_Scope_t* scope = zen_Scope_forClass(listener->m_symbolTable->m_currentScope);
+
+    zen_Symbol_t* symbol = zen_Symbol_forClass(NULL,
+        listener->m_symbolTable->m_currentScope, scope,
+        listener->m_className, listener->m_classNameSize,
+        listener->m_package, listener->m_packageSize);
+    zen_ClassSymbol_t* classSymbol = &symbol->m_context;
+    scope->m_symbol = symbol;
+
+    zen_Scope_defineEx(listener->m_symbolTable->m_currentScope, listener->m_className,
+        listener->m_classNameSize, symbol);
+    zen_Compiler_registerSymbol(listener->m_compiler, classSymbol->m_qualifiedName,
+        classSymbol->m_qualifiedNameSize, symbol);
+
+    // TODO: Is the symbol defined here destroyed?
+    zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
+
+    listener->m_classPrepared = true;
+}
+
 void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* astListener,
     zen_ASTNode_t* node) {
     jtk_Assert_assertObject(astListener, "The specified AST listener is null.");
@@ -352,8 +397,13 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
     /* Retrieve the identifier associated with the function declaration. */
     zen_ASTNode_t* identifier = functionDeclarationContext->m_identifier;
     zen_Token_t* identifierToken = (zen_Token_t*)identifier->m_context;
-    /* Retrieve the text representation of the identifier. */
-    uint8_t* const identifierText = ((zen_Token_t*)identifier->m_context)->m_text;
+
+    if ((listener->m_mainComponent != ZEN_AST_NODE_TYPE_CLASS_DECLARATION)
+        && !listener->m_classPrepared) {
+        /* Pure static classes do not inherit any superclasses. */
+        zen_SymbolDefinitionListener_initializeClassName(listener);
+        zen_SymbolDefinitionListener_defineClass(listener);
+    }
 
     zen_FunctionParametersContext_t* functionParametersContext =
         (zen_FunctionParametersContext_t*)functionDeclarationContext->m_functionParameters->m_context;
@@ -381,18 +431,24 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
         if (zen_Scope_isCompilationUnitScope(currentScope) ||
             zen_Scope_isClassScope(currentScope)) {
             /* Resolve the identifier within the scope of the compilation unit. */
-            zen_Symbol_t* symbol = zen_SymbolTable_resolve(symbolTable, identifierText);
+            zen_Symbol_t* symbol = zen_SymbolTable_resolve(symbolTable, identifierToken->m_text);
             uint32_t modifiers = 0;
 
             if (zen_Scope_isClassScope(currentScope)) {
-                zen_ClassMemberContext_t* classMemberContext = (zen_ClassMemberContext_t*)node->m_parent->m_context;
-                int32_t modifierCount = jtk_ArrayList_getSize(classMemberContext->m_modifiers);
-                int32_t i;
-                for (i = 0; i < modifierCount; i++) {
-                    zen_ASTNode_t* modifier =
-                        (zen_ASTNode_t*)jtk_ArrayList_getValue(classMemberContext->m_modifiers, i);
-                    zen_Token_t* token = (zen_Token_t*)modifier->m_context;
-                    modifiers |= zen_TokenType_toModifiers(token->m_type);
+                /* When functions are declared in the compilation unit, a
+                 * synthetic class symbol is generated. Therefore, make sure
+                 * that the class scope is not synthetic.
+                 */
+                if (node->m_parent->m_type == ZEN_AST_NODE_TYPE_CLASS_MEMBER) {
+                    zen_ClassMemberContext_t* classMemberContext = (zen_ClassMemberContext_t*)node->m_parent->m_context;
+                    int32_t modifierCount = jtk_ArrayList_getSize(classMemberContext->m_modifiers);
+                    int32_t i;
+                    for (i = 0; i < modifierCount; i++) {
+                        zen_ASTNode_t* modifier =
+                            (zen_ASTNode_t*)jtk_ArrayList_getValue(classMemberContext->m_modifiers, i);
+                        zen_Token_t* token = (zen_Token_t*)modifier->m_context;
+                        modifiers |= zen_TokenType_toModifiers(token->m_type);
+                    }
                 }
             }
             else {

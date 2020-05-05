@@ -590,7 +590,7 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length);
 void zen_Compiler_printHelp() {
     printf(
         "[Usage]\n"
-        "    zc [--tokens] [--nodes] [--footprint] [--instructions] [--core-api] [--run <virtualMachineFlags>] [--log <level>] [--help] <inputFiles>\n\n"
+        "    zc [--tokens] [--nodes] [--footprint] [--instructions] [--core-api] [--log <level>] [--help] <inputFiles> [--run <vmArguments>]\n\n"
         "[Options]\n"
         "    --tokens        Print the tokens recognized by the lexer.\n"
         "    --nodes         Print the AST recognized by the parser.\n"
