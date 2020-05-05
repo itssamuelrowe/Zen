@@ -27,13 +27,15 @@
 #include <jtk/core/System.h>
 #include <jtk/core/CString.h>
 
+#ifndef ZVM_MAIN_DISABLE
 int32_t main(int32_t length, char** arguments) {
     jtk_System_initialize();
-    int32_t result = zen_ZenVirtualMachine_main(arguments, length);
+    int32_t result = zen_ZenVirtualMachine_main(arguments + 1, length - 1);
     jtk_System_shutdown();
 
     return 0;
 }
+#endif
 
 int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
     /* TODO: The command line arguments are parsed to differentiate and extract
@@ -56,7 +58,7 @@ int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length) {
     bool afterClass = false;
     bool invalidCommandLine = false;
     int32_t i;
-    for (i = 1; i < length; i++) {
+    for (i = 0; i < length; i++) {
         if (afterClass) {
         }
         else {

@@ -26,6 +26,7 @@
 #include <com/onecube/zen/Configuration.h>
 
 #include <jtk/collection/list/ArrayList.h>
+#include <jtk/collection/array/Arrays.h>
 #include <jtk/fs/FileInputStream.h>
 #include <jtk/fs/Path.h>
 #include <jtk/io/BufferedInputStream.h>
@@ -584,12 +585,17 @@ jtk_ArrayList_t* zen_CString_split_c(const uint8_t* sequence, int32_t size,
     return result;
 }
 
+int32_t zen_ZenVirtualMachine_main(char** arguments, int32_t length);
+
 bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t length) {
     jtk_Assert_assertObject(compiler, "The specified compiler is null.");
 
     // TODO: Add the --path flag
     zen_SymbolLoader_addDirectory(compiler->m_symbolLoader, ".");
     zen_BinaryEntityDisassembler_addDirectory(compiler->m_disassembler, ".", 1);
+
+    char** vmArguments = NULL;
+    int32_t vmArgumentsSize = 0;
 
     bool invalidCommandLine = false;
     int32_t i;
@@ -609,6 +615,17 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
             }
             else if (strcmp(arguments[i], "--core-api") == 0) {
                 compiler->m_coreApi = true;
+            }
+            else if (strcmp(arguments[i], "--run") == 0) {
+                vmArgumentsSize = length - i + 1;
+                if (vmArgumentsSize > 0) {
+                    vmArguments = arguments + (i + 1);
+                    break;
+                }
+                else {
+                    printf("[error] Please specify the main class.");
+                    invalidCommandLine = true;
+                }
             }
             else if (strcmp(arguments[i], "--log") == 0) {
                 if ((i + 1) < length) {
@@ -715,6 +732,10 @@ bool zen_Compiler_compileEx(zen_Compiler_t* compiler, char** arguments, int32_t 
     if (compiler->m_footprint) {
         int32_t footprint = zen_Memory_getFootprint();
         printf("Memory Footprint = %.2f KB\n", footprint / 1024.0f);
+    }
+
+    if (vmArguments != NULL) {
+        zen_ZenVirtualMachine_main(vmArguments, vmArgumentsSize);
     }
 
     // TODO: Return true only if the compilation suceeded.

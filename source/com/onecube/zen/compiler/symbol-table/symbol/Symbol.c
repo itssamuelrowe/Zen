@@ -86,7 +86,7 @@ zen_Symbol_t* zen_Symbol_forClass(zen_ASTNode_t* identifier,
         qualifiedName = jtk_CString_joinAll(strings, sizes, 3, &qualifiedNameSize);
     }
     else {
-        qualifiedName = jtk_CString_make(qualifiedName, &qualifiedNameSize);
+        qualifiedName = jtk_CString_newEx(name, nameSize);
     }
 
     uint8_t* descriptor = jtk_CString_newEx(qualifiedName, qualifiedNameSize);
