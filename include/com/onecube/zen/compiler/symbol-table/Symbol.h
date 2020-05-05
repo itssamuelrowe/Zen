@@ -80,9 +80,18 @@ zen_Symbol_t* zen_Symbol_forVariable(zen_ASTNode_t* identifier,
 zen_Symbol_t* zen_Symbol_forFunction(zen_ASTNode_t* identifier,
     zen_Scope_t* enclosingScope);
 
+/**
+ * This function is used for class declarations in compilation units.
+ */
 zen_Symbol_t* zen_Symbol_forClass(zen_ASTNode_t* identifier,
     zen_Scope_t* enclosingScope, zen_Scope_t* classScope, const uint8_t* name,
     int32_t nameSize, const uint8_t* package, int32_t packageSize);
+
+/**
+ * This function is used by the symbol loader.
+ */
+zen_Symbol_t* zen_Symbol_forClassAlt(zen_Scope_t* classScope, const uint8_t* descriptor,
+    int32_t descriptorSize);
 
 zen_Symbol_t* zen_Symbol_forLabel(zen_ASTNode_t* identifier,
     zen_Scope_t* enclosingScope);

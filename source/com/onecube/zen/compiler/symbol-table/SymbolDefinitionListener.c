@@ -703,41 +703,18 @@ void zen_SymbolDefinitionListener_onEnterClassDeclaration(
             (zen_Token_t*)identifier->m_context);
     }
     else {
-        uint8_t* qualifiedName = NULL;
-        uint8_t* qualifiedName0 = NULL;
-        int32_t qualifiedNameSize;
-        if (listener->m_package != NULL) {
-            uint8_t* strings[] = {
-                listener->m_package,
-                ".",
-                identifierToken->m_text
-            };
-            int32_t sizes[] = {
-                listener->m_packageSize,
-                1,
-                identifierToken->m_length
-            };
-            qualifiedName = jtk_CString_joinAll(strings, sizes, 3, &qualifiedNameSize);
-            qualifiedName0 = qualifiedName;
-        }
-        else {
-            qualifiedName = identifierToken->m_text;
-            qualifiedNameSize = identifierToken->m_length;
-        }
-
         zen_Scope_t* scope = zen_Scope_forClass(listener->m_symbolTable->m_currentScope);
 
         zen_Symbol_t* symbol = zen_Symbol_forClass(identifier,
             listener->m_symbolTable->m_currentScope, scope,
-            qualifiedName, qualifiedNameSize);
+            identifierToken->m_text, identifierToken->m_length,
+            listener->m_package, listener->m_packageSize);
+        zen_ClassSymbol_t* classSymbol = &symbol->m_context;
         scope->m_symbol = symbol;
 
         zen_SymbolTable_define(listener->m_symbolTable, symbol);
-        zen_Compiler_registerSymbol(compiler, qualifiedName, qualifiedNameSize, symbol);
-
-        if (qualifiedName0 != NULL) {
-            jtk_CString_delete(qualifiedName0);
-        }
+        zen_Compiler_registerSymbol(compiler, classSymbol->m_qualifiedName,
+            classSymbol->m_qualifiedNameSize, symbol);
 
         zen_SymbolTable_setCurrentScope(listener->m_symbolTable, scope);
         zen_ASTAnnotations_put(listener->m_scopes, node, scope);

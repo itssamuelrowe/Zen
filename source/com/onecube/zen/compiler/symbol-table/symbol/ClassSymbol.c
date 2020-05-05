@@ -33,6 +33,7 @@ void zen_ClassSymbol_initialize(zen_ClassSymbol_t* symbol) {
 void zen_ClassSymbol_destroy(zen_ClassSymbol_t* symbol) {
     jtk_Assert_assertObject(symbol, "The specified symbol is null.");
 
+    jtk_CString_delete(symbol->m_descriptor);
     jtk_CString_delete(symbol->m_qualifiedName);
     jtk_ArrayList_delete(symbol->m_superClasses);
 }
