@@ -3689,6 +3689,7 @@ void zen_BinaryEntityGenerator_onEnterClassDeclaration(zen_ASTListener_t* astLis
             generator->m_constantPoolBuilder, "zen/core/Object", 15);
     }
 
+    zen_BinaryEntityGenerator_initializeClassName(generator);
     zen_BinaryEntityGenerator_prepareClass(generator, identifierToken->m_text,
         identifierToken->m_length, superclassIndexes, superclassCount);
 }
