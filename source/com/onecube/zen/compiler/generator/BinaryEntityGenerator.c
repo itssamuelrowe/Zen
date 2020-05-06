@@ -5273,11 +5273,24 @@ void zen_BinaryEntityGenerator_handleStringLiteral(zen_BinaryEntityGenerator_t* 
 }
 
 void zen_BinaryEntityGenerator_handleDirectFunction(
-    zen_BinaryEntityGenerator_t* generator,
-    zen_Symbol_t* symbol,
+    zen_BinaryEntityGenerator_t* generator, zen_Symbol_t* symbol,
     zen_FunctionArgumentsContext_t* functionArgumentsContext) {
+    zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
+    jtk_ArrayList_t* arguments = NULL;
+    int32_t argumentCount = 0;
+    if (expressions != NULL) {
+        zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
+        arguments = expressionsContext->m_expressions;
+        argumentCount = jtk_ArrayList_getSize(arguments);
+    }
 
-    bool instance = !zen_Modifier_hasStatic(symbol->m_modifiers);
+    zen_FunctionSignature_t* signature = zen_Symbol_getFunctionSignature(symbol,
+        argumentCount);
+    if (signature == NULL) {
+        printf("[error] Cannot find a suitable static function. A previous phase in the compiler has failed.\n");
+    }
+
+    bool instance = !zen_Modifier_hasStatic(signature->m_modifiers);
     if (instance) {
         /* The "this" reference is always stored at the zeroth position
         * in the local variable array. Further, we assume that the
@@ -5288,16 +5301,12 @@ void zen_BinaryEntityGenerator_handleDirectFunction(
         zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder, 0);
     }
 
-    zen_ASTNode_t* expressions = functionArgumentsContext->m_expressions;
-    int32_t argumentCount = 0;
-    if (expressions != NULL) {
-        zen_ExpressionsContext_t* expressionsContext = (zen_ExpressionsContext_t*)expressions->m_context;
-        argumentCount = jtk_ArrayList_getSize(expressionsContext->m_expressions);
+    if (arguments != NULL) {
         int32_t argumentIndex;
         for (argumentIndex = 0; argumentIndex < argumentCount; argumentIndex++) {
             /* Retrieve the expression for the current argument. */
-            zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(
-                expressionsContext->m_expressions, argumentIndex);
+            zen_ASTNode_t* argument = (zen_ASTNode_t*)jtk_ArrayList_getValue(arguments,
+                argumentIndex);
 
             /* Visit the expression node and generate the relevant instructions. */
             zen_ASTWalker_walk(generator->m_astListener, argument);
@@ -5308,10 +5317,6 @@ void zen_BinaryEntityGenerator_handleDirectFunction(
     zen_Symbol_t* classSymbol = enclosingScope->m_symbol;
     const uint8_t* classDescriptor = classSymbol->m_context.m_asClass.m_descriptor;
     uint16_t classDescriptorSize = classSymbol->m_context.m_asClass.m_descriptorSize;
-    zen_FunctionSignature_t* signature = zen_Symbol_getFunctionSignature(symbol, argumentCount);
-    if (signature == NULL) {
-        printf("[error] Cannot find a suitable static function\n");
-    }
     int32_t index = zen_ConstantPoolBuilder_getFunctionEntryIndexEx(
         generator->m_constantPoolBuilder, classDescriptor,
         classDescriptorSize, signature->m_descriptor, signature->m_descriptorSize,

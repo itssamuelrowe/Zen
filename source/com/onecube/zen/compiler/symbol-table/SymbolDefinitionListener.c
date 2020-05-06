@@ -428,27 +428,24 @@ void zen_SymbolDefinitionListener_onEnterFunctionDeclaration(zen_ASTListener_t* 
             ZEN_ERROR_CODE_STATIC_INITIALIZER_WITH_PARAMETERS, identifierToken);
     }
     else {
-        if (zen_Scope_isCompilationUnitScope(currentScope) ||
-            zen_Scope_isClassScope(currentScope)) {
+        if (zen_Scope_isClassScope(currentScope)) {
             /* Resolve the identifier within the scope of the compilation unit. */
             zen_Symbol_t* symbol = zen_SymbolTable_resolve(symbolTable, identifierToken->m_text);
             uint32_t modifiers = 0;
 
-            if (zen_Scope_isClassScope(currentScope)) {
-                /* When functions are declared in the compilation unit, a
-                 * synthetic class symbol is generated. Therefore, make sure
-                 * that the class scope is not synthetic.
-                 */
-                if (node->m_parent->m_type == ZEN_AST_NODE_TYPE_CLASS_MEMBER) {
-                    zen_ClassMemberContext_t* classMemberContext = (zen_ClassMemberContext_t*)node->m_parent->m_context;
-                    int32_t modifierCount = jtk_ArrayList_getSize(classMemberContext->m_modifiers);
-                    int32_t i;
-                    for (i = 0; i < modifierCount; i++) {
-                        zen_ASTNode_t* modifier =
-                            (zen_ASTNode_t*)jtk_ArrayList_getValue(classMemberContext->m_modifiers, i);
-                        zen_Token_t* token = (zen_Token_t*)modifier->m_context;
-                        modifiers |= zen_TokenType_toModifiers(token->m_type);
-                    }
+            /* When functions are declared in the compilation unit, a
+             * synthetic class symbol is generated. Therefore, make sure
+             * that the class scope is not synthetic.
+             */
+            if (node->m_parent->m_type == ZEN_AST_NODE_TYPE_CLASS_MEMBER) {
+                zen_ClassMemberContext_t* classMemberContext = (zen_ClassMemberContext_t*)node->m_parent->m_context;
+                int32_t modifierCount = jtk_ArrayList_getSize(classMemberContext->m_modifiers);
+                int32_t i;
+                for (i = 0; i < modifierCount; i++) {
+                    zen_ASTNode_t* modifier =
+                        (zen_ASTNode_t*)jtk_ArrayList_getValue(classMemberContext->m_modifiers, i);
+                    zen_Token_t* token = (zen_Token_t*)modifier->m_context;
+                    modifiers |= zen_TokenType_toModifiers(token->m_type);
                 }
             }
             else {
