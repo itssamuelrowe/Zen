@@ -5637,7 +5637,7 @@ void zen_BinaryEntityGenerator_handleIdentifier(zen_BinaryEntityGenerator_t* gen
                     zen_BinaryEntityBuilder_emitLoadStaticField(generator->m_builder, 0);
                 }
             }
-            else if (zen_Scope_isLocalScope(enclosingScope)) {
+            else if (zen_Scope_isLocalScope(enclosingScope) || zen_Scope_isFunctionScope(enclosingScope)) {
                 /* Emit the store_a instruction. */
                 zen_BinaryEntityBuilder_emitLoadReference(generator->m_builder,
                     symbol->m_index);
