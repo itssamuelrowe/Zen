@@ -905,6 +905,7 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
 
     zen_BinaryEntityGenerator_t* generator = (zen_BinaryEntityGenerator_t*)astListener->m_context;
     zen_FunctionDeclarationContext_t* context = (zen_FunctionDeclarationContext_t*)node->m_context;
+    zen_FunctionParametersContext_t* functionParameters = (zen_FunctionParametersContext_t*)context->m_functionParameters->m_context;
 
     if ((generator->m_mainComponent != ZEN_AST_NODE_TYPE_CLASS_DECLARATION)
         && !generator->m_classPrepared) {
@@ -942,10 +943,14 @@ void zen_BinaryEntityGenerator_onEnterFunctionDeclaration(
     zen_Scope_t* scope = zen_ASTAnnotations_get(generator->m_scopes, node);
     zen_SymbolTable_setCurrentScope(generator->m_symbolTable, scope);
 
+    int32_t parameterCount = jtk_ArrayList_getSize(functionParameters->m_fixedParameters);
+    zen_FunctionSignature_t* signature = zen_Symbol_getFunctionSignature(symbol,
+        parameterCount);
+
     /* The first local variable in the local variable array is reserved for the "this" pointer.
      * Therefore, do not perform the following increment for static functions.
      */
-    if (!zen_Symbol_isStatic(symbol)) {
+    if (!zen_Modifier_hasStatic(signature->m_modifiers)) {
         generator->m_localVariableCount += 2;
     }
 
