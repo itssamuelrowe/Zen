@@ -121,6 +121,47 @@ zen_Object_t* zen_Interpreter_makeException(zen_Interpreter_t* interpreter,
 
 /* Interpret */
 
+/*
+ * The invoke_dynamic instruction associates a call site with a dynamic call
+ * object, which holds the target function and call type. Whenever the
+ * invoke_dynamic instruction linked with the dynamic call object is executed,
+ * the call is delegated to the corresponding target function.
+ * There is no restriction on the number of invoke_dynamic instructions a dynamic
+ * call object maybe associated with.
+ *
+ * The two types of dynamic calls are:
+ *  1. Immutable
+ *     Once the target function is associated with the dynamic call object,
+ *     it does not change.
+ *  2. Mutable
+ *     The target function associated with the dynamic call object may change.
+ */
+
+struct zen_ConstantPoolDynamicFunction_t {
+
+};
+
+struct zen_ContantPoolDynamicField_t {
+};
+
+enum zen_DynamicCallType_t {
+    ZEN_DYNAMIC_CALL_TYPE_MUTABLE,
+    ZEN_DYNAMIC_CALL_TYPE_IMMUTABLE
+};
+
+typedef enum zen_DynamicCallType_t zen_DynamicCallType_t;
+
+struct zen_DynamicCall_t {
+    zen_Function_t* m_target;
+    zen_DynamicCallType_t m_type;
+};
+
+typedef struct zen_DynamicCall_t zen_DynamicCall_t;
+
+void bootstrap() {
+
+}
+
 void zen_Interpreter_interpret(zen_Interpreter_t* interpreter) {
     jtk_Assert_assertObject(interpreter, "The specified interpreter is null.");
     jtk_Logger_t* logger = interpreter->m_virtualMachine->m_logger;
