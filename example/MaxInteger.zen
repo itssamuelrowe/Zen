@@ -1,0 +1,9 @@
+function main(...arguments)
+    /* 10 32 13
+     * 334 150 36
+     * 17 38 90
+     */
+    with var input = Files.open('test')
+        for line in input.readLines()
+            var row = parseIntegers(line.split(' '))
+            print(Arrays.max(row))
